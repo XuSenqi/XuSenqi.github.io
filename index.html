@@ -345,7 +345,8 @@
 <p>rsc_server端，接收到数据时，write到cache，就立刻返回。当cache满时，由系统一次性flush到磁盘。会使磁盘util=100%，持续10~20s，导致影响到客户虚机的IO性能。</p>
 <p><img src="/2018/04/18/磁盘IO在文件传输过程中的稳定控制方法/2-nolimit-2.png" alt="image"></p>
 <p><img src="/2018/04/18/磁盘IO在文件传输过程中的稳定控制方法/2-nolimit-3.png" alt="image"></p>
-<h2 id="3-限速方案"><a href="#3-限速方案" class="headerlink" title="3 限速方案"></a>3 限速方案</h2><h3 id="3-1-对rsc-server进程的IO限速"><a href="#3-1-对rsc-server进程的IO限速" class="headerlink" title="3.1 对rsc_server进程的IO限速"></a>3.1 对rsc_server进程的IO限速</h3><h3 id="3-2-对flush-进程的IO限速"><a href="#3-2-对flush-进程的IO限速" class="headerlink" title="3.2 对flush 进程的IO限速"></a>3.2 对flush 进程的IO限速</h3><h3 id="3-3-每次write时都sync"><a href="#3-3-每次write时都sync" class="headerlink" title="3.3 每次write时都sync"></a>3.3 每次write时都sync</h3><h3 id="3-4-每收到10个64K的包，调用一次fsync"><a href="#3-4-每收到10个64K的包，调用一次fsync" class="headerlink" title="3.4 每收到10个64K的包，调用一次fsync"></a>3.4 每收到10个64K的包，调用一次fsync</h3><h2 id="4-最终方案"><a href="#4-最终方案" class="headerlink" title="4 最终方案"></a>4 最终方案</h2>
+<h2 id="3-限速方案"><a href="#3-限速方案" class="headerlink" title="3 限速方案"></a>3 限速方案</h2><p>不同方案的测试和比较：<br>（1）对rsc_server进程的IO限速；<br>（2）对flush进程的IO限速；<br>（3）每次write时都sync；<br>（4）收到一定数量的包，调用fsync<br>其中对进程的限速是通过cgroup。</p>
+<h3 id="3-1-对rsc-server进程的IO限速"><a href="#3-1-对rsc-server进程的IO限速" class="headerlink" title="3.1 对rsc_server进程的IO限速"></a>3.1 对rsc_server进程的IO限速</h3><h3 id="3-2-对flush-进程的IO限速"><a href="#3-2-对flush-进程的IO限速" class="headerlink" title="3.2 对flush 进程的IO限速"></a>3.2 对flush 进程的IO限速</h3><h3 id="3-3-每次write时都sync"><a href="#3-3-每次write时都sync" class="headerlink" title="3.3 每次write时都sync"></a>3.3 每次write时都sync</h3><h3 id="3-4-每收到10个64K的包，调用一次fsync"><a href="#3-4-每收到10个64K的包，调用一次fsync" class="headerlink" title="3.4 每收到10个64K的包，调用一次fsync"></a>3.4 每收到10个64K的包，调用一次fsync</h3><h2 id="4-最终方案"><a href="#4-最终方案" class="headerlink" title="4 最终方案"></a>4 最终方案</h2>
           
         
       
