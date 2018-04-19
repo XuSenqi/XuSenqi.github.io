@@ -346,7 +346,12 @@
 <p><img src="/2018/04/18/磁盘IO在文件传输过程中的稳定控制方法/2-nolimit-2.png" alt="image"></p>
 <p><img src="/2018/04/18/磁盘IO在文件传输过程中的稳定控制方法/2-nolimit-3.png" alt="image"></p>
 <h2 id="3-限速方案"><a href="#3-限速方案" class="headerlink" title="3 限速方案"></a>3 限速方案</h2><p>不同方案的测试和比较：<br>（1）对rsc_server进程的IO限速；<br>（2）对flush进程的IO限速；<br>（3）每次write时都sync；<br>（4）收到一定数量的包，调用fsync<br>其中对进程的限速是通过cgroup。</p>
-<h3 id="3-1-对rsc-server进程的IO限速"><a href="#3-1-对rsc-server进程的IO限速" class="headerlink" title="3.1 对rsc_server进程的IO限速"></a>3.1 对rsc_server进程的IO限速</h3><h3 id="3-2-对flush-进程的IO限速"><a href="#3-2-对flush-进程的IO限速" class="headerlink" title="3.2 对flush 进程的IO限速"></a>3.2 对flush 进程的IO限速</h3><h3 id="3-3-每次write时都sync"><a href="#3-3-每次write时都sync" class="headerlink" title="3.3 每次write时都sync"></a>3.3 每次write时都sync</h3><h3 id="3-4-每收到10个64K的包，调用一次fsync"><a href="#3-4-每收到10个64K的包，调用一次fsync" class="headerlink" title="3.4 每收到10个64K的包，调用一次fsync"></a>3.4 每收到10个64K的包，调用一次fsync</h3><h2 id="4-最终方案"><a href="#4-最终方案" class="headerlink" title="4 最终方案"></a>4 最终方案</h2>
+<h3 id="3-1-对rsc-server进程的IO限速"><a href="#3-1-对rsc-server进程的IO限速" class="headerlink" title="3.1 对rsc_server进程的IO限速"></a>3.1 对rsc_server进程的IO限速</h3><p>设置写到磁盘的限速参数：Bps=40MB/s，iops=15000。<br><img src="/2018/04/18/磁盘IO在文件传输过程中的稳定控制方法/3-1-limit-1.png" alt="image"></p>
+<p>把rsc_server进程PID添加到限速的tasks里。<br><img src="/2018/04/18/磁盘IO在文件传输过程中的稳定控制方法/3-1-limit-2.png" alt="image"></p>
+<p>无法限制住磁盘的IO。</p>
+<p><img src="/2018/04/18/磁盘IO在文件传输过程中的稳定控制方法/3-1-limit-3.png" alt="image"></p>
+<p>原因：将cache刷到磁盘时，是由flush进程执行的，并不是rsc_server本身。所以考虑到将flush进程限速。</p>
+<h3 id="3-2-对flush-进程的IO限速"><a href="#3-2-对flush-进程的IO限速" class="headerlink" title="3.2 对flush 进程的IO限速"></a>3.2 对flush 进程的IO限速</h3><h3 id="3-3-每次write时都sync"><a href="#3-3-每次write时都sync" class="headerlink" title="3.3 每次write时都sync"></a>3.3 每次write时都sync</h3><h3 id="3-4-每收到10个64K的包，调用一次fsync"><a href="#3-4-每收到10个64K的包，调用一次fsync" class="headerlink" title="3.4 每收到10个64K的包，调用一次fsync"></a>3.4 每收到10个64K的包，调用一次fsync</h3><h2 id="4-最终方案"><a href="#4-最终方案" class="headerlink" title="4 最终方案"></a>4 最终方案</h2>
           
         
       
