@@ -338,13 +338,13 @@
 <p>dm-0是物理机上的数据盘，有通过多快盘做raid。</p>
 <p>以下在rsc_server的IO优化过程中，对不同方案测试结果的比较和分析。</p>
 <h2 id="2-无限速方案"><a href="#2-无限速方案" class="headerlink" title="2 无限速方案"></a>2 无限速方案</h2><p>测试环境为:</p>
-<p>测试镜像： Windows 2008 64位 EN<br><img src="disk_io_control/2-nolimit-1.png" alt="image"><br>镜像文件为qcow2格式，总共40G，实际占用空间20G。</p>
+<p>测试镜像： Windows 2008 64位 EN<br><img src="/2018/04/18/磁盘IO在文件传输过程中的稳定控制方法/disk_io_control/2-nolimit-1.png" alt="image"><br>镜像文件为qcow2格式，总共40G，实际占用空间20G。</p>
 <p>宿主机: </p>
 <p>172.27.162.108 –&gt; 172.27.172.226（V3）</p>
 <p>172.28.160.151–&gt; 172.28.161.86（V4）</p>
 <p>rsc_server端，接收到数据时，write到cache，就立刻返回。当cache满时，由系统一次性flush到磁盘。会使磁盘util=100%，持续10~20s，导致影响到客户虚机的IO性能。</p>
-<p><img src="disk_io_control/2-nolimit-2.png" alt="image"></p>
-<p><img src="disk_io_control/2-nolimit-3.png" alt="image"></p>
+<p><img src="/2018/04/18/磁盘IO在文件传输过程中的稳定控制方法/disk_io_control/2-nolimit-2.png" alt="image"></p>
+<p><img src="/2018/04/18/磁盘IO在文件传输过程中的稳定控制方法/disk_io_control/2-nolimit-3.png" alt="image"></p>
 <h2 id="3-限速方案"><a href="#3-限速方案" class="headerlink" title="3 限速方案"></a>3 限速方案</h2><h3 id="3-1-对rsc-server进程的IO限速"><a href="#3-1-对rsc-server进程的IO限速" class="headerlink" title="3.1 对rsc_server进程的IO限速"></a>3.1 对rsc_server进程的IO限速</h3><h3 id="3-2-对flush-进程的IO限速"><a href="#3-2-对flush-进程的IO限速" class="headerlink" title="3.2 对flush 进程的IO限速"></a>3.2 对flush 进程的IO限速</h3><h3 id="3-3-每次write时都sync"><a href="#3-3-每次write时都sync" class="headerlink" title="3.3 每次write时都sync"></a>3.3 每次write时都sync</h3><h3 id="3-4-每收到10个64K的包，调用一次fsync"><a href="#3-4-每收到10个64K的包，调用一次fsync" class="headerlink" title="3.4 每收到10个64K的包，调用一次fsync"></a>3.4 每收到10个64K的包，调用一次fsync</h3><h2 id="4-最终方案"><a href="#4-最终方案" class="headerlink" title="4 最终方案"></a>4 最终方案</h2>
           
         
