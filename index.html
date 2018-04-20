@@ -351,7 +351,7 @@
 <p>无法限制住磁盘的IO。</p>
 <p><img src="/2018/04/18/磁盘IO在文件传输过程中的稳定控制方法/3-1-limit-3.png" alt="image"></p>
 <p>原因：将cache刷到磁盘时，是由flush进程执行的，并不是rsc_server本身。所以考虑到将flush进程限速。</p>
-<h3 id="对flush-进程的IO限速"><a href="#对flush-进程的IO限速" class="headerlink" title="对flush 进程的IO限速"></a>对flush 进程的IO限速</h3><p>把fulsh进程的PID加入tasks里，可以限制磁盘到40M/s。<br><img src="/2018/04/18/磁盘IO在文件传输过程中的稳定控制方法/3-2-flushlimit-1.png" alt="image"></p>
+<h3 id="对flush-进程的IO限速"><a href="#对flush-进程的IO限速" class="headerlink" title="对flush 进程的IO限速"></a>对flush 进程的IO限速</h3><p>把flush进程的PID加入tasks里，可以限制磁盘到40M/s。<br><img src="/2018/04/18/磁盘IO在文件传输过程中的稳定控制方法/3-2-flushlimit-1.png" alt="image"></p>
 <p><img src="/2018/04/18/磁盘IO在文件传输过程中的稳定控制方法/3-2-flushlimit-2.png" alt="image"></p>
 <p><img src="/2018/04/18/磁盘IO在文件传输过程中的稳定控制方法/3-2-flushlimit-3.png" alt="image"></p>
 <p>带来的问题，会影响所有通过flush来刷磁盘的操作：</p>

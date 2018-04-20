@@ -112,7 +112,7 @@
 <meta property="og:image" content="http://yoursite.com/2018/04/18/磁盘IO在文件传输过程中的稳定控制方法/4-final-2.png">
 <meta property="og:image" content="http://yoursite.com/2018/04/18/磁盘IO在文件传输过程中的稳定控制方法/4-final-3.png">
 <meta property="og:image" content="http://yoursite.com/2018/04/18/磁盘IO在文件传输过程中的稳定控制方法/4-final-4.png">
-<meta property="og:updated_time" content="2018-04-20T03:02:45.000Z">
+<meta property="og:updated_time" content="2018-04-20T06:25:44.000Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="磁盘IO在文件传输过程中的稳定控制优化">
 <meta name="twitter:description" content="问题的描述本地镜像在不同物理机之间的传输，这里是通过自研的工具rsc，包含rsc_client和rsc_server。 rsc_server对收到的数据的处理不当，对IO可能产生不理想的结果：（1）当Bps或者iops 过高时，可能使dm-0的util过高，甚至100%，影响上面虚机的IO；（2）当传输过程中Bps过低时，会使得传输镜像过慢，影响效率，甚至导致创建虚机失败。 dm-0是物理机上的数">
@@ -374,7 +374,7 @@
 <p>无法限制住磁盘的IO。</p>
 <p><img src="/2018/04/18/磁盘IO在文件传输过程中的稳定控制方法/3-1-limit-3.png" alt="image"></p>
 <p>原因：将cache刷到磁盘时，是由flush进程执行的，并不是rsc_server本身。所以考虑到将flush进程限速。</p>
-<h3 id="对flush-进程的IO限速"><a href="#对flush-进程的IO限速" class="headerlink" title="对flush 进程的IO限速"></a>对flush 进程的IO限速</h3><p>把fulsh进程的PID加入tasks里，可以限制磁盘到40M/s。<br><img src="/2018/04/18/磁盘IO在文件传输过程中的稳定控制方法/3-2-flushlimit-1.png" alt="image"></p>
+<h3 id="对flush-进程的IO限速"><a href="#对flush-进程的IO限速" class="headerlink" title="对flush 进程的IO限速"></a>对flush 进程的IO限速</h3><p>把flush进程的PID加入tasks里，可以限制磁盘到40M/s。<br><img src="/2018/04/18/磁盘IO在文件传输过程中的稳定控制方法/3-2-flushlimit-1.png" alt="image"></p>
 <p><img src="/2018/04/18/磁盘IO在文件传输过程中的稳定控制方法/3-2-flushlimit-2.png" alt="image"></p>
 <p><img src="/2018/04/18/磁盘IO在文件传输过程中的稳定控制方法/3-2-flushlimit-3.png" alt="image"></p>
 <p>带来的问题，会影响所有通过flush来刷磁盘的操作：</p>
