@@ -92,7 +92,27 @@
 <meta property="og:image" content="http://yoursite.com/2018/04/18/磁盘IO在文件传输过程中的稳定控制方法/3-1-limit-1.png">
 <meta property="og:image" content="http://yoursite.com/2018/04/18/磁盘IO在文件传输过程中的稳定控制方法/3-1-limit-2.png">
 <meta property="og:image" content="http://yoursite.com/2018/04/18/磁盘IO在文件传输过程中的稳定控制方法/3-1-limit-3.png">
-<meta property="og:updated_time" content="2018-04-20T02:26:42.000Z">
+<meta property="og:image" content="http://yoursite.com/2018/04/18/磁盘IO在文件传输过程中的稳定控制方法/3-2-flushlimit-1.png">
+<meta property="og:image" content="http://yoursite.com/2018/04/18/磁盘IO在文件传输过程中的稳定控制方法/3-2-flushlimit-2.png">
+<meta property="og:image" content="http://yoursite.com/2018/04/18/磁盘IO在文件传输过程中的稳定控制方法/3-2-flushlimit-3.png">
+<meta property="og:image" content="http://yoursite.com/2018/04/18/磁盘IO在文件传输过程中的稳定控制方法/3-2-flushlimit-4.png">
+<meta property="og:image" content="http://yoursite.com/2018/04/18/磁盘IO在文件传输过程中的稳定控制方法/3-2-flushlimit-5.png">
+<meta property="og:image" content="http://yoursite.com/2018/04/18/磁盘IO在文件传输过程中的稳定控制方法/3-2-flushlimit-6.png">
+<meta property="og:image" content="http://yoursite.com/2018/04/18/磁盘IO在文件传输过程中的稳定控制方法/3-3-sync-1.png">
+<meta property="og:image" content="http://yoursite.com/2018/04/18/磁盘IO在文件传输过程中的稳定控制方法/3-3-sync-2.png">
+<meta property="og:image" content="http://yoursite.com/2018/04/18/磁盘IO在文件传输过程中的稳定控制方法/3-4-fsync-1.png">
+<meta property="og:image" content="http://yoursite.com/2018/04/18/磁盘IO在文件传输过程中的稳定控制方法/3-4-fsync-2.png">
+<meta property="og:image" content="http://yoursite.com/2018/04/18/磁盘IO在文件传输过程中的稳定控制方法/3-4-fsync-3.png">
+<meta property="og:image" content="http://yoursite.com/2018/04/18/磁盘IO在文件传输过程中的稳定控制方法/3-4-fsync-4.png">
+<meta property="og:image" content="http://yoursite.com/2018/04/18/磁盘IO在文件传输过程中的稳定控制方法/3-4-fsync-5.png">
+<meta property="og:image" content="http://yoursite.com/2018/04/18/磁盘IO在文件传输过程中的稳定控制方法/3-4-fsync-6.png">
+<meta property="og:image" content="http://yoursite.com/2018/04/18/磁盘IO在文件传输过程中的稳定控制方法/3-4-fsync-7.png">
+<meta property="og:image" content="http://yoursite.com/2018/04/18/磁盘IO在文件传输过程中的稳定控制方法/3-4-fsync-8.png">
+<meta property="og:image" content="http://yoursite.com/2018/04/18/磁盘IO在文件传输过程中的稳定控制方法/4-final-1.png">
+<meta property="og:image" content="http://yoursite.com/2018/04/18/磁盘IO在文件传输过程中的稳定控制方法/4-final-2.png">
+<meta property="og:image" content="http://yoursite.com/2018/04/18/磁盘IO在文件传输过程中的稳定控制方法/4-final-3.png">
+<meta property="og:image" content="http://yoursite.com/2018/04/18/磁盘IO在文件传输过程中的稳定控制方法/4-final-4.png">
+<meta property="og:updated_time" content="2018-04-20T03:02:45.000Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="磁盘IO在文件传输过程中的稳定控制优化">
 <meta name="twitter:description" content="问题的描述本地镜像在不同物理机之间的传输，这里是通过自研的工具rsc，包含rsc_client和rsc_server。 rsc_server对收到的数据的处理不当，对IO可能产生不理想的结果：（1）当Bps或者iops 过高时，可能使dm-0的util过高，甚至100%，影响上面虚机的IO；（2）当传输过程中Bps过低时，会使得传输镜像过慢，影响效率，甚至导致创建虚机失败。 dm-0是物理机上的数">
@@ -354,7 +374,41 @@
 <p>无法限制住磁盘的IO。</p>
 <p><img src="/2018/04/18/磁盘IO在文件传输过程中的稳定控制方法/3-1-limit-3.png" alt="image"></p>
 <p>原因：将cache刷到磁盘时，是由flush进程执行的，并不是rsc_server本身。所以考虑到将flush进程限速。</p>
-<h3 id="对flush-进程的IO限速"><a href="#对flush-进程的IO限速" class="headerlink" title="对flush 进程的IO限速"></a>对flush 进程的IO限速</h3><h3 id="每次write时都sync"><a href="#每次write时都sync" class="headerlink" title="每次write时都sync"></a>每次write时都sync</h3><h3 id="每收到10个64K的包，调用一次fsync"><a href="#每收到10个64K的包，调用一次fsync" class="headerlink" title="每收到10个64K的包，调用一次fsync"></a>每收到10个64K的包，调用一次fsync</h3><h2 id="最终方案"><a href="#最终方案" class="headerlink" title="最终方案"></a>最终方案</h2>
+<h3 id="对flush-进程的IO限速"><a href="#对flush-进程的IO限速" class="headerlink" title="对flush 进程的IO限速"></a>对flush 进程的IO限速</h3><p>把fulsh进程的PID加入tasks里，可以限制磁盘到40M/s。<br><img src="/2018/04/18/磁盘IO在文件传输过程中的稳定控制方法/3-2-flushlimit-1.png" alt="image"></p>
+<p><img src="/2018/04/18/磁盘IO在文件传输过程中的稳定控制方法/3-2-flushlimit-2.png" alt="image"></p>
+<p><img src="/2018/04/18/磁盘IO在文件传输过程中的稳定控制方法/3-2-flushlimit-3.png" alt="image"></p>
+<p>带来的问题，会影响所有通过flush来刷磁盘的操作：</p>
+<p>1 宿主机的磁盘dm-0上，其他会将数据写到cahe就返回的操作都受到影响，如jbd2服务。jbd2(journaling block device 2)是ext4文件系统的服务，可以完成数据备份和恢复。<br><img src="/2018/04/18/磁盘IO在文件传输过程中的稳定控制方法/3-2-flushlimit-4.png" alt="image"><br>2 虚机内部<br><img src="/2018/04/18/磁盘IO在文件传输过程中的稳定控制方法/3-2-flushlimit-5.png" alt="image"></p>
+<p><img src="/2018/04/18/磁盘IO在文件传输过程中的稳定控制方法/3-2-flushlimit-6.png" alt="image"></p>
+<h3 id="每次write时都sync"><a href="#每次write时都sync" class="headerlink" title="每次write时都sync"></a>每次write时都sync</h3><p>每次write都sync到磁盘，可以绕过从cache flush到磁盘的过程,也就不会产生flush过程中产生的IO过大的问题。<br><img src="/2018/04/18/磁盘IO在文件传输过程中的稳定控制方法/3-3-sync-1.png" alt="image"></p>
+<p>但每次write都sync带来写磁盘性能过低,落盘速度5M/s左右,util为98%~100%。<br><img src="/2018/04/18/磁盘IO在文件传输过程中的稳定控制方法/3-3-sync-2.png" alt="image"></p>
+<h3 id="每收到10个64K的包，调用一次fsync"><a href="#每收到10个64K的包，调用一次fsync" class="headerlink" title="每收到10个64K的包，调用一次fsync"></a>每收到10个64K的包，调用一次fsync</h3><p>考虑到每次write都sync，影响磁盘性能，考虑减少sync的次数。改成累积到一定数量的包后，再调用fsync的方案。</p>
+<p>172.27.162.108 –&gt; 172.27.172.226( V3 )<br><img src="/2018/04/18/磁盘IO在文件传输过程中的稳定控制方法/3-4-fsync-1.png" alt="image"></p>
+<p><img src="/2018/04/18/磁盘IO在文件传输过程中的稳定控制方法/3-4-fsync-2.png" alt="image"></p>
+<p>172.28.160.151–&gt; 172.28.161.86( V4 )<br><img src="/2018/04/18/磁盘IO在文件传输过程中的稳定控制方法/3-4-fsync-3.png" alt="image"></p>
+<p><img src="/2018/04/18/磁盘IO在文件传输过程中的稳定控制方法/3-4-fsync-4.png" alt="image"></p>
+<p>可以结果：</p>
+<p>（1）写入IO得到很大提高，在30M/s ~ 200M/s之间，受宿主机影响较大；</p>
+<p>（2）传输过程中，IO一直很稳定，util保持在40%或70%，也没有看到flush进程的出现，说明IO落地是由fsync执行；</p>
+<p>  使标准镜像（小于40G）都能在20分钟内传完，扩容过的镜像也不影响虚机的创建。</p>
+<p>小插曲：</p>
+<p>前面由于代码bug， 在每第10个64K包sync了n次。n为该64K的包，在跳过0的空洞后，拆成的小包的个数。sync次数过多导致IO性能过低，测试数据为6M/s左右。</p>
+<p>172.28.160.151–&gt; 172.28.161.86（V4）</p>
+<p><img src="/2018/04/18/磁盘IO在文件传输过程中的稳定控制方法/3-4-fsync-5.png" alt="image"></p>
+<p>strace的查看结果：</p>
+<p>strace -T -p 21712( rsc_server进程PID ) -o test_rsc_server.txt</p>
+<p><img src="/2018/04/18/磁盘IO在文件传输过程中的稳定控制方法/3-4-fsync-6.png" alt="image"></p>
+<p>IO性能过低。<br><img src="/2018/04/18/磁盘IO在文件传输过程中的稳定控制方法/3-4-fsync-7.png" alt="image"></p>
+<p><img src="/2018/04/18/磁盘IO在文件传输过程中的稳定控制方法/3-4-fsync-8.png" alt="image"></p>
+<h2 id="最终方案"><a href="#最终方案" class="headerlink" title="最终方案"></a>最终方案</h2><p>“每收到10个64K的包，调用一次fsync”，由于宿主机的磁盘性能不同，不排除依然可能会有IO打满的情况，因为此时cache到磁盘的过程，是由rsc_server自己控制的，所以可以通过cgroup对rsc_server限速。</p>
+<p>172.27.162.108 –&gt; 172.27.172.226( V3 )</p>
+<p>限速： rsc_server写入dm-0的 Bps=60M/s。<br><img src="/2018/04/18/磁盘IO在文件传输过程中的稳定控制方法/4-final-1.png" alt="image"></p>
+<p><img src="/2018/04/18/磁盘IO在文件传输过程中的稳定控制方法/4-final-2.png" alt="image"></p>
+<p>结果：rsc_server的落盘速度稳定在60M/s。</p>
+<p><img src="/2018/04/18/磁盘IO在文件传输过程中的稳定控制方法/4-final-3.png" alt="image"></p>
+<p><img src="/2018/04/18/磁盘IO在文件传输过程中的稳定控制方法/4-final-4.png" alt="image"></p>
+<p>因此最终的方案是“fsync + cgroup限速”。</p>
+
       
     </div>
     
