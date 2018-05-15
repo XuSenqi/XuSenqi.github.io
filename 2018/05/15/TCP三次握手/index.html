@@ -93,7 +93,7 @@
 <meta property="og:image" content="http://yoursite.com/2018/05/15/TCP三次握手/第一次握手抓包.jpg">
 <meta property="og:image" content="http://yoursite.com/2018/05/15/TCP三次握手/第一次握手抓包.jpg">
 <meta property="og:image" content="http://yoursite.com/2018/05/15/TCP三次握手/第三次握手抓包.jpg">
-<meta property="og:updated_time" content="2018-05-15T11:51:43.000Z">
+<meta property="og:updated_time" content="2018-05-15T12:08:48.000Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="TCP三次握手">
 <meta name="twitter:description" content="TCP三次握手/四次挥手的文章看过太多，但有些不太正确。还是决定自己写一篇，也算是对自己知识和碰到的问题的总结。 tcp的主要特点 面向连接 点到点 可靠交付 全双工通信 面向字节流  其中核心的特点：tcp是可以可靠传输协议，它的其他所有特点都为这个可靠传输服务。 如何保证可靠传输tcp在传输过程中都有一个ack，接收方通过ack告诉发送方收到那些包了。这样发送方能知道有没有丢包，进而确定重传。">
@@ -412,8 +412,22 @@
 <h3 id="查看第一次握手的详情"><a href="#查看第一次握手的详情" class="headerlink" title="查看第一次握手的详情"></a>查看第一次握手的详情</h3><p><img src="/2018/05/15/TCP三次握手/第一次握手抓包.jpg" alt="image"></p>
 <h3 id="查看第二次握手的详情"><a href="#查看第二次握手的详情" class="headerlink" title="查看第二次握手的详情"></a>查看第二次握手的详情</h3><p><img src="/2018/05/15/TCP三次握手/第一次握手抓包.jpg" alt="image"></p>
 <h3 id="查看第三次握手的详情"><a href="#查看第三次握手的详情" class="headerlink" title="查看第三次握手的详情"></a>查看第三次握手的详情</h3><p><img src="/2018/05/15/TCP三次握手/第三次握手抓包.jpg" alt="image"></p>
+<h3 id="为什么要三次握手？"><a href="#为什么要三次握手？" class="headerlink" title="为什么要三次握手？"></a>为什么要三次握手？</h3><ul>
+<li>如果只有一次握手，Client不能确定与Server的单向连接，更加不能确定Server与Client的单向连接；</li>
+<li>如果只有两次握手，Client确定与Server的单向连接，但是Server不能确定与Client的单向连接；</li>
+<li><p>只有三次握手，Client与Server才能相互确认双向连接，实现双工数据传输。</p>
+</li>
+<li><p>谢希仁版《计算机网络》中的例子是这样的，“已失效的连接请求报文段”的产生在这样一种情况下：client发出的第一个连接请求报文段并没有丢失，而是在某个网络结点长时间的滞留了，以致延误到连接释放以后的某个时间才到达server。本来这是一个早已失效的报文段。但server收到此失效的连接请求报文段后，就误认为是client再次发出的一个新的连接请求。于是就向client发出确认报文段，同意建立连接。假设不采用“三次握手”，那么只要server发出确认，新的连接就建立了。由于现在client并没有发出建立连接的请求，因此不会理睬server的确认，也不会向server发送数据。但server却以为新的运输连接已经建立，并一直等待client发来数据。这样，server的很多资源就白白浪费掉了。采用“三次握手”的办法可以防止上述现象发生。例如刚才那种情况，client不会向server的确认发出确认。server由于收不到确认，就知道client并没有要求建立连接。</p>
+</li>
+</ul>
+<h3 id="握手中断"><a href="#握手中断" class="headerlink" title="握手中断"></a>握手中断</h3><ul>
+<li>第一次握手中断: A发送给B的SYN中断，A会周期性超时重传，直到A收到B的确认响应。</li>
+<li>第二次握手中断: B发送给A的SYN、ACK中断，B会周期性超时重传，直到B收到A的确认响应。</li>
+<li>第三次握手中断: A发送给B的ACK中断，A不会重传。超时后，B会重传SYN信号(即回到第二次握手)，直到B收到A的确认响应。</li>
+</ul>
 <h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><ul>
 <li><a href="https://www.jianshu.com/p/448f37ed29fe" target="_blank" rel="noopener">https://www.jianshu.com/p/448f37ed29fe</a></li>
+<li><a href="https://www.jianshu.com/p/a4beee06220c" target="_blank" rel="noopener">https://www.jianshu.com/p/a4beee06220c</a></li>
 <li><a href="http://jm.taobao.org/2017/06/08/20170608/" target="_blank" rel="noopener">http://jm.taobao.org/2017/06/08/20170608/</a></li>
 </ul>
 
@@ -446,8 +460,8 @@
         <div class="post-nav">
           <div class="post-nav-next post-nav-item">
             
-              <a href="/2018/04/18/磁盘IO在文件传输过程中的稳定控制方法/" rel="next" title="磁盘IO在文件传输过程中的稳定控制优化">
-                <i class="fa fa-chevron-left"></i> 磁盘IO在文件传输过程中的稳定控制优化
+              <a href="/2018/05/15/TCP四次挥手/" rel="next" title="TCP四次挥手">
+                <i class="fa fa-chevron-left"></i> TCP四次挥手
               </a>
             
           </div>
@@ -531,7 +545,7 @@
               
                 <a href="/archives">
               
-                  <span class="site-state-item-count">3</span>
+                  <span class="site-state-item-count">4</span>
                   <span class="site-state-item-name">日志</span>
                 </a>
               </div>
@@ -596,7 +610,7 @@
             
 
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#tcp的主要特点"><span class="nav-number">1.</span> <span class="nav-text">tcp的主要特点</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#如何保证可靠传输"><span class="nav-number">2.</span> <span class="nav-text">如何保证可靠传输</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#tcp三次握手"><span class="nav-number">3.</span> <span class="nav-text">tcp三次握手</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#tcp首部简介"><span class="nav-number">4.</span> <span class="nav-text">tcp首部简介</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#抓包实践"><span class="nav-number">5.</span> <span class="nav-text">抓包实践</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#查看第一次握手的详情"><span class="nav-number">5.1.</span> <span class="nav-text">查看第一次握手的详情</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#查看第二次握手的详情"><span class="nav-number">5.2.</span> <span class="nav-text">查看第二次握手的详情</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#查看第三次握手的详情"><span class="nav-number">5.3.</span> <span class="nav-text">查看第三次握手的详情</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参考"><span class="nav-number">6.</span> <span class="nav-text">参考</span></a></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#tcp的主要特点"><span class="nav-number">1.</span> <span class="nav-text">tcp的主要特点</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#如何保证可靠传输"><span class="nav-number">2.</span> <span class="nav-text">如何保证可靠传输</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#tcp三次握手"><span class="nav-number">3.</span> <span class="nav-text">tcp三次握手</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#tcp首部简介"><span class="nav-number">4.</span> <span class="nav-text">tcp首部简介</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#抓包实践"><span class="nav-number">5.</span> <span class="nav-text">抓包实践</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#查看第一次握手的详情"><span class="nav-number">5.1.</span> <span class="nav-text">查看第一次握手的详情</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#查看第二次握手的详情"><span class="nav-number">5.2.</span> <span class="nav-text">查看第二次握手的详情</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#查看第三次握手的详情"><span class="nav-number">5.3.</span> <span class="nav-text">查看第三次握手的详情</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#为什么要三次握手？"><span class="nav-number">5.4.</span> <span class="nav-text">为什么要三次握手？</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#握手中断"><span class="nav-number">5.5.</span> <span class="nav-text">握手中断</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参考"><span class="nav-number">6.</span> <span class="nav-text">参考</span></a></li></ol></div>
             
 
           </div>
