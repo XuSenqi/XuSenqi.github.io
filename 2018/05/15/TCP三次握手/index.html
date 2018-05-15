@@ -93,7 +93,7 @@
 <meta property="og:image" content="http://yoursite.com/2018/05/15/TCP三次握手/第一次握手抓包.jpg">
 <meta property="og:image" content="http://yoursite.com/2018/05/15/TCP三次握手/第一次握手抓包.jpg">
 <meta property="og:image" content="http://yoursite.com/2018/05/15/TCP三次握手/第三次握手抓包.jpg">
-<meta property="og:updated_time" content="2018-05-15T08:47:06.000Z">
+<meta property="og:updated_time" content="2018-05-15T11:51:43.000Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="TCP三次握手">
 <meta name="twitter:description" content="TCP三次握手/四次挥手的文章看过太多，但有些不太正确。还是决定自己写一篇，也算是对自己知识和碰到的问题的总结。 tcp的主要特点 面向连接 点到点 可靠交付 全双工通信 面向字节流  其中核心的特点：tcp是可以可靠传输协议，它的其他所有特点都为这个可靠传输服务。 如何保证可靠传输tcp在传输过程中都有一个ack，接收方通过ack告诉发送方收到那些包了。这样发送方能知道有没有丢包，进而确定重传。">
@@ -371,9 +371,12 @@
 <h2 id="如何保证可靠传输"><a href="#如何保证可靠传输" class="headerlink" title="如何保证可靠传输"></a>如何保证可靠传输</h2><p>tcp在传输过程中都有一个ack，接收方通过ack告诉发送方收到那些包了。这样发送方能知道有没有丢包，进而确定重传。</p>
 <h2 id="tcp三次握手"><a href="#tcp三次握手" class="headerlink" title="tcp三次握手"></a>tcp三次握手</h2><p><img src="/2018/05/15/TCP三次握手/三次握手.png" alt="image"></p>
 <ul>
-<li>第一步：client发送连接请求报文段，将SYN位置为1，Seq(Sequence Number)为X(由操作系统动态随机选取一个32位长的序列号)。然后，客户端进入SYN_SEND状态，等待服务器的确认。</li>
-<li>第二步：server收到client的SYN报文段。需要对这个SYN报文段进行确认，设置Ack(Acknowledgment Number)设置为X(第一次握手中的Seq的值)+1。同时，自己还要发送SYN请求信息，将SYN位置为1，Seq(Sequence Number)为Y(由操作系统动态随机选取一个32位长的序列号)。服务器端将上述所有信息一并发送给客户端，此时服务器进入SYN_RECV状态。</li>
-<li>第三步：client收到sever的SYN+ACK后，回复server一个ACK。将Ack(Acknowledgment Number)设置为Y(第二次握手中的Seq的值)+1，Seq(Sequence Number)设置为X+1(第二次握手中的Ack(Acknowledgment Number)值)，向服务器发送ACK报文段，这个报文段发送完毕以后，客户端和服务器端都进入ESTABLISHED状态，完成TCP三次握手。</li>
+<li><p>第一步：client发送连接请求报文段，将SYN位置为1，Seq(Sequence Number)为X(由操作系统动态随机选取一个32位长的序列号)。然后，客户端进入SYN_SEND状态，等待服务器的确认。</p>
+</li>
+<li><p>第二步：server收到client的SYN报文段。需要对这个SYN报文段进行确认，设置Ack(Acknowledgment Number)设置为X(第一次握手中的Seq的值)+1。同时，自己还要发送SYN请求信息，将SYN位置为1，Seq(Sequence Number)为Y(由操作系统动态随机选取一个32位长的序列号)。服务器端将上述所有信息一并发送给客户端，此时服务器进入SYN_RECV状态。</p>
+</li>
+<li><p>第三步：client收到sever的SYN+ACK后，回复server一个ACK。将Ack(Acknowledgment Number)设置为Y(第二次握手中的Seq的值)+1，Seq(Sequence Number)设置为X+1(第二次握手中的Ack(Acknowledgment Number)值)，向服务器发送ACK报文段，这个报文段发送完毕以后，客户端和服务器端都进入ESTABLISHED状态，完成TCP三次握手。</p>
+</li>
 </ul>
 <h2 id="tcp首部简介"><a href="#tcp首部简介" class="headerlink" title="tcp首部简介"></a>tcp首部简介</h2><p>这里先介绍下TCP首部的相关知识。三次握手相关的是主要是ACK和SYN这两个标志比特位。</p>
 <p><img src="/2018/05/15/TCP三次握手/TCP首部.png" alt="image"></p>
