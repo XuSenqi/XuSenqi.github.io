@@ -356,8 +356,7 @@
         
           
             <p>TCP三次握手/四次挥手的文章看过太多，但有些不太正确。还是决定自己写一篇，也算是对自己知识和碰到的问题的总结。</p>
-<p>##tcp的主要特点</p>
-<ul>
+<h2 id="tcp的主要特点"><a href="#tcp的主要特点" class="headerlink" title="tcp的主要特点"></a>tcp的主要特点</h2><ul>
 <li>面向连接</li>
 <li>点到点</li>
 <li>可靠交付</li>
@@ -365,15 +364,16 @@
 <li>面向字节流</li>
 </ul>
 <p>其中核心的特点：tcp是可以可靠传输协议，它的其他所有特点都为这个可靠传输服务。</p>
-<p>##如何保证可靠传输</p>
-<p>tcp在传输过程中都有一个ack，接收方通过ack告诉发送方收到那些包了。这样发送方能知道有没有丢包，进而确定重传。</p>
-<p>##tcp三次握手</p>
-<p>来看一个pb请求的三次握手过程<br><img src="/2018/05/15/TCP三次握手/三次握手.jpg" alt="image"></p>
+<h2 id="如何保证可靠传输"><a href="#如何保证可靠传输" class="headerlink" title="如何保证可靠传输"></a>如何保证可靠传输</h2><p>tcp在传输过程中都有一个ack，接收方通过ack告诉发送方收到那些包了。这样发送方能知道有没有丢包，进而确定重传。</p>
+<h2 id="tcp三次握手"><a href="#tcp三次握手" class="headerlink" title="tcp三次握手"></a>tcp三次握手</h2><p><img src="/2018/05/15/TCP三次握手/三次握手.png" alt="image"></p>
 <ul>
-<li>第一步：client 发送 syn 到server 发起握手；</li>
-<li>第二步：server 收到 syn后回复syn+ack给client；</li>
-<li>第三步：client 收到syn+ack后，回复server一个ack表示收到了server的syn+ack（此时client的41309端口的连接已经是established）</li>
+<li>第一步：client发送连接请求报文段，将SYN位置为1，Seq(Sequence Number)为X(由操作系统动态随机选取一个32位长的序列号)。然后，客户端进入SYN_SEND状态，等待服务器的确认。</li>
+<li>第二步：server收到client的SYN报文段。需要对这个SYN报文段进行确认，设置Ack(Acknowledgment Number)设置为X(第一次握手中的Seq的值)+1。同时，自己还要发送SYN请求信息，将SYN位置为1，Seq(Sequence Number)为Y(由操作系统动态随机选取一个32位长的序列号)。服务器端将上述所有信息一并发送给客户端，此时服务器进入SYN_RECV状态。</li>
+<li>第三步：client收到sever的SYN+ACK后，回复server一个ACK。将Ack(Acknowledgment Number)设置为Y(第二次握手中的Seq的值)+1，Seq(Sequence Number)设置为X+1(第二次握手中的Ack(Acknowledgment Number)值)，向服务器发送ACK报文段，这个报文段发送完毕以后，客户端和服务器端都进入ESTABLISHED状态，完成TCP三次握手。</li>
 </ul>
+<h2 id="抓包实践"><a href="#抓包实践" class="headerlink" title="抓包实践"></a>抓包实践</h2><p>来看一个pb请求的三次握手过程</p>
+<p><img src="/2018/05/15/TCP三次握手/三次握手抓包.jpg" alt="image"></p>
+<p>client: 172.17.1.217  server: 172.27.247.168</p>
 <p>握手的核心目的是告知对方seq（client的初始seq，server的初始seq），对方回复ack（收到的seq+包的大小），这样发送端就知道有没有丢包了。</p>
 <p>握手的次要目的是告知和协商一些信息。</p>
 <ul>
@@ -382,8 +382,10 @@
 <li>WS–窗口计算指数（有点复杂的话先不用管）</li>
 </ul>
 <p><strong>这就是tcp为什么要握手建立连接，就是为了解决tcp的可靠传输。</strong></p>
-<p>##参考</p>
-<ul>
+<h3 id="查看第一次握手的详情"><a href="#查看第一次握手的详情" class="headerlink" title="查看第一次握手的详情"></a>查看第一次握手的详情</h3><p><img src="/2018/05/15/TCP三次握手/第一次握手抓包.jpg" alt="image"></p>
+<h3 id="查看第二次握手的详情"><a href="#查看第二次握手的详情" class="headerlink" title="查看第二次握手的详情"></a>查看第二次握手的详情</h3><p><img src="/2018/05/15/TCP三次握手/第一次握手抓包.jpg" alt="image"></p>
+<h3 id="查看第三次握手的详情"><a href="#查看第三次握手的详情" class="headerlink" title="查看第三次握手的详情"></a>查看第三次握手的详情</h3><p><img src="/2018/05/15/TCP三次握手/第三次握手抓包.jpg" alt="image"></p>
+<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><ul>
 <li><a href="https://www.jianshu.com/p/448f37ed29fe" target="_blank" rel="noopener">https://www.jianshu.com/p/448f37ed29fe</a></li>
 <li><a href="http://jm.taobao.org/2017/06/08/20170608/" target="_blank" rel="noopener">http://jm.taobao.org/2017/06/08/20170608/</a></li>
 </ul>
