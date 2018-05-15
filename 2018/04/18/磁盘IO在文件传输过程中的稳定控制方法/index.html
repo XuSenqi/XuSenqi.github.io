@@ -68,7 +68,7 @@
 
 
 
-  <meta name="keywords" content="Hexo, NexT" />
+  <meta name="keywords" content="限速,cgroup,磁盘IO," />
 
 
 
@@ -80,6 +80,7 @@
 
 
 <meta name="description" content="问题的描述本地镜像在不同物理机之间的传输，这里是通过自研的工具rsc，包含rsc_client和rsc_server。 rsc_server对收到的数据的处理不当，对IO可能产生不理想的结果：（1）当Bps或者iops 过高时，可能使dm-0的util过高，甚至100%，影响上面虚机的IO；（2）当传输过程中Bps过低时，会使得传输镜像过慢，影响效率，甚至导致创建虚机失败。 dm-0是物理机上的数">
+<meta name="keywords" content="限速,cgroup,磁盘IO">
 <meta property="og:type" content="article">
 <meta property="og:title" content="磁盘IO在文件传输过程中的稳定控制优化">
 <meta property="og:url" content="http://yoursite.com/2018/04/18/磁盘IO在文件传输过程中的稳定控制方法/index.html">
@@ -112,7 +113,7 @@
 <meta property="og:image" content="http://yoursite.com/2018/04/18/磁盘IO在文件传输过程中的稳定控制方法/4-final-2.png">
 <meta property="og:image" content="http://yoursite.com/2018/04/18/磁盘IO在文件传输过程中的稳定控制方法/4-final-3.png">
 <meta property="og:image" content="http://yoursite.com/2018/04/18/磁盘IO在文件传输过程中的稳定控制方法/4-final-4.png">
-<meta property="og:updated_time" content="2018-04-20T06:29:43.000Z">
+<meta property="og:updated_time" content="2018-05-15T08:55:21.000Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="磁盘IO在文件传输过程中的稳定控制优化">
 <meta name="twitter:description" content="问题的描述本地镜像在不同物理机之间的传输，这里是通过自研的工具rsc，包含rsc_client和rsc_server。 rsc_server对收到的数据的处理不当，对IO可能产生不理想的结果：（1）当Bps或者iops 过高时，可能使dm-0的util过高，甚至100%，影响上面虚机的IO；（2）当传输过程中Bps过低时，会使得传输镜像过慢，影响效率，甚至导致创建虚机失败。 dm-0是物理机上的数">
@@ -329,6 +330,28 @@
           </span>
 
           
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/磁盘IO/" itemprop="url" rel="index">
+                    <span itemprop="name">磁盘IO</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
 
           
             
@@ -422,6 +445,16 @@
     
 
     <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/限速/" rel="tag"># 限速</a>
+          
+            <a href="/tags/cgroup/" rel="tag"># cgroup</a>
+          
+            <a href="/tags/磁盘IO/" rel="tag"># 磁盘IO</a>
+          
+        </div>
       
 
       
@@ -532,7 +565,7 @@
               
               <div class="site-state-item site-state-categories">
                 <a href="/categories/index.html">
-                  <span class="site-state-item-count">1</span>
+                  <span class="site-state-item-count">2</span>
                   <span class="site-state-item-name">分类</span>
                 </a>
               </div>
@@ -543,7 +576,7 @@
               
               <div class="site-state-item site-state-tags">
                 <a href="/tags/index.html">
-                  <span class="site-state-item-count">1</span>
+                  <span class="site-state-item-count">4</span>
                   <span class="site-state-item-name">标签</span>
                 </a>
               </div>
