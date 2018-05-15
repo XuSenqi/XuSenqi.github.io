@@ -79,18 +79,20 @@
 
 
 
-<meta name="description" content="问题的描述本地镜像在不同物理机之间的传输，这里是通过自研的工具rsc，包含rsc_client和rsc_server。 rsc_server对收到的数据的处理不当，对IO可能产生不理想的结果：（1）当Bps或者iops 过高时，可能使dm-0的util过高，甚至100%，影响上面虚机的IO；（2）当传输过程中Bps过低时，会使得传输镜像过慢，影响效率，甚至导致创建虚机失败。 dm-0是物理机上的数">
+<meta name="description" content="TCP三次握手/四次挥手的文章看过太多，但有些不太正确。还是决定自己写一篇，也算是对自己知识和碰到的问题的总结。 ##tcp的主要特点  面向连接 点到点 可靠交付 全双工通信 面向字节流  其中核心的特点：tcp是可以可靠传输协议，它的其他所有特点都为这个可靠传输服务。 ##如何保证可靠传输 tcp在传输过程中都有一个ack，接收方通过ack告诉发送方收到那些包了。这样发送方能知道有没有丢包，进">
 <meta name="keywords" content="TCP">
 <meta property="og:type" content="article">
 <meta property="og:title" content="TCP三次握手">
 <meta property="og:url" content="http://yoursite.com/2018/05/15/TCP三次握手/index.html">
 <meta property="og:site_name" content="许森琪的博客">
-<meta property="og:description" content="问题的描述本地镜像在不同物理机之间的传输，这里是通过自研的工具rsc，包含rsc_client和rsc_server。 rsc_server对收到的数据的处理不当，对IO可能产生不理想的结果：（1）当Bps或者iops 过高时，可能使dm-0的util过高，甚至100%，影响上面虚机的IO；（2）当传输过程中Bps过低时，会使得传输镜像过慢，影响效率，甚至导致创建虚机失败。 dm-0是物理机上的数">
+<meta property="og:description" content="TCP三次握手/四次挥手的文章看过太多，但有些不太正确。还是决定自己写一篇，也算是对自己知识和碰到的问题的总结。 ##tcp的主要特点  面向连接 点到点 可靠交付 全双工通信 面向字节流  其中核心的特点：tcp是可以可靠传输协议，它的其他所有特点都为这个可靠传输服务。 ##如何保证可靠传输 tcp在传输过程中都有一个ack，接收方通过ack告诉发送方收到那些包了。这样发送方能知道有没有丢包，进">
 <meta property="og:locale" content="zh-Hans">
-<meta property="og:updated_time" content="2018-05-15T03:32:17.000Z">
+<meta property="og:image" content="http://yoursite.com/2018/05/15/TCP三次握手/三次握手.jpg">
+<meta property="og:updated_time" content="2018-05-15T04:16:18.000Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="TCP三次握手">
-<meta name="twitter:description" content="问题的描述本地镜像在不同物理机之间的传输，这里是通过自研的工具rsc，包含rsc_client和rsc_server。 rsc_server对收到的数据的处理不当，对IO可能产生不理想的结果：（1）当Bps或者iops 过高时，可能使dm-0的util过高，甚至100%，影响上面虚机的IO；（2）当传输过程中Bps过低时，会使得传输镜像过慢，影响效率，甚至导致创建虚机失败。 dm-0是物理机上的数">
+<meta name="twitter:description" content="TCP三次握手/四次挥手的文章看过太多，但有些不太正确。还是决定自己写一篇，也算是对自己知识和碰到的问题的总结。 ##tcp的主要特点  面向连接 点到点 可靠交付 全双工通信 面向字节流  其中核心的特点：tcp是可以可靠传输协议，它的其他所有特点都为这个可靠传输服务。 ##如何保证可靠传输 tcp在传输过程中都有一个ack，接收方通过ack告诉发送方收到那些包了。这样发送方能知道有没有丢包，进">
+<meta name="twitter:image" content="http://yoursite.com/2018/05/15/TCP三次握手/三次握手.jpg">
 
 
 
@@ -352,10 +354,38 @@
       
 
       
-        <h2 id="问题的描述"><a href="#问题的描述" class="headerlink" title="问题的描述"></a>问题的描述</h2><p>本地镜像在不同物理机之间的传输，这里是通过自研的工具rsc，包含rsc_client和rsc_server。</p>
-<p>rsc_server对收到的数据的处理不当，对IO可能产生不理想的结果：<br>（1）当Bps或者iops 过高时，可能使dm-0的util过高，甚至100%，影响上面虚机的IO；<br>（2）当传输过程中Bps过低时，会使得传输镜像过慢，影响效率，甚至导致创建虚机失败。</p>
-<p>dm-0是物理机上的数据盘，有通过多快盘做raid。</p>
-<p>以下在rsc_server的IO优化过程中，对不同方案测试结果的比较和分析。</p>
+        <p>TCP三次握手/四次挥手的文章看过太多，但有些不太正确。还是决定自己写一篇，也算是对自己知识和碰到的问题的总结。</p>
+<p>##tcp的主要特点</p>
+<ul>
+<li>面向连接</li>
+<li>点到点</li>
+<li>可靠交付</li>
+<li>全双工通信</li>
+<li>面向字节流</li>
+</ul>
+<p>其中核心的特点：tcp是可以可靠传输协议，它的其他所有特点都为这个可靠传输服务。</p>
+<p>##如何保证可靠传输</p>
+<p>tcp在传输过程中都有一个ack，接收方通过ack告诉发送方收到那些包了。这样发送方能知道有没有丢包，进而确定重传。</p>
+<p>##tcp三次握手</p>
+<p>来看一个pb请求的三次握手过程<br><img src="/2018/05/15/TCP三次握手/三次握手.jpg" alt="image"></p>
+<ul>
+<li>第一步：client 发送 syn 到server 发起握手；</li>
+<li>第二步：server 收到 syn后回复syn+ack给client；</li>
+<li>第三步：client 收到syn+ack后，回复server一个ack表示收到了server的syn+ack（此时client的41309端口的连接已经是established）</li>
+</ul>
+<p>握手的核心目的是告知对方seq（client的初始seq，server的初始seq），对方回复ack（收到的seq+包的大小），这样发送端就知道有没有丢包了。</p>
+<p>握手的次要目的是告知和协商一些信息。</p>
+<ul>
+<li>MSS–最大传输包</li>
+<li>SACK_PERM–是否支持Selective ack(用户优化重传效率）</li>
+<li>WS–窗口计算指数（有点复杂的话先不用管）</li>
+</ul>
+<p><strong>这就是tcp为什么要握手建立连接，就是为了解决tcp的可靠传输。</strong></p>
+<p>##参考</p>
+<ul>
+<li><a href="https://www.jianshu.com/p/448f37ed29fe" target="_blank" rel="noopener">https://www.jianshu.com/p/448f37ed29fe</a></li>
+<li><a href="http://jm.taobao.org/2017/06/08/20170608/" target="_blank" rel="noopener">http://jm.taobao.org/2017/06/08/20170608/</a></li>
+</ul>
 
       
     </div>
@@ -446,17 +476,8 @@
       
 
       
-        <ul class="sidebar-nav motion-element">
-          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
-            文章目录
-          </li>
-          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
-            站点概览
-          </li>
-        </ul>
-      
 
-      <section class="site-overview-wrap sidebar-panel">
+      <section class="site-overview-wrap sidebar-panel sidebar-panel-active">
         <div class="site-overview">
           <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
             
@@ -526,22 +547,6 @@
         </div>
       </section>
 
-      
-      <!--noindex-->
-        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
-          <div class="post-toc">
-
-            
-              
-            
-
-            
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#问题的描述"><span class="nav-number">1.</span> <span class="nav-text">问题的描述</span></a></li></ol></div>
-            
-
-          </div>
-        </section>
-      <!--/noindex-->
       
 
       
