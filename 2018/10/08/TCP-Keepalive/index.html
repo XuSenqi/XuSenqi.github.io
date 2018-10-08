@@ -87,7 +87,7 @@
 <meta property="og:site_name" content="许森琪的博客">
 <meta property="og:description" content="TCP Keepalive的作用链接建立之后，如果应用程序或者上层协议一直不发送数据，或者隔很长时间才发送一次数据，当链接很久没有数据报文传输时如何去确定对方还在线，到底是掉线了还是确实没有数据传输，链接还需不需要保持，这种情况在TCP协议设计中是需要考虑到的。  TCP协议通过一种巧妙的方式去解决这个问题，当超过一段时间之后，TCP自动发送一个数据为空的报文给对方，如果对方回应了这个报文，说明对">
 <meta property="og:locale" content="zh-Hans">
-<meta property="og:updated_time" content="2018-10-08T08:33:33.000Z">
+<meta property="og:updated_time" content="2018-10-08T08:36:23.000Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="TCP Keepalive">
 <meta name="twitter:description" content="TCP Keepalive的作用链接建立之后，如果应用程序或者上层协议一直不发送数据，或者隔很长时间才发送一次数据，当链接很久没有数据报文传输时如何去确定对方还在线，到底是掉线了还是确实没有数据传输，链接还需不需要保持，这种情况在TCP协议设计中是需要考虑到的。  TCP协议通过一种巧妙的方式去解决这个问题，当超过一段时间之后，TCP自动发送一个数据为空的报文给对方，如果对方回应了这个报文，说明对">
@@ -354,6 +354,15 @@
       
         <h2 id="TCP-Keepalive的作用"><a href="#TCP-Keepalive的作用" class="headerlink" title="TCP Keepalive的作用"></a>TCP Keepalive的作用</h2><p>链接建立之后，如果应用程序或者上层协议一直不发送数据，或者隔很长时间才发送一次数据，当链接很久没有数据报文传输时如何去确定对方还在线，到底是掉线了还是确实没有数据传输，链接还需不需要保持，这种情况在TCP协议设计中是需要考虑到的。 </p>
 <p>TCP协议通过一种巧妙的方式去解决这个问题，当超过一段时间之后，TCP自动发送一个数据为空的报文给对方，如果对方回应了这个报文，说明对方还在线，链接可以继续保持，如果对方没有报文返回，并且重试了多次之后则认为链接丢失，没有必要保持链接。 </p>
+<h2 id="TCP-Keepalive的具体处理"><a href="#TCP-Keepalive的具体处理" class="headerlink" title="TCP Keepalive的具体处理"></a>TCP Keepalive的具体处理</h2><p>对于面向连接的TCP socket,在实际应用中通常都要检测对端是否处于连接中,连接端口分两种情况:</p>
+<p>1、连接正常关闭,调用close() shutdown()连接优雅关闭,send与recv立马返回错误,select返回SOCK_ERR;</p>
+<p>2、连接的对端异常关闭,比如网络断掉,突然断电.</p>
+<p>对于第二种情况,判断连接是否断开的方法有一下几种:</p>
+<p>1、自己编写心跳包程序,简单的说就是自己的程序加入一条线程,定时向对端发送数据包,查看是否有ACK,根据ACK的返回情况来管理连接。此方法比较通用,一般使用业务层心跳处理,灵活可控,但改变了现有的协议;</p>
+<p>2、使用TCP的keepalive机制,UNIX网络编程不推荐使用SO_KEEPALIVE来做心跳检测(为什么??)。<br>keepalive原理:TCP内嵌有心跳包,以服务端为例,当server检测到超过一定时间(/proc/sys/net/ipv4/tcp_keepalive_time 7200 即2小时)没有数据传输,那么会向client端发送一个keepalive packet,此时client端有三种反应:</p>
+<p>1、client端连接正常,返回一个ACK.server端收到ACK后重置计时器,在2小时后在发送探测.如果2小时内连接上有数据传输,那么在该时间的基础上向后推延2小时发送探测包;</p>
+<p>2、客户端异常关闭,或网络断开。client无响应,server收不到ACK,在一定时间(/proc/sys/net/ipv4/tcp_keepalive_intvl 75 即75秒)后重发keepalive packet, 并且重发一定次数(/proc/sys/net/ipv4/tcp_keepalive_probes 9 即9次);</p>
+<p>3、客户端曾经崩溃,但已经重启.server收到的探测响应是一个复位,server端终止连接。</p>
 <h2 id="注意和-HTTP的Keep-Alive区别"><a href="#注意和-HTTP的Keep-Alive区别" class="headerlink" title="注意和 HTTP的Keep-Alive区别"></a>注意和 HTTP的Keep-Alive区别</h2><p>HTTP协议的Keep-Alive意图在于连接复用，同一个连接上串行方式传递请求-响应数据</p>
 <p>TCP的keepalive机制意图在于保活、心跳，检测连接错误。</p>
 <h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><p><a href="https://blog.csdn.net/callinglove/article/details/38380673" target="_blank" rel="noopener">Linux SO_KEEPALIVE属性,心跳</a></p>
@@ -544,7 +553,7 @@
             
 
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#TCP-Keepalive的作用"><span class="nav-number">1.</span> <span class="nav-text">TCP Keepalive的作用</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#注意和-HTTP的Keep-Alive区别"><span class="nav-number">2.</span> <span class="nav-text">注意和 HTTP的Keep-Alive区别</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参考"><span class="nav-number">3.</span> <span class="nav-text">参考</span></a></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#TCP-Keepalive的作用"><span class="nav-number">1.</span> <span class="nav-text">TCP Keepalive的作用</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#TCP-Keepalive的具体处理"><span class="nav-number">2.</span> <span class="nav-text">TCP Keepalive的具体处理</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#注意和-HTTP的Keep-Alive区别"><span class="nav-number">3.</span> <span class="nav-text">注意和 HTTP的Keep-Alive区别</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参考"><span class="nav-number">4.</span> <span class="nav-text">参考</span></a></li></ol></div>
             
 
           </div>
