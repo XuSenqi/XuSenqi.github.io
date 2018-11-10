@@ -94,7 +94,7 @@
 <meta property="og:image" content="http://yoursite.com/2018/11/10/文件已删除空间未释放的例子/5_lsof.png">
 <meta property="og:image" content="http://yoursite.com/2018/11/10/文件已删除空间未释放的例子/6_solution1_space.png">
 <meta property="og:image" content="http://yoursite.com/2018/11/10/文件已删除空间未释放的例子/8_误删后恢复文件.png">
-<meta property="og:updated_time" content="2018-11-10T08:04:54.000Z">
+<meta property="og:updated_time" content="2018-11-10T08:06:50.000Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="文件删除空间未释放的例子">
 <meta name="twitter:description" content="背景在删除文件后，有时会遇到磁盘空间并未被释放的场景。这里自己尝试复现，并去做相关的说明。 删除后空间未释放根目录下当前占用空间是626G。 创建的文件/tmp/safedog_windows_2012_new.img占了15G。（ls和du的区别留到后面讲） 这里用vim打开文件，让有个进程一直在使用这个文件。 删除文件后，空间并未释放。 原因分析： 一个文件在文件系统中的存放分为两个部分：数据">
@@ -368,9 +368,7 @@
 <p>原因分析：</p>
 <p>一个文件在文件系统中的存放分为两个部分：数据部分和指针部分，指针位于文件系统的meta-data中，数据被删除后，这个指针就从meta-data中清除了，而数据部分存储在磁盘中，数据对应的指针从meta-data中清除后，文件数据部分占用的空间就可以被覆盖并写入新的内容，之所以出现删除文件后，空间还没释放，就是因为有进程还在一直向这个文件写入内容，导致虽然删除了文件，但文件对应的指针部分由于进程锁定，并未从meta-data中清除，而由于指针并未被删除，那么系统内核就认为文件并未被删除，因此通过df命令查询空间并未释放也就不足为奇了。</p>
 <p><img src="/2018/11/10/文件已删除空间未释放的例子/5_lsof.png" alt="image"></p>
-<h2 id="释放的解决措施"><a href="#释放的解决措施" class="headerlink" title="释放的解决措施"></a>释放的解决措施</h2><p>###停掉或重启占用文件的进程</p>
-<p>###Truncate File Size</p>
-<p>Alternatively, it is possible to force the system to de-allocate the space consumed by an in-use file by forcing the system to truncate the file via the proc file system. This is an advanced technique and should only be carried out when the administrator is certain that this will cause no adverse effects to running processes. Applications may not be designed to deal elegantly with this situation and may produce inconsistent or undefined behavior when files that are in use are abruptly truncated in this manner.</p>
+<h2 id="释放的解决措施"><a href="#释放的解决措施" class="headerlink" title="释放的解决措施"></a>释放的解决措施</h2><h3 id="停掉或重启占用文件的进程"><a href="#停掉或重启占用文件的进程" class="headerlink" title="停掉或重启占用文件的进程"></a>停掉或重启占用文件的进程</h3><h3 id="Truncate-File-Size"><a href="#Truncate-File-Size" class="headerlink" title="Truncate File Size"></a>Truncate File Size</h3><p>Alternatively, it is possible to force the system to de-allocate the space consumed by an in-use file by forcing the system to truncate the file via the proc file system. This is an advanced technique and should only be carried out when the administrator is certain that this will cause no adverse effects to running processes. Applications may not be designed to deal elegantly with this situation and may produce inconsistent or undefined behavior when files that are in use are abruptly truncated in this manner.</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">&gt; /proc/$pid/fd/$fd_number   </span><br><span class="line">echo &gt; /proc/$pid/fd/$fd_number </span><br><span class="line">echo &quot;&quot; &gt; /proc/$pid/fd/$fd_number</span><br></pre></td></tr></table></figure>
 <p><img src="/2018/11/10/文件已删除空间未释放的例子/6_solution1_space.png" alt="image"></p>
 <p>// 以上截断命令的区别</p>
@@ -379,7 +377,7 @@
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">&gt; /tmp/safedog_windows_2012.img //不起作用</span><br><span class="line">echo &gt; /tmp/safedog_windows_2012.img //不起作用</span><br><span class="line">echo &quot;&quot; &gt; /tmp/safedog_windows_2012.img不起作用</span><br><span class="line">```## 删除后文件未释放的恢复</span><br></pre></td></tr></table></figure>
 <p>cat /proc/44848/fd/4 &gt; /tmp/safedog_windows_2012_new.img<br><code>`</code><br><img src="/2018/11/10/文件已删除空间未释放的例子/8_误删后恢复文件.png" alt="image"></p>
 <p>恢复的文件占用空间还会更大，是否恢复出来的已经不是稀疏的了？</p>
-<p><a href="https://www.tanglei.name/blog/difference-between-du-and-ls.html" target="_blank" rel="noopener">由一次磁盘告警引发的血案 – du 和 ls 的区别</a></p>
+<h2 id="参考链接"><a href="#参考链接" class="headerlink" title="参考链接"></a>参考链接</h2><p><a href="https://www.tanglei.name/blog/difference-between-du-and-ls.html" target="_blank" rel="noopener">由一次磁盘告警引发的血案 – du 和 ls 的区别</a></p>
 <p><a href="https://access.redhat.com/solutions/2316" target="_blank" rel="noopener">Why is space not being freed from disk after deleting a file in Red Hat Enterprise Linux?</a></p>
 
       
@@ -561,7 +559,7 @@
             
 
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#背景"><span class="nav-number">1.</span> <span class="nav-text">背景</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#删除后空间未释放"><span class="nav-number">2.</span> <span class="nav-text">删除后空间未释放</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#释放的解决措施"><span class="nav-number">3.</span> <span class="nav-text">释放的解决措施</span></a></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#背景"><span class="nav-number">1.</span> <span class="nav-text">背景</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#删除后空间未释放"><span class="nav-number">2.</span> <span class="nav-text">删除后空间未释放</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#释放的解决措施"><span class="nav-number">3.</span> <span class="nav-text">释放的解决措施</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#停掉或重启占用文件的进程"><span class="nav-number">3.1.</span> <span class="nav-text">停掉或重启占用文件的进程</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Truncate-File-Size"><span class="nav-number">3.2.</span> <span class="nav-text">Truncate File Size</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参考链接"><span class="nav-number">4.</span> <span class="nav-text">参考链接</span></a></li></ol></div>
             
 
           </div>
