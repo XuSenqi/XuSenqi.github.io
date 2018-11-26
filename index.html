@@ -356,9 +356,11 @@
         
           
             <h2 id="中断是什么"><a href="#中断是什么" class="headerlink" title="中断是什么"></a>中断是什么</h2><p>中断使得硬件可以发松通知给处理器。例如敲击键盘时，键盘就会产生一个中断，通知操作系统有键被按下。</p>
-<p>中断本质上是一种电信号，由硬件设备生成，送入中断控制器的输入引脚中。中断控制器是个简单的电子芯片，将多路中断管线，采用复用技术只通过一个和处理器连接的管线和处理器通信。当产生一个中断后，处理器会检测到一个电信号，中断自己的当前正在运行的程序，通知内核。内核调用一个称为中断处理程序（interrupt handler)或中断服务例程(interrupt service routine）的特定程序。中断处理程序或中断服务例程可以在中断向量表中找到，而这个中断向量表位于内存中的固定地址中。CPU处理中断后，就会恢复执行之前被中断的程序，整个流程如下图所示。</p>
+<p>中断本质上是一种电信号，由硬件设备生成，送入中断控制器的输入引脚中。中断控制器(如8259A)是个简单的电子芯片，将多路中断管线，采用复用技术只通过一个和处理器连接的管线和处理器通信。当产生一个中断后，处理器会检测到一个电信号，中断自己的当前正在运行的程序，通知内核。内核调用一个称为中断处理程序（interrupt handler)或中断服务例程(interrupt service routine）的特定程序。中断处理程序或中断服务例程可以在中断向量表中找到，而这个中断向量表位于内存中的固定地址中。CPU处理中断后，就会恢复执行之前被中断的程序，整个流程如下图所示。</p>
+<p>不同设备同时中断如何知道哪个中断是来自硬盘、哪个来自网卡呢?这个很容易，系统上的每个硬件设备都会被分配一个 IRQ 号，通过这个唯一的IRQ号就能区别不同硬件设备了。</p>
 <p><img src="/2018/11/23/网卡多队列总结/中断处理流程.png" alt="image"></p>
-<p>由于中断会频繁发生，因此要求中断处理程序执行要快速。为了实现快速执行，必须要将一些繁重且不非常紧急的任务从中断处理程序中剥离出来，这一部分Linux中称为下半部，有三种方法处理下半部——软中断、tasklet和工作队列。</p>
+<h3 id="中断控制器"><a href="#中断控制器" class="headerlink" title="中断控制器"></a>中断控制器</h3><p>常见的中断控制器有两种：可编程中断控制器 8259A 和高级可编程中断控制器(APIC)，中断控制器应该在大学的硬件接口和计算机体系结构的相关课程中都学过。传统的 8259A 只适合单 CPU 的情况，现在都是多 CPU 多核的 SMP 体系，所以为了充分利用 SMP 体系结构、把中断传递给系统上的每个 CPU 以便更好实现并行和提高性能，Intel 引入了高级可编程中断控制器(APIC)。</p>
+<h3 id="网卡收发包过程"><a href="#网卡收发包过程" class="headerlink" title="网卡收发包过程"></a>网卡收发包过程</h3><p>由于中断会频繁发生，因此要求中断处理程序执行要快速。为了实现快速执行，必须要将一些繁重且不非常紧急的任务从中断处理程序中剥离出来，这一部分Linux中称为下半部，有三种方法处理下半部——软中断、tasklet和工作队列。</p>
 <p>以网卡为例，当网卡收到数据包时会产生中断，通知内核有新数据包，然后内核调用中断处理程序进行响应，把数据包从网卡缓存拷贝到内存，因为网卡缓存大小有限，如果不及时拷出数据，后续数据包将会因为缓存溢出被丢弃，因此这一工作需要立即完成。剩下的处理和操作数据包的工作就会交给软中断。高负载的网卡是软中断产生的大户，很容易形成瓶颈。</p>
 <p>在相当长的时间内，网卡的中断都是通过CPU 0来处理的，造成CPU 0的压力很高、其他CPU相对空闲的情况。直到网卡多队列技术的出现，网卡多队列实际就是网卡的数据请求可以通过多个CPU处理。</p>
 <h2 id="多队列网卡的实现"><a href="#多队列网卡的实现" class="headerlink" title="多队列网卡的实现"></a>多队列网卡的实现</h2><h3 id="多队列网卡硬件实现"><a href="#多队列网卡硬件实现" class="headerlink" title="多队列网卡硬件实现"></a>多队列网卡硬件实现</h3><p>常见的有Intel的82575、82576，Boardcom的57711等，下面以公司的服务器使用较多的Intel 82575网卡为例，分析一下多队列网卡的硬件的实现以及Linux内核软件的支持。</p>
@@ -404,6 +406,7 @@
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br></pre></td><td class="code"><pre><span class="line">[root@192-168-152-52 ~]# cat /proc/irq/108/smp_affinity</span><br><span class="line">0000,00000000,00000000,00000000,00000000,00000000,00000000,00000001</span><br><span class="line">[root@192-168-152-52 ~]# cat /proc/irq/109/smp_affinity</span><br><span class="line">0000,00000000,00000000,00000000,00000000,00000000,00000000,00000002</span><br><span class="line">[root@192-168-152-52 ~]# cat /proc/irq/110/smp_affinity</span><br><span class="line">0000,00000000,00000000,00000000,00000000,00000000,00000000,00000004</span><br><span class="line">[root@192-168-152-52 ~]# cat /proc/irq/111/smp_affinity</span><br><span class="line">0000,00000000,00000000,00000000,00000000,00000000,00000000,00000008</span><br><span class="line">[root@192-168-152-52 ~]# cat /proc/irq/112/smp_affinity</span><br><span class="line">0000,00000000,00000000,00000000,00000000,00000000,00000000,00000010</span><br><span class="line">[root@192-168-152-52 ~]# cat /proc/irq/113/smp_affinity</span><br><span class="line">0000,00000000,00000000,00000000,00000000,00000000,00000000,00000020</span><br><span class="line">[root@192-168-152-52 ~]# cat /proc/irq/114/smp_affinity</span><br><span class="line">0000,00000000,00000000,00000000,00000000,00000000,00000000,00000040</span><br><span class="line">[root@192-168-152-52 ~]# cat /proc/irq/115/smp_affinity</span><br><span class="line">0000,00000000,00000000,00000000,00000000,00000000,00000000,00000080</span><br><span class="line">[root@192-168-152-52 ~]# cat /proc/irq/116/smp_affinity</span><br><span class="line">0000,00000000,00000000,00000000,00000000,00000000,00000000,00000100</span><br><span class="line">[root@192-168-152-52 ~]# cat /proc/irq/117/smp_affinity</span><br><span class="line">0000,00000000,00000000,00000000,00000000,00000000,00000000,00000200</span><br><span class="line">[root@192-168-152-52 ~]# cat /proc/irq/118/smp_affinity</span><br><span class="line">0000,00000000,00000000,00000000,00000000,00000000,00000000,00000001</span><br><span class="line">[root@192-168-152-52 ~]# cat /proc/irq/119/smp_affinity</span><br><span class="line">0000,00000000,00000000,00000000,00000000,00000000,00000000,00000002</span><br><span class="line">[root@192-168-152-52 ~]# cat /proc/irq/120/smp_affinity</span><br><span class="line">0000,00000000,00000000,00000000,00000000,00000000,00000000,00000004</span><br><span class="line">[root@192-168-152-52 ~]# cat /proc/irq/121/smp_affinity</span><br><span class="line">0000,00000000,00000000,00000000,00000000,00000000,00000000,00000008</span><br><span class="line">[root@192-168-152-52 ~]# cat /proc/irq/122/smp_affinity</span><br><span class="line">0000,00000000,00000000,00000000,00000000,00000000,00000000,00000010</span><br><span class="line">[root@192-168-152-52 ~]# cat /proc/irq/123/smp_affinity</span><br><span class="line">0000,00000000,00000000,00000000,00000000,00000000,00000000,00000020</span><br><span class="line">[root@192-168-152-52 ~]# cat /proc/irq/124/smp_affinity</span><br><span class="line">0000,00000000,00000000,00000000,00000000,00000000,00000000,00000040</span><br><span class="line">[root@192-168-152-52 ~]# cat /proc/irq/125/smp_affinity</span><br><span class="line">0000,00000000,00000000,00000000,00000000,00000000,00000000,00000080</span><br><span class="line">[root@192-168-152-52 ~]# cat /proc/irq/126/smp_affinity</span><br><span class="line">0000,00000000,00000000,00000000,00000000,00000000,00000000,00000100</span><br><span class="line">[root@192-168-152-52 ~]# cat /proc/irq/127/smp_affinity</span><br><span class="line">0000,00000000,00000000,00000000,00000000,00000000,00000000,00000200</span><br><span class="line">[root@192-168-152-52 ~]# cat /proc/irq/128/smp_affinity</span><br><span class="line">0000,00000000,00000000,00000000,00000000,00000000,00000000,00000001</span><br><span class="line">[root@192-168-152-52 ~]# cat /proc/irq/129/smp_affinity</span><br><span class="line">0000,00000000,00000000,00000000,00000000,00000000,00000000,00000002</span><br><span class="line">[root@192-168-152-52 ~]# cat /proc/irq/130/smp_affinity</span><br><span class="line">0000,00000000,00000000,00000000,00000000,00000000,00000000,00000004</span><br><span class="line">[root@192-168-152-52 ~]# cat /proc/irq/131/smp_affinity</span><br><span class="line">0000,00000000,00000000,00000000,00000000,00000000,00000000,00000008</span><br><span class="line">[root@192-168-152-52 ~]# cat /proc/irq/132/smp_affinity</span><br><span class="line">0000,00000000,00000000,00000000,00000000,00000000,00000000,0003f03f</span><br></pre></td></tr></table></figure>
 <p>上面说明网卡队列绑定在CPU0~CPU0上。我们可以通过手动改变smp_affinity文件中的值来将IRQ绑定到指定的CPU核心上，或者启用irqbalance服务来自动绑定IRQ到CPU核心上。</p>
 <h3 id="IRQ-Balance"><a href="#IRQ-Balance" class="headerlink" title="IRQ Balance"></a>IRQ Balance</h3><p>Irqbalance是一个Linux的实用程序，它主要是用于分发中断请求到CPU核心上，有助于性能的提升。它的目的是寻求省电和性能优化之间的平衡。你可以使用yum进行安装（CentOS系统一般默认安装）：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">yum -y install irqbalance</span><br><span class="line">/etc/init.d/irqbalance start</span><br></pre></td></tr></table></figure>
 <p>Irqbalance对于包含多个核心的系统来说是非常有用的，因为通常中断只被第一个CPU核心服务。</p>
 <h3 id="RPS-RFS"><a href="#RPS-RFS" class="headerlink" title="RPS/RFS"></a>RPS/RFS</h3><p>前面大量介绍了多队列网卡及中断绑定，但是在单网卡单队列的情况下要想负载做网卡软中断绑定怎么办呢？RPS/RFS就是为此而生的，RPS/RFS功能出现在Linux kernel 2.6.35中，由google的工程师提交的两个补丁，这两个补丁的出现主要功能是在单队列网卡的情况下，在系统层用模拟了多队列的情况，以便达到CPU的均衡。</p>
 <p>RPS（Receive Packet Steering）主要是把软中断的负载均衡到各个cpu，简单来说，是网卡驱动对每个流生成一个hash标识，这个HASH值得计算可以通过四元组来计算（SIP，SPORT，DIP，DPORT），然后由中断处理的地方根据这个hash标识分配到相应的CPU上去，这样就可以比较充分的发挥多核的能力了。通俗点来说就是在软件层面模拟实现硬件的多队列网卡功能，如果网卡本身支持多队列功能的话RPS就不会有任何的作用。该功能主要针对单队列网卡多CPU环境，如网卡支持多队列则可使用SMP irq affinity直接绑定硬中断。</p>
@@ -1590,181 +1593,6 @@
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2018/05/15/TCP四次挥手/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="patrick.xu">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="森几许的博客">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/2018/05/15/TCP四次挥手/" itemprop="url">TCP四次挥手</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">发表于</span>
-              
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-05-15T11:21:20+08:00">
-                2018-05-15
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category" >
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">分类于</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/网络/" itemprop="url" rel="index">
-                    <span itemprop="name">网络</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h2 id="tcp四次挥手"><a href="#tcp四次挥手" class="headerlink" title="tcp四次挥手"></a>tcp四次挥手</h2><p>TCP四次挥手的过程以及握手两端状态的变化。</p>
-<p><img src="/2018/05/15/TCP四次挥手/tcp四次挥手.png" alt="image"></p>
-<p>挥手过程</p>
-<ul>
-<li><p>第一次挥手: 主动关闭方(可以使客户端，也可以是服务器端，这里标记为：A)，将FIN置为1，ACK置为1，Seq(Sequence Number)设置为X为上一次对方传送过来的Ack(Acknowledgment Number)值，Ack(Acknowledgment Number)设置为Y为上一次对方传过来的Seq(Sequence Number)值+1。设置好以上值后，将数据发送至被动关闭方(这里标记为：B)。然后A进入FIN_WAIT_1状态。</p>
-</li>
-<li><p>第二次挥手：B收到了A发送的FIN报文段，向A回复，将ACK置为1，Ack(Acknowledgment Number)设置为X第一次挥手中的Seq(Sequence Number)值+1，Seq(Sequence Number)设置为Y第一次挥手中的Ack(Acknowledgment Number)值。然后B进入CLOSE_WAIT状态，A收到B的回复后，进入FIN_WAIT_2状态。</p>
-</li>
-<li><p>第三次挥手：B再次向A发送报文，将FIN置为1，ACK置为1，Ack(Acknowledgment Number)设置为X+1第二次挥手中的Ack(Acknowledgment Number)值，Seq(Sequence Number)设置为Y第二次挥手中的Seq(Sequence Number)值。然后B进入LAST_ACK状态，A收到B的报文后，进入TIME_WAIT状态。</p>
-</li>
-<li><p>第四次挥手：A收到B发送的FIN报文段，像B回复，将ACK置为1，Ack(Acknowledgment Number)设置为Y第三次挥手中的Seq(Sequence Number)值+1，Seq(Sequence Number)设置为X+1第三次挥手中的Ack(Acknowledgment Number)值。然后A进入TIME_WAIT状态，B在收到报文后进入CLOSED状态，A在发送完报文等待了2MSL时间后进入CLOSED状态。</p>
-</li>
-</ul>
-<h2 id="为什么-TIME-WAIT-状态要等待-2MSL-之后才关闭连接"><a href="#为什么-TIME-WAIT-状态要等待-2MSL-之后才关闭连接" class="headerlink" title="为什么 TIME_WAIT 状态要等待 2MSL 之后才关闭连接"></a>为什么 TIME_WAIT 状态要等待 2MSL 之后才关闭连接</h2><ul>
-<li><p>2MSL表示两个MSL的时长，MSL全称为Maximum Segment Life，表示TCP 对TCP Segment 生存时间的限制。</p>
-</li>
-<li><p>为了保证A发送的最后一个ACK报文段能够到达B。这个ACK报文段有可能丢失，因而使处在LAST_ACK状态的B收不到对自己已发送的FIN+ACK报文段的确认。B会超时重传这个FIN+ACK报文段。而A就能在2MSL时间内收到这个重传的FIN+ACK报文段。接着A重传一次确认，重新启动2MSL计时器。最后A和B都正常进入到CLOSED状态。如果A在TIME_WAIT状态不等待一段时间，而是在发送完ACK报文段后立即释放连接，那么就无法收到B重传的FIN+ACK报文段，因而也不会在发送一次确认报文段。这样，B就无法按照正常步骤进入CLOSED状态。</p>
-</li>
-<li><p>防止已失效的连接请求报文段出现在本连接中。A在发送完最后一个ACK报文段后，在经过2MSL，就可以使本连接持续的时间内所产生的所有报文段都从网络中消失。这样就可以使下一个新的连接中不会出现这种旧的连接请求报文段。</p>
-</li>
-</ul>
-<h2 id="抓包实践"><a href="#抓包实践" class="headerlink" title="抓包实践"></a>抓包实践</h2><p><img src="/2018/05/15/TCP四次挥手/四次挥手抓包.jpg" alt="image"></p>
-<p>抓包看，挥手的过程却只有三次。这是因为数据传输中的延迟确认策略。</p>
-<p>何谓延迟确认策略？</p>
-<p>WIKI:TCP delayed acknowledgment is a technique used by some implementations of the Transmission Control Protocol in an effort to improve network performance. In essence, several ACK responses may be combined together into a single response, reducing protocol overhead. However, in some circumstances, the technique can reduce application performance.即接收方收到包后，如果暂时没有内容回复给发送方，则延迟一段时间再确认，假如在这个时间范围内刚好有数据需要传输，则和确认包一起回复。这种也被称为数据捎带。延迟确认只是减轻网络负担，未必可以提升网络性能，有些情况下反而会影响性能。</p>
-<p>正是这个策略，让图中缺少了一次断开连接的包，仔细看可以发现8和9之间时间也是差了200ms左右，为什么是200ms？根据TCP/IP详解卷一里面的描述是绝不大部分平台的时延是按200ms来实现的，但是不允许超过500ms。</p>
-<p>谈到延迟确认就必须再谈谈Nagle算法，两者的作用都是减轻网络负担，Nagle算法起源于John Nagle在RFC896的提议，所以命名为Nagle算法。Nagle在描述The small-packet problem时提到TCP在传输1字节有用信息时必须传输41字节的数据，其中20字节的TCP头，20字节的IP头，4000%的开销在低负载网络是可以容忍的，但是在重负载网络，这种开销是会导致网络拥塞，进而导致重传和数据丢失。这里暂时先不用关注拥塞、重传等，后面再讨论。重点关注下Nagle算法的实现原理，即在发送的数据在未被确认前，如果有新的小数据生成，那就把小数据收集起来，等凑足一个MSS或者收到确认后再发送。</p>
-<p>说到这，我们就清楚了提到的延迟确认和Nagle算法的作用都是降低网络负担，提高传输效率，但是未必能提升网络性能。</p>
-<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><ul>
-<li><a href="http://www.cnblogs.com/iou123lg/p/8727598.html?utm_source=tuicool&amp;utm_medium=referral" target="_blank" rel="noopener">http://www.cnblogs.com/iou123lg/p/8727598.html?utm_source=tuicool&amp;utm_medium=referral</a></li>
-<li><a href="https://www.jianshu.com/p/448f37ed29fe" target="_blank" rel="noopener">https://www.jianshu.com/p/448f37ed29fe</a></li>
-<li><a href="https://www.jianshu.com/p/a4beee06220c" target="_blank" rel="noopener">https://www.jianshu.com/p/a4beee06220c</a></li>
-<li><a href="http://jm.taobao.org/2017/06/08/20170608/" target="_blank" rel="noopener">http://jm.taobao.org/2017/06/08/20170608/</a></li>
-</ul>
-
-          
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="http://yoursite.com/2018/05/15/TCP三次握手/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1925,6 +1753,181 @@
 <li>第三次握手中断: A发送给B的ACK中断，A不会重传。超时后，B会重传SYN信号(即回到第二次握手)，直到B收到A的确认响应。</li>
 </ul>
 <h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><ul>
+<li><a href="https://www.jianshu.com/p/448f37ed29fe" target="_blank" rel="noopener">https://www.jianshu.com/p/448f37ed29fe</a></li>
+<li><a href="https://www.jianshu.com/p/a4beee06220c" target="_blank" rel="noopener">https://www.jianshu.com/p/a4beee06220c</a></li>
+<li><a href="http://jm.taobao.org/2017/06/08/20170608/" target="_blank" rel="noopener">http://jm.taobao.org/2017/06/08/20170608/</a></li>
+</ul>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2018/05/15/TCP四次挥手/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="patrick.xu">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="森几许的博客">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2018/05/15/TCP四次挥手/" itemprop="url">TCP四次挥手</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-05-15T11:21:20+08:00">
+                2018-05-15
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/网络/" itemprop="url" rel="index">
+                    <span itemprop="name">网络</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h2 id="tcp四次挥手"><a href="#tcp四次挥手" class="headerlink" title="tcp四次挥手"></a>tcp四次挥手</h2><p>TCP四次挥手的过程以及握手两端状态的变化。</p>
+<p><img src="/2018/05/15/TCP四次挥手/tcp四次挥手.png" alt="image"></p>
+<p>挥手过程</p>
+<ul>
+<li><p>第一次挥手: 主动关闭方(可以使客户端，也可以是服务器端，这里标记为：A)，将FIN置为1，ACK置为1，Seq(Sequence Number)设置为X为上一次对方传送过来的Ack(Acknowledgment Number)值，Ack(Acknowledgment Number)设置为Y为上一次对方传过来的Seq(Sequence Number)值+1。设置好以上值后，将数据发送至被动关闭方(这里标记为：B)。然后A进入FIN_WAIT_1状态。</p>
+</li>
+<li><p>第二次挥手：B收到了A发送的FIN报文段，向A回复，将ACK置为1，Ack(Acknowledgment Number)设置为X第一次挥手中的Seq(Sequence Number)值+1，Seq(Sequence Number)设置为Y第一次挥手中的Ack(Acknowledgment Number)值。然后B进入CLOSE_WAIT状态，A收到B的回复后，进入FIN_WAIT_2状态。</p>
+</li>
+<li><p>第三次挥手：B再次向A发送报文，将FIN置为1，ACK置为1，Ack(Acknowledgment Number)设置为X+1第二次挥手中的Ack(Acknowledgment Number)值，Seq(Sequence Number)设置为Y第二次挥手中的Seq(Sequence Number)值。然后B进入LAST_ACK状态，A收到B的报文后，进入TIME_WAIT状态。</p>
+</li>
+<li><p>第四次挥手：A收到B发送的FIN报文段，像B回复，将ACK置为1，Ack(Acknowledgment Number)设置为Y第三次挥手中的Seq(Sequence Number)值+1，Seq(Sequence Number)设置为X+1第三次挥手中的Ack(Acknowledgment Number)值。然后A进入TIME_WAIT状态，B在收到报文后进入CLOSED状态，A在发送完报文等待了2MSL时间后进入CLOSED状态。</p>
+</li>
+</ul>
+<h2 id="为什么-TIME-WAIT-状态要等待-2MSL-之后才关闭连接"><a href="#为什么-TIME-WAIT-状态要等待-2MSL-之后才关闭连接" class="headerlink" title="为什么 TIME_WAIT 状态要等待 2MSL 之后才关闭连接"></a>为什么 TIME_WAIT 状态要等待 2MSL 之后才关闭连接</h2><ul>
+<li><p>2MSL表示两个MSL的时长，MSL全称为Maximum Segment Life，表示TCP 对TCP Segment 生存时间的限制。</p>
+</li>
+<li><p>为了保证A发送的最后一个ACK报文段能够到达B。这个ACK报文段有可能丢失，因而使处在LAST_ACK状态的B收不到对自己已发送的FIN+ACK报文段的确认。B会超时重传这个FIN+ACK报文段。而A就能在2MSL时间内收到这个重传的FIN+ACK报文段。接着A重传一次确认，重新启动2MSL计时器。最后A和B都正常进入到CLOSED状态。如果A在TIME_WAIT状态不等待一段时间，而是在发送完ACK报文段后立即释放连接，那么就无法收到B重传的FIN+ACK报文段，因而也不会在发送一次确认报文段。这样，B就无法按照正常步骤进入CLOSED状态。</p>
+</li>
+<li><p>防止已失效的连接请求报文段出现在本连接中。A在发送完最后一个ACK报文段后，在经过2MSL，就可以使本连接持续的时间内所产生的所有报文段都从网络中消失。这样就可以使下一个新的连接中不会出现这种旧的连接请求报文段。</p>
+</li>
+</ul>
+<h2 id="抓包实践"><a href="#抓包实践" class="headerlink" title="抓包实践"></a>抓包实践</h2><p><img src="/2018/05/15/TCP四次挥手/四次挥手抓包.jpg" alt="image"></p>
+<p>抓包看，挥手的过程却只有三次。这是因为数据传输中的延迟确认策略。</p>
+<p>何谓延迟确认策略？</p>
+<p>WIKI:TCP delayed acknowledgment is a technique used by some implementations of the Transmission Control Protocol in an effort to improve network performance. In essence, several ACK responses may be combined together into a single response, reducing protocol overhead. However, in some circumstances, the technique can reduce application performance.即接收方收到包后，如果暂时没有内容回复给发送方，则延迟一段时间再确认，假如在这个时间范围内刚好有数据需要传输，则和确认包一起回复。这种也被称为数据捎带。延迟确认只是减轻网络负担，未必可以提升网络性能，有些情况下反而会影响性能。</p>
+<p>正是这个策略，让图中缺少了一次断开连接的包，仔细看可以发现8和9之间时间也是差了200ms左右，为什么是200ms？根据TCP/IP详解卷一里面的描述是绝不大部分平台的时延是按200ms来实现的，但是不允许超过500ms。</p>
+<p>谈到延迟确认就必须再谈谈Nagle算法，两者的作用都是减轻网络负担，Nagle算法起源于John Nagle在RFC896的提议，所以命名为Nagle算法。Nagle在描述The small-packet problem时提到TCP在传输1字节有用信息时必须传输41字节的数据，其中20字节的TCP头，20字节的IP头，4000%的开销在低负载网络是可以容忍的，但是在重负载网络，这种开销是会导致网络拥塞，进而导致重传和数据丢失。这里暂时先不用关注拥塞、重传等，后面再讨论。重点关注下Nagle算法的实现原理，即在发送的数据在未被确认前，如果有新的小数据生成，那就把小数据收集起来，等凑足一个MSS或者收到确认后再发送。</p>
+<p>说到这，我们就清楚了提到的延迟确认和Nagle算法的作用都是降低网络负担，提高传输效率，但是未必能提升网络性能。</p>
+<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><ul>
+<li><a href="http://www.cnblogs.com/iou123lg/p/8727598.html?utm_source=tuicool&amp;utm_medium=referral" target="_blank" rel="noopener">http://www.cnblogs.com/iou123lg/p/8727598.html?utm_source=tuicool&amp;utm_medium=referral</a></li>
 <li><a href="https://www.jianshu.com/p/448f37ed29fe" target="_blank" rel="noopener">https://www.jianshu.com/p/448f37ed29fe</a></li>
 <li><a href="https://www.jianshu.com/p/a4beee06220c" target="_blank" rel="noopener">https://www.jianshu.com/p/a4beee06220c</a></li>
 <li><a href="http://jm.taobao.org/2017/06/08/20170608/" target="_blank" rel="noopener">http://jm.taobao.org/2017/06/08/20170608/</a></li>
