@@ -87,15 +87,15 @@
 <meta property="og:site_name" content="森几许的博客">
 <meta property="og:description" content="背景线上一个go语言写的服务，在连续跑了10多天后，占用内存从最开始的20M左右，涨到了1个多G，有内存泄漏的问题，将整个排查过程和相应方法进行整理，做个记录。  pprofGo语言自带的pprof工具，是检测Golang开发应用性能的利器。 pprof 采样数据主要有三种获取方式:  runtime/pprof: 手动调用runtime.StartCPUProfile或者runtime.Stop">
 <meta property="og:locale" content="zh-Hans">
-<meta property="og:image" content="http://yoursite.com/2018/12/11/一次go内存泄漏的排查过程/一次go语言内存泄漏的排查过程/1_内存泄漏.png">
-<meta property="og:image" content="http://yoursite.com/2018/12/11/一次go内存泄漏的排查过程/一次go语言内存泄漏的排查过程/3_netpprof浏览器截图2.png">
-<meta property="og:image" content="http://yoursite.com/2018/12/11/一次go内存泄漏的排查过程/一次go语言内存泄漏的排查过程/4_netpprof_debug_1.png">
-<meta property="og:image" content="http://yoursite.com/2018/12/11/一次go内存泄漏的排查过程/一次go语言内存泄漏的排查过程/5_cpu耗时调度图.png">
-<meta property="og:updated_time" content="2018-12-11T13:23:21.000Z">
+<meta property="og:image" content="http://yoursite.com/2018/12/11/一次go内存泄漏的排查过程/1_内存泄漏.png">
+<meta property="og:image" content="http://yoursite.com/2018/12/11/一次go内存泄漏的排查过程/3_netpprof浏览器截图2.png">
+<meta property="og:image" content="http://yoursite.com/2018/12/11/一次go内存泄漏的排查过程/4_netpprof_debug_1.png">
+<meta property="og:image" content="http://yoursite.com/2018/12/11/一次go内存泄漏的排查过程/5_cpu耗时调度图.png">
+<meta property="og:updated_time" content="2018-12-11T13:26:31.000Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="一次go语言内存泄漏的排查过程">
 <meta name="twitter:description" content="背景线上一个go语言写的服务，在连续跑了10多天后，占用内存从最开始的20M左右，涨到了1个多G，有内存泄漏的问题，将整个排查过程和相应方法进行整理，做个记录。  pprofGo语言自带的pprof工具，是检测Golang开发应用性能的利器。 pprof 采样数据主要有三种获取方式:  runtime/pprof: 手动调用runtime.StartCPUProfile或者runtime.Stop">
-<meta name="twitter:image" content="http://yoursite.com/2018/12/11/一次go内存泄漏的排查过程/一次go语言内存泄漏的排查过程/1_内存泄漏.png">
+<meta name="twitter:image" content="http://yoursite.com/2018/12/11/一次go内存泄漏的排查过程/1_内存泄漏.png">
 
 
 
@@ -358,7 +358,7 @@
 
       
         <h2 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h2><p>线上一个go语言写的服务，在连续跑了10多天后，占用内存从最开始的20M左右，涨到了1个多G，有内存泄漏的问题，将整个排查过程和相应方法进行整理，做个记录。</p>
-<p><img src="/2018/12/11/一次go内存泄漏的排查过程/一次go语言内存泄漏的排查过程/1_内存泄漏.png" alt="image"></p>
+<p><img src="/2018/12/11/一次go内存泄漏的排查过程/1_内存泄漏.png" alt="image"></p>
 <h2 id="pprof"><a href="#pprof" class="headerlink" title="pprof"></a>pprof</h2><p>Go语言自带的pprof工具，是检测Golang开发应用性能的利器。</p>
 <p>pprof 采样数据主要有三种获取方式:</p>
 <ol>
@@ -372,7 +372,7 @@
 </ol>
 <h2 id="net-http-pprof"><a href="#net-http-pprof" class="headerlink" title="net/http/pprof"></a>net/http/pprof</h2><p>线上的服务是一直运行的，用过“net/http/pprof”可以看到实时的状态，看到各个信息指标，这里主要介绍这种方法。</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">import _ &quot;net/http/pprof&quot;</span><br><span class="line">func main() &#123;</span><br><span class="line">	......</span><br><span class="line">	go func() &#123;</span><br><span class="line">		log.Println(http.ListenAndServe(&quot;localhost:8211&quot;, nil))</span><br><span class="line">	&#125;()</span><br><span class="line">	......</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p><img src="/2018/12/11/一次go内存泄漏的排查过程/一次go语言内存泄漏的排查过程/3_netpprof浏览器截图2.png" alt="image"></p>
+<p><img src="/2018/12/11/一次go内存泄漏的排查过程/3_netpprof浏览器截图2.png" alt="image"></p>
 <p>之后可以通过 <a href="http://localhost:8211/debug/pprof/CMD获取对应的采样数据" target="_blank" rel="noopener">http://localhost:8211/debug/pprof/CMD获取对应的采样数据</a></p>
 <p><a href="https://golang.org/src/runtime/pprof/pprof.go?s=23119:23158#L730" target="_blank" rel="noopener">pprof</a></p>
 <p>Profile翻译为“剖面，侧面等”，可以理解为当前应用的的一个剖面。可以知道哪些地方耗费了cpu、memory。</p>
@@ -396,7 +396,7 @@
 <p>The debug parameter enables additional output.</p>
 <p>Passing debug=0 prints only the hexadecimal addresses that pprof needs.</p>
 <p>Passing debug=1 adds comments translating addresses to function names and line numbers, so that a programmer can read the profile without tools.</p>
-<p><img src="/2018/12/11/一次go内存泄漏的排查过程/一次go语言内存泄漏的排查过程/4_netpprof_debug_1.png" alt="image"></p>
+<p><img src="/2018/12/11/一次go内存泄漏的排查过程/4_netpprof_debug_1.png" alt="image"></p>
 <p>The predefined profiles may assign meaning to other debug values;</p>
 <p>for example, when printing the “goroutine” profile, debug=2 means to print the goroutine stacks in the same form that a Go program uses when dying due to an unrecovered panic.</p>
 <p>以上几种 Profile 可在 <a href="http://localhost:8211/debug/pprof/" target="_blank" rel="noopener">http://localhost:8211/debug/pprof/</a> 中看到，除此之外，go pprof 的 CMD 还包括, </p>
@@ -441,7 +441,7 @@
 <p>$ pprof -http=”:8081” [binary] [profile]</p>
 <p>由于我的Mac上用的是go1.8.1版本，所用pprof命令。</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">➜  uhost-go git:(from_pxu) ✗ pprof uhost_server pprof.uhost_server.samples.cpu.004.pb</span><br><span class="line">uhost_server: parsing profile: unrecognized profile format</span><br><span class="line">Fetched 1 source profiles out of 2</span><br><span class="line">File: uhost_server</span><br><span class="line">Type: cpu</span><br><span class="line">Time: Dec 11, 2018 at 6:18pm (CST)</span><br><span class="line">Duration: 30s, Total samples = 180ms (  0.6%)</span><br><span class="line">Entering interactive mode (type &quot;help&quot; for commands, &quot;o&quot; for options)</span><br><span class="line">(pprof) web</span><br></pre></td></tr></table></figure>
-<p><img src="/2018/12/11/一次go内存泄漏的排查过程/一次go语言内存泄漏的排查过程/5_cpu耗时调度图.png" alt="image"></p>
+<p><img src="/2018/12/11/一次go内存泄漏的排查过程/5_cpu耗时调度图.png" alt="image"></p>
 <h2 id="其他工具"><a href="#其他工具" class="headerlink" title="其他工具"></a>其他工具</h2><ul>
 <li>delve<br><a href="https://github.com/derekparker/delve" target="_blank" rel="noopener">https://github.com/derekparker/delve</a></li>
 <li>go-torch 生成火焰图<br><a href="https://github.com/uber/go-torch" target="_blank" rel="noopener">https://github.com/uber/go-torch</a></li>
