@@ -357,21 +357,13 @@
           
             <h2 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h2><p>线上一个go语言写的服务，在连续跑了10多天后，占用内存从最开始的20M左右，涨到了1个多G，有内存泄漏的问题，将整个排查过程和相应方法进行整理，做个记录。</p>
 <p><img src="/2018/12/11/一次go内存泄漏的排查过程/一次go语言内存泄漏的排查过程/1_内存泄漏.png" alt="image"></p>
-<h2 id="pprof"><a href="#pprof" class="headerlink" title="pprof"></a>pprof</h2><p>Go语言自带的pprof工具，是检测Golang开发应用性能的利器。<br>Profile翻译为“剖面，侧面等”，可以理解为当前应用的的一个剖面。可以知道哪些地方耗费了cpu、memory。</p>
-<p>A few profiles are predefined:</p>
-<p>goroutine    - stack traces of all current goroutines</p>
-<p>heap         - a sampling of memory allocations of live objects</p>
-<p>allocs       - a sampling of all past memory allocations</p>
-<p>threadcreate - stack traces that led to the creation of new OS threads</p>
-<p>block        - stack traces that led to blocking on synchronization primitives</p>
-<p>mutex        - stack traces of holders of contended mutexes</p>
-<p>CPUProfile: 当前进程消耗的CPU，当开启后，会去按照一定频率（100MHz）采集CPU信息</p>
-<p>// The CPU profile is not available as a Profile. It has a special API,<br>// the StartCPUProfile and StopCPUProfile functions, because it streams<br>// output to a writer during profiling.</p>
+<h2 id="pprof"><a href="#pprof" class="headerlink" title="pprof"></a>pprof</h2><p>Go语言自带的pprof工具，是检测Golang开发应用性能的利器。</p>
 <p>pprof 采样数据主要有三种获取方式:</p>
 <ol>
-<li><p>runtime/pprof: 手动调用runtime.StartCPUProfile或者runtime.StopCPUProfile等 API来生成和写入采样文件，灵活性高</p>
-</li>
-<li><p>net/http/pprof: 通过 http 服务获取Profile采样文件，简单易用，适用于对应用程序的整体监控。通过runtime/pprof实现</p>
+<li>runtime/pprof: 手动调用runtime.StartCPUProfile或者runtime.StopCPUProfile等 API来生成和写入采样文件，灵活性高。参考文档<a href="https://blog.golang.org/profiling-go-programs" target="_blank" rel="noopener">profiling-go-programs</a></li>
+</ol>
+<ol start="2">
+<li><p>net/http/pprof: 通过 http 服务获取Profile采样文件，简单易用，适用于对应用程序的整体监控。通过runtime/pprof实现。这里推荐这种方法</p>
 </li>
 <li><p>go test: 通过 go test -bench . -cpuprofile prof.cpu生成采样文件 适用对函数进行针对性测试</p>
 </li>
@@ -381,6 +373,7 @@
 <p><img src="/2018/12/11/一次go内存泄漏的排查过程/一次go语言内存泄漏的排查过程/3_netpprof浏览器截图2.png" alt="image"></p>
 <p>之后可以通过 <a href="http://localhost:8211/debug/pprof/CMD获取对应的采样数据" target="_blank" rel="noopener">http://localhost:8211/debug/pprof/CMD获取对应的采样数据</a></p>
 <p><a href="https://golang.org/src/runtime/pprof/pprof.go?s=23119:23158#L730" target="_blank" rel="noopener">pprof</a></p>
+<p>Profile翻译为“剖面，侧面等”，可以理解为当前应用的的一个剖面。可以知道哪些地方耗费了cpu、memory。</p>
 <p>// Each Profile has a unique name. A few profiles are predefined:</p>
 <ol>
 <li>goroutine    - stack traces of all current goroutines</li>
@@ -400,15 +393,62 @@
 <p><a href="https://golang.org/src/runtime/pprof/pprof.go?s=23119:23158#L730" target="_blank" rel="noopener">pprof_debug</a></p>
 <p>The debug parameter enables additional output.</p>
 <p>Passing debug=0 prints only the hexadecimal addresses that pprof needs.</p>
-<p>Passing debug=1 adds comments translating addresses to function names and line numbers, so that a programmer can read the profile without tools.<br><img src="/2018/12/11/一次go内存泄漏的排查过程/一次go语言内存泄漏的排查过程/4_netpprof_debug_1.png" alt="image"></p>
+<p>Passing debug=1 adds comments translating addresses to function names and line numbers, so that a programmer can read the profile without tools.</p>
+<p><img src="/2018/12/11/一次go内存泄漏的排查过程/一次go语言内存泄漏的排查过程/4_netpprof_debug_1.png" alt="image"></p>
 <p>The predefined profiles may assign meaning to other debug values;</p>
 <p>for example, when printing the “goroutine” profile, debug=2 means to print the goroutine stacks in the same form that a Go program uses when dying due to an unrecovered panic.</p>
-<p>从图2中看到，goroutine的数量在一直增长；从图3看出，共起了414个goroutine, 其中395个是在调用FetchZkName。<br>然后再查看我们的代码，有哪里在调用go, 哪个goroutine会最终调用FetchZkName,就可以查到出问题的地方。</p>
+<p>以上几种 Profile 可在 <a href="http://localhost:8211/debug/pprof/" target="_blank" rel="noopener">http://localhost:8211/debug/pprof/</a> 中看到，除此之外，go pprof 的 CMD 还包括, </p>
+<ul>
+<li>cmdline: 获取程序的命令行启动参数</li>
+<li>profile: 获取指定时间内(从请求时开始)的cpuprof，倒计时结束后自动返回。参数: seconds, 默认值为30。cpuprofile 每秒钟采样100次，收集当前运行的 goroutine 堆栈信息。</li>
+<li>symbol: 用于将地址列表转换为函数名列表，地址通过’+’分隔，如 URL/debug/pprof?0x18d067f+0x17933e7</li>
+<li>trace: 对应用程序进行执行追踪，参数: seconds, 默认值1s</li>
+</ul>
+<p>参数具体信息可以参考<a href="https://golang.org/pkg/net/http/pprof/" target="_blank" rel="noopener">http_pprof</a></p>
+<p>再回顾来看服务的问题，从图2中看到，goroutine的数量在一直增长；从图3看出，共起了414个goroutine, 其中395个是在调用FetchZkName。<br>然后再查看我们的代码，有哪里在调用go, 哪个goroutine会最终调用FetchZkName,就可以查到出问题的地方。</p>
 <p>最终查到原因是：</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line">  // 10s去更新下zk节点</span><br><span class="line">ticker2 := time.NewTicker(time.Second * 10)</span><br><span class="line">go func() &#123;</span><br><span class="line">	for &#123;</span><br><span class="line">		select &#123;</span><br><span class="line">		case &lt;-ticker2.C:</span><br><span class="line">			UpdateInstanceFromZk()</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;()</span><br><span class="line"></span><br><span class="line">// 里面的函数调用关系如下：</span><br><span class="line">UpdateInstanceFromZk --&gt; nameservice.InitNameService </span><br><span class="line">--&gt; updateNames --&gt; FetchZkName</span><br><span class="line"></span><br><span class="line">// FetchZkName函数里起了一个goroutine,封装了watcher，自己已实现了更新zk节点的功能</span><br><span class="line">   go func() &#123;</span><br><span class="line">	select &#123;</span><br><span class="line">	case ev := &lt;-ch:</span><br><span class="line">		uflog.INFO(&quot;cat watcher&quot;, ev)</span><br><span class="line">		if ev.Type == zk.EventNotWatching &amp;&amp; ev.State == zk.StateDisconnected &#123;</span><br><span class="line">			reConnect(connStr)</span><br><span class="line">		&#125;</span><br><span class="line">		nc.FetchZkName(connStr, shortName, fullName)</span><br><span class="line">	&#125;</span><br><span class="line">&#125;()</span><br><span class="line"></span><br><span class="line">// 该goroutine不会退出，会一直watch。定时调用UpdateInstanceFromZk，会导致goroutine不断增加，内存泄漏。</span><br></pre></td></tr></table></figure>
 <p>解决方案是：UpdateInstanceFromZk（）调用一次即可。</p>
-<h2 id="参考链接"><a href="#参考链接" class="headerlink" title="参考链接"></a>参考链接</h2><p><a href="https://www.tanglei.name/blog/difference-between-du-and-ls.html" target="_blank" rel="noopener">由一次磁盘告警引发的血案 – du 和 ls 的区别</a></p>
-<p><a href="https://access.redhat.com/solutions/2316" target="_blank" rel="noopener">Why is space not being freed from disk after deleting a file in Red Hat Enterprise Linux?</a></p>
+<h2 id="Go-Tool-PProf-分析工具"><a href="#Go-Tool-PProf-分析工具" class="headerlink" title="Go Tool PProf 分析工具"></a>Go Tool PProf 分析工具</h2><p>上面通过浏览器访问http服务的方式，需要有图形界面。而线上服务器通常是没有图形界面的，可以通过命令行方式来分析，或者将profile拷贝到本地，再生成调用关系图</p>
+<h3 id="Go-Tool-PProf-命令行"><a href="#Go-Tool-PProf-命令行" class="headerlink" title="Go Tool PProf 命令行"></a>Go Tool PProf 命令行</h3><p>支持的cmd跟net/http/pprof里提到的一样<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">go tool pprof http://localhost:8211/debug/pprof/goroutine</span><br><span class="line">go tool pprof http://localhost:8211/debug/pprof/profile</span><br><span class="line">go tool pprof http://localhost:8211/debug/pprof/heap</span><br><span class="line">...</span><br></pre></td></tr></table></figure></p>
+<p>以采集CPU耗时举例, </p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"># /root/go/bin/go tool pprof http://localhost:8211/debug/pprof/profile</span><br><span class="line">Fetching profile over HTTP from http://localhost:8211/debug/pprof/profile</span><br><span class="line">Saved profile in /root/pprof/pprof.uhost_server.samples.cpu.003.pb.gz</span><br><span class="line">File: uhost_server</span><br><span class="line">Type: cpu</span><br><span class="line">Time: Dec 11, 2018 at 6:12pm (CST)</span><br><span class="line">Duration: 30s, Total samples = 10ms (0.033%)</span><br><span class="line">Entering interactive mode (type &quot;help&quot; for commands, &quot;o&quot; for options)</span><br><span class="line">(pprof)</span><br></pre></td></tr></table></figure>
+<p>会经历30s的采样时间，生成pprof.uhost_server.samples.cpu.003.pb.gz,这个可以拷贝到本地分析。</p>
+<h4 id="最重要的分析命令是top-N"><a href="#最重要的分析命令是top-N" class="headerlink" title="最重要的分析命令是top N"></a>最重要的分析命令是top N</h4><p>topN 命令可以查出程序最耗 CPU 的调用</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">(pprof) top 5</span><br><span class="line">Showing nodes accounting for 70ms, 38.89% of 180ms total</span><br><span class="line">Showing top 5 nodes out of 83</span><br><span class="line">      flat  flat%   sum%        cum   cum%</span><br><span class="line">      30ms 16.67% 16.67%       30ms 16.67%  syscall.Syscall</span><br><span class="line">      10ms  5.56% 22.22%       20ms 11.11%  fmt.Sprintf</span><br><span class="line">      10ms  5.56% 27.78%       30ms 16.67%  os.(*File).write</span><br><span class="line">      10ms  5.56% 33.33%       10ms  5.56%  runtime._ExternalCode</span><br><span class="line">      10ms  5.56% 38.89%       10ms  5.56%  runtime.epollwait</span><br></pre></td></tr></table></figure>
+<ul>
+<li>flat / flat% : 函数占用CPU的运行时间和百分比</li>
+<li>sum% : 按列累加的累计占用CPU百分比</li>
+<li>cum / cum% : 采样过程中， the function appeared (either running or waiting for a called function to return).</li>
+</ul>
+<h4 id="top-cum"><a href="#top-cum" class="headerlink" title="top -cum"></a>top -cum</h4><p>以累加的方式，看出消耗cpu的函数运行。可以和后面图形的方式做个对比</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">(pprof) top10 -cum</span><br><span class="line">Showing nodes accounting for 40ms, 22.22% of 180ms total</span><br><span class="line">Showing top 10 nodes out of 83</span><br><span class="line">      flat  flat%   sum%        cum   cum%</span><br><span class="line">         0     0%     0%      140ms 77.78%  runtime.goexit</span><br><span class="line">         0     0%     0%       40ms 22.22%  uframework/log.RealWrite</span><br><span class="line">         0     0%     0%       40ms 22.22%  uframework/task.(*TCPTask).Run.func1</span><br><span class="line">         0     0%     0%       40ms 22.22%  uframework/task.TCPTaskFunc.ServeTCP</span><br><span class="line">         0     0%     0%       40ms 22.22%  uhost-go/uhost-scheduler/logic.getSuitableResource</span><br><span class="line">         0     0%     0%       30ms 16.67%  os.(*File).Write</span><br><span class="line">      10ms  5.56%  5.56%       30ms 16.67%  os.(*File).write</span><br><span class="line">      30ms 16.67% 22.22%       30ms 16.67%  syscall.Syscall</span><br><span class="line">         0     0% 22.22%       30ms 16.67%  uframework/message/protobuf/proto.(*Buffer).dec_slice_struct</span><br><span class="line">         0     0% 22.22%       30ms 16.67%  uframework/message/protobuf/proto.(*Buffer).dec_slice_struct_message</span><br></pre></td></tr></table></figure>
+<h4 id="list-Func"><a href="#list-Func" class="headerlink" title="list Func"></a>list Func</h4><p>显示函数名以及每行代码的采样分析</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">(pprof) list dec_slice_struct_message</span><br><span class="line">Total: 180ms</span><br><span class="line">ROUTINE ======================== uframework/message/protobuf/proto.(*Buffer).dec_slice_struct_message in /Users/patrick.xu/go/src/uframework/message/protobuf/proto/decode.go</span><br><span class="line">         0       30ms (flat, cum) 16.67% of Total</span><br><span class="line">         .          .    822:	return err</span><br><span class="line">         .          .    823:&#125;</span><br><span class="line">         .          .    824:</span><br><span class="line">         .          .    825:// Decode a slice of embedded messages.</span><br><span class="line">         .          .    826:func (o *Buffer) dec_slice_struct_message(p *Properties, base structPointer) error &#123;</span><br><span class="line">         .       30ms    827:	return o.dec_slice_struct(p, false, base)</span><br><span class="line">         .          .    828:&#125;</span><br><span class="line">         .          .    829:</span><br><span class="line">         .          .    830:// Decode a slice of embedded groups.</span><br><span class="line">         .          .    831:func (o *Buffer) dec_slice_struct_group(p *Properties, base structPointer) error &#123;</span><br><span class="line">         .          .    832:	return o.dec_slice_struct(p, true, base)</span><br></pre></td></tr></table></figure>
+<h4 id="web-web-Func"><a href="#web-web-Func" class="headerlink" title="web / web Func"></a>web / web Func</h4><p>显示调用图 / 显示某个具体函数的调用图</p>
+<p>mac上需要先安装graphviz <a href="http://www.graphviz.org/" target="_blank" rel="noopener">http://www.graphviz.org/</a></p>
+<p>homebrew安装完毕后运行 brew install graphviz即可</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">➜  uhost-go git:(from_pxu) ✗ go tool pprof uhost_server pprof.uhost_server.samples.cpu.004.pb</span><br><span class="line">Entering interactive mode (type &quot;help&quot; for commands)</span><br><span class="line">(pprof) web</span><br><span class="line">(pprof) web getSuitableResource</span><br></pre></td></tr></table></figure>
+<p>但是web命令生成的调用图往往是残缺的，不知道是什么原因。但找到下面更好的方式。</p>
+<h2 id="pprof-1"><a href="#pprof-1" class="headerlink" title="pprof"></a>pprof</h2><p>As of Go 1.11, flamegraph visualizations are available in go tool pprof directly!</p>
+<p>This will listen on :8081 and open a browser.<br>Change :8081 to a port of your choice.</p>
+<p>$ go tool pprof -http=”:8081” [binary] [profile]</p>
+<p>If you cannot use Go 1.11, you can get the latest pprof tool and use it instead:</p>
+<p>Get the pprof tool directly</p>
+<p>$ go get -u github.com/google/pprof</p>
+<p>$ pprof -http=”:8081” [binary] [profile]</p>
+<p>由于我的Mac上用的是go1.8.1版本，所用pprof命令。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">➜  uhost-go git:(from_pxu) ✗ pprof uhost_server pprof.uhost_server.samples.cpu.004.pb</span><br><span class="line">uhost_server: parsing profile: unrecognized profile format</span><br><span class="line">Fetched 1 source profiles out of 2</span><br><span class="line">File: uhost_server</span><br><span class="line">Type: cpu</span><br><span class="line">Time: Dec 11, 2018 at 6:18pm (CST)</span><br><span class="line">Duration: 30s, Total samples = 180ms (  0.6%)</span><br><span class="line">Entering interactive mode (type &quot;help&quot; for commands, &quot;o&quot; for options)</span><br><span class="line">(pprof) web</span><br></pre></td></tr></table></figure>
+<p><img src="/2018/12/11/一次go内存泄漏的排查过程/一次go语言内存泄漏的排查过程/5_cpu耗时调度图.png" alt="image"></p>
+<h2 id="其他工具"><a href="#其他工具" class="headerlink" title="其他工具"></a>其他工具</h2><ul>
+<li>delve<br><a href="https://github.com/derekparker/delve" target="_blank" rel="noopener">https://github.com/derekparker/delve</a></li>
+<li>go-torch 生成火焰图<br><a href="https://github.com/uber/go-torch" target="_blank" rel="noopener">https://github.com/uber/go-torch</a></li>
+</ul>
+<p>以后用到了再整理，这里mark下</p>
+<h2 id="参考链接"><a href="#参考链接" class="headerlink" title="参考链接"></a>参考链接</h2><p><a href="https://blog.golang.org/profiling-go-programs" target="_blank" rel="noopener">Profiling Go Programs</a></p>
+<p><a href="https://golang.org/src/runtime/pprof/pprof.go?s=23119:23158#L730" target="_blank" rel="noopener">Source file src/runtime/pprof/pprof.go</a></p>
+<p><a href="http://wudaijun.com/2018/04/go-pprof/" target="_blank" rel="noopener">go pprof性能分析</a></p>
+<p><a href="https://cizixs.com/2017/09/11/profiling-golang-program/" target="_blank" rel="noopener">使用pprof和火焰图调试golang应用</a></p>
 
           
         
@@ -1811,7 +1851,7 @@
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2018/05/15/TCP四次挥手/">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2018/05/15/TCP三次握手/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="patrick.xu">
@@ -1830,7 +1870,7 @@
         
           <h1 class="post-title" itemprop="name headline">
                 
-                <a class="post-title-link" href="/2018/05/15/TCP四次挥手/" itemprop="url">TCP四次挥手</a></h1>
+                <a class="post-title-link" href="/2018/05/15/TCP三次握手/" itemprop="url">TCP三次握手</a></h1>
         
 
         <div class="post-meta">
@@ -1904,36 +1944,73 @@
       
         
           
-            <h2 id="tcp四次挥手"><a href="#tcp四次挥手" class="headerlink" title="tcp四次挥手"></a>tcp四次挥手</h2><p>TCP四次挥手的过程以及握手两端状态的变化。</p>
-<p><img src="/2018/05/15/TCP四次挥手/tcp四次挥手.png" alt="image"></p>
-<p>挥手过程</p>
+            <p>TCP三次握手/四次挥手的文章看过太多，但有些不太正确。还是决定自己写一篇，也算是对自己知识和碰到的问题的总结。</p>
+<h2 id="tcp的主要特点"><a href="#tcp的主要特点" class="headerlink" title="tcp的主要特点"></a>tcp的主要特点</h2><ul>
+<li>面向连接</li>
+<li>点到点</li>
+<li>可靠交付</li>
+<li>全双工通信</li>
+<li>面向字节流</li>
+</ul>
+<p>其中核心的特点：tcp是可以可靠传输协议，它的其他所有特点都为这个可靠传输服务。</p>
+<h2 id="如何保证可靠传输"><a href="#如何保证可靠传输" class="headerlink" title="如何保证可靠传输"></a>如何保证可靠传输</h2><p>tcp在传输过程中都有一个ack，接收方通过ack告诉发送方收到那些包了。这样发送方能知道有没有丢包，进而确定重传。</p>
+<h2 id="tcp三次握手"><a href="#tcp三次握手" class="headerlink" title="tcp三次握手"></a>tcp三次握手</h2><p><img src="/2018/05/15/TCP三次握手/三次握手.png" alt="image"></p>
 <ul>
-<li><p>第一次挥手: 主动关闭方(可以使客户端，也可以是服务器端，这里标记为：A)，将FIN置为1，ACK置为1，Seq(Sequence Number)设置为X为上一次对方传送过来的Ack(Acknowledgment Number)值，Ack(Acknowledgment Number)设置为Y为上一次对方传过来的Seq(Sequence Number)值+1。设置好以上值后，将数据发送至被动关闭方(这里标记为：B)。然后A进入FIN_WAIT_1状态。</p>
+<li><p>第一步：client发送连接请求报文段，将SYN位置为1，Seq(Sequence Number)为X(由操作系统动态随机选取一个32位长的序列号)。然后，客户端进入SYN_SEND状态，等待服务器的确认。</p>
 </li>
-<li><p>第二次挥手：B收到了A发送的FIN报文段，向A回复，将ACK置为1，Ack(Acknowledgment Number)设置为X第一次挥手中的Seq(Sequence Number)值+1，Seq(Sequence Number)设置为Y第一次挥手中的Ack(Acknowledgment Number)值。然后B进入CLOSE_WAIT状态，A收到B的回复后，进入FIN_WAIT_2状态。</p>
+<li><p>第二步：server收到client的SYN报文段。需要对这个SYN报文段进行确认，设置Ack(Acknowledgment Number)设置为X(第一次握手中的Seq的值)+1。同时，自己还要发送SYN请求信息，将SYN位置为1，Seq(Sequence Number)为Y(由操作系统动态随机选取一个32位长的序列号)。服务器端将上述所有信息一并发送给客户端，此时服务器进入SYN_RECV状态。</p>
 </li>
-<li><p>第三次挥手：B再次向A发送报文，将FIN置为1，ACK置为1，Ack(Acknowledgment Number)设置为X+1第二次挥手中的Ack(Acknowledgment Number)值，Seq(Sequence Number)设置为Y第二次挥手中的Seq(Sequence Number)值。然后B进入LAST_ACK状态，A收到B的报文后，进入TIME_WAIT状态。</p>
-</li>
-<li><p>第四次挥手：A收到B发送的FIN报文段，像B回复，将ACK置为1，Ack(Acknowledgment Number)设置为Y第三次挥手中的Seq(Sequence Number)值+1，Seq(Sequence Number)设置为X+1第三次挥手中的Ack(Acknowledgment Number)值。然后A进入TIME_WAIT状态，B在收到报文后进入CLOSED状态，A在发送完报文等待了2MSL时间后进入CLOSED状态。</p>
+<li><p>第三步：client收到sever的SYN+ACK后，回复server一个ACK。将Ack(Acknowledgment Number)设置为Y(第二次握手中的Seq的值)+1，Seq(Sequence Number)设置为X+1(第二次握手中的Ack(Acknowledgment Number)值)，向服务器发送ACK报文段，这个报文段发送完毕以后，客户端和服务器端都进入ESTABLISHED状态，完成TCP三次握手。</p>
 </li>
 </ul>
-<h2 id="为什么-TIME-WAIT-状态要等待-2MSL-之后才关闭连接"><a href="#为什么-TIME-WAIT-状态要等待-2MSL-之后才关闭连接" class="headerlink" title="为什么 TIME_WAIT 状态要等待 2MSL 之后才关闭连接"></a>为什么 TIME_WAIT 状态要等待 2MSL 之后才关闭连接</h2><ul>
-<li><p>2MSL表示两个MSL的时长，MSL全称为Maximum Segment Life，表示TCP 对TCP Segment 生存时间的限制。</p>
+<h2 id="tcp首部简介"><a href="#tcp首部简介" class="headerlink" title="tcp首部简介"></a>tcp首部简介</h2><p>这里先介绍下TCP首部的相关知识。三次握手相关的是主要是ACK和SYN这两个标志比特位。</p>
+<p><img src="/2018/05/15/TCP三次握手/TCP首部.png" alt="image"></p>
+<p>（1）源端口和目的端口：各占2字节。</p>
+<p>（2）序号(Seq, Sequence Number)：占4个字节。用来标识从TCP发端向TCP收端发送的数据字节流，它表示在这个报文段中的的第一个数据字节在数据流中的序号。主要用来解决网络报乱序的问题。序号范围是[0, 2^32 - 1],共2^32个序号。</p>
+<p>（3）确认号(Ack, Acknowledgment Number): 占4个字节。期望收到对方下一个报文段的第一个数据字节的序号，因此，确认序号应当是上次已成功收到数据字节序号加1。不过，只有当标志位中的ACK标志（下面介绍）为1时该确认序列号的字段才有效。主要用来解决不丢包的问题。</p>
+<p>（4）数据偏移(Offset): 占4位。TCP报文段的数据起始处距离TCP报文段的起始处有多远。实际上指出TCP报文段的首部长度。但注意，“数据偏移”的单位是32位字（即以4字节长度为单位）。最多能表示15个32bit的的字，即4*15=60个字节的首部长度。因此TCP最多有60字节的首部。然而，没有选项字段，正常的长度是20字节。</p>
+<p>（5）保留: 占6位。保留为今后使用，目前置为0。</p>
+<p>（6）标志比特(TCP Flags): TCP首部中有6个标志比特，它们中的多个可同时被设置为1，主要是用于操控TCP的状态机的，依次为URG，ACK，PSH，RST，SYN，FIN。每个标志位的意思如下:</p>
+<ul>
+<li>URG（URGent）: 此标志表示TCP包的紧急指针域（后面马上就要说到）有效，用来保证TCP连接不被中断，并且督促中间层设备要尽快处理这些数据。</li>
+<li>ACK(ACKnowlegment): 仅当ACK=1时Ack字段有效。在连接建立后所有传送的报文段都必须把ACK置1。</li>
+<li>PSH(PuSH): 这个标志位表示Push操作。所谓Push操作就是指在数据包到达接收端以后，立即传送给应用程序，而不是在缓冲区中排队。</li>
+<li>RST(ReSeT): 这个标志表示连接复位请求。用来复位那些产生错误的连接，也被用来拒绝错误和非法的数据包。</li>
+<li>SYN(SYNchoronization): 表示同步序号，用来建立连接。SYN标志位和ACK标志位搭配使用，当连接请求的时候，SYN=1，ACK=0。连接被响应的时候，SYN=1，ACK=1。</li>
+<li>FIN(FINis): 表示发送端已经达到数据末尾，也就是说双方的数据传送完成，没有数据可以传送了，发送FIN标志位的TCP数据包后，连接将被断开。</li>
+</ul>
+<p>（7）窗口: 占2个字节，[0, 2^16 - 1]。指的是发送本报文段的一方的接收窗口。明确指出了现在允许对方发送的数据量。窗口值是经常动态变化的。</p>
+<p>（8）校验和: 占2字节。该字段检验的范围包括首部和数据这两部分。由发端计算和存储，并由收端进行验证。</p>
+<p>（9）紧急指针: 占2个字节，紧急指针仅在URG=1时才有意义，它指出本报文段中的紧急数据的字节数。当所有紧急数据处理完毕时，TCP就告诉应用程序恢复到正常操作。值得注意的是，即使窗口为0时也可发送紧急数据。</p>
+<p>（10）选项: 长度可变，最长可达40字节，当没有选项时，TCP的首部长度是20字节。最初只规定了一种选项，即最大报文段长度MSS(Maximum Segment Size)，MSS是指每一个TCP报文段中的数据字段的最大长度。</p>
+<h2 id="抓包实践"><a href="#抓包实践" class="headerlink" title="抓包实践"></a>抓包实践</h2><p>来看一个pb请求的三次握手过程</p>
+<p><img src="/2018/05/15/TCP三次握手/三次握手抓包.jpg" alt="image"></p>
+<p>client: 172.17.1.217  server: 172.27.247.168</p>
+<p>握手的核心目的是告知对方seq（client的初始seq，server的初始seq），对方回复ack（收到的seq+包的大小），这样发送端就知道有没有丢包了。</p>
+<p>握手的次要目的是告知和协商一些信息。</p>
+<ul>
+<li>MSS–最大传输包</li>
+<li>SACK_PERM–是否支持Selective ack(用户优化重传效率）</li>
+<li>WS–窗口计算指数（有点复杂的话先不用管）</li>
+</ul>
+<p><strong>这就是tcp为什么要握手建立连接，就是为了解决tcp的可靠传输。</strong></p>
+<h3 id="查看第一次握手的详情"><a href="#查看第一次握手的详情" class="headerlink" title="查看第一次握手的详情"></a>查看第一次握手的详情</h3><p><img src="/2018/05/15/TCP三次握手/第一次握手抓包.jpg" alt="image"></p>
+<h3 id="查看第二次握手的详情"><a href="#查看第二次握手的详情" class="headerlink" title="查看第二次握手的详情"></a>查看第二次握手的详情</h3><p><img src="/2018/05/15/TCP三次握手/第一次握手抓包.jpg" alt="image"></p>
+<h3 id="查看第三次握手的详情"><a href="#查看第三次握手的详情" class="headerlink" title="查看第三次握手的详情"></a>查看第三次握手的详情</h3><p><img src="/2018/05/15/TCP三次握手/第三次握手抓包.jpg" alt="image"></p>
+<h3 id="为什么要三次握手？"><a href="#为什么要三次握手？" class="headerlink" title="为什么要三次握手？"></a>为什么要三次握手？</h3><ul>
+<li>如果只有一次握手，Client不能确定与Server的单向连接，更加不能确定Server与Client的单向连接；</li>
+<li>如果只有两次握手，Client确定与Server的单向连接，但是Server不能确定与Client的单向连接；</li>
+<li><p>只有三次握手，Client与Server才能相互确认双向连接，实现双工数据传输。</p>
 </li>
-<li><p>为了保证A发送的最后一个ACK报文段能够到达B。这个ACK报文段有可能丢失，因而使处在LAST_ACK状态的B收不到对自己已发送的FIN+ACK报文段的确认。B会超时重传这个FIN+ACK报文段。而A就能在2MSL时间内收到这个重传的FIN+ACK报文段。接着A重传一次确认，重新启动2MSL计时器。最后A和B都正常进入到CLOSED状态。如果A在TIME_WAIT状态不等待一段时间，而是在发送完ACK报文段后立即释放连接，那么就无法收到B重传的FIN+ACK报文段，因而也不会在发送一次确认报文段。这样，B就无法按照正常步骤进入CLOSED状态。</p>
-</li>
-<li><p>防止已失效的连接请求报文段出现在本连接中。A在发送完最后一个ACK报文段后，在经过2MSL，就可以使本连接持续的时间内所产生的所有报文段都从网络中消失。这样就可以使下一个新的连接中不会出现这种旧的连接请求报文段。</p>
+<li><p>谢希仁版《计算机网络》中的例子是这样的，“已失效的连接请求报文段”的产生在这样一种情况下：client发出的第一个连接请求报文段并没有丢失，而是在某个网络结点长时间的滞留了，以致延误到连接释放以后的某个时间才到达server。本来这是一个早已失效的报文段。但server收到此失效的连接请求报文段后，就误认为是client再次发出的一个新的连接请求。于是就向client发出确认报文段，同意建立连接。假设不采用“三次握手”，那么只要server发出确认，新的连接就建立了。由于现在client并没有发出建立连接的请求，因此不会理睬server的确认，也不会向server发送数据。但server却以为新的运输连接已经建立，并一直等待client发来数据。这样，server的很多资源就白白浪费掉了。采用“三次握手”的办法可以防止上述现象发生。例如刚才那种情况，client不会向server的确认发出确认。server由于收不到确认，就知道client并没有要求建立连接。</p>
 </li>
 </ul>
-<h2 id="抓包实践"><a href="#抓包实践" class="headerlink" title="抓包实践"></a>抓包实践</h2><p><img src="/2018/05/15/TCP四次挥手/四次挥手抓包.jpg" alt="image"></p>
-<p>抓包看，挥手的过程却只有三次。这是因为数据传输中的延迟确认策略。</p>
-<p>何谓延迟确认策略？</p>
-<p>WIKI:TCP delayed acknowledgment is a technique used by some implementations of the Transmission Control Protocol in an effort to improve network performance. In essence, several ACK responses may be combined together into a single response, reducing protocol overhead. However, in some circumstances, the technique can reduce application performance.即接收方收到包后，如果暂时没有内容回复给发送方，则延迟一段时间再确认，假如在这个时间范围内刚好有数据需要传输，则和确认包一起回复。这种也被称为数据捎带。延迟确认只是减轻网络负担，未必可以提升网络性能，有些情况下反而会影响性能。</p>
-<p>正是这个策略，让图中缺少了一次断开连接的包，仔细看可以发现8和9之间时间也是差了200ms左右，为什么是200ms？根据TCP/IP详解卷一里面的描述是绝不大部分平台的时延是按200ms来实现的，但是不允许超过500ms。</p>
-<p>谈到延迟确认就必须再谈谈Nagle算法，两者的作用都是减轻网络负担，Nagle算法起源于John Nagle在RFC896的提议，所以命名为Nagle算法。Nagle在描述The small-packet problem时提到TCP在传输1字节有用信息时必须传输41字节的数据，其中20字节的TCP头，20字节的IP头，4000%的开销在低负载网络是可以容忍的，但是在重负载网络，这种开销是会导致网络拥塞，进而导致重传和数据丢失。这里暂时先不用关注拥塞、重传等，后面再讨论。重点关注下Nagle算法的实现原理，即在发送的数据在未被确认前，如果有新的小数据生成，那就把小数据收集起来，等凑足一个MSS或者收到确认后再发送。</p>
-<p>说到这，我们就清楚了提到的延迟确认和Nagle算法的作用都是降低网络负担，提高传输效率，但是未必能提升网络性能。</p>
+<h3 id="握手中断"><a href="#握手中断" class="headerlink" title="握手中断"></a>握手中断</h3><ul>
+<li>第一次握手中断: A发送给B的SYN中断，A会周期性超时重传，直到A收到B的确认响应。</li>
+<li>第二次握手中断: B发送给A的SYN、ACK中断，B会周期性超时重传，直到B收到A的确认响应。</li>
+<li>第三次握手中断: A发送给B的ACK中断，A不会重传。超时后，B会重传SYN信号(即回到第二次握手)，直到B收到A的确认响应。</li>
+</ul>
 <h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><ul>
-<li><a href="http://www.cnblogs.com/iou123lg/p/8727598.html?utm_source=tuicool&amp;utm_medium=referral" target="_blank" rel="noopener">http://www.cnblogs.com/iou123lg/p/8727598.html?utm_source=tuicool&amp;utm_medium=referral</a></li>
 <li><a href="https://www.jianshu.com/p/448f37ed29fe" target="_blank" rel="noopener">https://www.jianshu.com/p/448f37ed29fe</a></li>
 <li><a href="https://www.jianshu.com/p/a4beee06220c" target="_blank" rel="noopener">https://www.jianshu.com/p/a4beee06220c</a></li>
 <li><a href="http://jm.taobao.org/2017/06/08/20170608/" target="_blank" rel="noopener">http://jm.taobao.org/2017/06/08/20170608/</a></li>
