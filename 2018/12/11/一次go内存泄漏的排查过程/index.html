@@ -1,0 +1,806 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css" />
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="Go," />
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="背景线上一个go语言写的服务，在连续跑了10多天后，占用内存从最开始的20M左右，涨到了1个多G，有内存泄漏的问题，将整个排查过程和相应方法进行整理，做个记录。  pprofGo语言自带的pprof工具，是检测Golang开发应用性能的利器。Profile翻译为“剖面，侧面等”，可以理解为当前应用的的一个剖面。可以知道哪些地方耗费了cpu、memory。 A few profiles are pr">
+<meta name="keywords" content="Go">
+<meta property="og:type" content="article">
+<meta property="og:title" content="一次go语言内存泄漏的排查过程">
+<meta property="og:url" content="http://yoursite.com/2018/12/11/一次go内存泄漏的排查过程/index.html">
+<meta property="og:site_name" content="森几许的博客">
+<meta property="og:description" content="背景线上一个go语言写的服务，在连续跑了10多天后，占用内存从最开始的20M左右，涨到了1个多G，有内存泄漏的问题，将整个排查过程和相应方法进行整理，做个记录。  pprofGo语言自带的pprof工具，是检测Golang开发应用性能的利器。Profile翻译为“剖面，侧面等”，可以理解为当前应用的的一个剖面。可以知道哪些地方耗费了cpu、memory。 A few profiles are pr">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="http://yoursite.com/2018/12/11/一次go内存泄漏的排查过程/一次go语言内存泄漏的排查过程/1_内存泄漏.png">
+<meta property="og:image" content="http://yoursite.com/2018/12/11/一次go内存泄漏的排查过程/一次go语言内存泄漏的排查过程/3_netpprof浏览器截图2.png">
+<meta property="og:image" content="http://yoursite.com/2018/12/11/一次go内存泄漏的排查过程/一次go语言内存泄漏的排查过程/4_netpprof_debug_1.png">
+<meta property="og:updated_time" content="2018-12-11T09:19:07.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="一次go语言内存泄漏的排查过程">
+<meta name="twitter:description" content="背景线上一个go语言写的服务，在连续跑了10多天后，占用内存从最开始的20M左右，涨到了1个多G，有内存泄漏的问题，将整个排查过程和相应方法进行整理，做个记录。  pprofGo语言自带的pprof工具，是检测Golang开发应用性能的利器。Profile翻译为“剖面，侧面等”，可以理解为当前应用的的一个剖面。可以知道哪些地方耗费了cpu、memory。 A few profiles are pr">
+<meta name="twitter:image" content="http://yoursite.com/2018/12/11/一次go内存泄漏的排查过程/一次go语言内存泄漏的排查过程/1_内存泄漏.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2018/12/11/一次go内存泄漏的排查过程/"/>
+
+
+
+
+
+  <title>一次go语言内存泄漏的排查过程 | 森几许的博客</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">森几许的博客</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">兴趣 + 坚持 + 方法 = 牛逼</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-首页">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-归档">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-分类">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-标签">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-关于">
+          <a href="/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br />
+            
+            关于
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2018/12/11/一次go内存泄漏的排查过程/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="patrick.xu">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="森几许的博客">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">一次go语言内存泄漏的排查过程</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-12-11T00:29:12+08:00">
+                2018-12-11
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Go/" itemprop="url" rel="index">
+                    <span itemprop="name">Go</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h2 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h2><p>线上一个go语言写的服务，在连续跑了10多天后，占用内存从最开始的20M左右，涨到了1个多G，有内存泄漏的问题，将整个排查过程和相应方法进行整理，做个记录。</p>
+<p><img src="/2018/12/11/一次go内存泄漏的排查过程/一次go语言内存泄漏的排查过程/1_内存泄漏.png" alt="image"></p>
+<h2 id="pprof"><a href="#pprof" class="headerlink" title="pprof"></a>pprof</h2><p>Go语言自带的pprof工具，是检测Golang开发应用性能的利器。<br>Profile翻译为“剖面，侧面等”，可以理解为当前应用的的一个剖面。可以知道哪些地方耗费了cpu、memory。</p>
+<p>A few profiles are predefined:</p>
+<p>goroutine    - stack traces of all current goroutines</p>
+<p>heap         - a sampling of memory allocations of live objects</p>
+<p>allocs       - a sampling of all past memory allocations</p>
+<p>threadcreate - stack traces that led to the creation of new OS threads</p>
+<p>block        - stack traces that led to blocking on synchronization primitives</p>
+<p>mutex        - stack traces of holders of contended mutexes</p>
+<p>CPUProfile: 当前进程消耗的CPU，当开启后，会去按照一定频率（100MHz）采集CPU信息</p>
+<p>// The CPU profile is not available as a Profile. It has a special API,<br>// the StartCPUProfile and StopCPUProfile functions, because it streams<br>// output to a writer during profiling.</p>
+<p>pprof 采样数据主要有三种获取方式:</p>
+<ol>
+<li><p>runtime/pprof: 手动调用runtime.StartCPUProfile或者runtime.StopCPUProfile等 API来生成和写入采样文件，灵活性高</p>
+</li>
+<li><p>net/http/pprof: 通过 http 服务获取Profile采样文件，简单易用，适用于对应用程序的整体监控。通过runtime/pprof实现</p>
+</li>
+<li><p>go test: 通过 go test -bench . -cpuprofile prof.cpu生成采样文件 适用对函数进行针对性测试</p>
+</li>
+</ol>
+<h2 id="net-http-pprof"><a href="#net-http-pprof" class="headerlink" title="net/http/pprof"></a>net/http/pprof</h2><p>线上的服务是一直运行的，用过“net/http/pprof”可以看到实时的状态，看到各个信息指标，这里主要介绍这种方法。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">import _ &quot;net/http/pprof&quot;</span><br><span class="line">func main() &#123;</span><br><span class="line">	......</span><br><span class="line">	go func() &#123;</span><br><span class="line">		log.Println(http.ListenAndServe(&quot;localhost:8211&quot;, nil))</span><br><span class="line">	&#125;()</span><br><span class="line">	......</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><img src="/2018/12/11/一次go内存泄漏的排查过程/一次go语言内存泄漏的排查过程/3_netpprof浏览器截图2.png" alt="image"></p>
+<p>之后可以通过 <a href="http://localhost:8211/debug/pprof/CMD获取对应的采样数据" target="_blank" rel="noopener">http://localhost:8211/debug/pprof/CMD获取对应的采样数据</a></p>
+<p><a href="https://golang.org/src/runtime/pprof/pprof.go?s=23119:23158#L730" target="_blank" rel="noopener">pprof</a></p>
+<p>// Each Profile has a unique name. A few profiles are predefined:</p>
+<ol>
+<li>goroutine    - stack traces of all current goroutines</li>
+<li>heap         - a sampling of memory allocations of live objects</li>
+<li>allocs       - a sampling of all past memory allocations</li>
+<li>threadcreate - stack traces that led to the creation of new OS threads</li>
+<li>block        - stack traces that led to blocking on synchronization primitives</li>
+<li>mutex        - stack traces of holders of contended mutexes</li>
+</ol>
+<ul>
+<li>goroutine: 获取程序当前所有 goroutine 的堆栈信息。</li>
+<li>heap: 包含每个 goroutine 分配大小，分配堆栈等。每分配 runtime.MemProfileRate(默认为512K) 个字节进行一次数据采样。</li>
+<li>threadcreate: 获取导致创建 OS 线程的 goroutine 堆栈</li>
+<li>block: 获取导致阻塞的 goroutine 堆栈(如 channel, mutex 等)，使用前需要先调用 runtime.SetBlockProfileRate</li>
+<li>mutex: 获取导致 mutex 争用的 goroutine 堆栈，使用前需要先调用 runtime.SetMutexProfileFraction</li>
+</ul>
+<p><a href="https://golang.org/src/runtime/pprof/pprof.go?s=23119:23158#L730" target="_blank" rel="noopener">pprof_debug</a></p>
+<p>The debug parameter enables additional output.</p>
+<p>Passing debug=0 prints only the hexadecimal addresses that pprof needs.</p>
+<p>Passing debug=1 adds comments translating addresses to function names and line numbers, so that a programmer can read the profile without tools.<br><img src="/2018/12/11/一次go内存泄漏的排查过程/一次go语言内存泄漏的排查过程/4_netpprof_debug_1.png" alt="image"></p>
+<p>The predefined profiles may assign meaning to other debug values;</p>
+<p>for example, when printing the “goroutine” profile, debug=2 means to print the goroutine stacks in the same form that a Go program uses when dying due to an unrecovered panic.</p>
+<p>从图2中看到，goroutine的数量在一直增长；从图3看出，共起了414个goroutine, 其中395个是在调用FetchZkName。<br>然后再查看我们的代码，有哪里在调用go, 哪个goroutine会最终调用FetchZkName,就可以查到出问题的地方。</p>
+<p>最终查到原因是：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line">  // 10s去更新下zk节点</span><br><span class="line">ticker2 := time.NewTicker(time.Second * 10)</span><br><span class="line">go func() &#123;</span><br><span class="line">	for &#123;</span><br><span class="line">		select &#123;</span><br><span class="line">		case &lt;-ticker2.C:</span><br><span class="line">			UpdateInstanceFromZk()</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;()</span><br><span class="line"></span><br><span class="line">// 里面的函数调用关系如下：</span><br><span class="line">UpdateInstanceFromZk --&gt; nameservice.InitNameService </span><br><span class="line">--&gt; updateNames --&gt; FetchZkName</span><br><span class="line"></span><br><span class="line">// FetchZkName函数里起了一个goroutine,封装了watcher，自己已实现了更新zk节点的功能</span><br><span class="line">   go func() &#123;</span><br><span class="line">	select &#123;</span><br><span class="line">	case ev := &lt;-ch:</span><br><span class="line">		uflog.INFO(&quot;cat watcher&quot;, ev)</span><br><span class="line">		if ev.Type == zk.EventNotWatching &amp;&amp; ev.State == zk.StateDisconnected &#123;</span><br><span class="line">			reConnect(connStr)</span><br><span class="line">		&#125;</span><br><span class="line">		nc.FetchZkName(connStr, shortName, fullName)</span><br><span class="line">	&#125;</span><br><span class="line">&#125;()</span><br><span class="line"></span><br><span class="line">// 该goroutine不会退出，会一直watch。定时调用UpdateInstanceFromZk，会导致goroutine不断增加，内存泄漏。</span><br></pre></td></tr></table></figure>
+<p>解决方案是：UpdateInstanceFromZk（）调用一次即可。</p>
+<h2 id="参考链接"><a href="#参考链接" class="headerlink" title="参考链接"></a>参考链接</h2><p><a href="https://www.tanglei.name/blog/difference-between-du-and-ls.html" target="_blank" rel="noopener">由一次磁盘告警引发的血案 – du 和 ls 的区别</a></p>
+<p><a href="https://access.redhat.com/solutions/2316" target="_blank" rel="noopener">Why is space not being freed from disk after deleting a file in Red Hat Enterprise Linux?</a></p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Go/" rel="tag"># Go</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2018/11/23/网卡多队列总结/" rel="next" title="网卡多队列总结（转）">
+                <i class="fa fa-chevron-left"></i> 网卡多队列总结（转）
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">patrick.xu</p>
+              <p class="site-description motion-element" itemprop="description">打怪升级之路</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives">
+              
+                  <span class="site-state-item-count">13</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">5</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">12</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+            <div class="links-of-author motion-element">
+                
+                  <span class="links-of-author-item">
+                    <a href="mailto:xusenqi@yeah.net" target="_blank" title="E-Mail">
+                      
+                        <i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+                  </span>
+                
+            </div>
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#背景"><span class="nav-number">1.</span> <span class="nav-text">背景</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#pprof"><span class="nav-number">2.</span> <span class="nav-text">pprof</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#net-http-pprof"><span class="nav-number">3.</span> <span class="nav-text">net/http/pprof</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参考链接"><span class="nav-number">4.</span> <span class="nav-text">参考链接</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2018</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">patrick.xu</span>
+
+  
+</div>
+
+
+  <div class="powered-by">由 <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a> 强力驱动</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Pisces</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
