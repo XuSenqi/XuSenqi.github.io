@@ -68,7 +68,7 @@
 
 
 
-  <meta name="keywords" content="Hexo, NexT" />
+  <meta name="keywords" content="分布式系统,架构," />
 
 
 
@@ -79,16 +79,21 @@
 
 
 
-<meta name="description" content="打怪升级之路">
-<meta property="og:type" content="website">
-<meta property="og:title" content="森几许的博客">
-<meta property="og:url" content="http://yoursite.com/archives/index.html">
+<meta name="description" content="摘自 分布式系统架构的冰与火 左耳听风 分布式系统架构的优缺点需要分布式系统架构，来代替传统的单体架构的原因：  增大系统容量 –&amp;gt; 提高性能单台机器的性能无法满足要求时，需要垂直或者水平拆分成分布式系统架构，让更多的机器去承担。 加强系统可用 –&amp;gt; 提高服务可用性避免单点故障。  分布式系统是一种trade-off 分布式系统的发展SOA——基于服务的架构   20 世纪 90 年代">
+<meta name="keywords" content="分布式系统,架构">
+<meta property="og:type" content="article">
+<meta property="og:title" content="分布式系统架构的简介">
+<meta property="og:url" content="http://yoursite.com/2019/03/18/分布式系统架构的简介/index.html">
 <meta property="og:site_name" content="森几许的博客">
-<meta property="og:description" content="打怪升级之路">
+<meta property="og:description" content="摘自 分布式系统架构的冰与火 左耳听风 分布式系统架构的优缺点需要分布式系统架构，来代替传统的单体架构的原因：  增大系统容量 –&amp;gt; 提高性能单台机器的性能无法满足要求时，需要垂直或者水平拆分成分布式系统架构，让更多的机器去承担。 加强系统可用 –&amp;gt; 提高服务可用性避免单点故障。  分布式系统是一种trade-off 分布式系统的发展SOA——基于服务的架构   20 世纪 90 年代">
 <meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="http://yoursite.com/2019/03/18/分布式系统架构的简介/单体应用和分布式架构的优缺点.png">
+<meta property="og:image" content="http://yoursite.com/2019/03/18/分布式系统架构的简介/SOA架构的演化.png">
+<meta property="og:updated_time" content="2019-03-18T13:28:01.701Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="森几许的博客">
-<meta name="twitter:description" content="打怪升级之路">
+<meta name="twitter:title" content="分布式系统架构的简介">
+<meta name="twitter:description" content="摘自 分布式系统架构的冰与火 左耳听风 分布式系统架构的优缺点需要分布式系统架构，来代替传统的单体架构的原因：  增大系统容量 –&amp;gt; 提高性能单台机器的性能无法满足要求时，需要垂直或者水平拆分成分布式系统架构，让更多的机器去承担。 加强系统可用 –&amp;gt; 提高服务可用性避免单点故障。  分布式系统是一种trade-off 分布式系统的发展SOA——基于服务的架构   20 世纪 90 年代">
+<meta name="twitter:image" content="http://yoursite.com/2019/03/18/分布式系统架构的简介/单体应用和分布式架构的优缺点.png">
 
 
 
@@ -118,13 +123,13 @@
 
 
 
-  <link rel="canonical" href="http://yoursite.com/archives/"/>
+  <link rel="canonical" href="http://yoursite.com/2019/03/18/分布式系统架构的简介/"/>
 
 
 
 
 
-  <title>归档 | 森几许的博客</title>
+  <title>分布式系统架构的简介 | 森几许的博客</title>
   
 
 
@@ -143,7 +148,7 @@
     
   
 
-  <div class="container sidebar-position-left page-archive">
+  <div class="container sidebar-position-left page-post-detail">
     <div class="headband"></div>
 
     <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
@@ -247,416 +252,185 @@
           <div id="content" class="content">
             
 
+  <div id="posts" class="posts-expand">
+    
+
+  
+
   
   
   
-  <div class="post-block archive">
-    <div id="posts" class="posts-collapse">
-      <span class="archive-move-on"></span>
 
-      <span class="archive-page-counter">
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/03/18/分布式系统架构的简介/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="patrick.xu">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="森几许的博客">
+    </span>
+
+    
+      <header class="post-header">
+
         
         
+          <h1 class="post-title" itemprop="name headline">分布式系统架构的简介</h1>
         
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-03-18T20:47:18+08:00">
+                2019-03-18
+              </time>
+            
+
+            
+
+            
+          </span>
+
           
-        
-        嗯..! 目前共计 15 篇日志。 继续努力。
-      </span>
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/分布式系统/" itemprop="url" rel="index">
+                    <span itemprop="name">分布式系统</span>
+                  </a>
+                </span>
 
-      
-
-        
-        
-        
-
-        
+                
+                
+              
+            </span>
           
-          <div class="collection-title">
-            <h1 class="archive-year" id="archive-year-2019">2019</h1>
-          </div>
-        
-        
 
-        
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-    <header class="post-header">
-
-      <h2 class="post-title">
-        
-            <a class="post-title-link" href="/2019/03/18/分布式系统架构的简介/" itemprop="url">
-              
-                <span itemprop="name">分布式系统架构的简介</span>
-              
-            </a>
-        
-      </h2>
-
-      <div class="post-meta">
-        <time class="post-time" itemprop="dateCreated"
-              datetime="2019-03-18T20:47:18+08:00"
-              content="2019-03-18" >
-          03-18
-        </time>
-      </div>
-
-    </header>
-  </article>
-
-
-
-      
-
-        
-        
-        
-
-        
           
-          <div class="collection-title">
-            <h1 class="archive-year" id="archive-year-2018">2018</h1>
-          </div>
-        
-        
+            
+          
 
-        
+          
+          
 
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-    <header class="post-header">
+          
 
-      <h2 class="post-title">
-        
-            <a class="post-title-link" href="/2018/12/14/nodejs获取客户端IP-Address/" itemprop="url">
-              
-                <span itemprop="name">nodejs获取客户端IP Address(转)</span>
-              
-            </a>
-        
-      </h2>
+          
 
-      <div class="post-meta">
-        <time class="post-time" itemprop="dateCreated"
-              datetime="2018-12-14T20:44:51+08:00"
-              content="2018-12-14" >
-          12-14
-        </time>
-      </div>
+          
 
-    </header>
-  </article>
+        </div>
+      </header>
+    
 
-
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
 
       
-
-        
-        
-        
-
-        
-        
-
-        
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-    <header class="post-header">
-
-      <h2 class="post-title">
-        
-            <a class="post-title-link" href="/2018/12/11/一次go内存泄漏的排查过程/" itemprop="url">
-              
-                <span itemprop="name">一次go语言内存泄漏的排查过程</span>
-              
-            </a>
-        
-      </h2>
-
-      <div class="post-meta">
-        <time class="post-time" itemprop="dateCreated"
-              datetime="2018-12-11T00:29:12+08:00"
-              content="2018-12-11" >
-          12-11
-        </time>
-      </div>
-
-    </header>
-  </article>
-
-
-
       
 
-        
-        
-        
-
-        
-        
-
-        
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-    <header class="post-header">
-
-      <h2 class="post-title">
-        
-            <a class="post-title-link" href="/2018/11/23/网卡多队列总结/" itemprop="url">
-              
-                <span itemprop="name">网卡多队列总结（转）</span>
-              
-            </a>
-        
-      </h2>
-
-      <div class="post-meta">
-        <time class="post-time" itemprop="dateCreated"
-              datetime="2018-11-23T15:11:59+08:00"
-              content="2018-11-23" >
-          11-23
-        </time>
-      </div>
-
-    </header>
-  </article>
-
-
+      
+        <p>摘自 分布式系统架构的冰与火 左耳听风</p>
+<h2 id="分布式系统架构的优缺点"><a href="#分布式系统架构的优缺点" class="headerlink" title="分布式系统架构的优缺点"></a>分布式系统架构的优缺点</h2><p>需要分布式系统架构，来代替传统的单体架构的原因：</p>
+<ol>
+<li>增大系统容量 –&gt; 提高性能<br>单台机器的性能无法满足要求时，需要垂直或者水平拆分成分布式系统架构，让更多的机器去承担。</li>
+<li>加强系统可用 –&gt; 提高服务可用性<br>避免单点故障。</li>
+</ol>
+<p>分布式系统是一种trade-off<br><img src="/2019/03/18/分布式系统架构的简介/单体应用和分布式架构的优缺点.png" alt="image"></p>
+<h2 id="分布式系统的发展"><a href="#分布式系统的发展" class="headerlink" title="分布式系统的发展"></a>分布式系统的发展</h2><p>SOA——基于服务的架构</p>
+<p><img src="/2019/03/18/分布式系统架构的简介/SOA架构的演化.png" alt="image"></p>
+<ol>
+<li>20 世纪 90 年代前，是单体架构，软件模块高度耦合。</li>
+<li>2000 年左右出现了比较松耦合的 SOA 架构，这个架构需要一个标准的协议或是中间件来联动其它相关联的服务.</li>
+<li>而 2010 年后，出现了微服务架构，这个架构更为松耦合。每一个微服务都能独立完整地运行（所谓的自包含），后端单体的数据库也被微服务这样的架构分散到不同的服务中。而它和传统 SOA 的差别在于，服务间的整合需要一个服务编排或是服务整合的引擎。就好像交响乐中需要有一个指挥来把所有乐器编排和组织在一起。</li>
+</ol>
+<p>一般来说，这个编排和组织引擎可以是工作流引擎，也可以是网关。当然，还需要辅助于像容器化调度这样的技术方式，如 Kubernetes.</p>
 
       
-
-        
-        
-        
-
-        
-        
-
-        
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-    <header class="post-header">
-
-      <h2 class="post-title">
-        
-            <a class="post-title-link" href="/2018/11/10/du、df和ls的区别/" itemprop="url">
-              
-                <span itemprop="name">du、df和ls的区别</span>
-              
-            </a>
-        
-      </h2>
-
-      <div class="post-meta">
-        <time class="post-time" itemprop="dateCreated"
-              datetime="2018-11-10T16:24:21+08:00"
-              content="2018-11-10" >
-          11-10
-        </time>
-      </div>
-
-    </header>
-  </article>
-
-
-
-      
-
-        
-        
-        
-
-        
-        
-
-        
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-    <header class="post-header">
-
-      <h2 class="post-title">
-        
-            <a class="post-title-link" href="/2018/11/10/文件已删除空间未释放的例子/" itemprop="url">
-              
-                <span itemprop="name">文件删除空间未释放的例子</span>
-              
-            </a>
-        
-      </h2>
-
-      <div class="post-meta">
-        <time class="post-time" itemprop="dateCreated"
-              datetime="2018-11-10T14:31:28+08:00"
-              content="2018-11-10" >
-          11-10
-        </time>
-      </div>
-
-    </header>
-  </article>
-
-
-
-      
-
-        
-        
-        
-
-        
-        
-
-        
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-    <header class="post-header">
-
-      <h2 class="post-title">
-        
-            <a class="post-title-link" href="/2018/10/22/golang-json操作的注意点/" itemprop="url">
-              
-                <span itemprop="name">golang - json操作的注意点</span>
-              
-            </a>
-        
-      </h2>
-
-      <div class="post-meta">
-        <time class="post-time" itemprop="dateCreated"
-              datetime="2018-10-22T21:36:19+08:00"
-              content="2018-10-22" >
-          10-22
-        </time>
-      </div>
-
-    </header>
-  </article>
-
-
-
-      
-
-        
-        
-        
-
-        
-        
-
-        
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-    <header class="post-header">
-
-      <h2 class="post-title">
-        
-            <a class="post-title-link" href="/2018/10/08/HTTP-Keepalive/" itemprop="url">
-              
-                <span itemprop="name">HTTP Keepalive</span>
-              
-            </a>
-        
-      </h2>
-
-      <div class="post-meta">
-        <time class="post-time" itemprop="dateCreated"
-              datetime="2018-10-08T16:22:18+08:00"
-              content="2018-10-08" >
-          10-08
-        </time>
-      </div>
-
-    </header>
-  </article>
-
-
-
-      
-
-        
-        
-        
-
-        
-        
-
-        
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-    <header class="post-header">
-
-      <h2 class="post-title">
-        
-            <a class="post-title-link" href="/2018/10/08/TCP-Keepalive/" itemprop="url">
-              
-                <span itemprop="name">TCP Keepalive</span>
-              
-            </a>
-        
-      </h2>
-
-      <div class="post-meta">
-        <time class="post-time" itemprop="dateCreated"
-              datetime="2018-10-08T16:22:10+08:00"
-              content="2018-10-08" >
-          10-08
-        </time>
-      </div>
-
-    </header>
-  </article>
-
-
-
-      
-
-        
-        
-        
-
-        
-        
-
-        
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-    <header class="post-header">
-
-      <h2 class="post-title">
-        
-            <a class="post-title-link" href="/2018/08/14/并发控制/" itemprop="url">
-              
-                <span itemprop="name">并发控制</span>
-              
-            </a>
-        
-      </h2>
-
-      <div class="post-meta">
-        <time class="post-time" itemprop="dateCreated"
-              datetime="2018-08-14T23:31:28+08:00"
-              content="2018-08-14" >
-          08-14
-        </time>
-      </div>
-
-    </header>
-  </article>
-
-
-
-      
-
     </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/分布式系统/" rel="tag"># 分布式系统</a>
+          
+            <a href="/tags/架构/" rel="tag"># 架构</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2018/12/14/nodejs获取客户端IP-Address/" rel="next" title="nodejs获取客户端IP Address(转)">
+                <i class="fa fa-chevron-left"></i> nodejs获取客户端IP Address(转)
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
   </div>
   
   
   
-
-  
-  <nav class="pagination">
-    <span class="page-number current">1</span><a class="page-number" href="/archives/page/2/">2</a><a class="extend next" rel="next" href="/archives/page/2/"><i class="fa fa-angle-right"></i></a>
-  </nav>
+  </article>
 
 
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
 
 
           </div>
@@ -664,6 +438,10 @@
 
 
           
+
+  
+
+
 
         </div>
         
@@ -684,8 +462,17 @@
       
 
       
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
 
-      <section class="site-overview-wrap sidebar-panel sidebar-panel-active">
+      <section class="site-overview-wrap sidebar-panel">
         <div class="site-overview">
           <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
             
@@ -755,6 +542,22 @@
         </div>
       </section>
 
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#分布式系统架构的优缺点"><span class="nav-number">1.</span> <span class="nav-text">分布式系统架构的优缺点</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#分布式系统的发展"><span class="nav-number">2.</span> <span class="nav-text">分布式系统的发展</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
       
 
       
@@ -895,6 +698,10 @@
 
 
   
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
 
   
 
