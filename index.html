@@ -363,13 +363,53 @@
 <li>物理层： Bit</li>
 </ul>
 <p><img src="/2019/04/24/读书笔记-TCP-IP详解-卷1：协议/传入的帧在主机上的分解.png" alt="image"></p>
-<h3 id="链路层"><a href="#链路层" class="headerlink" title="链路层"></a>链路层</h3><p><img src="/2019/04/24/读书笔记-TCP-IP详解-卷1：协议/以太网帧格式.png" alt="image"><br>MTU：46~1500</p>
+<h3 id="链路层"><a href="#链路层" class="headerlink" title="链路层"></a>链路层</h3><p><img src="/2019/04/24/读书笔记-TCP-IP详解-卷1：协议/以太网帧格式.png" alt="image"></p>
+<ul>
+<li>MTU 到底是怎么来的</li>
+</ul>
+<p>MTU, 是 Maximum Transmission Unit 的缩写, 根据 Wikipedia 的定义, MTU 指的是在 Network Layer (因处 OSI 第三层, 后以 L3 代替)上传输的最大数据报单元, 而 MTU 的大小一般由 Link Layer (因处 OSI 第二层, 后以 L2 代替) 设备决定. 比如生活中使用最广泛的以太网(Ethernet, IEEE 802.3)的帧大小是 1518 字节, 根据 Ethernet Frame 的定义, L2 Frame 由 14 字节 Header 和 4 字节 Trailer 组成, 所以 L3 层(也就是 IP 层)最多只能填充 1500 字节大小, 这就是 MTU 的由来.</p>
+<p>MTU：46~1500</p>
 <p>物理层扩展以太网：集线器<br>链路层扩展以太网：网桥、交换机</p>
 <p>隧道：在高层（或同等层）分组中携带底层数据</p>
 <h3 id="Internet协议"><a href="#Internet协议" class="headerlink" title="Internet协议"></a>Internet协议</h3><p><img src="/2019/04/24/读书笔记-TCP-IP详解-卷1：协议/IPV4数据报.png" alt="image"></p>
 <p><a href="https://www.tutorialspoint.com/ipv4/ipv4_packet_structure.htm" target="_blank" rel="noopener">IPv4 - Packet Structure</a></p>
 <h3 id="DHCP"><a href="#DHCP" class="headerlink" title="DHCP"></a>DHCP</h3><p><img src="/2019/04/24/读书笔记-TCP-IP详解-卷1：协议/DHCP交换.png" alt="image"></p>
-<h3 id="防火墙、NAT"><a href="#防火墙、NAT" class="headerlink" title="防火墙、NAT"></a>防火墙、NAT</h3><h3 id="ICMP"><a href="#ICMP" class="headerlink" title="ICMP"></a>ICMP</h3><h3 id="UDP"><a href="#UDP" class="headerlink" title="UDP"></a>UDP</h3>
+<h3 id="防火墙、NAT"><a href="#防火墙、NAT" class="headerlink" title="防火墙、NAT"></a>防火墙、NAT</h3><h3 id="ICMP"><a href="#ICMP" class="headerlink" title="ICMP"></a>ICMP</h3><h3 id="UDP"><a href="#UDP" class="headerlink" title="UDP"></a>UDP</h3><p><img src="/2019/04/24/读书笔记-TCP-IP详解-卷1：协议/IPV4_udp数据报.jpg" alt="image"></p>
+<p><img src="/2019/04/24/读书笔记-TCP-IP详解-卷1：协议/udp头部和负载区.jpg" alt="image"></p>
+<p><img src="/2019/04/24/读书笔记-TCP-IP详解-卷1：协议/用于计算UDPIPV4数据报的字段.jpg" alt="image"><br>UDP校验和覆盖了UDP头部、UDP数据和一个伪头部。<br>它不提供差错纠正、队列管理、流量控制和拥塞控制。</p>
+<p>面向数据报：应用层交给UDP多长的报文，UDP就照样发送，即一次发送一个报文。因此，应用程序必须选择合适大小的报文。若报文太长，则IP层需要分片，降低效率。若太短，会是IP太小。UDP对应用层交下来的报文，既不合并，也不拆分，而是保留这些报文的边界。这也就是说，应用层交给UDP多长的报文，UDP就照样发送，即一次发送一个报文。</p>
+<h3 id="TCP-传输控制协议（初步）"><a href="#TCP-传输控制协议（初步）" class="headerlink" title="TCP: 传输控制协议（初步）"></a>TCP: 传输控制协议（初步）</h3><ul>
+<li>差错纠正：接收方收报，校验和字段，校验失败时，不回ACK；发送端会重新发送。</li>
+<li>流量控制（flow control）：接收方相对发送方太慢时，会窗口更新（window update）,告诉发送方，调整其窗口大小，从而降低发送包的速度</li>
+<li>拥塞控制(congestion control)：中间的网络（比如路由器）丢包，减缓TCP发送</li>
+<li>面向字节流： 虽然应用程序和TCP的交互是一次一个数据块（大小不等），但TCP把应用程序看成是一连串的无结构的字节流。TCP有一个缓冲，当应用程序传送的数据块太长，TCP就可以把它划分短一些再传送。如果应用程序一次只发送一个字节，TCP也可以等待积累有足够多的字节后再构成报文段发送出去。</li>
+</ul>
+<p><img src="/2019/04/24/读书笔记-TCP-IP详解-卷1：协议/发送方窗口.png" alt="image"></p>
+<ul>
+<li>分组窗口（window）</li>
+<li>窗口大小（windows size）</li>
+<li><p>滑动窗口（sliding window）协议</p>
+</li>
+<li><p>组包（packetization）：把一个发送应用程序的字节流转换成一组IP可以携带的分组。分组的序列号表示了每个分组的第一个字节再整个数据流中的字节偏移，而不是分组号。在传输过程中允许重新组包(repacketization)</p>
+</li>
+<li><p>校验和：TCP维持了一个较强的校验和，该校验和涉及它的头部、任何相关应用程序数据和IP头部的所有字段。是一个端到端的伪头部，用于检测传送中引入的比特差错。</p>
+</li>
+<li><p>当TCP收到连接另一端的数据时，会发送一个确认。这个确认可能不会立即发送，一般会延迟片刻。TCP使用的ACK是累积的，从某种意义来讲，一个指示字节好N的ACK暗示着所有直到N的字节（但不包含N）已经成功接收了。</p>
+</li>
+<li><p>双工服务</p>
+</li>
+<li><p>使用序列号，TCP丢弃重复报文和记录以杂乱次序到达的报文段，将正确次序的数据交给应用程序。因此，TCP接收端可能会被迫先保持大序列号的数据不交给应用程序，直到确实的小序列号到达报文段（一个“洞“）被填满。</p>
+</li>
+</ul>
+<h4 id="TCP头部和封装"><a href="#TCP头部和封装" class="headerlink" title="TCP头部和封装"></a>TCP头部和封装</h4><p><img src="/2019/04/24/读书笔记-TCP-IP详解-卷1：协议/TCP在IP数据报中的封装.png" alt="image"></p>
+<p><img src="/2019/04/24/读书笔记-TCP-IP详解-卷1：协议/TCP头部.png" alt="image"></p>
+<p><img src="/2019/04/24/读书笔记-TCP-IP详解-卷1：协议/TCP_flags.png" alt="image"></p>
+<ul>
+<li>TCP MSS</li>
+</ul>
+<p>MSS (Maximum Segment Size)是 TCP Layer (L4) 的属性, MSS 指的是 TCP payload的长度. 当在MTU 1500 的网络上传输时, MSS 为 1460 (即 1500 减去 20 字节 IP 头, 20 字节 TCP 头).</p>
+<p>普通TCP连接的建立与终止<br><img src="/2019/04/24/读书笔记-TCP-IP详解-卷1：协议/TCP三次握手.png" alt="image"></p>
+
           
         
       
