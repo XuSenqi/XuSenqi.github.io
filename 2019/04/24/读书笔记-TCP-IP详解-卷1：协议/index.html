@@ -99,7 +99,16 @@
 <meta property="og:image" content="http://yoursite.com/2019/04/24/读书笔记-TCP-IP详解-卷1：协议/TCP头部.png">
 <meta property="og:image" content="http://yoursite.com/2019/04/24/读书笔记-TCP-IP详解-卷1：协议/TCP_flags.png">
 <meta property="og:image" content="http://yoursite.com/2019/04/24/读书笔记-TCP-IP详解-卷1：协议/TCP三次握手.png">
-<meta property="og:updated_time" content="2019-04-26T17:09:11.109Z">
+<meta property="og:image" content="http://yoursite.com/2019/04/24/读书笔记-TCP-IP详解-卷1：协议/TCP半关闭.png">
+<meta property="og:image" content="http://yoursite.com/2019/04/24/读书笔记-TCP-IP详解-卷1：协议/使用固定序列号的问题.png">
+<meta property="og:image" content="http://yoursite.com/2019/04/24/读书笔记-TCP-IP详解-卷1：协议/TCP选项.jpg">
+<meta property="og:image" content="http://yoursite.com/2019/04/24/读书笔记-TCP-IP详解-卷1：协议/交互式通信.png">
+<meta property="og:image" content="http://yoursite.com/2019/04/24/读书笔记-TCP-IP详解-卷1：协议/延时确认.png">
+<meta property="og:image" content="http://yoursite.com/2019/04/24/读书笔记-TCP-IP详解-卷1：协议/Nagle算法的对比.png">
+<meta property="og:image" content="http://yoursite.com/2019/04/24/读书笔记-TCP-IP详解-卷1：协议/延时ACK和Nagle算法相结合.png">
+<meta property="og:image" content="http://yoursite.com/2019/04/24/读书笔记-TCP-IP详解-卷1：协议/发送端滑动窗口.png">
+<meta property="og:image" content="http://yoursite.com/2019/04/24/读书笔记-TCP-IP详解-卷1：协议/接收端滑动窗口.png">
+<meta property="og:updated_time" content="2019-04-28T13:54:34.595Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="读书笔记-TCP&#x2F;IP详解 卷1：协议">
 <meta name="twitter:description" content="不同层的PDU（Protocol Data Unit）  传输层：Segment(帧) 网络层： Packet 链路层：Frame 物理层： Bit   链路层  MTU 到底是怎么来的  MTU, 是 Maximum Transmission Unit 的缩写, 根据 Wikipedia 的定义, MTU 指的是在 Network Layer (因处 OSI 第三层, 后以 L3 代替)上传输的">
@@ -418,8 +427,61 @@
 <li>TCP MSS</li>
 </ul>
 <p>MSS (Maximum Segment Size)是 TCP Layer (L4) 的属性, MSS 指的是 TCP payload的长度. 当在MTU 1500 的网络上传输时, MSS 为 1460 (即 1500 减去 20 字节 IP 头, 20 字节 TCP 头).</p>
-<p>普通TCP连接的建立与终止<br><img src="/2019/04/24/读书笔记-TCP-IP详解-卷1：协议/TCP三次握手.png" alt="image"></p>
-
+<h3 id="TCP连接管理"><a href="#TCP连接管理" class="headerlink" title="TCP连接管理"></a>TCP连接管理</h3><ul>
+<li><p>普通TCP连接的建立与终止<br><img src="/2019/04/24/读书笔记-TCP-IP详解-卷1：协议/TCP三次握手.png" alt="image"></p>
+</li>
+<li><p>TCP半关闭</p>
+</li>
+</ul>
+<p>TCP的半关闭操作是指仅关闭数据流的⼀一个传输⽅方向, ⽽而两个半关闭操作合在⼀一起就能够关闭整个连接。<br>例如, 应⽤用程序表明“ 我 已经完成了了数据的发送⼯工作, 并发送⼀一个F I N 给对⽅方, 但是我仍然希望接收来⾃自对⽅方的数据 直到它发送⼀一个F I N 给我” 。伯克利利套接字的A P I 提供了了半关闭操作。应⽤用程序只需要调⽤用shutdown函数来代替基本的close函数, 就能实现上述操作。然⽽而, 绝⼤大部分应⽤用程序仍然会调⽤用close函数来同时关闭⼀一条连接的两个传输⽅方向。</p>
+<p>图中左侧的客户端发起了半关闭<br><img src="/2019/04/24/读书笔记-TCP-IP详解-卷1：协议/TCP半关闭.png" alt="image"></p>
+<ul>
+<li>初始序列号（英文为：Initial Sequence Number，简称ISN）<br><img src="/2019/04/24/读书笔记-TCP-IP详解-卷1：协议/使用固定序列号的问题.png" alt="image"><br>按理来说，B应该把这个数据报丢弃掉才是。但是由于A每次发送报文都使用了相同的序号（SEQ = 1），这可能会让B误认为这200字节是属于新建立的tcp连接的，因此B会对这200字节数据照收不误。这就导致B在收到新tcp连接的数据后，又收到旧tcp连接的数据，从而出现数据乱序的问题。</li>
+</ul>
+<p>这其实反映了tcp的一些缺点，如果被一些恶意攻击者加以利用tcp的这种缺点：选择合适的序号，ip地址和端口的话，就能伪造出一个tcp报文段，从而打断正常的tcp连接。但是初始化序号的方式（通过算法来随机生成序号）就会使序号难以猜出，也就不容易利用这种缺点来进行一些恶意攻击行为。</p>
+<p>一般来说，这个序号的范围是0  ~  2^31 - 1之间，而且序号的生成也是随机的，</p>
+<ul>
+<li>TCP选项<br><img src="/2019/04/24/读书笔记-TCP-IP详解-卷1：协议/TCP选项.jpg" alt="image"></li>
+</ul>
+<p>MSS: 最⼤段⼤小是指TCP协议所允许的从对⽅方接收到的最⼤大报⽂文段。只记录TCP的payload的字节数。典型值1460</p>
+<ul>
+<li><p>TIME_WAIT状态<br>等待通信另一方重传它的FIN</p>
+</li>
+<li><p>重置报文段</p>
+</li>
+</ul>
+<p>当发现一个到达的报文段对于相关连接而言是不正确的，TCP就会发送一个重置报文段。TCP头部的RST位字段。重置报文段通常会导致TCP连接的快速拆卸。</p>
+<pre><code>1）针对不存在端口的请求连接
+2）终止一条连接（终止释放）： 
+任何排队的数据都将被抛弃，一个重置报文段会被立即发送出去；重置报文段的接收方会说明通信另一端采用了终止的方式而不是正常关闭。
+3）半开连接
+如果再未告知另一端的情况下通信的一端关闭或终止连接，那么就认为该TCP连接处于半开状态。
+发生在一方的主机崩溃的情况下。只要不同过半开连接传数据，正常工作的一端不会检测出另一端已经崩溃。
+</code></pre><p>更多的rst情况参考<a href="https://zhuanlan.zhihu.com/p/30791159" target="_blank" rel="noopener">tcp rst产生的几种情况</a></p>
+<h3 id="TCP超时与重传"><a href="#TCP超时与重传" class="headerlink" title="TCP超时与重传"></a>TCP超时与重传</h3><p>RTO： Retransmission Timeout 重传超时</p>
+<p>RTT： Round Trip Time</p>
+<h3 id="TCP数据流与窗口管理"><a href="#TCP数据流与窗口管理" class="headerlink" title="TCP数据流与窗口管理"></a>TCP数据流与窗口管理</h3><ul>
+<li><p>交互式通信<br><img src="/2019/04/24/读书笔记-TCP-IP详解-卷1：协议/交互式通信.png" alt="image"></p>
+</li>
+<li><p>延时确认（Delayed Acknowledgement）<br><img src="/2019/04/24/读书笔记-TCP-IP详解-卷1：协议/延时确认.png" alt="image"></p>
+</li>
+<li><p>Nagle算法</p>
+</li>
+</ul>
+<p>Nagle算法要求, 当⼀个TCP连接中有在传数据(即那些已发送但还未经确认的数据),小的报文段(长度小于SMSS)就不能被发送, 直到所有的在传数据都收到ACK并且, 在收到ACK后, TCP需要收集这些小数据, 将其整合到⼀个报⽂文段中发送。</p>
+<pre><code>迫使TCP遵循停等( stop-and-Wait)规程⼀只有等接收到所有在传数据的ACK后才能继续发送。
+该算法的精妙之处在于它实现了⾃时钟( self-clocking) 控制: ACK返回越快, 数据传输也越快。在相对高延迟的广域⽹网中, 更需要减少微型报的数⽬目, 该算法使得单位时间内发送的报⽂文段数目更少。也就是说, RTT控制着发包速率。
+</code></pre><p><img src="/2019/04/24/读书笔记-TCP-IP详解-卷1：协议/Nagle算法的对比.png" alt="image"></p>
+<p><img src="/2019/04/24/读书笔记-TCP-IP详解-卷1：协议/延时ACK和Nagle算法相结合.png" alt="image"></p>
+<ul>
+<li><p>流量控制与窗口管理<br><img src="/2019/04/24/读书笔记-TCP-IP详解-卷1：协议/发送端滑动窗口.png" alt="image"><br><img src="/2019/04/24/读书笔记-TCP-IP详解-卷1：协议/接收端滑动窗口.png" alt="image"></p>
+<pre><code>当TPC通信的接收方的接收速度无法匹配发送速度时，发送方会降低发送速度。
+TCP的流量控制机制完成了对发送速率的调节，它是基于ACK数据包中的通告窗口大小来实现的。
+这种方式提供了明确的接收方返回的状态信息，避免接收方缓存溢出。
+</code></pre></li>
+</ul>
+<h3 id="TCP拥塞控制（Congestion-Control）"><a href="#TCP拥塞控制（Congestion-Control）" class="headerlink" title="TCP拥塞控制（Congestion Control）"></a>TCP拥塞控制（Congestion Control）</h3><p>路由器因无法处理高速率到达的流量而被迫丢弃数据信息的现象称为拥塞。</p>
+<h3 id="TCP保活机制（KeepAlive）"><a href="#TCP保活机制（KeepAlive）" class="headerlink" title="TCP保活机制（KeepAlive）"></a>TCP保活机制（KeepAlive）</h3>
       
     </div>
     
@@ -599,7 +661,7 @@
             
 
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#链路层"><span class="nav-number">1.</span> <span class="nav-text">链路层</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Internet协议"><span class="nav-number">2.</span> <span class="nav-text">Internet协议</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#DHCP"><span class="nav-number">3.</span> <span class="nav-text">DHCP</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#防火墙、NAT"><span class="nav-number">4.</span> <span class="nav-text">防火墙、NAT</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#ICMP"><span class="nav-number">5.</span> <span class="nav-text">ICMP</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#UDP"><span class="nav-number">6.</span> <span class="nav-text">UDP</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#TCP-传输控制协议（初步）"><span class="nav-number">7.</span> <span class="nav-text">TCP: 传输控制协议（初步）</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#TCP头部和封装"><span class="nav-number">7.1.</span> <span class="nav-text">TCP头部和封装</span></a></li></ol></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#链路层"><span class="nav-number">1.</span> <span class="nav-text">链路层</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Internet协议"><span class="nav-number">2.</span> <span class="nav-text">Internet协议</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#DHCP"><span class="nav-number">3.</span> <span class="nav-text">DHCP</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#防火墙、NAT"><span class="nav-number">4.</span> <span class="nav-text">防火墙、NAT</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#ICMP"><span class="nav-number">5.</span> <span class="nav-text">ICMP</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#UDP"><span class="nav-number">6.</span> <span class="nav-text">UDP</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#TCP-传输控制协议（初步）"><span class="nav-number">7.</span> <span class="nav-text">TCP: 传输控制协议（初步）</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#TCP头部和封装"><span class="nav-number">7.1.</span> <span class="nav-text">TCP头部和封装</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#TCP连接管理"><span class="nav-number">8.</span> <span class="nav-text">TCP连接管理</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#TCP超时与重传"><span class="nav-number">9.</span> <span class="nav-text">TCP超时与重传</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#TCP数据流与窗口管理"><span class="nav-number">10.</span> <span class="nav-text">TCP数据流与窗口管理</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#TCP拥塞控制（Congestion-Control）"><span class="nav-number">11.</span> <span class="nav-text">TCP拥塞控制（Congestion Control）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#TCP保活机制（KeepAlive）"><span class="nav-number">12.</span> <span class="nav-text">TCP保活机制（KeepAlive）</span></a></li></ol></div>
             
 
           </div>
