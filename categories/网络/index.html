@@ -322,9 +322,9 @@
 
       <h2 class="post-title">
         
-            <a class="post-title-link" href="/2018/05/15/TCP四次挥手/" itemprop="url">
+            <a class="post-title-link" href="/2018/05/15/TCP三次握手/" itemprop="url">
               
-                <span itemprop="name">TCP四次挥手</span>
+                <span itemprop="name">TCP三次握手</span>
               
             </a>
         
@@ -350,9 +350,9 @@
 
       <h2 class="post-title">
         
-            <a class="post-title-link" href="/2018/05/15/TCP三次握手/" itemprop="url">
+            <a class="post-title-link" href="/2018/05/15/TCP四次挥手/" itemprop="url">
               
-                <span itemprop="name">TCP三次握手</span>
+                <span itemprop="name">TCP四次挥手</span>
               
             </a>
         
@@ -656,6 +656,28 @@
 
 
 
+
+  <script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script>
+  <script src="//unpkg.com/valine/dist/Valine.min.js"></script>
+  
+  <script type="text/javascript">
+    var GUEST = ['nick','mail','link'];
+    var guest = 'nick,mail,link';
+    guest = guest.split(',').filter(item=>{
+      return GUEST.indexOf(item)>-1;
+    });
+    new Valine({
+        el: '#comments' ,
+        verify: false,
+        notify: true,
+        appId: 'RuNvykqCFiSKIt83PqlqJbK0-gzGzoHsz',
+        appKey: '9TDvi5mOVCQ0aBL2MXCwd9WC',
+        placeholder: 'Just go go',
+        avatar:'mm',
+        guest_info:guest,
+        pageSize:'10' || 10,
+    });
+  </script>
 
 
 
