@@ -85,20 +85,20 @@
 <meta name="keywords" content="Go">
 <meta property="og:type" content="article">
 <meta property="og:title" content="一次go语言内存泄漏的排查过程">
-<meta property="og:url" content="http://yoursite.com/2018/12/11/一次go内存泄漏的排查过程/index.html">
+<meta property="og:url" content="https://xusenqi.github.io/2018/12/11/一次go内存泄漏的排查过程/index.html">
 <meta property="og:site_name" content="森几许的博客">
 <meta property="og:description" content="背景线上一个go语言写的服务，在连续跑了10多天后，占用内存从最开始的20M左右，涨到了1个多G，有内存泄漏的问题，将整个排查过程和相应方法进行整理，做个记录。  pprofGo语言自带的pprof工具，是检测Golang开发应用性能的利器。 pprof 采样数据主要有三种获取方式:  runtime/pprof: 手动调用runtime.StartCPUProfile或者runtime.Stop">
 <meta property="og:locale" content="zh-Hans">
-<meta property="og:image" content="http://yoursite.com/2018/12/11/一次go内存泄漏的排查过程/1_内存泄漏.png">
-<meta property="og:image" content="http://yoursite.com/2018/12/11/一次go内存泄漏的排查过程/3_netpprof浏览器截图2.png">
-<meta property="og:image" content="http://yoursite.com/2018/12/11/一次go内存泄漏的排查过程/4_netpprof_debug_1.png">
-<meta property="og:image" content="http://yoursite.com/2018/12/11/一次go内存泄漏的排查过程/6_内存泄漏解决.png">
-<meta property="og:image" content="http://yoursite.com/2018/12/11/一次go内存泄漏的排查过程/5_cpu耗时调度图.png">
+<meta property="og:image" content="https://xusenqi.github.io/2018/12/11/一次go内存泄漏的排查过程/1_内存泄漏.png">
+<meta property="og:image" content="https://xusenqi.github.io/2018/12/11/一次go内存泄漏的排查过程/3_netpprof浏览器截图2.png">
+<meta property="og:image" content="https://xusenqi.github.io/2018/12/11/一次go内存泄漏的排查过程/4_netpprof_debug_1.png">
+<meta property="og:image" content="https://xusenqi.github.io/2018/12/11/一次go内存泄漏的排查过程/6_内存泄漏解决.png">
+<meta property="og:image" content="https://xusenqi.github.io/2018/12/11/一次go内存泄漏的排查过程/5_cpu耗时调度图.png">
 <meta property="og:updated_time" content="2018-12-12T08:16:15.000Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="一次go语言内存泄漏的排查过程">
 <meta name="twitter:description" content="背景线上一个go语言写的服务，在连续跑了10多天后，占用内存从最开始的20M左右，涨到了1个多G，有内存泄漏的问题，将整个排查过程和相应方法进行整理，做个记录。  pprofGo语言自带的pprof工具，是检测Golang开发应用性能的利器。 pprof 采样数据主要有三种获取方式:  runtime/pprof: 手动调用runtime.StartCPUProfile或者runtime.Stop">
-<meta name="twitter:image" content="http://yoursite.com/2018/12/11/一次go内存泄漏的排查过程/1_内存泄漏.png">
+<meta name="twitter:image" content="https://xusenqi.github.io/2018/12/11/一次go内存泄漏的排查过程/1_内存泄漏.png">
 
 
 
@@ -128,7 +128,7 @@
 
 
 
-  <link rel="canonical" href="http://yoursite.com/2018/12/11/一次go内存泄漏的排查过程/"/>
+  <link rel="canonical" href="https://xusenqi.github.io/2018/12/11/一次go内存泄漏的排查过程/"/>
 
 
 
@@ -271,7 +271,7 @@
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2018/12/11/一次go内存泄漏的排查过程/">
+    <link itemprop="mainEntityOfPage" href="https://xusenqi.github.io/2018/12/11/一次go内存泄漏的排查过程/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="patrick.xu">

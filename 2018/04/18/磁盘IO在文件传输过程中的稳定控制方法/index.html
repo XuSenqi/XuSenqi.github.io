@@ -85,41 +85,41 @@
 <meta name="keywords" content="限速,cgroup,磁盘IO">
 <meta property="og:type" content="article">
 <meta property="og:title" content="磁盘IO在文件传输过程中的稳定控制优化">
-<meta property="og:url" content="http://yoursite.com/2018/04/18/磁盘IO在文件传输过程中的稳定控制方法/index.html">
+<meta property="og:url" content="https://xusenqi.github.io/2018/04/18/磁盘IO在文件传输过程中的稳定控制方法/index.html">
 <meta property="og:site_name" content="森几许的博客">
 <meta property="og:description" content="问题的描述本地镜像在不同物理机之间的传输，这里是通过自研的工具rsc，包含rsc_client和rsc_server。 rsc_server对收到的数据的处理不当，对IO可能产生不理想的结果：（1）当Bps或者iops 过高时，可能使dm-0的util过高，甚至100%，影响上面虚机的IO；（2）当传输过程中Bps过低时，会使得传输镜像过慢，影响效率，甚至导致创建虚机失败。 dm-0是物理机上的数">
 <meta property="og:locale" content="zh-Hans">
-<meta property="og:image" content="http://yoursite.com/2018/04/18/磁盘IO在文件传输过程中的稳定控制方法/2-nolimit-1.png">
-<meta property="og:image" content="http://yoursite.com/2018/04/18/磁盘IO在文件传输过程中的稳定控制方法/2-nolimit-2.png">
-<meta property="og:image" content="http://yoursite.com/2018/04/18/磁盘IO在文件传输过程中的稳定控制方法/2-nolimit-3.png">
-<meta property="og:image" content="http://yoursite.com/2018/04/18/磁盘IO在文件传输过程中的稳定控制方法/3-1-limit-1.png">
-<meta property="og:image" content="http://yoursite.com/2018/04/18/磁盘IO在文件传输过程中的稳定控制方法/3-1-limit-2.png">
-<meta property="og:image" content="http://yoursite.com/2018/04/18/磁盘IO在文件传输过程中的稳定控制方法/3-1-limit-3.png">
-<meta property="og:image" content="http://yoursite.com/2018/04/18/磁盘IO在文件传输过程中的稳定控制方法/3-2-flushlimit-1.png">
-<meta property="og:image" content="http://yoursite.com/2018/04/18/磁盘IO在文件传输过程中的稳定控制方法/3-2-flushlimit-2.png">
-<meta property="og:image" content="http://yoursite.com/2018/04/18/磁盘IO在文件传输过程中的稳定控制方法/3-2-flushlimit-3.png">
-<meta property="og:image" content="http://yoursite.com/2018/04/18/磁盘IO在文件传输过程中的稳定控制方法/3-2-flushlimit-4.png">
-<meta property="og:image" content="http://yoursite.com/2018/04/18/磁盘IO在文件传输过程中的稳定控制方法/3-2-flushlimit-5.png">
-<meta property="og:image" content="http://yoursite.com/2018/04/18/磁盘IO在文件传输过程中的稳定控制方法/3-2-flushlimit-6.png">
-<meta property="og:image" content="http://yoursite.com/2018/04/18/磁盘IO在文件传输过程中的稳定控制方法/3-3-sync-1.png">
-<meta property="og:image" content="http://yoursite.com/2018/04/18/磁盘IO在文件传输过程中的稳定控制方法/3-3-sync-2.png">
-<meta property="og:image" content="http://yoursite.com/2018/04/18/磁盘IO在文件传输过程中的稳定控制方法/3-4-fsync-1.png">
-<meta property="og:image" content="http://yoursite.com/2018/04/18/磁盘IO在文件传输过程中的稳定控制方法/3-4-fsync-2.png">
-<meta property="og:image" content="http://yoursite.com/2018/04/18/磁盘IO在文件传输过程中的稳定控制方法/3-4-fsync-3.png">
-<meta property="og:image" content="http://yoursite.com/2018/04/18/磁盘IO在文件传输过程中的稳定控制方法/3-4-fsync-4.png">
-<meta property="og:image" content="http://yoursite.com/2018/04/18/磁盘IO在文件传输过程中的稳定控制方法/3-4-fsync-5.png">
-<meta property="og:image" content="http://yoursite.com/2018/04/18/磁盘IO在文件传输过程中的稳定控制方法/3-4-fsync-6.png">
-<meta property="og:image" content="http://yoursite.com/2018/04/18/磁盘IO在文件传输过程中的稳定控制方法/3-4-fsync-7.png">
-<meta property="og:image" content="http://yoursite.com/2018/04/18/磁盘IO在文件传输过程中的稳定控制方法/3-4-fsync-8.png">
-<meta property="og:image" content="http://yoursite.com/2018/04/18/磁盘IO在文件传输过程中的稳定控制方法/4-final-1.png">
-<meta property="og:image" content="http://yoursite.com/2018/04/18/磁盘IO在文件传输过程中的稳定控制方法/4-final-2.png">
-<meta property="og:image" content="http://yoursite.com/2018/04/18/磁盘IO在文件传输过程中的稳定控制方法/4-final-3.png">
-<meta property="og:image" content="http://yoursite.com/2018/04/18/磁盘IO在文件传输过程中的稳定控制方法/4-final-4.png">
+<meta property="og:image" content="https://xusenqi.github.io/2018/04/18/磁盘IO在文件传输过程中的稳定控制方法/2-nolimit-1.png">
+<meta property="og:image" content="https://xusenqi.github.io/2018/04/18/磁盘IO在文件传输过程中的稳定控制方法/2-nolimit-2.png">
+<meta property="og:image" content="https://xusenqi.github.io/2018/04/18/磁盘IO在文件传输过程中的稳定控制方法/2-nolimit-3.png">
+<meta property="og:image" content="https://xusenqi.github.io/2018/04/18/磁盘IO在文件传输过程中的稳定控制方法/3-1-limit-1.png">
+<meta property="og:image" content="https://xusenqi.github.io/2018/04/18/磁盘IO在文件传输过程中的稳定控制方法/3-1-limit-2.png">
+<meta property="og:image" content="https://xusenqi.github.io/2018/04/18/磁盘IO在文件传输过程中的稳定控制方法/3-1-limit-3.png">
+<meta property="og:image" content="https://xusenqi.github.io/2018/04/18/磁盘IO在文件传输过程中的稳定控制方法/3-2-flushlimit-1.png">
+<meta property="og:image" content="https://xusenqi.github.io/2018/04/18/磁盘IO在文件传输过程中的稳定控制方法/3-2-flushlimit-2.png">
+<meta property="og:image" content="https://xusenqi.github.io/2018/04/18/磁盘IO在文件传输过程中的稳定控制方法/3-2-flushlimit-3.png">
+<meta property="og:image" content="https://xusenqi.github.io/2018/04/18/磁盘IO在文件传输过程中的稳定控制方法/3-2-flushlimit-4.png">
+<meta property="og:image" content="https://xusenqi.github.io/2018/04/18/磁盘IO在文件传输过程中的稳定控制方法/3-2-flushlimit-5.png">
+<meta property="og:image" content="https://xusenqi.github.io/2018/04/18/磁盘IO在文件传输过程中的稳定控制方法/3-2-flushlimit-6.png">
+<meta property="og:image" content="https://xusenqi.github.io/2018/04/18/磁盘IO在文件传输过程中的稳定控制方法/3-3-sync-1.png">
+<meta property="og:image" content="https://xusenqi.github.io/2018/04/18/磁盘IO在文件传输过程中的稳定控制方法/3-3-sync-2.png">
+<meta property="og:image" content="https://xusenqi.github.io/2018/04/18/磁盘IO在文件传输过程中的稳定控制方法/3-4-fsync-1.png">
+<meta property="og:image" content="https://xusenqi.github.io/2018/04/18/磁盘IO在文件传输过程中的稳定控制方法/3-4-fsync-2.png">
+<meta property="og:image" content="https://xusenqi.github.io/2018/04/18/磁盘IO在文件传输过程中的稳定控制方法/3-4-fsync-3.png">
+<meta property="og:image" content="https://xusenqi.github.io/2018/04/18/磁盘IO在文件传输过程中的稳定控制方法/3-4-fsync-4.png">
+<meta property="og:image" content="https://xusenqi.github.io/2018/04/18/磁盘IO在文件传输过程中的稳定控制方法/3-4-fsync-5.png">
+<meta property="og:image" content="https://xusenqi.github.io/2018/04/18/磁盘IO在文件传输过程中的稳定控制方法/3-4-fsync-6.png">
+<meta property="og:image" content="https://xusenqi.github.io/2018/04/18/磁盘IO在文件传输过程中的稳定控制方法/3-4-fsync-7.png">
+<meta property="og:image" content="https://xusenqi.github.io/2018/04/18/磁盘IO在文件传输过程中的稳定控制方法/3-4-fsync-8.png">
+<meta property="og:image" content="https://xusenqi.github.io/2018/04/18/磁盘IO在文件传输过程中的稳定控制方法/4-final-1.png">
+<meta property="og:image" content="https://xusenqi.github.io/2018/04/18/磁盘IO在文件传输过程中的稳定控制方法/4-final-2.png">
+<meta property="og:image" content="https://xusenqi.github.io/2018/04/18/磁盘IO在文件传输过程中的稳定控制方法/4-final-3.png">
+<meta property="og:image" content="https://xusenqi.github.io/2018/04/18/磁盘IO在文件传输过程中的稳定控制方法/4-final-4.png">
 <meta property="og:updated_time" content="2018-05-15T08:55:26.000Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="磁盘IO在文件传输过程中的稳定控制优化">
 <meta name="twitter:description" content="问题的描述本地镜像在不同物理机之间的传输，这里是通过自研的工具rsc，包含rsc_client和rsc_server。 rsc_server对收到的数据的处理不当，对IO可能产生不理想的结果：（1）当Bps或者iops 过高时，可能使dm-0的util过高，甚至100%，影响上面虚机的IO；（2）当传输过程中Bps过低时，会使得传输镜像过慢，影响效率，甚至导致创建虚机失败。 dm-0是物理机上的数">
-<meta name="twitter:image" content="http://yoursite.com/2018/04/18/磁盘IO在文件传输过程中的稳定控制方法/2-nolimit-1.png">
+<meta name="twitter:image" content="https://xusenqi.github.io/2018/04/18/磁盘IO在文件传输过程中的稳定控制方法/2-nolimit-1.png">
 
 
 
@@ -149,7 +149,7 @@
 
 
 
-  <link rel="canonical" href="http://yoursite.com/2018/04/18/磁盘IO在文件传输过程中的稳定控制方法/"/>
+  <link rel="canonical" href="https://xusenqi.github.io/2018/04/18/磁盘IO在文件传输过程中的稳定控制方法/"/>
 
 
 
@@ -292,7 +292,7 @@
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2018/04/18/磁盘IO在文件传输过程中的稳定控制方法/">
+    <link itemprop="mainEntityOfPage" href="https://xusenqi.github.io/2018/04/18/磁盘IO在文件传输过程中的稳定控制方法/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="patrick.xu">

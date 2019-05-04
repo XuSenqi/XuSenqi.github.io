@@ -85,28 +85,28 @@
 <meta name="keywords" content="网卡,多队列">
 <meta property="og:type" content="article">
 <meta property="og:title" content="网卡多队列总结（转）">
-<meta property="og:url" content="http://yoursite.com/2018/11/23/网卡多队列总结/index.html">
+<meta property="og:url" content="https://xusenqi.github.io/2018/11/23/网卡多队列总结/index.html">
 <meta property="og:site_name" content="森几许的博客">
 <meta property="og:description" content="中断是什么中断使得硬件可以发松通知给处理器。例如敲击键盘时，键盘就会产生一个中断，通知操作系统有键被按下。 中断本质上是一种电信号，由硬件设备生成，送入中断控制器的输入引脚中。中断控制器(如8259A)是个简单的电子芯片，将多路中断管线，采用复用技术只通过一个和处理器连接的管线和处理器通信。当产生一个中断后，处理器会检测到一个电信号，中断自己的当前正在运行的程序，通知内核。内核调用一个称为中断处理">
 <meta property="og:locale" content="zh-Hans">
-<meta property="og:image" content="http://yoursite.com/2018/11/23/网卡多队列总结/中断处理流程.png">
-<meta property="og:image" content="http://yoursite.com/2018/11/23/网卡多队列总结/82575网卡硬件逻辑图.gif">
-<meta property="og:image" content="http://yoursite.com/2018/11/23/网卡多队列总结/2.6.21之前内核协议栈.png">
-<meta property="og:image" content="http://yoursite.com/2018/11/23/网卡多队列总结/2.6.21之前net_device.png">
-<meta property="og:image" content="http://yoursite.com/2018/11/23/网卡多队列总结/2.6.21之后内核协议栈.png">
-<meta property="og:image" content="http://yoursite.com/2018/11/23/网卡多队列总结/2.6.21之后net_device.png">
-<meta property="og:image" content="http://yoursite.com/2018/11/23/网卡多队列总结/网卡支持多队列.jpg">
-<meta property="og:image" content="http://yoursite.com/2018/11/23/网卡多队列总结/interrupts.jpg">
-<meta property="og:image" content="http://yoursite.com/2018/11/23/网卡多队列总结/cpu消耗.jpg">
-<meta property="og:image" content="http://yoursite.com/2018/11/23/网卡多队列总结/interrupts说明.jpg">
-<meta property="og:image" content="http://yoursite.com/2018/11/23/网卡多队列总结/eth_interrupts.jpg">
-<meta property="og:image" content="http://yoursite.com/2018/11/23/网卡多队列总结/RPS.png">
-<meta property="og:image" content="http://yoursite.com/2018/11/23/网卡多队列总结/RFS.png">
+<meta property="og:image" content="https://xusenqi.github.io/2018/11/23/网卡多队列总结/中断处理流程.png">
+<meta property="og:image" content="https://xusenqi.github.io/2018/11/23/网卡多队列总结/82575网卡硬件逻辑图.gif">
+<meta property="og:image" content="https://xusenqi.github.io/2018/11/23/网卡多队列总结/2.6.21之前内核协议栈.png">
+<meta property="og:image" content="https://xusenqi.github.io/2018/11/23/网卡多队列总结/2.6.21之前net_device.png">
+<meta property="og:image" content="https://xusenqi.github.io/2018/11/23/网卡多队列总结/2.6.21之后内核协议栈.png">
+<meta property="og:image" content="https://xusenqi.github.io/2018/11/23/网卡多队列总结/2.6.21之后net_device.png">
+<meta property="og:image" content="https://xusenqi.github.io/2018/11/23/网卡多队列总结/网卡支持多队列.jpg">
+<meta property="og:image" content="https://xusenqi.github.io/2018/11/23/网卡多队列总结/interrupts.jpg">
+<meta property="og:image" content="https://xusenqi.github.io/2018/11/23/网卡多队列总结/cpu消耗.jpg">
+<meta property="og:image" content="https://xusenqi.github.io/2018/11/23/网卡多队列总结/interrupts说明.jpg">
+<meta property="og:image" content="https://xusenqi.github.io/2018/11/23/网卡多队列总结/eth_interrupts.jpg">
+<meta property="og:image" content="https://xusenqi.github.io/2018/11/23/网卡多队列总结/RPS.png">
+<meta property="og:image" content="https://xusenqi.github.io/2018/11/23/网卡多队列总结/RFS.png">
 <meta property="og:updated_time" content="2018-12-24T06:29:49.000Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="网卡多队列总结（转）">
 <meta name="twitter:description" content="中断是什么中断使得硬件可以发松通知给处理器。例如敲击键盘时，键盘就会产生一个中断，通知操作系统有键被按下。 中断本质上是一种电信号，由硬件设备生成，送入中断控制器的输入引脚中。中断控制器(如8259A)是个简单的电子芯片，将多路中断管线，采用复用技术只通过一个和处理器连接的管线和处理器通信。当产生一个中断后，处理器会检测到一个电信号，中断自己的当前正在运行的程序，通知内核。内核调用一个称为中断处理">
-<meta name="twitter:image" content="http://yoursite.com/2018/11/23/网卡多队列总结/中断处理流程.png">
+<meta name="twitter:image" content="https://xusenqi.github.io/2018/11/23/网卡多队列总结/中断处理流程.png">
 
 
 
@@ -136,7 +136,7 @@
 
 
 
-  <link rel="canonical" href="http://yoursite.com/2018/11/23/网卡多队列总结/"/>
+  <link rel="canonical" href="https://xusenqi.github.io/2018/11/23/网卡多队列总结/"/>
 
 
 
@@ -279,7 +279,7 @@
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2018/11/23/网卡多队列总结/">
+    <link itemprop="mainEntityOfPage" href="https://xusenqi.github.io/2018/11/23/网卡多队列总结/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="patrick.xu">
