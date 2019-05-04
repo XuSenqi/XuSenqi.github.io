@@ -434,14 +434,29 @@
 
       
       
+        <div class="post-widgets">
+        
+
+        
+
+        
+          
+          <div id="needsharebutton-postbottom">
+            <span class="btn">
+              <i class="fa fa-share-alt" aria-hidden="true"></i>
+            </span>
+          </div>
+        
+        </div>
+      
       
 
       
         <div class="post-nav">
           <div class="post-nav-next post-nav-item">
             
-              <a href="/2018/05/15/TCP三次握手/" rel="next" title="TCP三次握手">
-                <i class="fa fa-chevron-left"></i> TCP三次握手
+              <a href="/2018/04/18/磁盘IO在文件传输过程中的稳定控制方法/" rel="next" title="磁盘IO在文件传输过程中的稳定控制优化">
+                <i class="fa fa-chevron-left"></i> 磁盘IO在文件传输过程中的稳定控制优化
               </a>
             
           </div>
@@ -450,8 +465,8 @@
 
           <div class="post-nav-prev post-nav-item">
             
-              <a href="/2018/08/12/Go语言-01-工作区和GOPATH/" rel="prev" title="Go语言 - 01 工作区和GOPATH">
-                Go语言 - 01 工作区和GOPATH <i class="fa fa-chevron-right"></i>
+              <a href="/2018/05/15/TCP三次握手/" rel="prev" title="TCP三次握手">
+                TCP三次握手 <i class="fa fa-chevron-right"></i>
               </a>
             
           </div>
@@ -939,6 +954,18 @@
   <script src="/lib/needsharebutton/needsharebutton.js"></script>
 
   <script>
+    
+      pbOptions = {};
+      
+          pbOptions.iconStyle = "box";
+      
+          pbOptions.boxForm = "horizontal";
+      
+          pbOptions.position = "bottomCenter";
+      
+          pbOptions.networks = "Weibo,Wechat,Douban,QQZone,Twitter,Facebook";
+      
+      new needShareButton('#needsharebutton-postbottom', pbOptions);
     
     
   </script>
