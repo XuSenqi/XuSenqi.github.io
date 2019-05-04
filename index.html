@@ -392,7 +392,7 @@
 
 MTU 到底是怎么来的
 
-MTU, 是 Maximum Transmission Unit 的缩写, 根据 Wikipedia 的定义,
+MTU, 是 Maximum Transmission Unit 的缩写, 根据 Wikipedia 的定义, MTU 指的是在 Network Layer (因处 OSI 第三层, 后以 L3 代替)上传输的最大数据报单元, 而 MTU 的大小一般由 Link Layer (因处 OSI 第二层, 后以 L2 代替) 设备决定. 比如生活中使用最广泛的以太网(Ethernet, IEEE 802.3)的帧
           ...
           <!--noindex-->
           <div class="post-button text-center">
@@ -567,7 +567,13 @@ MTU, 是 Maximum Transmission Unit 的缩写, 根据 Wikipedia 的定义,
 增大系统容量 –&gt; 提高性能单台机器的性能无法满足要求时，需要垂直或者水平拆分成分布式系统架构，让更多的机器去承担。
 加强系统可用 –&gt; 提高服务可用性避免单点故障。
 
-分布
+分布式系统是一种trade-off
+分布式系统的发展SOA——基于服务的架构
+
+
+20 世纪 90 年代前，是单体架构，软件模块高度耦合。
+2000 年左右出现了比较松耦合的 SOA 架构，这个架构需要一个标准的协议或是中间件来联动其它相关联的服务.
+而 2010 年后，出现了微服务架构，这个架构更为松
           ...
           <!--noindex-->
           <div class="post-button text-center">
@@ -715,7 +721,8 @@ MTU, 是 Maximum Transmission Unit 的缩写, 根据 Wikipedia 的定义,
         
           
           在网上看见很多问node.js如何获取客户端IP,所以记录下来，以供大家参考。
-123456function getClientIp(req) &#123;        return req.headers[&apos;x-forwarded-for&apos;] ||        req.co
+123456function getClientIp(req) &#123;        return req.headers[&apos;x-forwarded-for&apos;] ||        req.connection.remoteAddress ||        req.socket.remoteAddress ||        req.connection.socket.remoteAddress;    &#125;;
+代码，第一段判断是否有反向代理IP(头信息：x-forwarded-
           ...
           <!--noindex-->
           <div class="post-button text-center">
@@ -889,7 +896,10 @@ MTU, 是 Maximum Transmission Unit 的缩写, 根据 Wikipedia 的定义,
 pprofGo语言自带的pprof工具，是检测Golang开发应用性能的利器。
 pprof 采样数据主要有三种获取方式:
 
-runtim
+runtime/pprof: 手动调用runtime.StartCPUProfile或者runtime.StopCPUProfile等 API来生成和写入采样文件，灵活性高。参考文档profiling-go-programs
+
+
+net/http/pprof: 通过 http 服务获取Profile采样文件，简
           ...
           <!--noindex-->
           <div class="post-button text-center">
@@ -1059,7 +1069,7 @@ runtim
         
           
           中断是什么中断使得硬件可以发松通知给处理器。例如敲击键盘时，键盘就会产生一个中断，通知操作系统有键被按下。
-中断本质上是一种电信号，由硬件设备生成，送入中断控制器的输入引脚中。中断控制器(如8259A)是个简单的电子芯片，将多路中断管线，采用复用技术只通过一个和处理器连接的管线和处理器通信。当产生一
+中断本质上是一种电信号，由硬件设备生成，送入中断控制器的输入引脚中。中断控制器(如8259A)是个简单的电子芯片，将多路中断管线，采用复用技术只通过一个和处理器连接的管线和处理器通信。当产生一个中断后，处理器会检测到一个电信号，中断自己的当前正在运行的程序，通知内核。内核调用一个称为中断处理程序（interrupt handler)或中断服务例程(interrupt service routine）的特定程序。中断处理程序或中断服务例程可以在中断向量表中找到，而这个中断向量表位于内存中的
           ...
           <!--noindex-->
           <div class="post-button text-center">
@@ -1401,7 +1411,10 @@ runtim
           背景在删除文件后，有时会遇到磁盘空间并未被释放的场景。这里自己尝试复现，并去做相关的说明。
 删除后空间未释放根目录下当前占用空间是626G。
 创建的文件/tmp/safedog_windows_2012_new.img占了15G。（ls和du的区别留到后面讲）
-这里用vim打开文件，让有个进程一直在
+这里用vim打开文件，让有个进程一直在使用这个文件。
+删除文件后，空间并未释放。
+原因分析：
+一个文件在文件系统中的存放分为两个部分：数据部分和指针部分，指针位于文件系统的meta-data中，数据被删除后，这个指针就从meta-data中清除了，而数据部分存储在磁盘中，数据对应的指针从meta-data中清除后，文件数据部分占用的空间
           ...
           <!--noindex-->
           <div class="post-button text-center">
@@ -1573,7 +1586,7 @@ runtim
           变量的大小写go中根据首字母的大小写来确定可以访问的权限。如果首字母大写，则可以被其他的包访问；如果首字母小写，则只能在本包中使用。包括接口、类型、函数和变量等。
 可以简单的理解成，首字母大写是公有的，首字母小写是私有的
 下面是一个排查该问题的例子：
-123456789101112131415161
+123456789101112131415161718192021222324252627282930313233343536373839404142434445package mainimport (	&quot;encoding/json&quot;	&quot;fmt&quot;)type Position struct &#123;	X 
           ...
           <!--noindex-->
           <div class="post-button text-center">
@@ -1890,7 +1903,8 @@ runtim
         
           
           TCP Keepalive的作用链接建立之后，如果应用程序或者上层协议一直不发送数据，或者隔很长时间才发送一次数据，当链接很久没有数据报文传输时如何去确定对方还在线，到底是掉线了还是确实没有数据传输，链接还需不需要保持，这种情况在TCP协议设计中是需要考虑到的。 
-TCP协议通过一种巧妙的方式去解决
+TCP协议通过一种巧妙的方式去解决这个问题，当超过一段时间之后，TCP自动发送一个数据为空的报文给对方，如果对方回应了这个报文，说明对方还在线，链接可以继续保持，如果对方没有报文返回，并且重试了多次之后则认为链接丢失，没有必要保持链接。 
+TCP Keepalive的具体处理对于面向连接的TCP socket,在实际应用中通常都要检
           ...
           <!--noindex-->
           <div class="post-button text-center">
