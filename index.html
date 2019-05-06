@@ -415,21 +415,14 @@
 
       
         
-          
-          不同层的PDU（Protocol Data Unit）
-
-传输层：Segment(帧)
-网络层： Packet
-链路层：Frame
-物理层： Bit
-
-
-链路层
-
-MTU 到底是怎么来的
-
-MTU, 是 Maximum Transmission Unit 的缩写, 根据 Wikipedia 的定义, MTU 指的是在 Network Layer (因处 OSI 第三层, 后以 L3 代替)上传输的最大数据报单元, 而 MTU 的大小一般由 Link Layer (因处 OSI 第二层, 后以 L2 代替) 设备决定. 比如生活中使用最广泛的以太网(Ethernet, IEEE 802.3)的帧
-          ...
+          <p>不同层的PDU（Protocol Data Unit）</p>
+<ul>
+<li>传输层：Segment(帧)</li>
+<li>网络层： Packet</li>
+<li>链路层：Frame</li>
+<li>物理层： Bit</li>
+</ul>
+<p><img src="/2019/04/24/读书笔记-TCP-IP详解-卷1：协议/传入的帧在主机上的分解.png" alt="image"><br></p>
           <!--noindex-->
           <div class="post-button text-center">
             <a class="btn" href="/2019/04/24/读书笔记-TCP-IP详解-卷1：协议/#more" rel="contents">
@@ -1937,11 +1930,8 @@ net/http/pprof: 通过 http 服务获取Profile采样文件，简
 
       
         
-          
-          TCP Keepalive的作用链接建立之后，如果应用程序或者上层协议一直不发送数据，或者隔很长时间才发送一次数据，当链接很久没有数据报文传输时如何去确定对方还在线，到底是掉线了还是确实没有数据传输，链接还需不需要保持，这种情况在TCP协议设计中是需要考虑到的。 
-TCP协议通过一种巧妙的方式去解决这个问题，当超过一段时间之后，TCP自动发送一个数据为空的报文给对方，如果对方回应了这个报文，说明对方还在线，链接可以继续保持，如果对方没有报文返回，并且重试了多次之后则认为链接丢失，没有必要保持链接。 
-TCP Keepalive的具体处理对于面向连接的TCP socket,在实际应用中通常都要检
-          ...
+          <h2 id="TCP-Keepalive的作用"><a href="#TCP-Keepalive的作用" class="headerlink" title="TCP Keepalive的作用"></a>TCP Keepalive的作用</h2><p>链接建立之后，如果应用程序或者上层协议一直不发送数据，或者隔很长时间才发送一次数据，当链接很久没有数据报文传输时如何去确定对方还在线，到底是掉线了还是确实没有数据传输，链接还需不需要保持，这种情况在TCP协议设计中是需要考虑到的。 </p>
+<p>TCP协议通过一种巧妙的方式去解决这个问题，当超过一段时间之后，TCP自动发送一个数据为空的报文给对方，如果对方回应了这个报文，说明对方还在线，链接可以继续保持，如果对方没有报文返回，并且重试了多次之后则认为链接丢失，没有必要保持链接。<br></p>
           <!--noindex-->
           <div class="post-button text-center">
             <a class="btn" href="/2018/10/08/TCP-Keepalive/#more" rel="contents">

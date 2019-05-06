@@ -93,7 +93,7 @@
 <meta property="og:site_name" content="森几许的博客">
 <meta property="og:description" content="TCP Keepalive的作用链接建立之后，如果应用程序或者上层协议一直不发送数据，或者隔很长时间才发送一次数据，当链接很久没有数据报文传输时如何去确定对方还在线，到底是掉线了还是确实没有数据传输，链接还需不需要保持，这种情况在TCP协议设计中是需要考虑到的。  TCP协议通过一种巧妙的方式去解决这个问题，当超过一段时间之后，TCP自动发送一个数据为空的报文给对方，如果对方回应了这个报文，说明对">
 <meta property="og:locale" content="zh-Hans">
-<meta property="og:updated_time" content="2018-10-08T08:37:15.000Z">
+<meta property="og:updated_time" content="2019-05-06T07:49:11.142Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="TCP Keepalive">
 <meta name="twitter:description" content="TCP Keepalive的作用链接建立之后，如果应用程序或者上层协议一直不发送数据，或者隔很长时间才发送一次数据，当链接很久没有数据报文传输时如何去确定对方还在线，到底是掉线了还是确实没有数据传输，链接还需不需要保持，这种情况在TCP协议设计中是需要考虑到的。  TCP协议通过一种巧妙的方式去解决这个问题，当超过一段时间之后，TCP自动发送一个数据为空的报文给对方，如果对方回应了这个报文，说明对">
@@ -414,7 +414,7 @@
 
       
         <h2 id="TCP-Keepalive的作用"><a href="#TCP-Keepalive的作用" class="headerlink" title="TCP Keepalive的作用"></a>TCP Keepalive的作用</h2><p>链接建立之后，如果应用程序或者上层协议一直不发送数据，或者隔很长时间才发送一次数据，当链接很久没有数据报文传输时如何去确定对方还在线，到底是掉线了还是确实没有数据传输，链接还需不需要保持，这种情况在TCP协议设计中是需要考虑到的。 </p>
-<p>TCP协议通过一种巧妙的方式去解决这个问题，当超过一段时间之后，TCP自动发送一个数据为空的报文给对方，如果对方回应了这个报文，说明对方还在线，链接可以继续保持，如果对方没有报文返回，并且重试了多次之后则认为链接丢失，没有必要保持链接。 </p>
+<p>TCP协议通过一种巧妙的方式去解决这个问题，当超过一段时间之后，TCP自动发送一个数据为空的报文给对方，如果对方回应了这个报文，说明对方还在线，链接可以继续保持，如果对方没有报文返回，并且重试了多次之后则认为链接丢失，没有必要保持链接。<br><a id="more"></a></p>
 <h2 id="TCP-Keepalive的具体处理"><a href="#TCP-Keepalive的具体处理" class="headerlink" title="TCP Keepalive的具体处理"></a>TCP Keepalive的具体处理</h2><p>对于面向连接的TCP socket,在实际应用中通常都要检测对端是否处于连接中,连接端口分两种情况:</p>
 <p>1、连接正常关闭,调用close() shutdown()连接优雅关闭,send与recv立马返回错误,select返回SOCK_ERR;</p>
 <p>2、连接的对端异常关闭,比如网络断掉,突然断电.</p>
