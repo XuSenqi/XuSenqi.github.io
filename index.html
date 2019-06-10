@@ -393,7 +393,7 @@
 
       
         
-          <h1 id="1-ZooKeeper-Sessions"><a href="#1-ZooKeeper-Sessions" class="headerlink" title="1 ZooKeeper Sessions"></a>1 ZooKeeper Sessions</h1><p><img src="/2019/06/06/关于客户端重连ZooKeeper的的那些事儿/ZooKeeper Sessions.jpg" alt="image"></p>
+          <h1 id="ZooKeeper-Sessions"><a href="#ZooKeeper-Sessions" class="headerlink" title="ZooKeeper Sessions"></a>ZooKeeper Sessions</h1><p><img src="/2019/06/06/关于客户端重连ZooKeeper的的那些事儿/ZooKeeper Sessions.jpg" alt="image"></p>
 <ul>
 <li>ZooKeeper客户端初始化后转换到CONNECTING状态，与ZooKeeper服务器（或者ZooKeeper集群中的一台服务器）建立连接后，进入CONNECTED状态</li>
 <li>当客户端与ZooKeeper服务器断开连接或者无法收到服务器响应时，就会转回到CONNECTING状态，此时会一直收到CONNECTION_LOSS。</li>
