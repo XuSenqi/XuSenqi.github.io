@@ -2,6 +2,20 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
+    <loc>https://xusenqi.github.io/2018/10/08/HTTP-Keepalive/</loc>
+    
+    <lastmod>2019-07-09T09:00:15.912Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://xusenqi.github.io/2018/10/08/TCP-Keepalive/</loc>
+    
+    <lastmod>2019-07-09T08:59:39.655Z</lastmod>
+    
+  </url>
+  
+  <url>
     <loc>https://xusenqi.github.io/2019/06/06/%E5%85%B3%E4%BA%8E%E5%AE%A2%E6%88%B7%E7%AB%AF%E9%87%8D%E8%BF%9EZooKeeper%E7%9A%84%E7%9A%84%E9%82%A3%E4%BA%9B%E4%BA%8B%E5%84%BF/</loc>
     
     <lastmod>2019-06-11T02:54:15.338Z</lastmod>
@@ -12,13 +26,6 @@
     <loc>https://xusenqi.github.io/about/index.html</loc>
     
     <lastmod>2019-05-29T16:05:16.341Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>https://xusenqi.github.io/2018/10/08/TCP-Keepalive/</loc>
-    
-    <lastmod>2019-05-06T07:49:11.142Z</lastmod>
     
   </url>
   
@@ -82,13 +89,6 @@
     <loc>https://xusenqi.github.io/2018/10/22/golang-json%E6%93%8D%E4%BD%9C%E7%9A%84%E6%B3%A8%E6%84%8F%E7%82%B9/</loc>
     
     <lastmod>2018-10-23T03:12:24.000Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>https://xusenqi.github.io/2018/10/08/HTTP-Keepalive/</loc>
-    
-    <lastmod>2018-10-08T08:22:18.000Z</lastmod>
     
   </url>
   

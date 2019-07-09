@@ -93,7 +93,7 @@
 <meta property="og:site_name" content="森几许的博客">
 <meta property="og:description" content="TCP Keepalive的作用链接建立之后，如果应用程序或者上层协议一直不发送数据，或者隔很长时间才发送一次数据，当链接很久没有数据报文传输时如何去确定对方还在线，到底是掉线了还是确实没有数据传输，链接还需不需要保持，这种情况在TCP协议设计中是需要考虑到的。  TCP协议通过一种巧妙的方式去解决这个问题，当超过一段时间之后，TCP自动发送一个数据为空的报文给对方，如果对方回应了这个报文，说明对">
 <meta property="og:locale" content="zh-Hans">
-<meta property="og:updated_time" content="2019-05-06T07:49:11.142Z">
+<meta property="og:updated_time" content="2019-07-09T08:59:39.655Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="TCP Keepalive">
 <meta name="twitter:description" content="TCP Keepalive的作用链接建立之后，如果应用程序或者上层协议一直不发送数据，或者隔很长时间才发送一次数据，当链接很久没有数据报文传输时如何去确定对方还在线，到底是掉线了还是确实没有数据传输，链接还需不需要保持，这种情况在TCP协议设计中是需要考虑到的。  TCP协议通过一种巧妙的方式去解决这个问题，当超过一段时间之后，TCP自动发送一个数据为空的报文给对方，如果对方回应了这个报文，说明对">
@@ -424,7 +424,7 @@
 <p>1、client端连接正常,返回一个ACK.server端收到ACK后重置计时器,在2小时后在发送探测.如果2小时内连接上有数据传输,那么在该时间的基础上向后推延2小时发送探测包;</p>
 <p>2、客户端异常关闭,或网络断开。client无响应,server收不到ACK,在一定时间(/proc/sys/net/ipv4/tcp_keepalive_intvl 75 即75秒)后重发keepalive packet, 并且重发一定次数(/proc/sys/net/ipv4/tcp_keepalive_probes 9 即9次);</p>
 <p>3、客户端曾经崩溃,但已经重启.server收到的探测响应是一个复位,server端终止连接。</p>
-<h2 id="注意和-HTTP的Keep-Alive区别"><a href="#注意和-HTTP的Keep-Alive区别" class="headerlink" title="注意和 HTTP的Keep-Alive区别"></a>注意和 HTTP的Keep-Alive区别</h2><p>HTTP协议的Keep-Alive意图在于连接复用，同一个连接上串行方式传递请求-响应数据</p>
+<h2 id="注意和-HTTP的Keep-Alive区别"><a href="#注意和-HTTP的Keep-Alive区别" class="headerlink" title="注意和 HTTP的Keep-Alive区别"></a>注意和 HTTP的Keep-Alive区别</h2><p>http keep-alive与tcp keep-alive，不是同一回事，意图不一样。http keep-alive是为了让tcp活得更久一点，以便在同一个连接上传送多个http，提高socket的效率。<br>http-keepalive的具体作用查看这里 <a href="http://www.nowamagic.net/academy/detail/23350305" target="_blank" rel="noopener">HTTP Keep-Alive是什么？如何工作？</a></p>
 <p>TCP的keepalive机制意图在于保活、心跳，检测连接错误。</p>
 <h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><p><a href="https://blog.csdn.net/callinglove/article/details/38380673" target="_blank" rel="noopener">Linux SO_KEEPALIVE属性,心跳</a></p>
 <p><a href="http://www.blogjava.net/yongboy/archive/2015/04/14/424413.html" target="_blank" rel="noopener">随手记之TCP Keepalive笔记</a></p>
