@@ -1,0 +1,1443 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+  <meta name="google-site-verification" content="MhBubBBbDjyTVRKqXESzfVfPShAgPFnyRzz01-cpKg8" />
+
+
+
+
+
+
+
+
+  <meta name="baidu-site-verification" content="lKsqvVXNBT" />
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css" />
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="cpu,node," />
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="森几许的博客" type="application/atom+xml" />
+
+
+
+
+
+
+<meta name="description" content="1 node进程负载高的问题 线上有个用node开发的uhost-manager的服务。每个set内会有多台物理机，每台物理机（宿主机）上存在着1台或者多台虚拟机。uhost-manager里有个定时逻辑：每隔30s,从MongoDB里拉取所有的虚拟机的记录，数量为2000多台；将位于同一台宿主机上的虚拟机资源，包括cpu、内存、磁盘容量等，做个sum，将sum再填入对应宿主机（共200多台）的记">
+<meta name="keywords" content="cpu,node">
+<meta property="og:type" content="article">
+<meta property="og:title" content="一次node进程cpu负载100%问题的处理">
+<meta property="og:url" content="https://xusenqi.github.io/2019/07/13/一次node进程cpu负载100-问题的处理/index.html">
+<meta property="og:site_name" content="森几许的博客">
+<meta property="og:description" content="1 node进程负载高的问题 线上有个用node开发的uhost-manager的服务。每个set内会有多台物理机，每台物理机（宿主机）上存在着1台或者多台虚拟机。uhost-manager里有个定时逻辑：每隔30s,从MongoDB里拉取所有的虚拟机的记录，数量为2000多台；将位于同一台宿主机上的虚拟机资源，包括cpu、内存、磁盘容量等，做个sum，将sum再填入对应宿主机（共200多台）的记">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="https://xusenqi.github.io/2019/07/13/一次node进程cpu负载100-问题的处理/uhost-manager-cpu-100.png">
+<meta property="og:image" content="https://xusenqi.github.io/2019/07/13/一次node进程cpu负载100-问题的处理/perf_top.png">
+<meta property="og:image" content="https://xusenqi.github.io/2019/07/13/一次node进程cpu负载100-问题的处理/perf_flamegraph.png">
+<meta property="og:image" content="https://xusenqi.github.io/2019/07/13/一次node进程cpu负载100-问题的处理/query时lean的使用.png">
+<meta property="og:image" content="https://xusenqi.github.io/2019/07/13/一次node进程cpu负载100-问题的处理/重复判断设置初始值的代码.png">
+<meta property="og:image" content="https://xusenqi.github.io/2019/07/13/一次node进程cpu负载100-问题的处理/进程的cpu时间.png">
+<meta property="og:updated_time" content="2019-07-14T16:52:54.911Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="一次node进程cpu负载100%问题的处理">
+<meta name="twitter:description" content="1 node进程负载高的问题 线上有个用node开发的uhost-manager的服务。每个set内会有多台物理机，每台物理机（宿主机）上存在着1台或者多台虚拟机。uhost-manager里有个定时逻辑：每隔30s,从MongoDB里拉取所有的虚拟机的记录，数量为2000多台；将位于同一台宿主机上的虚拟机资源，包括cpu、内存、磁盘容量等，做个sum，将sum再填入对应宿主机（共200多台）的记">
+<meta name="twitter:image" content="https://xusenqi.github.io/2019/07/13/一次node进程cpu负载100-问题的处理/uhost-manager-cpu-100.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="https://xusenqi.github.io/2019/07/13/一次node进程cpu负载100-问题的处理/"/>
+
+
+
+
+
+  <title>一次node进程cpu负载100%问题的处理 | 森几许的博客</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">森几许的博客</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">不念过往，不负当下，不畏将来</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-首页">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-归档">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-分类">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-标签">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-关于">
+          <a href="/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br />
+            
+            关于
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br />
+            
+            搜索
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off"
+             placeholder="搜索..." spellcheck="false"
+             type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://xusenqi.github.io/2019/07/13/一次node进程cpu负载100-问题的处理/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="patrick.xu">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="森几许的博客">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">一次node进程cpu负载100%问题的处理</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-07-13T23:17:28+08:00">
+                2019-07-13
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/linux性能优化/" itemprop="url" rel="index">
+                    <span itemprop="name">linux性能优化</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a href="/2019/07/13/一次node进程cpu负载100-问题的处理/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count valine-comment-count" data-xid="/2019/07/13/一次node进程cpu负载100-问题的处理/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+             <span id="/2019/07/13/一次node进程cpu负载100-问题的处理/" class="leancloud_visitors" data-flag-title="一次node进程cpu负载100%问题的处理">
+               <span class="post-meta-divider">|</span>
+               <span class="post-meta-item-icon">
+                 <i class="fa fa-eye"></i>
+               </span>
+               
+                 <span class="post-meta-item-text">阅读次数&#58;</span>
+               
+                 <span class="leancloud-visitors-count"></span>
+             </span>
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="1-node进程负载高的问题"><a href="#1-node进程负载高的问题" class="headerlink" title="1 node进程负载高的问题"></a>1 node进程负载高的问题</h1><ul>
+<li>线上有个用node开发的uhost-manager的服务。每个set内会有多台物理机，每台物理机（宿主机）上存在着1台或者多台虚拟机。uhost-manager里有个定时逻辑：每隔30s,从MongoDB里拉取所有的虚拟机的记录，数量为2000多台；将位于同一台宿主机上的虚拟机资源，包括cpu、内存、磁盘容量等，做个sum，将sum再填入对应宿主机（共200多台）的记录里，表示已经被占用的资源。</li>
+<li>由于计算量大，和代码写得差，导致在该定时的计算任务执行时，会把占用的cpu单核打满；如果uhost-manager此时又有其他接口被调用时，就会出现响应慢的问题，导致调用方的服务也响应慢，甚至会因超时导致服务接口不可用。</li>
+</ul>
+<p><img src="/2019/07/13/一次node进程cpu负载100-问题的处理/uhost-manager-cpu-100.png" alt="image"><br>这个单核打满持续的时间短，在1s左右。<br><a id="more"></a></p>
+<h1 id="2-问题的解决"><a href="#2-问题的解决" class="headerlink" title="2 问题的解决"></a>2 问题的解决</h1><p>为了解决这个问题，带来两个要思考的问题：</p>
+<ul>
+<li>解决方法 –&gt; 怎么改进代码</li>
+<li>怎么衡量改进的效果 –&gt;<br>因为负载高的时间短，统计实时cpu负载，想到的命令只有top，但top命令本身无法做到统计，加入单核打满时间从1秒降到0.9秒，是无法凭肉眼感知的；像ps、vmstat等，也都不满足统计某个进程的实时负载</li>
+</ul>
+<h2 id="2-1-统计进程占用的cpu运行时间"><a href="#2-1-统计进程占用的cpu运行时间" class="headerlink" title="2.1 统计进程占用的cpu运行时间"></a>2.1 统计进程占用的cpu运行时间</h2><p>/proc/<pid>/stat该文件包含了某一进程所有的活动的信息，该文件中的所有值都是从系统启动开始累计到当前时刻。</pid></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"># cat /proc/17273/stat</span><br><span class="line">17273 (node) R 1369 17273 17273 0 -1 4218880 12446677 0 2 0 380634 40519 0 0 20 0 6 0 3525562392 964878336 38584 18446744073709551615 4194304 5593643 140724209068064 140400647923040 140400819234755 0 0 4096 16898 0 0 0 17 1 0 0 3 0 0 7692288 7703720 35180544 140724209071315 140724209071434 140724209071434 140724209074154 0</span><br></pre></td></tr></table></figure>
+<p>这样看非常不直观，通过网上找的一段小代码procstat[1]，以人类可读的方式显示。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">[root@172-30-38-65 uhost-manager.logs]# procstat 17273</span><br><span class="line">                 pid: 17273</span><br><span class="line">               tcomm: (node)</span><br><span class="line">                ...</span><br><span class="line">               utime: 3818.830000</span><br><span class="line">               stime: 406.260000</span><br><span class="line">              cutime: 0.000000</span><br><span class="line">              cstime: 0.000000</span><br><span class="line">                 ...</span><br><span class="line">              start_time: 07.13 03:00 (77599.65s)</span><br><span class="line">                 ...</span><br></pre></td></tr></table></figure>
+<p>进程的总Cpu时间processCpuTime = utime + stime + cutime + cstime，该值包括其所有线程的cpu时间[2]。注：这里统计出来的单位不是s，是相对于clock ticks来说的[3]。</p>
+<p>我们的衡量手段为统计一段时间内新增的该进程的cpu时间；该值越小，表示运行时间越短。</p>
+<p>具体步骤如下：</p>
+<ul>
+<li>以其他端口，再起一个uhost-manager服务，防止被其他服务调用；</li>
+<li>另外，定时任务里只保留定时更新宿主机占用资源的接口（ smi_update_host_resource ）。</li>
+<li>为了使统计的cpu占用时间长一点，smi改成每5秒执行一次；总共统计60s。查看新增的cpu时间，processCpuTime_60s - processCpuTime_0s。</li>
+</ul>
+<h2 id="2-2-解决方法"><a href="#2-2-解决方法" class="headerlink" title="2.2 解决方法"></a>2.2 解决方法</h2><p>为了解决，需要知道消耗cpu性能的环节在哪些步骤上，好进一步优化。</p>
+<h3 id="2-2-1-perf"><a href="#2-2-1-perf" class="headerlink" title="2.2.1 perf"></a>2.2.1 perf</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">perf top -g -p 26642 -d 1  #此时uhost-manager pid为26642</span><br></pre></td></tr></table></figure>
+<p><img src="/2019/07/13/一次node进程cpu负载100-问题的处理/perf_top.png" alt="image"><br>这里看起来不直观，并不能看清楚是哪个操作引起的。</p>
+<h3 id="2-2-2-FlameGraph"><a href="#2-2-2-FlameGraph" class="headerlink" title="2.2.2 FlameGraph"></a>2.2.2 FlameGraph</h3><p>火焰图的方式比较直观，这里测试下效果。</p>
+<ul>
+<li>采集脚本： perf record -F 99 -p 26642 -g – sleep 60</li>
+</ul>
+<p>参数说明如下：</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:center">采集频率(ms)</th>
+<th style="text-align:center">进程pid</th>
+<th style="text-align:center">调用记录</th>
+<th style="text-align:center">记录时长</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">-F 99</td>
+<td style="text-align:center">-p 26642</td>
+<td style="text-align:center">-g</td>
+<td style="text-align:center">–sleep 60</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>进程对应的符号表perf-pid.map权限设置：$chown root /tmp/perf-pid.map。</li>
+</ul>
+<p>踩过的坑！！！是为了消除下面这个问题的</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">File /tmp/perf-PID.map not owned by current user or root, ignoring it (use -f to override).</span><br><span class="line">Failed to open /tmp/perf-PID.map, continuing without symbols</span><br></pre></td></tr></table></figure>
+<ul>
+<li>FlameGraph使用方式如下：</li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">git clone https://github.com/brendangregg/FlameGraph.git</span><br><span class="line">cd FlameGraph</span><br><span class="line">perf script -i perf.data &amp;&gt; perf.unfold  # 以下几个命令都是在FlameGraph目录下执行的</span><br><span class="line">perl stackcollapse-perf.pl perf.unfold &amp;&gt; perf.folded</span><br><span class="line">perl flamegraph.pl perf.folded &gt; perf.svg</span><br></pre></td></tr></table></figure>
+<ul>
+<li>火焰图效果</li>
+</ul>
+<p><img src="/2019/07/13/一次node进程cpu负载100-问题的处理/perf_flamegraph.png" alt="image"></p>
+<p>火焰图中看到libv8.so.3.14.5是消耗cpu最多的，但底下的方块（父函数）是unknown，所以还是无法知晓是哪里调用的。</p>
+<p>火焰图形状对应关系</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">形状</th>
+<th style="text-align:left">含义</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">每一个平面方块</td>
+<td style="text-align:left">一个函数在栈中的位置（也称一个栈帧）</td>
+</tr>
+<tr>
+<td style="text-align:left">Y轴</td>
+<td style="text-align:left">栈的深度(也叫栈的帧数)</td>
+</tr>
+<tr>
+<td style="text-align:left">X轴</td>
+<td style="text-align:left">表示总的样例，不过它们左右顺序没有特殊含义</td>
+</tr>
+<tr>
+<td style="text-align:left">每个平面方块的宽度</td>
+<td style="text-align:left">方块的宽度标示CPU使用时间或者说相对父函数而言使用CPU的比率，越宽代表占用CPU的时间越长，或者使用CPU很频繁</td>
+</tr>
+</tbody>
+</table>
+<h3 id="2-2-3-原始的分析代码方式（肉眼看）"><a href="#2-2-3-原始的分析代码方式（肉眼看）" class="headerlink" title="2.2.3 原始的分析代码方式（肉眼看）"></a>2.2.3 原始的分析代码方式（肉眼看）</h3><p>以上手段不起作用后，只能逐行分析代码，看哪里可能消耗的cpu多，然后优化掉。</p>
+<h4 id="原始的消耗时间"><a href="#原始的消耗时间" class="headerlink" title="原始的消耗时间"></a>原始的消耗时间</h4><p>先按照2.1中的采集uhost-manager进程在60s内消耗的cpu时间，为10.65。这里的时间采集是5次测量，然后取平均值。</p>
+<h4 id="lean"><a href="#lean" class="headerlink" title="lean"></a>lean</h4><p>从MongoDB里读取数据时，用到mongoose的模块。使用lean可以加快查询速度。</p>
+<p><img src="/2019/07/13/一次node进程cpu负载100-问题的处理/query时lean的使用.png" alt="image"></p>
+<blockquote>
+<p>The lean option tells Mongoose to skip hydrating the result documents. This makes queries faster and less memory intensive, <strong>but the result documents are plain old JavaScript objects (POJOs), not Mongoose documents</strong>.</p>
+</blockquote>
+<blockquote>
+<p>If you’re executing a query and sending the results without modification to, say, an Express response, you should use lean. <font color="#FF0000">In general, if you do not modify the query results and do not use custom getters, you should use lean(). If you modify the query results or rely on features like getters or transforms, you should not use lean()</font>.</p>
+</blockquote>
+<p>测试下来结果为6.5，降低了40%左右，效果明显。</p>
+<h4 id="减少无用的重复执行的语句"><a href="#减少无用的重复执行的语句" class="headerlink" title="减少无用的重复执行的语句"></a>减少无用的重复执行的语句</h4><p>修改之后，测试下来结果为5.3。<br><img src="/2019/07/13/一次node进程cpu负载100-问题的处理/重复判断设置初始值的代码.png" alt="image"></p>
+<h4 id="减少日志打印"><a href="#减少日志打印" class="headerlink" title="减少日志打印"></a>减少日志打印</h4><p>减少量大的无用的日志打印后，测试下来结果为1.9。所以日志打印的cpu消耗在原始基础上占了32%，即（5.3-1.9)/10.65。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">// 每台虚机打印下vcpu的个数，&gt;2000</span><br><span class="line">GLOBAL.logger.info(_vcpus);</span><br><span class="line"></span><br><span class="line">// 每台宿主机打印下host_id, &gt;200</span><br><span class="line">GLOBAL.logger.info(&quot;[SMI]check:&quot;, host_ids[i]);</span><br></pre></td></tr></table></figure>
+<h1 id="3-优化效果"><a href="#3-优化效果" class="headerlink" title="3 优化效果"></a>3 优化效果</h1><p>经过优化后，消耗时间是1.9 clock ticks，相对于原来的10.65 clock ticks，减少了82.16%。<br><img src="/2019/07/13/一次node进程cpu负载100-问题的处理/进程的cpu时间.png" alt="image"><br>单核峰值CPU消耗为70%左右，且持续时间很短，为100ms左右。</p>
+<h1 id="参考链接"><a href="#参考链接" class="headerlink" title="参考链接"></a>参考链接</h1><ol>
+<li><a href="http://brokestream.com/procstat.html" target="_blank" rel="noopener">procstat - displays linux proc stat (/proc/pid/stat) in human-readable format
+</a></li>
+<li><a href="http://www.samirchen.com/linux-cpu-performance/" target="_blank" rel="noopener">Linux环境下进程的CPU占用率</a></li>
+<li><a href="http://man7.org/linux/man-pages/man5/proc.5.html" target="_blank" rel="noopener">Linux Programmer’s Manual PROC(5)</a></li>
+<li><a href="https://cloud.tencent.com/developer/article/1005867" target="_blank" rel="noopener">NodeJS 性能优化之 CPU 看图篇</a></li>
+<li><a href="http://www.cpper.cn/2017/06/04/linux/perf/" target="_blank" rel="noopener">Linux性能调优工具perf的使用</a></li>
+<li><a href="https://www.yangcs.net/posts/how-to-deal-with-increasing-of-cpu-usage/" target="_blank" rel="noopener">某个应用的 CPU 使用率居然达到 100%，我该怎么办？</a></li>
+<li><a href="https://mongoosejs.com/docs/tutorials/lean.html#lean-and-populate" target="_blank" rel="noopener">Faster Mongoose Queries With Lean</a></li>
+</ol>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/cpu/" rel="tag"># cpu</a>
+          
+            <a href="/tags/node/" rel="tag"># node</a>
+          
+        </div>
+      
+
+      
+      
+        <div class="post-widgets">
+        
+
+        
+
+        
+          
+          <div id="needsharebutton-postbottom">
+            <span class="btn">
+              <i class="fa fa-share-alt" aria-hidden="true"></i>
+            </span>
+          </div>
+        
+        </div>
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/06/06/关于客户端重连ZooKeeper的的那些事儿/" rel="next" title="关于客户端重连ZooKeeper的的那些事儿">
+                <i class="fa fa-chevron-left"></i> 关于客户端重连ZooKeeper的的那些事儿
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+    <div class="comments" id="comments">
+    </div>
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">patrick.xu</p>
+              <p class="site-description motion-element" itemprop="description">如果凡事都很容易，那还叫什么选择</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives">
+              
+                  <span class="site-state-item-count">18</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">9</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">17</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+            <div class="feed-link motion-element">
+              <a href="/atom.xml" rel="alternate">
+                <i class="fa fa-rss"></i>
+                RSS
+              </a>
+            </div>
+          
+
+          
+            <div class="links-of-author motion-element">
+                
+                  <span class="links-of-author-item">
+                    <a href="mailto:xusenqi@yeah.net" target="_blank" title="E-Mail">
+                      
+                        <i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+                  </span>
+                
+            </div>
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#1-node进程负载高的问题"><span class="nav-number">1.</span> <span class="nav-text">1 node进程负载高的问题</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#2-问题的解决"><span class="nav-number">2.</span> <span class="nav-text">2 问题的解决</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#2-1-统计进程占用的cpu运行时间"><span class="nav-number">2.1.</span> <span class="nav-text">2.1 统计进程占用的cpu运行时间</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-2-解决方法"><span class="nav-number">2.2.</span> <span class="nav-text">2.2 解决方法</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#2-2-1-perf"><span class="nav-number">2.2.1.</span> <span class="nav-text">2.2.1 perf</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-2-2-FlameGraph"><span class="nav-number">2.2.2.</span> <span class="nav-text">2.2.2 FlameGraph</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-2-3-原始的分析代码方式（肉眼看）"><span class="nav-number">2.2.3.</span> <span class="nav-text">2.2.3 原始的分析代码方式（肉眼看）</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#原始的消耗时间"><span class="nav-number">2.2.3.1.</span> <span class="nav-text">原始的消耗时间</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#lean"><span class="nav-number">2.2.3.2.</span> <span class="nav-text">lean</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#减少无用的重复执行的语句"><span class="nav-number">2.2.3.3.</span> <span class="nav-text">减少无用的重复执行的语句</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#减少日志打印"><span class="nav-number">2.2.3.4.</span> <span class="nav-text">减少日志打印</span></a></li></ol></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#3-优化效果"><span class="nav-number">3.</span> <span class="nav-text">3 优化效果</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#参考链接"><span class="nav-number">4.</span> <span class="nav-text">参考链接</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">patrick.xu</span>
+
+  
+</div>
+
+
+  <div class="powered-by">由 <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a> 强力驱动</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Pisces</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+  <script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script>
+  <script src="//unpkg.com/valine/dist/Valine.min.js"></script>
+  
+  <script type="text/javascript">
+    var GUEST = ['nick','mail','link'];
+    var guest = 'nick,mail,link';
+    guest = guest.split(',').filter(item=>{
+      return GUEST.indexOf(item)>-1;
+    });
+    new Valine({
+        el: '#comments' ,
+        verify: true,
+        notify: true,
+        appId: 'RuNvykqCFiSKIt83PqlqJbK0-gzGzoHsz',
+        appKey: '9TDvi5mOVCQ0aBL2MXCwd9WC',
+        placeholder: 'ヾﾉ≧∀≦)o来啊，快活啊!',
+        avatar:'mm',
+        guest_info:guest,
+        pageSize:'10' || 10,
+    });
+  </script>
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+  <script src="https://cdn1.lncld.net/static/js/av-core-mini-0.6.4.js"></script>
+  <script>AV.initialize("RuNvykqCFiSKIt83PqlqJbK0-gzGzoHsz", "9TDvi5mOVCQ0aBL2MXCwd9WC");</script>
+  <script>
+    function showTime(Counter) {
+      var query = new AV.Query(Counter);
+      var entries = [];
+      var $visitors = $(".leancloud_visitors");
+
+      $visitors.each(function () {
+        entries.push( $(this).attr("id").trim() );
+      });
+
+      query.containedIn('url', entries);
+      query.find()
+        .done(function (results) {
+          var COUNT_CONTAINER_REF = '.leancloud-visitors-count';
+
+          if (results.length === 0) {
+            $visitors.find(COUNT_CONTAINER_REF).text(0);
+            return;
+          }
+
+          for (var i = 0; i < results.length; i++) {
+            var item = results[i];
+            var url = item.get('url');
+            var time = item.get('time');
+            var element = document.getElementById(url);
+
+            $(element).find(COUNT_CONTAINER_REF).text(time);
+          }
+          for(var i = 0; i < entries.length; i++) {
+            var url = entries[i];
+            var element = document.getElementById(url);
+            var countSpan = $(element).find(COUNT_CONTAINER_REF);
+            if( countSpan.text() == '') {
+              countSpan.text(0);
+            }
+          }
+        })
+        .fail(function (object, error) {
+          console.log("Error: " + error.code + " " + error.message);
+        });
+    }
+
+    function addCount(Counter) {
+      var $visitors = $(".leancloud_visitors");
+      var url = $visitors.attr('id').trim();
+      var title = $visitors.attr('data-flag-title').trim();
+      var query = new AV.Query(Counter);
+
+      query.equalTo("url", url);
+      query.find({
+        success: function(results) {
+          if (results.length > 0) {
+            var counter = results[0];
+            counter.fetchWhenSave(true);
+            counter.increment("time");
+            counter.save(null, {
+              success: function(counter) {
+                var $element = $(document.getElementById(url));
+                $element.find('.leancloud-visitors-count').text(counter.get('time'));
+              },
+              error: function(counter, error) {
+                console.log('Failed to save Visitor num, with error message: ' + error.message);
+              }
+            });
+          } else {
+            var newcounter = new Counter();
+            /* Set ACL */
+            var acl = new AV.ACL();
+            acl.setPublicReadAccess(true);
+            acl.setPublicWriteAccess(true);
+            newcounter.setACL(acl);
+            /* End Set ACL */
+            newcounter.set("title", title);
+            newcounter.set("url", url);
+            newcounter.set("time", 1);
+            newcounter.save(null, {
+              success: function(newcounter) {
+                var $element = $(document.getElementById(url));
+                $element.find('.leancloud-visitors-count').text(newcounter.get('time'));
+              },
+              error: function(newcounter, error) {
+                console.log('Failed to create');
+              }
+            });
+          }
+        },
+        error: function(error) {
+          console.log('Error:' + error.code + " " + error.message);
+        }
+      });
+    }
+
+    $(function() {
+      var Counter = AV.Object.extend("Counter");
+      if ($('.leancloud_visitors').length == 1) {
+        addCount(Counter);
+      } else if ($('.post-title-link').length > 1) {
+        showTime(Counter);
+      }
+    });
+  </script>
+
+
+
+  
+
+  
+<script>
+(function(){
+    var bp = document.createElement('script');
+    var curProtocol = window.location.protocol.split(':')[0];
+    if (curProtocol === 'https') {
+        bp.src = 'https://zz.bdstatic.com/linksubmit/push.js';        
+    }
+    else {
+        bp.src = 'http://push.zhanzhang.baidu.com/push.js';
+    }
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(bp, s);
+})();
+</script>
+
+
+  
+  
+  
+  <link rel="stylesheet" href="/lib/needsharebutton/needsharebutton.css">
+
+  
+  
+  <script src="/lib/needsharebutton/needsharebutton.js"></script>
+
+  <script>
+    
+      pbOptions = {};
+      
+          pbOptions.iconStyle = "box";
+      
+          pbOptions.boxForm = "horizontal";
+      
+          pbOptions.position = "bottomCenter";
+      
+          pbOptions.networks = "Weibo,Wechat,Douban,QQZone,Twitter,Facebook";
+      
+      new needShareButton('#needsharebutton-postbottom', pbOptions);
+    
+    
+  </script>
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
