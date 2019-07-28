@@ -72,7 +72,7 @@
 
 
 
-  <meta name="keywords" content="Go,json," />
+  <meta name="keywords" content="goroutine,调度," />
 
 
 
@@ -85,21 +85,20 @@
 
 
 
-<meta name="description" content="变量的大小写go中根据首字母的大小写来确定可以访问的权限。如果首字母大写，则可以被其他的包访问；如果首字母小写，则只能在本包中使用。包括接口、类型、函数和变量等。 可以简单的理解成，首字母大写是公有的，首字母小写是私有的 下面是一个排查该问题的例子： 12345678910111213141516171819202122232425262728293031323334353637383940414">
-<meta name="keywords" content="Go,json">
+<meta name="description" content="goroutine调度器简介G-P-M模型，下面这张图很只管。 具体内容，参考以下链接，已经说得很详细，不再重复。  The Go scheduler 也谈goroutine调度器 Goroutine并发调度模型深度解析之手撸一个协程池 源码阅读的话，推荐国内的雨痕老师在其《Go语言学习笔记》  例子12345678910111213141516171819package mainimport &amp;">
+<meta name="keywords" content="goroutine,调度">
 <meta property="og:type" content="article">
-<meta property="og:title" content="golang - json操作的注意点">
-<meta property="og:url" content="https://xusenqi.github.io/2018/10/22/golang-json操作的注意点/index.html">
+<meta property="og:title" content="goroutine调度器">
+<meta property="og:url" content="https://xusenqi.github.io/2019/07/28/goroutine调度器/index.html">
 <meta property="og:site_name" content="森几许的博客">
-<meta property="og:description" content="变量的大小写go中根据首字母的大小写来确定可以访问的权限。如果首字母大写，则可以被其他的包访问；如果首字母小写，则只能在本包中使用。包括接口、类型、函数和变量等。 可以简单的理解成，首字母大写是公有的，首字母小写是私有的 下面是一个排查该问题的例子： 12345678910111213141516171819202122232425262728293031323334353637383940414">
+<meta property="og:description" content="goroutine调度器简介G-P-M模型，下面这张图很只管。 具体内容，参考以下链接，已经说得很详细，不再重复。  The Go scheduler 也谈goroutine调度器 Goroutine并发调度模型深度解析之手撸一个协程池 源码阅读的话，推荐国内的雨痕老师在其《Go语言学习笔记》  例子12345678910111213141516171819package mainimport &amp;">
 <meta property="og:locale" content="zh-Hans">
-<meta property="og:image" content="https://xusenqi.github.io/2018/10/22/golang-json操作的注意点/1_小写导致序列化后数据丢失.png">
-<meta property="og:image" content="https://xusenqi.github.io/2018/10/22/golang-json操作的注意点/2_序列化正常的结果.png">
-<meta property="og:updated_time" content="2018-10-23T03:12:24.000Z">
+<meta property="og:image" content="https://xusenqi.github.io/2019/07/28/goroutine调度器/goroutine-scheduler-model.png">
+<meta property="og:updated_time" content="2019-07-28T16:42:25.189Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="golang - json操作的注意点">
-<meta name="twitter:description" content="变量的大小写go中根据首字母的大小写来确定可以访问的权限。如果首字母大写，则可以被其他的包访问；如果首字母小写，则只能在本包中使用。包括接口、类型、函数和变量等。 可以简单的理解成，首字母大写是公有的，首字母小写是私有的 下面是一个排查该问题的例子： 12345678910111213141516171819202122232425262728293031323334353637383940414">
-<meta name="twitter:image" content="https://xusenqi.github.io/2018/10/22/golang-json操作的注意点/1_小写导致序列化后数据丢失.png">
+<meta name="twitter:title" content="goroutine调度器">
+<meta name="twitter:description" content="goroutine调度器简介G-P-M模型，下面这张图很只管。 具体内容，参考以下链接，已经说得很详细，不再重复。  The Go scheduler 也谈goroutine调度器 Goroutine并发调度模型深度解析之手撸一个协程池 源码阅读的话，推荐国内的雨痕老师在其《Go语言学习笔记》  例子12345678910111213141516171819package mainimport &amp;">
+<meta name="twitter:image" content="https://xusenqi.github.io/2019/07/28/goroutine调度器/goroutine-scheduler-model.png">
 
 
 
@@ -129,13 +128,13 @@
 
 
 
-  <link rel="canonical" href="https://xusenqi.github.io/2018/10/22/golang-json操作的注意点/"/>
+  <link rel="canonical" href="https://xusenqi.github.io/2019/07/28/goroutine调度器/"/>
 
 
 
 
 
-  <title>golang - json操作的注意点 | 森几许的博客</title>
+  <title>goroutine调度器 | 森几许的博客</title>
   
 
 
@@ -306,7 +305,7 @@
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://xusenqi.github.io/2018/10/22/golang-json操作的注意点/">
+    <link itemprop="mainEntityOfPage" href="https://xusenqi.github.io/2019/07/28/goroutine调度器/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="patrick.xu">
@@ -323,7 +322,7 @@
 
         
         
-          <h1 class="post-title" itemprop="name headline">golang - json操作的注意点</h1>
+          <h1 class="post-title" itemprop="name headline">goroutine调度器</h1>
         
 
         <div class="post-meta">
@@ -335,8 +334,8 @@
               
                 <span class="post-meta-item-text">发表于</span>
               
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-10-22T21:36:19+08:00">
-                2018-10-22
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-07-28T23:54:16+08:00">
+                2019-07-28
               </time>
             
 
@@ -358,8 +357,8 @@
               
               
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Go/" itemprop="url" rel="index">
-                    <span itemprop="name">Go</span>
+                  <a href="/categories/go/" itemprop="url" rel="index">
+                    <span itemprop="name">go</span>
                   </a>
                 </span>
 
@@ -376,8 +375,8 @@
                 <span class="post-meta-item-icon">
                   <i class="fa fa-comment-o"></i>
                 </span>
-                <a href="/2018/10/22/golang-json操作的注意点/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count valine-comment-count" data-xid="/2018/10/22/golang-json操作的注意点/" itemprop="commentCount"></span>
+                <a href="/2019/07/28/goroutine调度器/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count valine-comment-count" data-xid="/2019/07/28/goroutine调度器/" itemprop="commentCount"></span>
                 </a>
               </span>
             
@@ -385,7 +384,7 @@
 
           
           
-             <span id="/2018/10/22/golang-json操作的注意点/" class="leancloud_visitors" data-flag-title="golang - json操作的注意点">
+             <span id="/2019/07/28/goroutine调度器/" class="leancloud_visitors" data-flag-title="goroutine调度器">
                <span class="post-meta-divider">|</span>
                <span class="post-meta-item-icon">
                  <i class="fa fa-eye"></i>
@@ -416,35 +415,23 @@
       
 
       
-        <h2 id="变量的大小写"><a href="#变量的大小写" class="headerlink" title="变量的大小写"></a>变量的大小写</h2><p>go中根据首字母的大小写来确定可以访问的权限。如果首字母大写，则可以被其他的包访问；如果首字母小写，则只能在本包中使用。包括接口、类型、函数和变量等。</p>
-<p>可以简单的理解成，首字母大写是公有的，首字母小写是私有的</p>
-<p>下面是一个排查该问题的例子：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br></pre></td><td class="code"><pre><span class="line">package main</span><br><span class="line"></span><br><span class="line">import (</span><br><span class="line">	&quot;encoding/json&quot;</span><br><span class="line">	&quot;fmt&quot;</span><br><span class="line">)</span><br><span class="line"></span><br><span class="line">type Position struct &#123;</span><br><span class="line">	X int</span><br><span class="line">	Y int</span><br><span class="line">	Z int</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">type Student struct &#123;</span><br><span class="line">	Name     string</span><br><span class="line">	Sex      string</span><br><span class="line">	Age      int</span><br><span class="line">	position Position</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">func main() &#123;</span><br><span class="line">	position1 := Position&#123;10, 20, 30&#125;</span><br><span class="line">	student1 := Student&#123;&quot;zhangsan&quot;, &quot;male&quot;, 20, position1&#125;</span><br><span class="line">	position2 := Position&#123;15, 10, 20&#125;</span><br><span class="line">	student2 := Student&#123;&quot;lisi&quot;, &quot;female&quot;, 18, position2&#125;</span><br><span class="line"></span><br><span class="line">	var srcSlice = make([]Student, 2)</span><br><span class="line">	srcSlice[0] = student1</span><br><span class="line">	srcSlice[1] = student2</span><br><span class="line">	fmt.Printf(&quot;Init:srcSlice is : %v\n&quot;, srcSlice)</span><br><span class="line">	data, err := json.Marshal(srcSlice)</span><br><span class="line">	if err != nil &#123;</span><br><span class="line">		fmt.Printf(&quot;Serialize:json.Marshal error! %v\n&quot;, err)</span><br><span class="line">		return</span><br><span class="line">	&#125;</span><br><span class="line">	fmt.Println(&quot;After serialize, data : \n&quot;, string(data))</span><br><span class="line"></span><br><span class="line">	var dstSliece = make([]Student, 2)</span><br><span class="line">	err = json.Unmarshal(data, &amp;dstSliece)</span><br><span class="line">	if err != nil &#123;</span><br><span class="line">		fmt.Printf(&quot;Deserialize: json.Unmarshal error! %v\n&quot;, err)</span><br><span class="line">		return</span><br><span class="line">	&#125;</span><br><span class="line">	fmt.Printf(&quot;Deserialize:dstSlice is : %v\n&quot;, dstSliece)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p><img src="/2018/10/22/golang-json操作的注意点/1_小写导致序列化后数据丢失.png" alt="image"></p>
-<p>很意外的是，我们反序列化后获取的对象数据dstSliece是错误的，Position里的数据都变成了0。而json.Unmarshal没有返回任何异常。</p>
-<p>观察将序列化后的json串，Position的数据丢了，这使得我们想到了可见性，即大写的符号在包外可见。通过走查代码，我们发现Student的定义中，Position的变量名是小写开始的。</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">type Student struct &#123;</span><br><span class="line">    Name string</span><br><span class="line">    Sex string</span><br><span class="line">    Age int</span><br><span class="line">    //position Position</span><br><span class="line">    Position Position</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>改成大写后再观察结果，可以正常序列化。<br><img src="/2018/10/22/golang-json操作的注意点/2_序列化正常的结果.png" alt="image"></p>
-<h2 id="序列化到json后改成小写"><a href="#序列化到json后改成小写" class="headerlink" title="序列化到json后改成小写"></a>序列化到json后改成小写</h2><p>对于json串，很多人喜欢全小写，对于大写开头的key感觉很刺眼，我们继续改进：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">type Position struct &#123;</span><br><span class="line">    X int `json:&quot;x&quot;`</span><br><span class="line">    Y int `json:&quot;y&quot;`</span><br><span class="line">    Z int `json:&quot;z&quot;`</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">type Student struct &#123;</span><br><span class="line">    Name string `json:&quot;name&quot;`</span><br><span class="line">    Sex string `json:&quot;sex&quot;`</span><br><span class="line">    Age int `json:&quot;age&quot;`</span><br><span class="line">    Posi Position `json:&quot;position&quot;`</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>再次运行程序，结果是我们期望的，打印如下：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">Init:srcSlice is : [&#123;zhangsan male 20 &#123;10 20 30&#125;&#125; &#123;lisi female 18 &#123;15 10 20&#125;&#125;]</span><br><span class="line">After serialize, data :</span><br><span class="line"> [&#123;&quot;name&quot;:&quot;zhangsan&quot;,&quot;sex&quot;:&quot;male&quot;,&quot;age&quot;:20,&quot;position&quot;:&#123;&quot;x&quot;:10,&quot;y&quot;:20,&quot;z&quot;:30&#125;&#125;,&#123;&quot;name&quot;:&quot;lisi&quot;,&quot;sex&quot;:&quot;female&quot;,&quot;age&quot;:18,&quot;position&quot;:&#123;&quot;x&quot;:15,&quot;y&quot;:10,&quot;z&quot;:20&#125;&#125;]</span><br><span class="line">Deserialize:dstSlice is : [&#123;zhangsan male 20 &#123;10 20 30&#125;&#125; &#123;lisi female 18 &#123;15 10 20&#125;&#125;]</span><br></pre></td></tr></table></figure>
-<h2 id="omitempty"><a href="#omitempty" class="headerlink" title="omitempty"></a>omitempty</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">type Dog struct &#123;</span><br><span class="line">	Breed string</span><br><span class="line">	WeightKg int</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">func main() &#123;</span><br><span class="line">	d := Dog&#123;</span><br><span class="line">		Breed:    &quot;dalmation&quot;,</span><br><span class="line">		WeightKg: 45,</span><br><span class="line">	&#125;</span><br><span class="line">	b, _ := json.Marshal(d)</span><br><span class="line">	fmt.Println(string(b))</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>output:</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&#123;&quot;Breed&quot;:&quot;dalmation&quot;,&quot;WeightKg&quot;:45&#125;</span><br></pre></td></tr></table></figure>
-<p>如果对dog没有设置：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">func main() &#123;</span><br><span class="line">	d := Dog&#123;</span><br><span class="line">		Breed:    &quot;pug&quot;,</span><br><span class="line">	&#125;</span><br><span class="line">	b, _ := json.Marshal(d)</span><br><span class="line">	fmt.Println(string(b))</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>这会输出</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&#123;&quot;Breed&quot;:&quot;pug&quot;,&quot;WeightKg&quot;:0&#125;</span><br></pre></td></tr></table></figure>
-<p>即使WeightKg的值是未知的。</p>
-<p>更好的方式是使“WeightKg”为null, 或者根本没有这个值。</p>
-<p>omitempty tag 正好可以起到这个作用.</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">type Dog struct &#123;</span><br><span class="line">	Breed    string</span><br><span class="line">	// The first comma below is to separate the name tag from the omitempty tag </span><br><span class="line">	WeightKg int `json:&quot;,omitempty&quot;`</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>这会输出</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&#123;&quot;Breed&quot;:&quot;pug&quot;&#125;</span><br></pre></td></tr></table></figure>
-<h2 id="参考链接"><a href="#参考链接" class="headerlink" title="参考链接"></a>参考链接</h2><p><a href="https://www.jianshu.com/p/e737cb26c141" target="_blank" rel="noopener">Golang初学者易犯的三种错误</a></p>
-<p><a href="https://www.sohamkamani.com/blog/golang/2018-07-19-golang-omitempty/" target="_blank" rel="noopener">Go’s “omitempty” explained</a></p>
+        <h1 id="goroutine调度器简介"><a href="#goroutine调度器简介" class="headerlink" title="goroutine调度器简介"></a>goroutine调度器简介</h1><p>G-P-M模型，下面这张图很只管。<br><img src="/2019/07/28/goroutine调度器/goroutine-scheduler-model.png" alt="image"></p>
+<p>具体内容，参考以下链接，已经说得很详细，不再重复。</p>
+<ul>
+<li><a href="http://morsmachine.dk/go-scheduler" target="_blank" rel="noopener">The Go scheduler</a></li>
+<li><a href="https://tonybai.com/2017/06/23/an-intro-about-goroutine-scheduler/" target="_blank" rel="noopener">也谈goroutine调度器</a></li>
+<li><a href="https://segmentfault.com/a/1190000015464889" target="_blank" rel="noopener">Goroutine并发调度模型深度解析之手撸一个协程池</a></li>
+<li>源码阅读的话，推荐国内的雨痕老师在其《Go语言学习笔记》</li>
+</ul>
+<h1 id="例子"><a href="#例子" class="headerlink" title="例子"></a>例子</h1><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line">package main</span><br><span class="line">import &quot;fmt&quot;</span><br><span class="line">import &quot;time&quot;</span><br><span class="line">import &quot;runtime&quot;</span><br><span class="line"></span><br><span class="line">func main() &#123;</span><br><span class="line">    var x int</span><br><span class="line">    fmt.Println(&quot;GOMAXPROCS =&quot;, runtime.GOMAXPROCS(0) )</span><br><span class="line">    threads := runtime.GOMAXPROCS(0)</span><br><span class="line">    for i := 0; i &lt; threads; i++ &#123;</span><br><span class="line">        go func() &#123;</span><br><span class="line">            for &#123; x++ &#125;</span><br><span class="line">        &#125;()</span><br><span class="line">    &#125;</span><br><span class="line">    fmt.Println(&quot;Before time.Sleep&quot;)</span><br><span class="line">    time.Sleep(time.Second)</span><br><span class="line">    fmt.Println(&quot;After time.Sleep&quot;)</span><br><span class="line">    fmt.Println(&quot;x =&quot;, x)  //程序能运行到这里吗？</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>运行之后，发现main函数运行到Sleep之后，就卡住了，是什么原因呢？</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">[patrickxu@vm1 src]$ ./test</span><br><span class="line">GOMAXPROCS = 8</span><br><span class="line">Before time.Sleep</span><br></pre></td></tr></table></figure>
+<p>因为main函数在执行time.Sleep(time.Second)后，main函数本身占据的P(G-P-M模型中的P)也被for{ x++ }一直占着,抢占的机制。这下总共8个P，全部一直被for { x++ }占着，永远轮不到主函数了。</p>
+<p>runtime.GOMAXPROCS(0)默认等于CPU核数8。每个P可以分配到一个M(即线程)，总共2 + runtime.GOMAXPROCS(0) = 10个。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">[patrickxu@vm1 ~]$ ps -eLf | grep test</span><br><span class="line">519      26778 26325 26778  0   10 00:18 pts/42   00:00:00 ./test</span><br><span class="line">519      26778 26325 26779  0   10 00:18 pts/42   00:00:00 ./test</span><br><span class="line">519      26778 26325 26780 99   10 00:18 pts/42   00:02:28 ./test</span><br><span class="line">519      26778 26325 26781 99   10 00:18 pts/42   00:02:28 ./test</span><br><span class="line">519      26778 26325 26782 99   10 00:18 pts/42   00:02:28 ./test</span><br><span class="line">519      26778 26325 26783 99   10 00:18 pts/42   00:02:28 ./test</span><br><span class="line">519      26778 26325 26784 99   10 00:18 pts/42   00:02:28 ./test</span><br><span class="line">519      26778 26325 26785 99   10 00:18 pts/42   00:02:27 ./test</span><br><span class="line">519      26778 26325 26786 99   10 00:18 pts/42   00:02:28 ./test</span><br><span class="line">519      26778 26325 26787 99   10 00:18 pts/42   00:02:28 ./test</span><br></pre></td></tr></table></figure>
+<p>如果把time.Sleep(time.Second)去掉后，马上全部执行结束。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">[patrickxu@vm1 src]$ ./test</span><br><span class="line">GOMAXPROCS = 8</span><br><span class="line">x = 0</span><br></pre></td></tr></table></figure>
+<p>当然也可以把GOMAXPROCS设打，比如threads := runtime.GOMAXPROCS(10)。有足够多的P，也可以运行完。</p>
 
       
     </div>
@@ -462,9 +449,9 @@
       
         <div class="post-tags">
           
-            <a href="/tags/Go/" rel="tag"># Go</a>
+            <a href="/tags/goroutine/" rel="tag"># goroutine</a>
           
-            <a href="/tags/json/" rel="tag"># json</a>
+            <a href="/tags/调度/" rel="tag"># 调度</a>
           
         </div>
       
@@ -492,8 +479,8 @@
         <div class="post-nav">
           <div class="post-nav-next post-nav-item">
             
-              <a href="/2018/10/08/HTTP-Keepalive/" rel="next" title="HTTP Keepalive">
-                <i class="fa fa-chevron-left"></i> HTTP Keepalive
+              <a href="/2019/07/24/一次mongo慢查询的优化过程/" rel="next" title="一次mongo慢查询的优化过程">
+                <i class="fa fa-chevron-left"></i> 一次mongo慢查询的优化过程
               </a>
             
           </div>
@@ -501,10 +488,6 @@
           <span class="post-nav-divider"></span>
 
           <div class="post-nav-prev post-nav-item">
-            
-              <a href="/2018/11/10/文件已删除空间未释放的例子/" rel="prev" title="文件删除空间未释放的例子">
-                文件删除空间未释放的例子 <i class="fa fa-chevron-right"></i>
-              </a>
             
           </div>
         </div>
@@ -656,7 +639,7 @@
             
 
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#变量的大小写"><span class="nav-number">1.</span> <span class="nav-text">变量的大小写</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#序列化到json后改成小写"><span class="nav-number">2.</span> <span class="nav-text">序列化到json后改成小写</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#omitempty"><span class="nav-number">3.</span> <span class="nav-text">omitempty</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参考链接"><span class="nav-number">4.</span> <span class="nav-text">参考链接</span></a></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#goroutine调度器简介"><span class="nav-number">1.</span> <span class="nav-text">goroutine调度器简介</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#例子"><span class="nav-number">2.</span> <span class="nav-text">例子</span></a></li></ol></div>
             
 
           </div>
