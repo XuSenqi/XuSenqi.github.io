@@ -6,7 +6,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="https://xusenqi.github.io/"/>
-  <updated>2019-07-28T16:46:11.421Z</updated>
+  <updated>2019-08-23T17:08:23.602Z</updated>
   <id>https://xusenqi.github.io/</id>
   
   <author>
@@ -15,6 +15,33 @@
   </author>
   
   <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>Visual Studio Code的使用总结</title>
+    <link href="https://xusenqi.github.io/2019/08/23/Visual-Studio-Code%E7%9A%84%E4%BD%BF%E7%94%A8%E6%80%BB%E7%BB%93/"/>
+    <id>https://xusenqi.github.io/2019/08/23/Visual-Studio-Code的使用总结/</id>
+    <published>2019-08-23T14:57:05.000Z</published>
+    <updated>2019-08-23T17:08:23.602Z</updated>
+    
+    <content type="html"><![CDATA[<h1 id="Visual-Studio-Code介绍"><a href="#Visual-Studio-Code介绍" class="headerlink" title="Visual Studio Code介绍"></a>Visual Studio Code介绍</h1><p>Visual Studio Code是很轻量但功能强大的代码编辑器，可以在Windows、macOS和 Linux上运行。</p><p># </p><h1 id="快捷键"><a href="#快捷键" class="headerlink" title="快捷键"></a>快捷键</h1><h2 id="默认常用快捷键"><a href="#默认常用快捷键" class="headerlink" title="默认常用快捷键"></a>默认常用快捷键</h2><ul><li>(Command Palette | Show All Commands)  shift + command + p 或者 F1<br><img src="/2019/08/23/Visual-Studio-Code的使用总结/CommandPalette.jpg" alt="image"></li><li>搜索文件 command + p</li><li>搜索内容(Find in Files) shift + command + f</li><li>回到上一个地方(Go Back) ctrl + -</li><li>跳到侧边栏(Focus into Side Bar) command + 0</li><li>切换侧边栏(Toggle Side Bar Visibility) command + b</li><li>打开原生的console(OpenNativeConsole) shift + command +c</li><li>切换Panel(Toggle Panel) command + j</li><li>调整Panel大小(Resize Panel) ctrl + command + <-- |="" --=""></--></li></ul><h3 id="Code-navigation"><a href="#Code-navigation" class="headerlink" title="Code navigation"></a>Code navigation</h3><p><img src="/2019/08/23/Visual-Studio-Code的使用总结/Code navigation.jpg" alt="image"></p><ul><li>跳转到定义(Go to Definition) F12</li><li>(showAllSymbols) command + t</li></ul><h2 id="自定义快捷键"><a href="#自定义快捷键" class="headerlink" title="自定义快捷键"></a>自定义快捷键</h2><h3 id="更改方式"><a href="#更改方式" class="headerlink" title="更改方式"></a>更改方式</h3><p>打开键盘快捷键<br><img src="/2019/08/23/Visual-Studio-Code的使用总结/OpenKeyboardShotcuts.jpg" alt="image"></p><p>Keyboard Shotcuts里显示当前支持哪些快捷键，包括默认的和自定义的；也可以在里面直接更改<br><img src="/2019/08/23/Visual-Studio-Code的使用总结/KeyboardShotcuts.jpg" alt="image"></p><p>Keyboard Shotcuts(json)里了自定义的快捷键；前面在Keyboard Shotcuts修改的会展示在这里，也可以在这里直接修改<br><img src="/2019/08/23/Visual-Studio-Code的使用总结/KeyboardShotcuts_json.jpg" alt="image"></p><h3 id="常用自定义快捷键"><a href="#常用自定义快捷键" class="headerlink" title="常用自定义快捷键"></a>常用自定义快捷键</h3><p>根绝个人喜好，常用的如下：</p><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"> &#123;</span><br><span class="line">     &quot;key&quot;: &quot;cmd+enter&quot;,</span><br><span class="line">     &quot;command&quot;: &quot;workbench.action.toggleFullScreen&quot;  //切换全屏</span><br><span class="line"> &#125;,</span><br><span class="line"> &#123;</span><br><span class="line">     &quot;key&quot;: &quot;cmd+right&quot;,</span><br><span class="line">     &quot;command&quot;: &quot;workbench.action.nextEditor&quot;   //下个编辑器</span><br><span class="line"> &#125;,</span><br><span class="line"> &#123;</span><br><span class="line">     &quot;key&quot;: &quot;cmd+left&quot;,</span><br><span class="line">     &quot;command&quot;: &quot;workbench.action.previousEditor&quot; //上个编辑器</span><br><span class="line"> &#125;,</span><br><span class="line"> &#123;</span><br><span class="line">    &quot;key&quot;: &quot;alt+cmd+n&quot;,</span><br><span class="line">    &quot;command&quot;: &quot;openInTerminal&quot;  //打开Terminal,并跳到当前文件的目录</span><br><span class="line">&#125;,</span><br><span class="line">&#123;</span><br><span class="line">    &quot;key&quot;: &quot;cmd+s cmd+w&quot;,</span><br><span class="line">    &quot;command&quot;: &quot;workbench.action.quickSwitchWindow&quot; // 切换窗口</span><br><span class="line">&#125;,</span><br><span class="line">&#123;</span><br><span class="line">    &quot;key&quot;: &quot;cmd+2&quot;,</span><br><span class="line">    &quot;command&quot;: &quot;workbench.action.focusPanel&quot;   // 跳到Panel</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure><h1 id="常用插件"><a href="#常用插件" class="headerlink" title="常用插件"></a>常用插件</h1>]]></content>
+    
+    <summary type="html">
+    
+      
+      
+        &lt;h1 id=&quot;Visual-Studio-Code介绍&quot;&gt;&lt;a href=&quot;#Visual-Studio-Code介绍&quot; class=&quot;headerlink&quot; title=&quot;Visual Studio Code介绍&quot;&gt;&lt;/a&gt;Visual Studio Code介绍&lt;/h1&gt;&lt;
+      
+    
+    </summary>
+    
+      <category term="vscode" scheme="https://xusenqi.github.io/categories/vscode/"/>
+    
+    
+      <category term="快捷键" scheme="https://xusenqi.github.io/tags/%E5%BF%AB%E6%8D%B7%E9%94%AE/"/>
+    
+      <category term="插件" scheme="https://xusenqi.github.io/tags/%E6%8F%92%E4%BB%B6/"/>
+    
+  </entry>
   
   <entry>
     <title>goroutine调度器</title>
@@ -510,27 +537,6 @@
       <category term="cgroup" scheme="https://xusenqi.github.io/tags/cgroup/"/>
     
       <category term="磁盘IO" scheme="https://xusenqi.github.io/tags/%E7%A3%81%E7%9B%98IO/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>Hello World</title>
-    <link href="https://xusenqi.github.io/2018/04/13/hexo/"/>
-    <id>https://xusenqi.github.io/2018/04/13/hexo/</id>
-    <published>2018-04-12T23:04:19.000Z</published>
-    <updated>2018-04-12T23:04:19.000Z</updated>
-    
-    <content type="html"><![CDATA[<p>Welcome to <a href="https://hexo.io/" target="_blank" rel="noopener">Hexo</a>! This is your very first post. Check <a href="https://hexo.io/docs/" target="_blank" rel="noopener">documentation</a> for more info. If you get any problems when using Hexo, you can find the answer in <a href="https://hexo.io/docs/troubleshooting.html" target="_blank" rel="noopener">troubleshooting</a> or you can ask me on <a href="https://github.com/hexojs/hexo/issues" target="_blank" rel="noopener">GitHub</a>.</p><h2 id="Quick-Start"><a href="#Quick-Start" class="headerlink" title="Quick Start"></a>Quick Start</h2><h3 id="Create-a-new-post"><a href="#Create-a-new-post" class="headerlink" title="Create a new post"></a>Create a new post</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo new <span class="string">"My New Post"</span></span><br></pre></td></tr></table></figure><p>More info: <a href="https://hexo.io/docs/writing.html" target="_blank" rel="noopener">Writing</a></p><h3 id="Run-server"><a href="#Run-server" class="headerlink" title="Run server"></a>Run server</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo server</span><br></pre></td></tr></table></figure><p>More info: <a href="https://hexo.io/docs/server.html" target="_blank" rel="noopener">Server</a></p><h3 id="Generate-static-files"><a href="#Generate-static-files" class="headerlink" title="Generate static files"></a>Generate static files</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo generate</span><br></pre></td></tr></table></figure><p>More info: <a href="https://hexo.io/docs/generating.html" target="_blank" rel="noopener">Generating</a></p><h3 id="Deploy-to-remote-sites"><a href="#Deploy-to-remote-sites" class="headerlink" title="Deploy to remote sites"></a>Deploy to remote sites</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo deploy</span><br></pre></td></tr></table></figure><p>More info: <a href="https://hexo.io/docs/deployment.html" target="_blank" rel="noopener">Deployment</a></p>]]></content>
-    
-    <summary type="html">
-    
-      
-      
-        &lt;p&gt;Welcome to &lt;a href=&quot;https://hexo.io/&quot; target=&quot;_blank&quot; rel=&quot;noopener&quot;&gt;Hexo&lt;/a&gt;! This is your very first post. Check &lt;a href=&quot;https://hexo.
-      
-    
-    </summary>
-    
     
   </entry>
   
