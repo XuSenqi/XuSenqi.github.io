@@ -95,7 +95,7 @@
 <meta property="og:locale" content="zh-Hans">
 <meta property="og:image" content="https://xusenqi.github.io/2019/08/25/通过delve-dlv-调试golang程序/godbg_project.jpg">
 <meta property="og:image" content="https://xusenqi.github.io/2019/08/25/通过delve-dlv-调试golang程序/lock.jpg">
-<meta property="og:updated_time" content="2019-08-25T14:26:29.243Z">
+<meta property="og:updated_time" content="2019-08-25T14:27:34.059Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="通过delve(dlv)调试golang程序">
 <meta name="twitter:description" content="介绍gdb是强大的调试工具。但对于golang程序来说，delve是个更好的选择，它能更好地理解Go runtime, data structures, and expressions，尤其是goroutine。 以下描述引用自Debugging Go Code with GDB【1】  Note that Delve is a better alternative to GDB when deb">
@@ -419,12 +419,9 @@
         <h1 id="介绍"><a href="#介绍" class="headerlink" title="介绍"></a>介绍</h1><p>gdb是强大的调试工具。但对于golang程序来说，delve是个更好的选择，它能更好地理解Go runtime, data structures, and expressions，尤其是goroutine。</p>
 <p>以下描述引用自<a href="https://golang.google.cn/doc/gdb" target="_blank" rel="noopener">Debugging Go Code with GDB</a>【1】</p>
 <blockquote>
-<p>Note that Delve is a better alternative to GDB when debugging Go programs built with the standard toolchain. It understands the Go runtime, data structures, and expressions better than GDB. Delve currently supports Linux, OSX, and Windows on amd64. For the most up-to-date list of supported platforms, please see the Delve documentation.</p>
+<p>Note that Delve is a better alternative to GDB when debugging Go programs built with the standard toolchain. It understands the Go runtime, data structures, and expressions better than GDB. Delve currently supports Linux, OSX, and Windows on amd64. For the most up-to-date list of supported platforms, please see the Delve documentation.<br><a id="more"></a><br>GDB does not understand Go programs well. The stack management, threading, and runtime contain aspects that differ enough from the execution model GDB expects that they can confuse the debugger and cause incorrect results even when the program is compiled with gccgo. As a consequence, although GDB can be useful in some situations (e.g., debugging Cgo code, or debugging the runtime itself), it is not a reliable debugger for Go programs, particularly heavily concurrent ones. Moreover, it is not a priority for the Go project to address these issues, which are difficult.</p>
 </blockquote>
-<blockquote>
-<p>GDB does not understand Go programs well. The stack management, threading, and runtime contain aspects that differ enough from the execution model GDB expects that they can confuse the debugger and cause incorrect results even when the program is compiled with gccgo. As a consequence, although GDB can be useful in some situations (e.g., debugging Cgo code, or debugging the runtime itself), it is not a reliable debugger for Go programs, particularly heavily concurrent ones. Moreover, it is not a priority for the Go project to address these issues, which are difficult.</p>
-</blockquote>
-<p>Delve is a debugger for the Go programming language【2】.<br><a id="more"></a></p>
+<p>Delve is a debugger for the Go programming language【2】.</p>
 <h1 id="安装"><a href="#安装" class="headerlink" title="安装"></a>安装</h1><p>安装过程参考<a href="https://github.com/go-delve/delve/tree/master/Documentation/installation" target="_blank" rel="noopener">https://github.com/go-delve/delve/tree/master/Documentation/installation</a></p>
 <p>安装好后，可以查看版本</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">➜  _posts dlv version</span><br><span class="line">Delve Debugger</span><br><span class="line">Version: 1.1.0</span><br><span class="line">Build: $Id: 1990ba12450cab9425a2ae62e6ab988725023d5c</span><br></pre></td></tr></table></figure>
