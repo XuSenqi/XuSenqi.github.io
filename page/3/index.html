@@ -302,7 +302,7 @@
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://xusenqi.github.io/2018/05/15/TCP三次握手/">
+    <link itemprop="mainEntityOfPage" href="https://xusenqi.github.io/2018/05/15/TCP四次挥手/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="patrick.xu">
@@ -321,7 +321,7 @@
         
           <h1 class="post-title" itemprop="name headline">
                 
-                <a class="post-title-link" href="/2018/05/15/TCP三次握手/" itemprop="url">TCP三次握手</a></h1>
+                <a class="post-title-link" href="/2018/05/15/TCP四次挥手/" itemprop="url">TCP四次挥手</a></h1>
         
 
         <div class="post-meta">
@@ -374,8 +374,8 @@
                 <span class="post-meta-item-icon">
                   <i class="fa fa-comment-o"></i>
                 </span>
-                <a href="/2018/05/15/TCP三次握手/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count valine-comment-count" data-xid="/2018/05/15/TCP三次握手/" itemprop="commentCount"></span>
+                <a href="/2018/05/15/TCP四次挥手/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count valine-comment-count" data-xid="/2018/05/15/TCP四次挥手/" itemprop="commentCount"></span>
                 </a>
               </span>
             
@@ -383,7 +383,7 @@
 
           
           
-             <span id="/2018/05/15/TCP三次握手/" class="leancloud_visitors" data-flag-title="TCP三次握手">
+             <span id="/2018/05/15/TCP四次挥手/" class="leancloud_visitors" data-flag-title="TCP四次挥手">
                <span class="post-meta-divider">|</span>
                <span class="post-meta-item-icon">
                  <i class="fa fa-eye"></i>
@@ -416,23 +416,17 @@
       
         
           
-          TCP三次握手/四次挥手的文章看过太多，但有些不太正确。还是决定自己写一篇，也算是对自己知识和碰到的问题的总结。
-tcp的主要特点
-面向连接
-点到点
-可靠交付
-全双工通信
-面向字节流
+          tcp四次挥手TCP四次挥手的过程以及握手两端状态的变化。
 
-其中核心的特点：tcp是可以可靠传输协议，它的其他所有特点都为这个可靠传输服务。
-如何保证可靠传输tcp在传输过程中都有一个ack，接收方通过ack告诉发送方收到那些包了。这样发送方能知道有没有丢包，进而确定重传。
-tcp三次握手
+挥手过程
 
-第一步：client发送连接请求报文段，将SYN位置为1，Seq(Sequence Number)为X(由操作系统动态随机选取一个32位长的序列号)。然后，客户端进入SYN_SEN
+第一次挥手: 主动关闭方(可以使客户端，也可以是服务器端，这里标记为：A)，将FIN置为1，ACK置为1，Seq(Sequence Number)设置为X为上一次对方传送过来的Ack(Acknowledgment Number)值，Ack(Acknowledgment Number)设置为Y为上一次对方传过来的Seq(Sequence Number)值+1。设置好以上值后，将数据发送至被动关闭方(这里标记为：B)。然后A进入FIN_WAIT_1状态。
+
+第二次挥手：B收到了A发送的FIN报文段，向A回复，将ACK置为1，
           ...
           <!--noindex-->
           <div class="post-button text-center">
-            <a class="btn" href="/2018/05/15/TCP三次握手/#more" rel="contents">
+            <a class="btn" href="/2018/05/15/TCP四次挥手/#more" rel="contents">
               阅读全文 &raquo;
             </a>
           </div>
