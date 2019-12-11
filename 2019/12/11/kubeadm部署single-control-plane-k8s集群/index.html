@@ -97,7 +97,7 @@
 <meta property="og:image" content="https://xusenqi.github.io/2019/12/11/kubeadm部署single-control-plane-k8s集群/flannel网络插件部署.png">
 <meta property="og:image" content="https://xusenqi.github.io/2019/12/11/kubeadm部署single-control-plane-k8s集群/kube_join_steps.png">
 <meta property="og:image" content="https://xusenqi.github.io/2019/12/11/kubeadm部署single-control-plane-k8s集群/kubeadm_token_create.png">
-<meta property="og:updated_time" content="2019-12-11T06:14:04.090Z">
+<meta property="og:updated_time" content="2019-12-11T06:42:00.065Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="kubeadm部署single control-plane k8s集群">
 <meta name="twitter:description" content="kubeadm介绍 Kubeadm is a tool built to provide kubeadm init and kubeadm join as best-practice “fast paths” for creating Kubernetes clusters.   kubeadm init  创建一个 Master节点  kubeadm join 将一个 Node 节点加入到当前集">
@@ -425,6 +425,7 @@
 <li>kubeadm init  创建一个 Master节点 </li>
 <li>kubeadm join 将一个 Node 节点加入到当前集群中</li>
 </ul>
+<a id="more"></a>
 <h1 id="Before-you-begin"><a href="#Before-you-begin" class="headerlink" title="Before you begin"></a>Before you begin</h1><p>在开始之前，部署Kubernetes集群机器需要满足以下几个条件：</p>
 <ul>
 <li>One or more machines running a deb/rpm-compatible OS, for example Ubuntu or CentOS</li>
@@ -449,28 +450,24 @@
 <td style="text-align:center">10.8.141.79</td>
 <td style="text-align:center">K8s node节点1</td>
 <td style="text-align:center">centos 7.6</td>
-<td style="text-align:center">docker</td>
 </tr>
 <tr>
 <td style="text-align:center">k8snode02</td>
 <td style="text-align:center">10.8.177.123</td>
 <td style="text-align:center">K8s node节点2</td>
 <td style="text-align:center">centos 7.6</td>
-<td style="text-align:center">docker</td>
 </tr>
 <tr>
 <td style="text-align:center">k8snode03</td>
 <td style="text-align:center">10.8.177.192</td>
 <td style="text-align:center">K8s node节点3</td>
 <td style="text-align:center">centos 7.6</td>
-<td style="text-align:center">docker</td>
 </tr>
 <tr>
 <td style="text-align:center">k8smaster01</td>
 <td style="text-align:center">10.8.112.141</td>
 <td style="text-align:center">K8s master节点1</td>
 <td style="text-align:center">centos 7.6</td>
-<td style="text-align:center">docker</td>
 </tr>
 </tbody>
 </table>
@@ -535,7 +532,11 @@
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line">[root@10-8-112-141 ~]# curl 10.1.41.49:80</span><br><span class="line">&lt;!DOCTYPE html&gt;</span><br><span class="line">&lt;html&gt;</span><br><span class="line">&lt;head&gt;</span><br><span class="line">&lt;title&gt;Welcome to nginx!&lt;/title&gt;</span><br><span class="line">&lt;style&gt;</span><br><span class="line">    body &#123;</span><br><span class="line">        width: 35em;</span><br><span class="line">        margin: 0 auto;</span><br><span class="line">        font-family: Tahoma, Verdana, Arial, sans-serif;</span><br><span class="line">    &#125;</span><br><span class="line">&lt;/style&gt;</span><br><span class="line">&lt;/head&gt;</span><br><span class="line">&lt;body&gt;</span><br><span class="line">&lt;h1&gt;Welcome to nginx!&lt;/h1&gt;</span><br><span class="line">&lt;p&gt;If you see this page, the nginx web server is successfully installed and</span><br><span class="line">working. Further configuration is required.&lt;/p&gt;</span><br><span class="line"></span><br><span class="line">&lt;p&gt;For online documentation and support please refer to</span><br><span class="line">&lt;a href=&quot;http://nginx.org/&quot;&gt;nginx.org&lt;/a&gt;.&lt;br/&gt;</span><br><span class="line">Commercial support is available at</span><br><span class="line">&lt;a href=&quot;http://nginx.com/&quot;&gt;nginx.com&lt;/a&gt;.&lt;/p&gt;</span><br><span class="line"></span><br><span class="line">&lt;p&gt;&lt;em&gt;Thank you for using nginx.&lt;/em&gt;&lt;/p&gt;</span><br><span class="line">&lt;/body&gt;</span><br><span class="line">&lt;/html&gt;</span><br></pre></td></tr></table></figure>
 <p>也可以进入部署的nginx</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">kubectl exec -it nginx-86c57db685-zbbnr sh</span><br></pre></td></tr></table></figure>
-<h1 id="部署Dashboard"><a href="#部署Dashboard" class="headerlink" title="部署Dashboard"></a>部署Dashboard</h1><p><a href="https://kubernetes.io/docs/tasks/access-application-cluster/web-ui-dashboard/" target="_blank" rel="noopener">Web UI (Dashboard)</a><br>未完待续。。。</p>
+<h1 id="安装Dashboard"><a href="#安装Dashboard" class="headerlink" title="安装Dashboard"></a>安装Dashboard</h1><p>参考<a href="https://kubernetes.io/docs/tasks/access-application-cluster/web-ui-dashboard/" target="_blank" rel="noopener">Web UI (Dashboard)</a></p>
+<h2 id="部署Dashboard"><a href="#部署Dashboard" class="headerlink" title="部署Dashboard"></a>部署Dashboard</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">[root@10-8-112-141 k8s]# kubectl apply -f https://raw.githubusercontent.com/kubernetes/dashboard/v2.0.0-beta6/aio/deploy/recommended.yaml</span><br></pre></td></tr></table></figure>
+<p>部署完毕后, 执行kubectl get pods –all-namespaces查看pods状态</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">[root@10-8-112-141 k8s]# kubectl get pods --all-namespaces | grep dashboard</span><br><span class="line">kubernetes-dashboard   dashboard-metrics-scraper-76585494d8-fnwp4   1/1     Running   0          16s</span><br><span class="line">kubernetes-dashboard   kubernetes-dashboard-b65488c4-l9kgm          1/1     Running   0          16s</span><br></pre></td></tr></table></figure>
+<p>未完待续。。。</p>
 <h1 id="参考链接"><a href="#参考链接" class="headerlink" title="参考链接"></a>参考链接</h1><ol>
 <li><a href="https://kubernetes.io/docs/reference/setup-tools/kubeadm/kubeadm/" target="_blank" rel="noopener">Overview of kubeadm</a></li>
 <li><a href="https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/create-cluster-kubeadm/" target="_blank" rel="noopener">Creating a single control-plane cluster with kubeadm</a></li>
@@ -752,7 +753,7 @@
             
 
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#kubeadm介绍"><span class="nav-number">1.</span> <span class="nav-text">kubeadm介绍</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Before-you-begin"><span class="nav-number">2.</span> <span class="nav-text">Before you begin</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#准备环境"><span class="nav-number">3.</span> <span class="nav-text">准备环境</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#所有节点安装Docker-kubeadm-kubelet"><span class="nav-number">4.</span> <span class="nav-text">所有节点安装Docker/kubeadm/kubelet</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#安装docker"><span class="nav-number">4.1.</span> <span class="nav-text">安装docker</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Installing-kubeadm"><span class="nav-number">4.2.</span> <span class="nav-text">Installing kubeadm</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Initializing-your-control-plane-node"><span class="nav-number">5.</span> <span class="nav-text">Initializing your control-plane node</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#部署网络插件"><span class="nav-number">6.</span> <span class="nav-text">部署网络插件</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#添加Node至集群中"><span class="nav-number">7.</span> <span class="nav-text">添加Node至集群中</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#从集群中删除Node-Tear-down"><span class="nav-number">8.</span> <span class="nav-text">从集群中删除Node(Tear down)</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#获取集群状态信息"><span class="nav-number">9.</span> <span class="nav-text">获取集群状态信息</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#测试kubernetes集群"><span class="nav-number">10.</span> <span class="nav-text">测试kubernetes集群</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#部署Dashboard"><span class="nav-number">11.</span> <span class="nav-text">部署Dashboard</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#参考链接"><span class="nav-number">12.</span> <span class="nav-text">参考链接</span></a></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#kubeadm介绍"><span class="nav-number">1.</span> <span class="nav-text">kubeadm介绍</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Before-you-begin"><span class="nav-number">2.</span> <span class="nav-text">Before you begin</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#准备环境"><span class="nav-number">3.</span> <span class="nav-text">准备环境</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#所有节点安装Docker-kubeadm-kubelet"><span class="nav-number">4.</span> <span class="nav-text">所有节点安装Docker/kubeadm/kubelet</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#安装docker"><span class="nav-number">4.1.</span> <span class="nav-text">安装docker</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Installing-kubeadm"><span class="nav-number">4.2.</span> <span class="nav-text">Installing kubeadm</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Initializing-your-control-plane-node"><span class="nav-number">5.</span> <span class="nav-text">Initializing your control-plane node</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#部署网络插件"><span class="nav-number">6.</span> <span class="nav-text">部署网络插件</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#添加Node至集群中"><span class="nav-number">7.</span> <span class="nav-text">添加Node至集群中</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#从集群中删除Node-Tear-down"><span class="nav-number">8.</span> <span class="nav-text">从集群中删除Node(Tear down)</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#获取集群状态信息"><span class="nav-number">9.</span> <span class="nav-text">获取集群状态信息</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#测试kubernetes集群"><span class="nav-number">10.</span> <span class="nav-text">测试kubernetes集群</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#安装Dashboard"><span class="nav-number">11.</span> <span class="nav-text">安装Dashboard</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#部署Dashboard"><span class="nav-number">11.1.</span> <span class="nav-text">部署Dashboard</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#参考链接"><span class="nav-number">12.</span> <span class="nav-text">参考链接</span></a></li></ol></div>
             
 
           </div>
