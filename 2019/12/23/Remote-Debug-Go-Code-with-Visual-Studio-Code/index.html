@@ -85,13 +85,13 @@
 
 
 
-<meta name="description" content="当了解一些大型项目的代码逻辑时，如kubernetes，跟着调试器跟踪代码学习，是很好的方式。当项目部署在远程环境时，在本机进行开发，很自然对Remote Debug有迫切需求，这也是和调试一般golang程序最主要的诉求区别点，本文将通过两个实际例子，来介绍如何Remote Debug。 dlv远程调试的原理vscode支持丰富的插件，dlv插件可以帮助我们调试golang代码，基本使用方法详见">
+<meta name="description" content="当了解一些大型项目的代码逻辑时，如kubernetes，跟着调试器跟踪代码学习，是很好的方式。当项目部署在远程环境时，在本机进行开发，很自然对Remote Debug有迫切需求，这也是和调试一般golang程序最主要的诉求区别点，本文将通过两个实际例子，来介绍如何Remote Debug。">
 <meta name="keywords" content="vscode,remote debug,k8s">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Remote Debugging Go Code with Visual Studio Code">
 <meta property="og:url" content="https://xusenqi.github.io/2019/12/23/Remote-Debug-Go-Code-with-Visual-Studio-Code/index.html">
 <meta property="og:site_name" content="森几许的博客">
-<meta property="og:description" content="当了解一些大型项目的代码逻辑时，如kubernetes，跟着调试器跟踪代码学习，是很好的方式。当项目部署在远程环境时，在本机进行开发，很自然对Remote Debug有迫切需求，这也是和调试一般golang程序最主要的诉求区别点，本文将通过两个实际例子，来介绍如何Remote Debug。 dlv远程调试的原理vscode支持丰富的插件，dlv插件可以帮助我们调试golang代码，基本使用方法详见">
+<meta property="og:description" content="当了解一些大型项目的代码逻辑时，如kubernetes，跟着调试器跟踪代码学习，是很好的方式。当项目部署在远程环境时，在本机进行开发，很自然对Remote Debug有迫切需求，这也是和调试一般golang程序最主要的诉求区别点，本文将通过两个实际例子，来介绍如何Remote Debug。">
 <meta property="og:locale" content="zh-Hans">
 <meta property="og:image" content="https://xusenqi.github.io/2019/12/23/Remote-Debug-Go-Code-with-Visual-Studio-Code/dlv_server.jpeg">
 <meta property="og:image" content="https://xusenqi.github.io/2019/12/23/Remote-Debug-Go-Code-with-Visual-Studio-Code/Open_Configurations.jpeg">
@@ -100,10 +100,10 @@
 <meta property="og:image" content="https://xusenqi.github.io/2019/12/23/Remote-Debug-Go-Code-with-Visual-Studio-Code/kubeadm_kube_scheduler.jpeg">
 <meta property="og:image" content="https://xusenqi.github.io/2019/12/23/Remote-Debug-Go-Code-with-Visual-Studio-Code/VSCode_debug_kube_scheduler界面.jpeg">
 <meta property="og:image" content="https://xusenqi.github.io/2019/12/23/Remote-Debug-Go-Code-with-Visual-Studio-Code/dlv_server_kube_scheduler_调试.jpeg">
-<meta property="og:updated_time" content="2019-12-23T17:01:03.287Z">
+<meta property="og:updated_time" content="2019-12-23T17:10:25.080Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Remote Debugging Go Code with Visual Studio Code">
-<meta name="twitter:description" content="当了解一些大型项目的代码逻辑时，如kubernetes，跟着调试器跟踪代码学习，是很好的方式。当项目部署在远程环境时，在本机进行开发，很自然对Remote Debug有迫切需求，这也是和调试一般golang程序最主要的诉求区别点，本文将通过两个实际例子，来介绍如何Remote Debug。 dlv远程调试的原理vscode支持丰富的插件，dlv插件可以帮助我们调试golang代码，基本使用方法详见">
+<meta name="twitter:description" content="当了解一些大型项目的代码逻辑时，如kubernetes，跟着调试器跟踪代码学习，是很好的方式。当项目部署在远程环境时，在本机进行开发，很自然对Remote Debug有迫切需求，这也是和调试一般golang程序最主要的诉求区别点，本文将通过两个实际例子，来介绍如何Remote Debug。">
 <meta name="twitter:image" content="https://xusenqi.github.io/2019/12/23/Remote-Debug-Go-Code-with-Visual-Studio-Code/dlv_server.jpeg">
 
 
@@ -421,7 +421,7 @@
       
 
       
-        <p>当了解一些大型项目的代码逻辑时，如kubernetes，跟着调试器跟踪代码学习，是很好的方式。当项目部署在远程环境时，在本机进行开发，很自然对Remote Debug有迫切需求，这也是和调试一般golang程序最主要的诉求区别点，本文将通过两个实际例子，来介绍如何Remote Debug。</p>
+        <p>当了解一些大型项目的代码逻辑时，如kubernetes，跟着调试器跟踪代码学习，是很好的方式。当项目部署在远程环境时，在本机进行开发，很自然对Remote Debug有迫切需求，这也是和调试一般golang程序最主要的诉求区别点，本文将通过两个实际例子，来介绍如何Remote Debug。<br><a id="more"></a></p>
 <h1 id="dlv远程调试的原理"><a href="#dlv远程调试的原理" class="headerlink" title="dlv远程调试的原理"></a>dlv远程调试的原理</h1><p>vscode支持丰富的插件，dlv插件可以帮助我们调试golang代码，基本使用方法详见 <a href="https://github.com/go-delve/delve" target="_blank" rel="noopener">delve官网</a>，以及我之前的一篇文档<a href="https://xusenqi.github.io/2019/08/25/%E9%80%9A%E8%BF%87delve-dlv-%E8%B0%83%E8%AF%95golang%E7%A8%8B%E5%BA%8F/#more">通过delve(dlv)调试golang程序</a>。dlv远程调试的基本原理是，在服务端启动dlv server，客户端vscode去连接dlv server</p>
 <p><img src="/2019/12/23/Remote-Debug-Go-Code-with-Visual-Studio-Code/dlv_server.jpeg" alt="image"></p>
 <h1 id="远程调试的步骤"><a href="#远程调试的步骤" class="headerlink" title="远程调试的步骤"></a>远程调试的步骤</h1><p>主要参考了<a href="https://github.com/Microsoft/vscode-go/wiki/Debugging-Go-code-using-VS-Code" target="_blank" rel="noopener">Debugging Go code using VS Code</a>，现将步骤整理如下：</p>
