@@ -302,7 +302,7 @@
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://xusenqi.github.io/2018/05/15/TCP三次握手/">
+    <link itemprop="mainEntityOfPage" href="https://xusenqi.github.io/2018/08/12/Go语言-01-工作区和GOPATH/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="patrick.xu">
@@ -321,7 +321,7 @@
         
           <h1 class="post-title" itemprop="name headline">
                 
-                <a class="post-title-link" href="/2018/05/15/TCP三次握手/" itemprop="url">TCP三次握手</a></h1>
+                <a class="post-title-link" href="/2018/08/12/Go语言-01-工作区和GOPATH/" itemprop="url">Go语言 - 01 工作区和GOPATH</a></h1>
         
 
         <div class="post-meta">
@@ -333,8 +333,8 @@
               
                 <span class="post-meta-item-text">发表于</span>
               
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-05-15T11:21:20+08:00">
-                2018-05-15
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-08-12T20:01:39+08:00">
+                2018-08-12
               </time>
             
 
@@ -356,8 +356,8 @@
               
               
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/网络/" itemprop="url" rel="index">
-                    <span itemprop="name">网络</span>
+                  <a href="/categories/Go/" itemprop="url" rel="index">
+                    <span itemprop="name">Go</span>
                   </a>
                 </span>
 
@@ -374,8 +374,8 @@
                 <span class="post-meta-item-icon">
                   <i class="fa fa-comment-o"></i>
                 </span>
-                <a href="/2018/05/15/TCP三次握手/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count valine-comment-count" data-xid="/2018/05/15/TCP三次握手/" itemprop="commentCount"></span>
+                <a href="/2018/08/12/Go语言-01-工作区和GOPATH/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count valine-comment-count" data-xid="/2018/08/12/Go语言-01-工作区和GOPATH/" itemprop="commentCount"></span>
                 </a>
               </span>
             
@@ -383,7 +383,7 @@
 
           
           
-             <span id="/2018/05/15/TCP三次握手/" class="leancloud_visitors" data-flag-title="TCP三次握手">
+             <span id="/2018/08/12/Go语言-01-工作区和GOPATH/" class="leancloud_visitors" data-flag-title="Go语言 - 01 工作区和GOPATH">
                <span class="post-meta-divider">|</span>
                <span class="post-meta-item-icon">
                  <i class="fa fa-eye"></i>
@@ -415,24 +415,18 @@
 
       
         
-          
-          TCP三次握手/四次挥手的文章看过太多，但有些不太正确。还是决定自己写一篇，也算是对自己知识和碰到的问题的总结。
-tcp的主要特点
-面向连接
-点到点
-可靠交付
-全双工通信
-面向字节流
-
-其中核心的特点：tcp是可以可靠传输协议，它的其他所有特点都为这个可靠传输服务。
-如何保证可靠传输tcp在传输过程中都有一个ack，接收方通过ack告诉发送方收到那些包了。这样发送方能知道有没有丢包，进而确定重传。
-tcp三次握手
-
-第一步：client发送连接请求报文段，将SYN位置为1，Seq(Sequence Number)为X(由操作系统动态随机选取一个32位长的序列号)。然后，客户端进入SYN_SEN
-          ...
+          <h2 id="Go语言的安装"><a href="#Go语言的安装" class="headerlink" title="Go语言的安装"></a>Go语言的安装</h2><p>参照官网文档 <a href="https://golang.org/doc/install" target="_blank" rel="noopener">https://golang.org/doc/install</a><br>可以在命令行中输入命令来验证是否安装成功：</p>
+<ul>
+<li>go version：查看安装的版本</li>
+<li>go env：当前go的配置环境</li>
+</ul>
+<p>2个环境变量，即 GOROOT、GOPATH和GOBIN:</p>
+<ul>
+<li>GOROOT：go的安装路径</li>
+<li>GOPATH：go的工作路径</li></ul>
           <!--noindex-->
           <div class="post-button text-center">
-            <a class="btn" href="/2018/05/15/TCP三次握手/#more" rel="contents">
+            <a class="btn" href="/2018/08/12/Go语言-01-工作区和GOPATH/#more" rel="contents">
               阅读全文 &raquo;
             </a>
           </div>
@@ -608,6 +602,187 @@ tcp三次握手
           <!--noindex-->
           <div class="post-button text-center">
             <a class="btn" href="/2018/05/15/TCP四次挥手/#more" rel="contents">
+              阅读全文 &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://xusenqi.github.io/2018/05/15/TCP三次握手/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="patrick.xu">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="森几许的博客">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2018/05/15/TCP三次握手/" itemprop="url">TCP三次握手</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-05-15T11:21:20+08:00">
+                2018-05-15
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/网络/" itemprop="url" rel="index">
+                    <span itemprop="name">网络</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a href="/2018/05/15/TCP三次握手/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count valine-comment-count" data-xid="/2018/05/15/TCP三次握手/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+             <span id="/2018/05/15/TCP三次握手/" class="leancloud_visitors" data-flag-title="TCP三次握手">
+               <span class="post-meta-divider">|</span>
+               <span class="post-meta-item-icon">
+                 <i class="fa fa-eye"></i>
+               </span>
+               
+                 <span class="post-meta-item-text">阅读次数&#58;</span>
+               
+                 <span class="leancloud-visitors-count"></span>
+             </span>
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+          TCP三次握手/四次挥手的文章看过太多，但有些不太正确。还是决定自己写一篇，也算是对自己知识和碰到的问题的总结。
+tcp的主要特点
+面向连接
+点到点
+可靠交付
+全双工通信
+面向字节流
+
+其中核心的特点：tcp是可以可靠传输协议，它的其他所有特点都为这个可靠传输服务。
+如何保证可靠传输tcp在传输过程中都有一个ack，接收方通过ack告诉发送方收到那些包了。这样发送方能知道有没有丢包，进而确定重传。
+tcp三次握手
+
+第一步：client发送连接请求报文段，将SYN位置为1，Seq(Sequence Number)为X(由操作系统动态随机选取一个32位长的序列号)。然后，客户端进入SYN_SEN
+          ...
+          <!--noindex-->
+          <div class="post-button text-center">
+            <a class="btn" href="/2018/05/15/TCP三次握手/#more" rel="contents">
               阅读全文 &raquo;
             </a>
           </div>
@@ -1020,7 +1195,7 @@ More in
               
                 <a href="/archives">
               
-                  <span class="site-state-item-count">24</span>
+                  <span class="site-state-item-count">25</span>
                   <span class="site-state-item-name">日志</span>
                 </a>
               </div>
@@ -1042,7 +1217,7 @@ More in
               
               <div class="site-state-item site-state-tags">
                 <a href="/tags/index.html">
-                  <span class="site-state-item-count">29</span>
+                  <span class="site-state-item-count">31</span>
                   <span class="site-state-item-name">标签</span>
                 </a>
               </div>
