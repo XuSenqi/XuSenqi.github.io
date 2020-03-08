@@ -415,10 +415,8 @@
 
       
         
-          
-          map不是并发安全的官方的faq里有说明，考虑到有性能损失，map没有设计成原子操作，在并发读写时会有问题。
-1Map access is unsafe only when updates are occurring. As long as all goroutines are only reading—looking up elements in the map, including iterating through it using a for range loop—and not changing the map by assigning to elements or doing de
-          ...
+          <h1 id="map不是并发安全的"><a href="#map不是并发安全的" class="headerlink" title="map不是并发安全的"></a>map不是并发安全的</h1><p>官方的<a href="https://golang.org/doc/faq#atomic_maps" target="_blank" rel="noopener">faq</a>里有说明，考虑到有性能损失，map没有设计成原子操作，在并发读写时会有问题。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Map access is unsafe only when updates are occurring. As long as all goroutines are only reading—looking up elements in the map, including iterating through it using a for range loop—and not changing the map by assigning to elements or doing deletions, it is safe for them to access the map concurrently without synchronization.</span><br></pre></td></tr></table></figure>
           <!--noindex-->
           <div class="post-button text-center">
             <a class="btn" href="/2020/03/08/golang中的map并发读写问题/#more" rel="contents">
