@@ -2,6 +2,13 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
+    <loc>https://xusenqi.github.io/2020/12/06/C++Profile%E7%9A%84%E5%A4%A7%E6%9D%80%E5%99%A8_gperftools%E7%9A%84%E4%BD%BF%E7%94%A8/</loc>
+    
+    <lastmod>2020-12-06T13:51:39.508Z</lastmod>
+    
+  </url>
+  
+  <url>
     <loc>https://xusenqi.github.io/2019/08/25/%E9%80%9A%E8%BF%87delve-dlv-%E8%B0%83%E8%AF%95golang%E7%A8%8B%E5%BA%8F/</loc>
     
     <lastmod>2020-12-02T06:45:38.306Z</lastmod>
