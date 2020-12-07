@@ -45,9 +45,9 @@
         <category>vscode</category>
       </categories>
       <tags>
-        <tag>k8s</tag>
         <tag>vscode</tag>
         <tag>remote debug</tag>
+        <tag>k8s</tag>
       </tags>
   </entry>
   <entry>
@@ -58,8 +58,8 @@
         <category>k8s</category>
       </categories>
       <tags>
-        <tag>kubeadm</tag>
         <tag>k8s</tag>
+        <tag>kubeadm</tag>
       </tags>
   </entry>
   <entry>

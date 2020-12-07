@@ -109,11 +109,11 @@
       <category term="vscode" scheme="https://xusenqi.github.io/categories/vscode/"/>
     
     
-      <category term="k8s" scheme="https://xusenqi.github.io/tags/k8s/"/>
-    
       <category term="vscode" scheme="https://xusenqi.github.io/tags/vscode/"/>
     
       <category term="remote debug" scheme="https://xusenqi.github.io/tags/remote-debug/"/>
+    
+      <category term="k8s" scheme="https://xusenqi.github.io/tags/k8s/"/>
     
   </entry>
   
@@ -141,9 +141,9 @@
       <category term="k8s" scheme="https://xusenqi.github.io/categories/k8s/"/>
     
     
-      <category term="kubeadm" scheme="https://xusenqi.github.io/tags/kubeadm/"/>
-    
       <category term="k8s" scheme="https://xusenqi.github.io/tags/k8s/"/>
+    
+      <category term="kubeadm" scheme="https://xusenqi.github.io/tags/kubeadm/"/>
     
   </entry>
   
