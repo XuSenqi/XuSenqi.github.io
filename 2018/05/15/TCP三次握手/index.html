@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.4.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    hostname: new URL('https://xusenqi.github.io').hostname,
+    root: '/',
+    scheme: 'Muse',
+    version: '7.7.0',
+    exturl: false,
+    sidebar: {"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},
+    copycode: {"enable":false,"show_result":false,"style":null},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":false},
+    bookmark: {"enable":false,"color":"#222","save":"auto"},
+    fancybox: false,
+    mediumzoom: false,
+    lazyload: false,
+    pangu: false,
+    comments: {"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: '',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}
+  };
+</script>
+
+  <meta name="description" content="TCP三次握手&#x2F;四次挥手的文章看过太多，但有些不太正确。还是决定自己写一篇，也算是对自己知识和碰到的问题的总结。 tcp的主要特点 面向连接 点到点 可靠交付 全双工通信 面向字节流  其中核心的特点：tcp是可以可靠传输协议，它的其他所有特点都为这个可靠传输服务。 如何保证可靠传输tcp在传输过程中都有一个ack，接收方通过ack告诉发送方收到那些包了。这样发送方能知道有没有丢包，进而确定重传。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="TCP三次握手">
+<meta property="og:url" content="https://xusenqi.github.io/2018/05/15/TCP%E4%B8%89%E6%AC%A1%E6%8F%A1%E6%89%8B/index.html">
+<meta property="og:site_name" content="森几许的博客">
+<meta property="og:description" content="TCP三次握手&#x2F;四次挥手的文章看过太多，但有些不太正确。还是决定自己写一篇，也算是对自己知识和碰到的问题的总结。 tcp的主要特点 面向连接 点到点 可靠交付 全双工通信 面向字节流  其中核心的特点：tcp是可以可靠传输协议，它的其他所有特点都为这个可靠传输服务。 如何保证可靠传输tcp在传输过程中都有一个ack，接收方通过ack告诉发送方收到那些包了。这样发送方能知道有没有丢包，进而确定重传。">
+<meta property="og:locale">
+<meta property="og:image" content="https://xusenqi.github.io/.io//%E4%B8%89%E6%AC%A1%E6%8F%A1%E6%89%8B.png">
+<meta property="og:image" content="https://xusenqi.github.io/.io//TCP%E9%A6%96%E9%83%A8.png">
+<meta property="og:image" content="https://xusenqi.github.io/.io//%E4%B8%89%E6%AC%A1%E6%8F%A1%E6%89%8B%E6%8A%93%E5%8C%85.jpg">
+<meta property="og:image" content="https://xusenqi.github.io/.io//%E7%AC%AC%E4%B8%80%E6%AC%A1%E6%8F%A1%E6%89%8B%E6%8A%93%E5%8C%85.jpg">
+<meta property="og:image" content="https://xusenqi.github.io/.io//%E7%AC%AC%E4%B8%80%E6%AC%A1%E6%8F%A1%E6%89%8B%E6%8A%93%E5%8C%85.jpg">
+<meta property="og:image" content="https://xusenqi.github.io/.io//%E7%AC%AC%E4%B8%89%E6%AC%A1%E6%8F%A1%E6%89%8B%E6%8A%93%E5%8C%85.jpg">
+<meta property="article:published_time" content="2018-05-15T03:21:20.000Z">
+<meta property="article:modified_time" content="2021-08-18T13:13:05.855Z">
+<meta property="article:author" content="patrick.xu">
+<meta property="article:tag" content="TCP">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://xusenqi.github.io/.io//%E4%B8%89%E6%AC%A1%E6%8F%A1%E6%89%8B.png">
+
+<link rel="canonical" href="https://xusenqi.github.io/2018/05/15/TCP%E4%B8%89%E6%AC%A1%E6%8F%A1%E6%89%8B/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true
+  };
+</script>
+
+  <title>TCP三次握手 | 森几许的博客</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+<link rel="alternate" href="/atom.xml" title="森几许的博客" type="application/atom+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">森几许的博客</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+        <p class="site-subtitle">空杯心态</p>
+  </div>
+
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-fw fa-user"></i>About</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>Tags</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-fw fa-th"></i>Categories</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>Archives</a>
+
+  </li>
+  </ul>
+
+</nav>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content">
+            
+
+  <div class="posts-expand">
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block " lang="zh-Hans">
+    <link itemprop="mainEntityOfPage" href="https://xusenqi.github.io/2018/05/15/TCP%E4%B8%89%E6%AC%A1%E6%8F%A1%E6%89%8B/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="patrick.xu">
+      <meta itemprop="description" content="完成比完美更重要">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="森几许的博客">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          TCP三次握手
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2018-05-15 11:21:20" itemprop="dateCreated datePublished" datetime="2018-05-15T11:21:20+08:00">2018-05-15</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2021-08-18 21:13:05" itemprop="dateModified" datetime="2021-08-18T21:13:05+08:00">2021-08-18</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E7%BD%91%E7%BB%9C/" itemprop="url" rel="index">
+                    <span itemprop="name">网络</span>
+                  </a>
+                </span>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="Symbols count in article">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-file-word-o"></i>
+              </span>
+                <span class="post-meta-item-text">Symbols count in article: </span>
+              <span>3.2k</span>
+            </span>
+            <span class="post-meta-item" title="Reading time">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-clock-o"></i>
+              </span>
+                <span class="post-meta-item-text">Reading time &asymp;</span>
+              <span>5 mins.</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>TCP三次握手/四次挥手的文章看过太多，但有些不太正确。还是决定自己写一篇，也算是对自己知识和碰到的问题的总结。</p>
+<h2 id="tcp的主要特点"><a href="#tcp的主要特点" class="headerlink" title="tcp的主要特点"></a>tcp的主要特点</h2><ul>
+<li>面向连接</li>
+<li>点到点</li>
+<li>可靠交付</li>
+<li>全双工通信</li>
+<li>面向字节流</li>
+</ul>
+<p>其中核心的特点：tcp是可以可靠传输协议，它的其他所有特点都为这个可靠传输服务。</p>
+<h2 id="如何保证可靠传输"><a href="#如何保证可靠传输" class="headerlink" title="如何保证可靠传输"></a>如何保证可靠传输</h2><p>tcp在传输过程中都有一个ack，接收方通过ack告诉发送方收到那些包了。这样发送方能知道有没有丢包，进而确定重传。</p>
+<h2 id="tcp三次握手"><a href="#tcp三次握手" class="headerlink" title="tcp三次握手"></a>tcp三次握手</h2><p><img src="/.io//%E4%B8%89%E6%AC%A1%E6%8F%A1%E6%89%8B.png" alt="image"></p>
+<ul>
+<li><p>第一步：client发送连接请求报文段，将SYN位置为1，Seq(Sequence Number)为X(由操作系统动态随机选取一个32位长的序列号)。然后，客户端进入SYN_SEND状态，等待服务器的确认。</p>
+</li>
+<li><p>第二步：server收到client的SYN报文段。需要对这个SYN报文段进行确认，设置Ack(Acknowledgment Number)设置为X(第一次握手中的Seq的值)+1。同时，自己还要发送SYN请求信息，将SYN位置为1，Seq(Sequence Number)为Y(由操作系统动态随机选取一个32位长的序列号)。服务器端将上述所有信息一并发送给客户端，此时服务器进入SYN_RECV状态。</p>
+</li>
+<li><p>第三步：client收到sever的SYN+ACK后，回复server一个ACK。将Ack(Acknowledgment Number)设置为Y(第二次握手中的Seq的值)+1，Seq(Sequence Number)设置为X+1(第二次握手中的Ack(Acknowledgment Number)值)，向服务器发送ACK报文段，这个报文段发送完毕以后，客户端和服务器端都进入ESTABLISHED状态，完成TCP三次握手。</p>
+</li>
+</ul>
+<h2 id="tcp首部简介"><a href="#tcp首部简介" class="headerlink" title="tcp首部简介"></a>tcp首部简介</h2><p>这里先介绍下TCP首部的相关知识。三次握手相关的是主要是ACK和SYN这两个标志比特位。</p>
+<p><img src="/.io//TCP%E9%A6%96%E9%83%A8.png" alt="image"></p>
+<p>（1）源端口和目的端口：各占2字节。</p>
+<p>（2）序号(Seq, Sequence Number)：占4个字节。用来标识从TCP发端向TCP收端发送的数据字节流，它表示在这个报文段中的的第一个数据字节在数据流中的序号。主要用来解决网络报乱序的问题。序号范围是[0, 2^32 - 1],共2^32个序号。</p>
+<p>（3）确认号(Ack, Acknowledgment Number): 占4个字节。期望收到对方下一个报文段的第一个数据字节的序号，因此，确认序号应当是上次已成功收到数据字节序号加1。不过，只有当标志位中的ACK标志（下面介绍）为1时该确认序列号的字段才有效。主要用来解决不丢包的问题。</p>
+<p>（4）数据偏移(Offset): 占4位。TCP报文段的数据起始处距离TCP报文段的起始处有多远。实际上指出TCP报文段的首部长度。但注意，“数据偏移”的单位是32位字（即以4字节长度为单位）。最多能表示15个32bit的的字，即4*15=60个字节的首部长度。因此TCP最多有60字节的首部。然而，没有选项字段，正常的长度是20字节。</p>
+<p>（5）保留: 占6位。保留为今后使用，目前置为0。</p>
+<p>（6）标志比特(TCP Flags): TCP首部中有6个标志比特，它们中的多个可同时被设置为1，主要是用于操控TCP的状态机的，依次为URG，ACK，PSH，RST，SYN，FIN。每个标志位的意思如下:</p>
+<ul>
+<li>URG（URGent）: 此标志表示TCP包的紧急指针域（后面马上就要说到）有效，用来保证TCP连接不被中断，并且督促中间层设备要尽快处理这些数据。</li>
+<li>ACK(ACKnowlegment): 仅当ACK=1时Ack字段有效。在连接建立后所有传送的报文段都必须把ACK置1。</li>
+<li>PSH(PuSH): 这个标志位表示Push操作。所谓Push操作就是指在数据包到达接收端以后，立即传送给应用程序，而不是在缓冲区中排队。</li>
+<li>RST(ReSeT): 这个标志表示连接复位请求。用来复位那些产生错误的连接，也被用来拒绝错误和非法的数据包。</li>
+<li>SYN(SYNchoronization): 表示同步序号，用来建立连接。SYN标志位和ACK标志位搭配使用，当连接请求的时候，SYN=1，ACK=0。连接被响应的时候，SYN=1，ACK=1。</li>
+<li>FIN(FINis): 表示发送端已经达到数据末尾，也就是说双方的数据传送完成，没有数据可以传送了，发送FIN标志位的TCP数据包后，连接将被断开。</li>
+</ul>
+<p>（7）窗口: 占2个字节，[0, 2^16 - 1]。指的是发送本报文段的一方的接收窗口。明确指出了现在允许对方发送的数据量。窗口值是经常动态变化的。</p>
+<p>（8）校验和: 占2字节。该字段检验的范围包括首部和数据这两部分。由发端计算和存储，并由收端进行验证。</p>
+<p>（9）紧急指针: 占2个字节，紧急指针仅在URG=1时才有意义，它指出本报文段中的紧急数据的字节数。当所有紧急数据处理完毕时，TCP就告诉应用程序恢复到正常操作。值得注意的是，即使窗口为0时也可发送紧急数据。</p>
+<p>（10）选项: 长度可变，最长可达40字节，当没有选项时，TCP的首部长度是20字节。最初只规定了一种选项，即最大报文段长度MSS(Maximum Segment Size)，MSS是指每一个TCP报文段中的数据字段的最大长度。</p>
+<h2 id="抓包实践"><a href="#抓包实践" class="headerlink" title="抓包实践"></a>抓包实践</h2><p>来看一个pb请求的三次握手过程</p>
+<p><img src="/.io//%E4%B8%89%E6%AC%A1%E6%8F%A1%E6%89%8B%E6%8A%93%E5%8C%85.jpg" alt="image"></p>
+<p>client: 172.17.1.217  server: 172.27.247.168</p>
+<p>握手的核心目的是告知对方seq（client的初始seq，server的初始seq），对方回复ack（收到的seq+包的大小），这样发送端就知道有没有丢包了。</p>
+<p>握手的次要目的是告知和协商一些信息。</p>
+<ul>
+<li>MSS–最大传输包</li>
+<li>SACK_PERM–是否支持Selective ack(用户优化重传效率）</li>
+<li>WS–窗口计算指数（有点复杂的话先不用管）</li>
+</ul>
+<p><strong>这就是tcp为什么要握手建立连接，就是为了解决tcp的可靠传输。</strong></p>
+<h3 id="查看第一次握手的详情"><a href="#查看第一次握手的详情" class="headerlink" title="查看第一次握手的详情"></a>查看第一次握手的详情</h3><p><img src="/.io//%E7%AC%AC%E4%B8%80%E6%AC%A1%E6%8F%A1%E6%89%8B%E6%8A%93%E5%8C%85.jpg" alt="image"></p>
+<h3 id="查看第二次握手的详情"><a href="#查看第二次握手的详情" class="headerlink" title="查看第二次握手的详情"></a>查看第二次握手的详情</h3><p><img src="/.io//%E7%AC%AC%E4%B8%80%E6%AC%A1%E6%8F%A1%E6%89%8B%E6%8A%93%E5%8C%85.jpg" alt="image"></p>
+<h3 id="查看第三次握手的详情"><a href="#查看第三次握手的详情" class="headerlink" title="查看第三次握手的详情"></a>查看第三次握手的详情</h3><p><img src="/.io//%E7%AC%AC%E4%B8%89%E6%AC%A1%E6%8F%A1%E6%89%8B%E6%8A%93%E5%8C%85.jpg" alt="image"></p>
+<h3 id="为什么要三次握手？"><a href="#为什么要三次握手？" class="headerlink" title="为什么要三次握手？"></a>为什么要三次握手？</h3><ul>
+<li><p>如果只有一次握手，Client不能确定与Server的单向连接，更加不能确定Server与Client的单向连接；</p>
+</li>
+<li><p>如果只有两次握手，Client确定与Server的单向连接，但是Server不能确定与Client的单向连接；</p>
+</li>
+<li><p>只有三次握手，Client与Server才能相互确认双向连接，实现双工数据传输。</p>
+</li>
+<li><p>谢希仁版《计算机网络》中的例子是这样的，“已失效的连接请求报文段”的产生在这样一种情况下：client发出的第一个连接请求报文段并没有丢失，而是在某个网络结点长时间的滞留了，以致延误到连接释放以后的某个时间才到达server。本来这是一个早已失效的报文段。但server收到此失效的连接请求报文段后，就误认为是client再次发出的一个新的连接请求。于是就向client发出确认报文段，同意建立连接。假设不采用“三次握手”，那么只要server发出确认，新的连接就建立了。由于现在client并没有发出建立连接的请求，因此不会理睬server的确认，也不会向server发送数据。但server却以为新的运输连接已经建立，并一直等待client发来数据。这样，server的很多资源就白白浪费掉了。采用“三次握手”的办法可以防止上述现象发生。例如刚才那种情况，client不会向server的确认发出确认。server由于收不到确认，就知道client并没有要求建立连接。</p>
+</li>
+</ul>
+<h3 id="握手中断"><a href="#握手中断" class="headerlink" title="握手中断"></a>握手中断</h3><ul>
+<li>第一次握手中断: A发送给B的SYN中断，A会周期性超时重传，直到A收到B的确认响应。</li>
+<li>第二次握手中断: B发送给A的SYN、ACK中断，B会周期性超时重传，直到B收到A的确认响应。</li>
+<li>第三次握手中断: A发送给B的ACK中断，A不会重传。超时后，B会重传SYN信号(即回到第二次握手)，直到B收到A的确认响应。</li>
+</ul>
+<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><ul>
+<li><a target="_blank" rel="noopener" href="https://www.jianshu.com/p/448f37ed29fe">https://www.jianshu.com/p/448f37ed29fe</a></li>
+<li><a target="_blank" rel="noopener" href="https://www.jianshu.com/p/a4beee06220c">https://www.jianshu.com/p/a4beee06220c</a></li>
+<li><a target="_blank" rel="noopener" href="http://jm.taobao.org/2017/06/08/20170608/">http://jm.taobao.org/2017/06/08/20170608/</a></li>
+</ul>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/TCP/" rel="tag"># TCP</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2018/05/15/TCP%E5%9B%9B%E6%AC%A1%E6%8C%A5%E6%89%8B/" rel="prev" title="TCP四次挥手">
+      <i class="fa fa-chevron-left"></i> TCP四次挥手
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2018/08/12/Go%E8%AF%AD%E8%A8%80-01-%E5%B7%A5%E4%BD%9C%E5%8C%BA%E5%92%8CGOPATH/" rel="next" title="Go语言 - 01 工作区和GOPATH">
+      Go语言 - 01 工作区和GOPATH <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+  </div>
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let activeClass = CONFIG.comments.activeClass;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#tcp%E7%9A%84%E4%B8%BB%E8%A6%81%E7%89%B9%E7%82%B9"><span class="nav-number">1.</span> <span class="nav-text">tcp的主要特点</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%A6%82%E4%BD%95%E4%BF%9D%E8%AF%81%E5%8F%AF%E9%9D%A0%E4%BC%A0%E8%BE%93"><span class="nav-number">2.</span> <span class="nav-text">如何保证可靠传输</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#tcp%E4%B8%89%E6%AC%A1%E6%8F%A1%E6%89%8B"><span class="nav-number">3.</span> <span class="nav-text">tcp三次握手</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#tcp%E9%A6%96%E9%83%A8%E7%AE%80%E4%BB%8B"><span class="nav-number">4.</span> <span class="nav-text">tcp首部简介</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%8A%93%E5%8C%85%E5%AE%9E%E8%B7%B5"><span class="nav-number">5.</span> <span class="nav-text">抓包实践</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%9F%A5%E7%9C%8B%E7%AC%AC%E4%B8%80%E6%AC%A1%E6%8F%A1%E6%89%8B%E7%9A%84%E8%AF%A6%E6%83%85"><span class="nav-number">5.1.</span> <span class="nav-text">查看第一次握手的详情</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%9F%A5%E7%9C%8B%E7%AC%AC%E4%BA%8C%E6%AC%A1%E6%8F%A1%E6%89%8B%E7%9A%84%E8%AF%A6%E6%83%85"><span class="nav-number">5.2.</span> <span class="nav-text">查看第二次握手的详情</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%9F%A5%E7%9C%8B%E7%AC%AC%E4%B8%89%E6%AC%A1%E6%8F%A1%E6%89%8B%E7%9A%84%E8%AF%A6%E6%83%85"><span class="nav-number">5.3.</span> <span class="nav-text">查看第三次握手的详情</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%BA%E4%BB%80%E4%B9%88%E8%A6%81%E4%B8%89%E6%AC%A1%E6%8F%A1%E6%89%8B%EF%BC%9F"><span class="nav-number">5.4.</span> <span class="nav-text">为什么要三次握手？</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%8F%A1%E6%89%8B%E4%B8%AD%E6%96%AD"><span class="nav-number">5.5.</span> <span class="nav-text">握手中断</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8F%82%E8%80%83"><span class="nav-number">6.</span> <span class="nav-text">参考</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">patrick.xu</p>
+  <div class="site-description" itemprop="description">完成比完美更重要</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">28</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">12</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">37</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="/atom.xml" title="RSS → &#x2F;atom.xml"><i class="fa fa-fw fa-rss"></i>RSS</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">patrick.xu</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-area-chart"></i>
+    </span>
+    <span title="Symbols count total">124k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="Reading time total">3:27</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> v5.4.0
+  </div>
+  <span class="post-meta-divider">|</span>
+  <div class="theme-info">Theme – <a href="https://muse.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a> v7.7.0
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

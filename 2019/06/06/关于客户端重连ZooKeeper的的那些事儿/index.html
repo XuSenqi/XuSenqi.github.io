@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.4.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    hostname: new URL('https://xusenqi.github.io').hostname,
+    root: '/',
+    scheme: 'Muse',
+    version: '7.7.0',
+    exturl: false,
+    sidebar: {"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},
+    copycode: {"enable":false,"show_result":false,"style":null},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":false},
+    bookmark: {"enable":false,"color":"#222","save":"auto"},
+    fancybox: false,
+    mediumzoom: false,
+    lazyload: false,
+    pangu: false,
+    comments: {"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: '',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}
+  };
+</script>
+
+  <meta name="description" content="ZooKeeper Sessions![image](关于客户端重连ZooKeeper的的那些事儿&#x2F;ZooKeeper Sessions.jpg)  ZooKeeper客户端初始化后转换到CONNECTING状态，与ZooKeeper服务器（或者ZooKeeper集群中的一台服务器）建立连接后，进入CONNECTED状态 当客户端与ZooKeeper服务器断开连接或者无法收到服务器响应时，就会转回">
+<meta property="og:type" content="article">
+<meta property="og:title" content="关于客户端重连ZooKeeper的的那些事儿">
+<meta property="og:url" content="https://xusenqi.github.io/2019/06/06/%E5%85%B3%E4%BA%8E%E5%AE%A2%E6%88%B7%E7%AB%AF%E9%87%8D%E8%BF%9EZooKeeper%E7%9A%84%E7%9A%84%E9%82%A3%E4%BA%9B%E4%BA%8B%E5%84%BF/index.html">
+<meta property="og:site_name" content="森几许的博客">
+<meta property="og:description" content="ZooKeeper Sessions![image](关于客户端重连ZooKeeper的的那些事儿&#x2F;ZooKeeper Sessions.jpg)  ZooKeeper客户端初始化后转换到CONNECTING状态，与ZooKeeper服务器（或者ZooKeeper集群中的一台服务器）建立连接后，进入CONNECTED状态 当客户端与ZooKeeper服务器断开连接或者无法收到服务器响应时，就会转回">
+<meta property="og:locale">
+<meta property="og:image" content="https://xusenqi.github.io/.io//%E5%AE%A2%E6%88%B7%E7%AB%AF%E8%87%AA%E5%8A%A8%E9%87%8D%E8%BF%9Ezk%E7%9A%84%E6%BC%94%E7%A4%BA.png">
+<meta property="og:image" content="https://xusenqi.github.io/.io//ephemeral_node_access_1.png">
+<meta property="og:image" content="https://xusenqi.github.io/.io//connecting_state_1.jpg">
+<meta property="og:image" content="https://xusenqi.github.io/.io//zkjs_on_close.jpg">
+<meta property="og:image" content="https://xusenqi.github.io/.io//zkjs_reconnect.jpg">
+<meta property="og:image" content="https://xusenqi.github.io/.io//zk%E8%BF%9E%E6%8E%A5%E6%95%B0%E6%8E%89.jpg">
+<meta property="og:image" content="https://xusenqi.github.io/.io//singapore_session_expire.png">
+<meta property="og:image" content="https://xusenqi.github.io/.io//uframework_reconnect_zk_1.png">
+<meta property="og:image" content="https://xusenqi.github.io/.io//uframework_reconnect_zk_2.png">
+<meta property="og:image" content="https://xusenqi.github.io/.io//uframework_reconnect_zk_3.png">
+<meta property="article:published_time" content="2019-06-06T06:24:24.000Z">
+<meta property="article:modified_time" content="2021-08-18T13:13:06.056Z">
+<meta property="article:author" content="patrick.xu">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://xusenqi.github.io/.io//%E5%AE%A2%E6%88%B7%E7%AB%AF%E8%87%AA%E5%8A%A8%E9%87%8D%E8%BF%9Ezk%E7%9A%84%E6%BC%94%E7%A4%BA.png">
+
+<link rel="canonical" href="https://xusenqi.github.io/2019/06/06/%E5%85%B3%E4%BA%8E%E5%AE%A2%E6%88%B7%E7%AB%AF%E9%87%8D%E8%BF%9EZooKeeper%E7%9A%84%E7%9A%84%E9%82%A3%E4%BA%9B%E4%BA%8B%E5%84%BF/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true
+  };
+</script>
+
+  <title>关于客户端重连ZooKeeper的的那些事儿 | 森几许的博客</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+<link rel="alternate" href="/atom.xml" title="森几许的博客" type="application/atom+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">森几许的博客</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+        <p class="site-subtitle">空杯心态</p>
+  </div>
+
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-fw fa-user"></i>About</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>Tags</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-fw fa-th"></i>Categories</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>Archives</a>
+
+  </li>
+  </ul>
+
+</nav>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content">
+            
+
+  <div class="posts-expand">
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block " lang="zh-Hans">
+    <link itemprop="mainEntityOfPage" href="https://xusenqi.github.io/2019/06/06/%E5%85%B3%E4%BA%8E%E5%AE%A2%E6%88%B7%E7%AB%AF%E9%87%8D%E8%BF%9EZooKeeper%E7%9A%84%E7%9A%84%E9%82%A3%E4%BA%9B%E4%BA%8B%E5%84%BF/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="patrick.xu">
+      <meta itemprop="description" content="完成比完美更重要">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="森几许的博客">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          关于客户端重连ZooKeeper的的那些事儿
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2019-06-06 14:24:24" itemprop="dateCreated datePublished" datetime="2019-06-06T14:24:24+08:00">2019-06-06</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2021-08-18 21:13:06" itemprop="dateModified" datetime="2021-08-18T21:13:06+08:00">2021-08-18</time>
+              </span>
+
+          <br>
+            <span class="post-meta-item" title="Symbols count in article">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-file-word-o"></i>
+              </span>
+                <span class="post-meta-item-text">Symbols count in article: </span>
+              <span>14k</span>
+            </span>
+            <span class="post-meta-item" title="Reading time">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-clock-o"></i>
+              </span>
+                <span class="post-meta-item-text">Reading time &asymp;</span>
+              <span>23 mins.</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="ZooKeeper-Sessions"><a href="#ZooKeeper-Sessions" class="headerlink" title="ZooKeeper Sessions"></a>ZooKeeper Sessions</h1><p>![image](关于客户端重连ZooKeeper的的那些事儿/ZooKeeper Sessions.jpg)</p>
+<ul>
+<li>ZooKeeper客户端初始化后转换到CONNECTING状态，与ZooKeeper服务器（或者ZooKeeper集群中的一台服务器）建立连接后，进入CONNECTED状态</li>
+<li>当客户端与ZooKeeper服务器断开连接或者无法收到服务器响应时，就会转回到CONNECTING状态，此时会一直收到CONNECTION_LOSS。</li>
+<li>这时ZooKeeper客户端会自动地从列表中逐个选取新的地址进行重连，如果成功，状态又会转回CONNECTED状态</li>
+<li>如果一直无法重连，超过会话超时时间(sessionTimeout)后，服务器认为这个session已经结束了，此时客户端无法感知</li>
+<li>最后当客户端终于自动重连到ZooKeeper服务器时，会收到Session Expired；这种情况下，需要应用层关闭当前会话，然后重连。</li>
+<li>在CONNECTING状态和CONNECTED状态，客户端都可以显示地关闭，进入CLOSED状态</li>
+</ul>
+<span id="more"></span>
+
+<blockquote>
+<p>当建立session时，客户会收到由服务器创建的session id和password。当自动重连时，客户端都会发送session id和password给服务端，重建的还是原来的session。以上的自动重连都是由底层的API库来实现，非应用层面去实现的重连</p>
+</blockquote>
+<h1 id="客户端自动重连zk的测试"><a href="#客户端自动重连zk的测试" class="headerlink" title="客户端自动重连zk的测试"></a>客户端自动重连zk的测试</h1><p>cons 查看连接到服务端的信息，看到在自动重连之后，session id保持不变。<br><img src="/.io//%E5%AE%A2%E6%88%B7%E7%AB%AF%E8%87%AA%E5%8A%A8%E9%87%8D%E8%BF%9Ezk%E7%9A%84%E6%BC%94%E7%A4%BA.png" alt="image"></p>
+<h1 id="Session-Expired后的重连实践"><a href="#Session-Expired后的重连实践" class="headerlink" title="Session Expired后的重连实践"></a>Session Expired后的重连实践</h1><h2 id="Session-Expired产生的过程"><a href="#Session-Expired产生的过程" class="headerlink" title="Session Expired产生的过程"></a>Session Expired产生的过程</h2><p>再来回顾下产生session expired的过程，官网上的说明很清楚。</p>
+<p>Session expiration is managed by the ZooKeeper cluster itself, not by the client. When the ZK client establishes a session with the cluster it provides a “timeout” value detailed above. This value is used by the cluster to determine when the client’s session expires. Expirations happens when the cluster does not hear from the client within the specified session timeout period (i.e. no heartbeat). At session expiration the cluster will delete any/all ephemeral nodes owned by that session and immediately notify any/all connected clients of the change (anyone watching those znodes).* At this point the client of the expired session is still disconnected from the cluster, it will not be notified of the session expiration until/unless it is able to re-establish a connection to the cluster.* The client will stay in disconnected state until the TCP connection is re-established with the cluster, at which point the watcher of the expired session will receive the “session expired” notification.</p>
+<p>Example state transitions for an expired session as seen by the expired session’s watcher:</p>
+<ul>
+<li>‘connected’ : session is established and client is communicating with cluster (client/server communication is operating properly)</li>
+<li>…. client is partitioned from the cluster</li>
+<li>‘disconnected’ : client has lost connectivity with the cluster</li>
+<li>…. time elapses, after ‘timeout’ period the cluster expires the session, nothing is seen by client as it is disconnected from cluster</li>
+<li>…. time elapses, the client regains network level connectivity with the cluster</li>
+<li>‘expired’ : eventually the client reconnects to the cluster, it is then notified of the expiration</li>
+</ul>
+<p>所以需要在客户端收到expiration后，进行重连。</p>
+<h2 id="Session-Expired后的重连的测试"><a href="#Session-Expired后的重连的测试" class="headerlink" title="Session Expired后的重连的测试"></a>Session Expired后的重连的测试</h2><p>由于生产环境中用的语言是node，选用的客户端是<a target="_blank" rel="noopener" href="https://github.com/yfinkelstein/node-zookeeper">node-zookeeper</a>。这是一个封装了ZooKeeper C API的模块.</p>
+<p>后面实验的测试环境如下:</p>
+<ul>
+<li>zk集群：192.168.154.103:2181,192.168.154.104:2181,192.168.154.105:2181</li>
+<li>客户端：192.168.154.106 uhost-access</li>
+</ul>
+<p>重连的过程如下：</p>
+<p>（1）客户端拉起uhost-access服务:<br>   临时节点 /NS/region666888/set12/uhost/access/0注册成功，session建立成功<br>   <img src="/.io//ephemeral_node_access_1.png" alt="image"></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">[root@192-168-153-51 node-common]# echo cons | nc 192.168.154.103 2181 | grep &quot;192.168.154.106&quot;</span><br><span class="line"> /192.168.154.106:48146[1](queued=0,recved=99,sent=102,sid=0x6b364768a90001,lop=NA,est=1560000679478,to=40000,lcxid=0x5cfbb93f,lzxid=0x1300013dd4,lresp=1560000745134,llat=1,minlat=0,avglat=1,maxlat=6)</span><br><span class="line"> /192.168.154.106:48149[1](queued=0,recved=7,sent=7,sid=0x6b364768a90000,lop=PING,est=1560000679478,to=40000,lcxid=0x5cfbb8b6,lzxid=0xffffffffffffffff,lresp=1560000732987,llat=0,minlat=0,avglat=0,maxlat=4)</span><br><span class="line">[root@192-168-153-51 node-common]# echo cons | nc 192.168.154.104 2181 | grep &quot;192.168.154.106&quot;</span><br><span class="line">[root@192-168-153-51 node-common]# echo cons | nc 192.168.154.105 2181 | grep &quot;192.168.154.106&quot;</span><br></pre></td></tr></table></figure>
+
+<p>（2）客户端添加防火墙规则，模拟网络分区</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">iptables -A OUTPUT -d 192.168.154.103 -p tcp --dport 2181 -j DROP</span><br><span class="line">iptables -A OUTPUT -d 192.168.154.104 -p tcp --dport 2181 -j DROP</span><br><span class="line">iptables -A OUTPUT -d 192.168.154.105 -p tcp --dport 2181 -j DROP</span><br><span class="line">iptables -A INPUT -s 192.168.154.103 -p tcp --sport 2181 -j DROP</span><br><span class="line">iptables -A INPUT -s 192.168.154.104 -p tcp --sport 2181 -j DROP</span><br><span class="line">iptables -A INPUT -s 192.168.154.105 -p tcp --sport 2181 -j DROP   </span><br></pre></td></tr></table></figure>
+
+<p>此时客户端和zk自动重连失败，一直处于CONNECTING状态</p>
+<p>这部分错误在module zookeeper： node-zk.cpp里</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">2019-06-08 21:38:52,739:22724:ZOO_ERROR@handle_socket_error_msg@1666: Socket [192.168.154.103:2181] zk retcode=-7, errno=110(Connection timed out): connection to 192.168.154.103:2181 timed out (exceeded timeout by 1ms)</span><br><span class="line">2019-06-08 21:38:52,742:22724:ZOO_ERROR@yield@234: yield:zookeeper_interest returned error: -7 - operation timeout</span><br></pre></td></tr></table></figure>
+
+<p>zk.js（在node-zookeeper上层封装的代码）打印on connecting的日志</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">[2019-06-08 21:38:52.739] [WARN] uhost-access - zk connection 192.168.154.103:2181,192.168.154.104:2181,192.168.154.105:2181 connecting</span><br><span class="line"></span><br><span class="line">[2019-06-08 21:38:53.016] [WARN] uhost-access - zk connection 192.168.154.103:2181,192.168.154.104:2181,192.168.154.105:2181 connecting</span><br></pre></td></tr></table></figure>
+
+<p>   <img src="/.io//connecting_state_1.jpg" alt="image"></p>
+<p>/NS/region666888/set12/uhost/access/0临时节点和会话被清理</p>
+<p>（3）删除防火墙规则，模拟网络恢复</p>
+<p>清楚防火墙规则：iptables -F</p>
+<p>（4）重连</p>
+<p>此时，客户端自动重连到zk时，会收到session expiration的错误。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">2019-06-08 22:14:20,118:22724:ZOO_ERROR@handle_socket_error_msg@1764: Socket [192.168.154.104:2181] zk retcode=-112, errno=116(Stale file handle): sessionId=0x6b364768a90000 has expired.</span><br><span class="line">2019-06-08 22:14:20,118:22724:ZOO_ERROR@main_watcher@380: Session expired. Shutting down...</span><br><span class="line"></span><br><span class="line">2019-06-08 22:14:20,124:22724:ZOO_ERROR@zk_io_cb@278: yield:zookeeper_process returned error: -112 - session expired</span><br><span class="line"></span><br><span class="line">2019-06-08 22:14:39,701:22724:ZOO_ERROR@handle_socket_error_msg@1764: Socket [192.168.154.103:2181] zk retcode=-112, errno=116(Stale file handle): sessionId=0x6b364768a90001 has expired.</span><br><span class="line">2019-06-08 22:14:39,702:22724:ZOO_ERROR@main_watcher@380: Session expired. Shutting down...</span><br><span class="line"></span><br><span class="line">2019-06-08 22:14:39,707:22724:ZOO_ERROR@zk_io_cb@278: yield:zookeeper_process returned error: -112 - session expired</span><br></pre></td></tr></table></figure>
+
+
+<ul>
+<li>在node-zookeeper里，会有检测ZOO_ EXPIRED_ SESSION_STATE的watcher。当watch到后，会emit一个closed的event。</li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><span class="line"> static void main_watcher (zhandle_t *zzh, int type, int state, const char *path, void* context) &#123;</span><br><span class="line">     Nan::HandleScope scope;</span><br><span class="line">     LOG_DEBUG((&quot;main watcher event: type=%d, state=%d, path=%s&quot;, type, state, (path ? path: &quot;null&quot;)));</span><br><span class="line">     ZooKeeper *zk = static_cast&lt;ZooKeeper *&gt;(context);</span><br><span class="line"></span><br><span class="line">     if (type == ZOO_SESSION_EVENT) &#123;</span><br><span class="line">         if (state == ZOO_CONNECTED_STATE) &#123;</span><br><span class="line">             zk-&gt;myid = *(zoo_client_id(zzh));</span><br><span class="line">             zk-&gt;DoEmitPath(Nan::New(on_connected), path);</span><br><span class="line">         &#125; else if (state == ZOO_CONNECTING_STATE) &#123;</span><br><span class="line">             zk-&gt;DoEmitPath (Nan::New(on_connecting), path);</span><br><span class="line">         &#125; else if (state == ZOO_AUTH_FAILED_STATE) &#123;</span><br><span class="line">             LOG_ERROR((&quot;Authentication failure. Shutting down...\n&quot;));</span><br><span class="line">             zk-&gt;realClose(ZOO_AUTH_FAILED_STATE);</span><br><span class="line">         &#125; else if (state == ZOO_EXPIRED_SESSION_STATE) &#123;</span><br><span class="line">             LOG_ERROR((&quot;Session expired. Shutting down...\n&quot;));</span><br><span class="line">             zk-&gt;realClose(ZOO_EXPIRED_SESSION_STATE);</span><br><span class="line">         &#125;</span><br><span class="line">     &#125; </span><br><span class="line">     ......</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">void realClose (int code) &#123;</span><br><span class="line">    ......</span><br><span class="line">       </span><br><span class="line">    if (zhandle) &#123;</span><br><span class="line">        ......</span><br><span class="line">           </span><br><span class="line">        // Close the timer and finally Unref the ZooKeeper instance when it&#x27;s done</span><br><span class="line">        // Unrefing after is important to avoid memory being freed too early.</span><br><span class="line">        uv_close((uv_handle_t*) &amp;zk_timer, timer_closed); </span><br><span class="line"></span><br><span class="line">        Nan::HandleScope scope;</span><br><span class="line">        DoEmitClose (Nan::New(on_closed), code);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+<ul>
+<li>在自己封装的上层业务库里，捕获到这个close event，并重连到zk<br><img src="/.io//zkjs_on_close.jpg" alt="image"><br><img src="/.io//zkjs_reconnect.jpg" alt="image"></li>
+</ul>
+<p>重连之后，session id改变，建立了新的session</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">[root@192-168-153-51 node-common]# echo cons | nc 192.168.154.103 2181 | grep &quot;192.168.154.106&quot;</span><br><span class="line">[root@192-168-153-51 node-common]# echo cons | nc 192.168.154.104 2181 | grep &quot;192.168.154.106&quot;</span><br><span class="line">[root@192-168-153-51 node-common]# echo cons | nc 192.168.154.105 2181 | grep &quot;192.168.154.106&quot;</span><br><span class="line"> /192.168.154.106:40100[1](queued=0,recved=56,sent=56,sid=0x26b3647662b0002,lop=PING,est=1560003260125,to=40000,lcxid=0x5cfbc659,lzxid=0x1300016fae,lresp=1560003948592,llat=0,minlat=0,avglat=0,maxlat=1)</span><br><span class="line"> /192.168.154.106:40106[1](queued=0,recved=837,sent=837,sid=0x26b3647662b0003,lop=NA,est=1560003279705,to=40000,lcxid=0x5cfbc841,lzxid=0x1300016fde,lresp=1560003957541,llat=1,minlat=0,avglat=1,maxlat=17)</span><br></pre></td></tr></table></figure>
+
+<h2 id="新加坡机房重连失败的分析"><a href="#新加坡机房重连失败的分析" class="headerlink" title="新加坡机房重连失败的分析"></a>新加坡机房重连失败的分析</h2><p>线上问题：5月2日新加坡机房set11出现的问题：zk异常，有2分钟处于不工作状态，主机服务（客户端）收到session expired错误。<br><img src="/.io//zk%E8%BF%9E%E6%8E%A5%E6%95%B0%E6%8E%89.jpg" alt="image"><br><img src="/.io//singapore_session_expire.png" alt="image"></p>
+<p>当时并未重连成功，但测试下来确实是有重连的逻辑的。虽然当时zk的具体问题原因无法查清，也无法复现问题。但可以猜测是重连的时候，zk服务没有恢复，导致重连没有成功。<br>虽然2min后，zk恢复正常了，但此时客户端也不会再重试了。所以需要更可靠的重连机制。</p>
+<h1 id="在zk删除数据后的重连实践"><a href="#在zk删除数据后的重连实践" class="headerlink" title="在zk删除数据后的重连实践"></a>在zk删除数据后的重连实践</h1><h2 id="问题描述"><a href="#问题描述" class="headerlink" title="问题描述"></a>问题描述</h2><p>关闭zk, 删除节点数据，拉起zk  → 无法自动注册成功，需要重启服务</p>
+<p>测试步骤<br>zookeeper集群关闭删除数据再启动：</p>
+<ul>
+<li>zk集群：service zookeeper stop </li>
+<li>zk集群里删除快照和日志数据：rm -f /data/zookeeper/data/version-2/* rm -f /data/zookeeper/log/version-2/*  </li>
+<li>zk集群拉起：service zookeeper start</li>
+</ul>
+<p>自动重连还会连到原来的session，但因为数据已经删除了，无法以原来session连到zk，一直失败。</p>
+<p>客户端：192.168.154.106 uhost-access的错误日志</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">2019-06-09 22:59:33,339:27610:ZOO_ERROR@handle_socket_error_msg@1746: Socket [192.168.154.105:2181] zk retcode=-4, errno=112(Host is down): failed while receiving a server response</span><br><span class="line">2019-06-09 22:59:33,339:27610:ZOO_ERROR@zk_io_cb@278: yield:zookeeper_process returned error: -4 - connection loss</span><br><span class="line"></span><br><span class="line">2019-06-09 22:59:33,340:27610:ZOO_ERROR@handle_socket_error_msg@1746: Socket [192.168.154.105:2181] zk retcode=-4, errno=112(Host is down): failed while receiving a server response</span><br><span class="line">2019-06-09 22:59:33,341:27610:ZOO_ERROR@zk_io_cb@278: yield:zookeeper_process returned error: -4 - connection loss</span><br></pre></td></tr></table></figure>
+
+<p>结果： node服务的节点数据都没有自动注册上去。相当于复现了线上香港公共zk升级后数据丢失后，业务代码没有再次注册的话，需要服务重启的问题。</p>
+<h2 id="go框架uframework里的处理"><a href="#go框架uframework里的处理" class="headerlink" title="go框架uframework里的处理"></a>go框架uframework里的处理</h2><p>go框架uframework里用了golang版本的zk 客户端（<a target="_blank" rel="noopener" href="https://github.com/samuel/go-zookeeper">go-zookeeper</a>），并又封装了name_container.go的文件，里面实现了上层重连的逻辑。在zookeeper集群数据清掉之后再被拉起，服务的节点还可以重新注册上去。</p>
+<p>它的实现有两处重连的逻辑：</p>
+<p>（1）name_container.go → func FetchZkName里，注册了所有关注节点的子节点变化的watcher。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">childs, _, ch, err := zkConn.GetChildrenWatcher(fullName)</span><br></pre></td></tr></table></figure>
+
+<p>当连接断开时，触发一个event，然后重连。又调用FetchZkName, 保证一直有个 goroutine在等待这个事件的触发。<br><img src="/.io//uframework_reconnect_zk_1.png" alt="image"><br><img src="/.io//uframework_reconnect_zk_2.png" alt="image"><br><img src="/.io//uframework_reconnect_zk_3.png" alt="image"></p>
+<p>重复4.1中的测试后，可以重连(相当于新建session)</p>
+<p>在我们的服务里，关注的节点有三个uhost-access、uimage3-access、uimage3-manager，所有会有三个reconnect的动作，但只会有一个成功。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">[2019-06-09 23:57:21.471566] [INFO]cat watcher &#123;EventNotWatching StateDisconnected /NS/region666888/set12/uhost/access zk: zookeeper is closing &#125;</span><br><span class="line">[2019-06-09 23:57:21.471724] [ERROR]********  ev.Type == zk.EventNotWatching &amp;&amp; ev.State == zk.StateDisconnected, begin to reconnect</span><br><span class="line">[2019-06-09 23:57:21.471742] [INFO]cat watcher &#123;EventNotWatching StateDisconnected /NS/region666888/set12/uimage3/access zk: zookeeper is closing &#125;</span><br><span class="line">[2019-06-09 23:57:21.471781] [INFO]cat watcher &#123;EventNotWatching StateDisconnected /NS/region666888/set12/uimage3/manager zk: zookeeper is closing &#125;</span><br><span class="line">[2019-06-09 23:57:21.471786] [ERROR]********  ev.Type == zk.EventNotWatching &amp;&amp; ev.State == zk.StateDisconnected, begin to reconnect</span><br><span class="line">[2019-06-09 23:57:21.471867] [ERROR]********  ev.Type == zk.EventNotWatching &amp;&amp; ev.State == zk.StateDisconnected, begin to reconnect</span><br><span class="line">[2019-06-09 23:57:23.472008] [ERROR]in GetZkInstance, zkConn.conn.State() != zk.StateHasSession, before initZkConn</span><br><span class="line">[2019-06-09 23:57:24.481209] [ERROR]Connect zk Servers [192.168.154.103:2181 192.168.154.104:2181 192.168.154.105:2181] failed:can not connect remote servers</span><br><span class="line">[2019-06-09 23:57:24.481379] [ERROR]in GetZkInstance, zkConn.conn.State() != zk.StateHasSession, after initZkConn fail</span><br><span class="line">[2019-06-09 23:57:24.481427] [ERROR]in GetZkInstance, zkConn.conn.State() != zk.StateHasSession, before initZkConn</span><br><span class="line">[2019-06-09 23:57:25.483472] [ERROR]Connect zk Servers [192.168.154.103:2181 192.168.154.104:2181 192.168.154.105:2181] failed:can not connect remote servers</span><br><span class="line">[2019-06-09 23:57:25.483658] [ERROR]in GetZkInstance, zkConn.conn.State() != zk.StateHasSession, after initZkConn fail</span><br><span class="line">[2019-06-09 23:57:25.483674] [ERROR]in GetZkInstance, zkConn.conn.State() != zk.StateHasSession, before initZkConn</span><br><span class="line">[2019-06-09 23:57:26.492263] [ERROR]Connect zk Servers [192.168.154.103:2181 192.168.154.104:2181 192.168.154.105:2181] failed:can not connect remote servers</span><br><span class="line">[2019-06-09 23:57:26.492371] [ERROR]in GetZkInstance, zkConn.conn.State() != zk.StateHasSession, after initZkConn fail</span><br><span class="line">[2019-06-09 23:57:26.492390] [ERROR]in GetZkInstance, zkConn.conn.State() != zk.StateHasSession, before initZkConn</span><br><span class="line">[2019-06-09 23:57:26.515713] [ERROR]in GetZkInstance, zkConn.conn.State() != zk.StateHasSession, after initZkConn success</span><br></pre></td></tr></table></figure>
+
+<p>（2）周期性注册自身节点到zk时触发。<br>registerNode（每隔5秒） → zookeeper.GetZkInstance(zk_server) → initZkConn(负责重新连接)。 </p>
+<p>注：这是在把（1）里面所有的reconnect注释的情况下测试的，不然会混淆。</p>
+<p>第42秒时，zk还没恢复，所以连接不上；第47秒，连到zk后，注册自身节点成功。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">019-06-10 00:19:42.225063] [ERROR]in GetZkInstance, zkConn.conn.State() != zk.StateHasSession, before initZkConn</span><br><span class="line">[2019-06-10 00:19:43.232714] [ERROR]Connect zk Servers [192.168.154.103:2181 192.168.154.104:2181 192.168.154.105:2181] failed:can not connect remote servers</span><br><span class="line">[2019-06-10 00:19:43.232775] [ERROR]in GetZkInstance, zkConn.conn.State() != zk.StateHasSession, after initZkConn fail</span><br><span class="line">[2019-06-10 00:19:43.232877] [ERROR][register_myself]connect zk server error</span><br><span class="line">[2019-06-10 00:19:47.224898] [ERROR]in GetZkInstance, zkConn.conn.State() != zk.StateHasSession, before initZkConn</span><br><span class="line">[2019-06-10 00:19:47.254394] [ERROR]in GetZkInstance, zkConn.conn.State() != zk.StateHasSession, after initZkConn success</span><br><span class="line">[2019-06-10 00:19:47.302364] [INFO][register_myself]complte register, /NS/region666888/set12/uhost/scheduler/0</span><br></pre></td></tr></table></figure>
+
+<p>题外话：<br>zookeeper官方是不推荐加上这种重连机制的。个人感觉现实中有这种机制都是被迫加上的，因为难以避免操作不当而造成数据丢失，底层自动重连失败的情况。</p>
+<p>When a client (session) becomes partitioned from the ZK serving cluster it will begin searching the list of servers that were specified during session creation. Eventually, when connectivity between the client and at least one of the servers is re-established, the session will either again transition to the “connected” state (if reconnected within the session timeout value) or it will transition to the “expired” state (if reconnected after the session timeout). It is not advisable to create a new session object (a new ZooKeeper.class or zookeeper handle in the c binding) for disconnection. The ZK client library will handle reconnect for you. In particular we have heuristics built into the client library to handle things like “herd effect”, etc… Only create a new session when you are notified of session expiration (mandatory).</p>
+<h2 id="node-common下zk-js的改进"><a href="#node-common下zk-js的改进" class="headerlink" title="node-common下zk.js的改进"></a>node-common下zk.js的改进</h2><p>目前的逻辑, 只有在收到close的event，有一次重试。缺少定期的检查和重试机制。</p>
+<p>模仿4.2中的重连逻辑，在node中也能很快地实现。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br></pre></td><td class="code"><pre><span class="line">ZkClass.prototype.connect = function() &#123;</span><br><span class="line">    var self = this;</span><br><span class="line">    var f = new Future;</span><br><span class="line"></span><br><span class="line">    function reconnect() &#123;</span><br><span class="line">        self.close();</span><br><span class="line">        init();</span><br><span class="line">        self.conn.connect(function(err, zk_conn)&#123;</span><br><span class="line">            self.emit(&quot;reconnect&quot;);</span><br><span class="line">        &#125;);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    function init() &#123;</span><br><span class="line">        self.conn = new ZooKeeper(&#123;</span><br><span class="line">            connect: self.options.connect,</span><br><span class="line">            timeout: self.options.timeout || 200000,</span><br><span class="line">            debug_level: self.options.debug_level || ZooKeeper.ZOO_LOG_LEVEL_ERROR,</span><br><span class="line">            host_order_deterministic: self.options.host_order_deterministic || false</span><br><span class="line">        &#125;)</span><br><span class="line">        ......</span><br><span class="line">        .once(&quot;close&quot;, reconnect);</span><br><span class="line">        ......</span><br><span class="line">    &#125;</span><br><span class="line">    init();</span><br><span class="line"></span><br><span class="line">    self.conn.connect(function(err, zk_conn)&#123;</span><br><span class="line">        if (err) &#123;</span><br><span class="line">            f.throw(err);</span><br><span class="line">        &#125;</span><br><span class="line">        f.return(zk_conn);</span><br><span class="line">    &#125;);</span><br><span class="line"></span><br><span class="line">    var res = f.wait();</span><br><span class="line"></span><br><span class="line">    FunctionPool.register(&quot;zk_&quot; + uuid.v4() + &quot;_worker&quot;, function() &#123;</span><br><span class="line">        if (self.conn.state != ZkClass.ZOO_CONNECTED_STATE) &#123;</span><br><span class="line">            GLOBAL.logger.info( &quot;self.conn.state: %d, not ZOO_CONNECTED_STATE(3), begin to reconnet&quot;, self.conn.state );</span><br><span class="line">            reconnect();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;, 10000);</span><br><span class="line"></span><br><span class="line">    return res;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<h1 id="参考链接"><a href="#参考链接" class="headerlink" title="参考链接"></a>参考链接</h1><ul>
+<li><a target="_blank" rel="noopener" href="http://zookeeper.apache.org/doc/r3.4.5/zookeeperProgrammers.html">ZooKeeper Programmer’s Guide</a></li>
+<li><a target="_blank" rel="noopener" href="http://zookeeper.apache.org/doc/r3.4.5/zookeeperAdmin.html">ZooKeeper Administrator’s Guide</a></li>
+<li><a target="_blank" rel="noopener" href="https://wiki.apache.org/hadoop/ZooKeeper/FAQ#A3">Hadoop Wiki ZooKeeper/FAQ</a></li>
+<li><a target="_blank" rel="noopener" href="https://juejin.im/post/5b13b9e86fb9a01e7b4de21e">Zookeeper系列一：Zookeeper基础命令操作</a></li>
+</ul>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2019/04/24/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0-TCP-IP%E8%AF%A6%E8%A7%A3-%E5%8D%B71%EF%BC%9A%E5%8D%8F%E8%AE%AE/" rel="prev" title="读书笔记-TCP/IP详解 卷1：协议">
+      <i class="fa fa-chevron-left"></i> 读书笔记-TCP/IP详解 卷1：协议
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2019/07/13/%E4%B8%80%E6%AC%A1node%E8%BF%9B%E7%A8%8Bcpu%E8%B4%9F%E8%BD%BD100-%E9%97%AE%E9%A2%98%E7%9A%84%E5%A4%84%E7%90%86/" rel="next" title="一次node进程cpu负载100%问题的处理">
+      一次node进程cpu负载100%问题的处理 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+  </div>
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let activeClass = CONFIG.comments.activeClass;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#ZooKeeper-Sessions"><span class="nav-number">1.</span> <span class="nav-text">ZooKeeper Sessions</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%AE%A2%E6%88%B7%E7%AB%AF%E8%87%AA%E5%8A%A8%E9%87%8D%E8%BF%9Ezk%E7%9A%84%E6%B5%8B%E8%AF%95"><span class="nav-number">2.</span> <span class="nav-text">客户端自动重连zk的测试</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Session-Expired%E5%90%8E%E7%9A%84%E9%87%8D%E8%BF%9E%E5%AE%9E%E8%B7%B5"><span class="nav-number">3.</span> <span class="nav-text">Session Expired后的重连实践</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Session-Expired%E4%BA%A7%E7%94%9F%E7%9A%84%E8%BF%87%E7%A8%8B"><span class="nav-number">3.1.</span> <span class="nav-text">Session Expired产生的过程</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Session-Expired%E5%90%8E%E7%9A%84%E9%87%8D%E8%BF%9E%E7%9A%84%E6%B5%8B%E8%AF%95"><span class="nav-number">3.2.</span> <span class="nav-text">Session Expired后的重连的测试</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%96%B0%E5%8A%A0%E5%9D%A1%E6%9C%BA%E6%88%BF%E9%87%8D%E8%BF%9E%E5%A4%B1%E8%B4%A5%E7%9A%84%E5%88%86%E6%9E%90"><span class="nav-number">3.3.</span> <span class="nav-text">新加坡机房重连失败的分析</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%9C%A8zk%E5%88%A0%E9%99%A4%E6%95%B0%E6%8D%AE%E5%90%8E%E7%9A%84%E9%87%8D%E8%BF%9E%E5%AE%9E%E8%B7%B5"><span class="nav-number">4.</span> <span class="nav-text">在zk删除数据后的重连实践</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%97%AE%E9%A2%98%E6%8F%8F%E8%BF%B0"><span class="nav-number">4.1.</span> <span class="nav-text">问题描述</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#go%E6%A1%86%E6%9E%B6uframework%E9%87%8C%E7%9A%84%E5%A4%84%E7%90%86"><span class="nav-number">4.2.</span> <span class="nav-text">go框架uframework里的处理</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#node-common%E4%B8%8Bzk-js%E7%9A%84%E6%94%B9%E8%BF%9B"><span class="nav-number">4.3.</span> <span class="nav-text">node-common下zk.js的改进</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%8F%82%E8%80%83%E9%93%BE%E6%8E%A5"><span class="nav-number">5.</span> <span class="nav-text">参考链接</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">patrick.xu</p>
+  <div class="site-description" itemprop="description">完成比完美更重要</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">28</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">12</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">37</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="/atom.xml" title="RSS → &#x2F;atom.xml"><i class="fa fa-fw fa-rss"></i>RSS</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">patrick.xu</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-area-chart"></i>
+    </span>
+    <span title="Symbols count total">124k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="Reading time total">3:27</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> v5.4.0
+  </div>
+  <span class="post-meta-divider">|</span>
+  <div class="theme-info">Theme – <a href="https://muse.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a> v7.7.0
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

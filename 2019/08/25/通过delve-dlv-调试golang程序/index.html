@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.4.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    hostname: new URL('https://xusenqi.github.io').hostname,
+    root: '/',
+    scheme: 'Muse',
+    version: '7.7.0',
+    exturl: false,
+    sidebar: {"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},
+    copycode: {"enable":false,"show_result":false,"style":null},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":false},
+    bookmark: {"enable":false,"color":"#222","save":"auto"},
+    fancybox: false,
+    mediumzoom: false,
+    lazyload: false,
+    pangu: false,
+    comments: {"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: '',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}
+  };
+</script>
+
+  <meta name="description" content="介绍gdb是强大的调试工具。但对于golang程序来说，delve是个更好的选择，它能更好地理解Go runtime, data structures, and expressions，尤其是goroutine。 以下描述引用自Debugging Go Code with GDB【1】  Note that Delve is a better alternative to GDB when deb">
+<meta property="og:type" content="article">
+<meta property="og:title" content="通过delve(dlv)调试golang程序">
+<meta property="og:url" content="https://xusenqi.github.io/2019/08/25/%E9%80%9A%E8%BF%87delve-dlv-%E8%B0%83%E8%AF%95golang%E7%A8%8B%E5%BA%8F/index.html">
+<meta property="og:site_name" content="森几许的博客">
+<meta property="og:description" content="介绍gdb是强大的调试工具。但对于golang程序来说，delve是个更好的选择，它能更好地理解Go runtime, data structures, and expressions，尤其是goroutine。 以下描述引用自Debugging Go Code with GDB【1】  Note that Delve is a better alternative to GDB when deb">
+<meta property="og:locale">
+<meta property="og:image" content="https://xusenqi.github.io/.io//godbg_project.jpg">
+<meta property="og:image" content="https://xusenqi.github.io/.io//lock.jpg">
+<meta property="article:published_time" content="2019-08-25T13:04:13.000Z">
+<meta property="article:modified_time" content="2021-08-18T13:13:06.211Z">
+<meta property="article:author" content="patrick.xu">
+<meta property="article:tag" content="debug">
+<meta property="article:tag" content="delve">
+<meta property="article:tag" content="dlv">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://xusenqi.github.io/.io//godbg_project.jpg">
+
+<link rel="canonical" href="https://xusenqi.github.io/2019/08/25/%E9%80%9A%E8%BF%87delve-dlv-%E8%B0%83%E8%AF%95golang%E7%A8%8B%E5%BA%8F/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true
+  };
+</script>
+
+  <title>通过delve(dlv)调试golang程序 | 森几许的博客</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+<link rel="alternate" href="/atom.xml" title="森几许的博客" type="application/atom+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">森几许的博客</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+        <p class="site-subtitle">空杯心态</p>
+  </div>
+
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-fw fa-user"></i>About</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>Tags</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-fw fa-th"></i>Categories</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>Archives</a>
+
+  </li>
+  </ul>
+
+</nav>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content">
+            
+
+  <div class="posts-expand">
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block " lang="zh-Hans">
+    <link itemprop="mainEntityOfPage" href="https://xusenqi.github.io/2019/08/25/%E9%80%9A%E8%BF%87delve-dlv-%E8%B0%83%E8%AF%95golang%E7%A8%8B%E5%BA%8F/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="patrick.xu">
+      <meta itemprop="description" content="完成比完美更重要">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="森几许的博客">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          通过delve(dlv)调试golang程序
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2019-08-25 21:04:13" itemprop="dateCreated datePublished" datetime="2019-08-25T21:04:13+08:00">2019-08-25</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2021-08-18 21:13:06" itemprop="dateModified" datetime="2021-08-18T21:13:06+08:00">2021-08-18</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/go/" itemprop="url" rel="index">
+                    <span itemprop="name">go</span>
+                  </a>
+                </span>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="Symbols count in article">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-file-word-o"></i>
+              </span>
+                <span class="post-meta-item-text">Symbols count in article: </span>
+              <span>13k</span>
+            </span>
+            <span class="post-meta-item" title="Reading time">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-clock-o"></i>
+              </span>
+                <span class="post-meta-item-text">Reading time &asymp;</span>
+              <span>21 mins.</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="介绍"><a href="#介绍" class="headerlink" title="介绍"></a>介绍</h1><p>gdb是强大的调试工具。但对于golang程序来说，delve是个更好的选择，它能更好地理解Go runtime, data structures, and expressions，尤其是goroutine。</p>
+<p>以下描述引用自<a target="_blank" rel="noopener" href="https://golang.google.cn/doc/gdb">Debugging Go Code with GDB</a>【1】</p>
+<blockquote>
+<p>Note that Delve is a better alternative to GDB when debugging Go programs built with the standard toolchain. It understands the Go runtime, data structures, and expressions better than GDB. Delve currently supports Linux, OSX, and Windows on amd64. For the most up-to-date list of supported platforms, please see the Delve documentation.</p>
+</blockquote>
+<span id="more"></span>
+<blockquote>
+<p>GDB does not understand Go programs well. The stack management, threading, and runtime contain aspects that differ enough from the execution model GDB expects that they can confuse the debugger and cause incorrect results even when the program is compiled with gccgo. As a consequence, although GDB can be useful in some situations (e.g., debugging Cgo code, or debugging the runtime itself), it is not a reliable debugger for Go programs, particularly heavily concurrent ones. Moreover, it is not a priority for the Go project to address these issues, which are difficult.</p>
+</blockquote>
+<p>Delve is a debugger for the Go programming language【2】.</p>
+<h1 id="安装"><a href="#安装" class="headerlink" title="安装"></a>安装</h1><p>安装过程参考<a target="_blank" rel="noopener" href="https://github.com/go-delve/delve/tree/master/Documentation/installation">https://github.com/go-delve/delve/tree/master/Documentation/installation</a></p>
+<p>安装好后，可以查看版本</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">➜  _posts dlv version</span><br><span class="line">Delve Debugger</span><br><span class="line">Version: 1.1.0</span><br><span class="line">Build: $Id: 1990ba12450cab9425a2ae62e6ab988725023d5c</span><br></pre></td></tr></table></figure>
+
+<h1 id="调试方法"><a href="#调试方法" class="headerlink" title="调试方法"></a>调试方法</h1><p>dlv提供了多种调试命令，如debug、exec、attach、core等，具体见官网文档或help信息。接下介绍常用的几种。</p>
+<h2 id="dlv-debug"><a href="#dlv-debug" class="headerlink" title="dlv debug"></a>dlv debug</h2><p>这是一个代码工程实例, 位于目录GoWorks/GoDbg。</p>
+<p><img src="/.io//godbg_project.jpg" alt="image"></p>
+<ul>
+<li>如果位于工程目录下，可以dlv debug开始调试；</li>
+<li>也可以指定目录，dlv debug GoWorks/GoDbg; </li>
+<li>如果要传入参数，添加–后指定， 如dlv debug GoWorks/GoDbg – -arg1 value</li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line">➜  GoDbg dlv debug GoWorks/GoDbg</span><br><span class="line">Type &#x27;help&#x27; for list of commands.</span><br><span class="line">(dlv) break main.main</span><br><span class="line">Breakpoint 1 set at 0x1089f6b for main.main() ./main.go:7</span><br><span class="line">(dlv) continue</span><br><span class="line">&gt; main.main() ./main.go:7 (hits goroutine(1):1 total:1) (PC: 0x1089f6b)</span><br><span class="line">     2:	import (</span><br><span class="line">     3:		&quot;GoWorks/GoDbg/mylib&quot;</span><br><span class="line">     4:		&quot;fmt&quot;</span><br><span class="line">     5:		&quot;os&quot;</span><br><span class="line">     6:	)</span><br><span class="line">=&gt;   7:	func main() &#123;</span><br><span class="line">     8:		fmt.Println(&quot;Golang dbg test...&quot;)</span><br><span class="line">     9:		var argc = len(os.Args)</span><br><span class="line">    10:		var argv = append([]string&#123;&#125;, os.Args...)</span><br><span class="line">    11:		fmt.Printf(&quot;argc:%d\n&quot;, argc)</span><br><span class="line">    12:		fmt.Printf(&quot;argv:%v\n&quot;, argv)</span><br><span class="line">(dlv) next</span><br><span class="line">&gt; main.main() ./main.go:8 (PC: 0x1089f82)</span><br><span class="line">     3:		&quot;GoWorks/GoDbg/mylib&quot;</span><br><span class="line">     4:		&quot;fmt&quot;</span><br><span class="line">     5:		&quot;os&quot;</span><br><span class="line">     6:	)</span><br><span class="line">     7:	func main() &#123;</span><br><span class="line">=&gt;   8:		fmt.Println(&quot;Golang dbg test...&quot;)</span><br><span class="line">     9:		var argc = len(os.Args)</span><br><span class="line">    10:		var argv = append([]string&#123;&#125;, os.Args...)</span><br><span class="line">    11:		fmt.Printf(&quot;argc:%d\n&quot;, argc)</span><br><span class="line">    12:		fmt.Printf(&quot;argv:%v\n&quot;, argv)</span><br><span class="line">    13:		var var1 = 1</span><br></pre></td></tr></table></figure>
+
+<p>具体有哪些debug命令，可以help来查看，与gdb的很类似，goroutine/goroutines的是dlv中特有的。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br></pre></td><td class="code"><pre><span class="line">(dlv) help</span><br><span class="line">The following commands are available:</span><br><span class="line">    args ------------------------ Print function arguments.</span><br><span class="line">    break (alias: b) ------------ Sets a breakpoint.</span><br><span class="line">    breakpoints (alias: bp) ----- Print out info for active breakpoints.</span><br><span class="line">    call ------------------------ Resumes process, injecting a function call (EXPERIMENTAL!!!)</span><br><span class="line">    clear ----------------------- Deletes breakpoint.</span><br><span class="line">    clearall -------------------- Deletes multiple breakpoints.</span><br><span class="line">    condition (alias: cond) ----- Set breakpoint condition.</span><br><span class="line">    config ---------------------- Changes configuration parameters.</span><br><span class="line">    continue (alias: c) --------- Run until breakpoint or program termination.   // 继续运行</span><br><span class="line">    deferred -------------------- Executes command in the context of a deferred call.</span><br><span class="line">    disassemble (alias: disass) - Disassembler.</span><br><span class="line">    down ------------------------ Move the current frame down.</span><br><span class="line">    edit (alias: ed) ------------ Open where you are in $DELVE_EDITOR or $EDITOR</span><br><span class="line">    exit (alias: quit | q) ------ Exit the debugger.</span><br><span class="line">    frame ----------------------- Set the current frame, or execute command on a different frame.</span><br><span class="line">    funcs ----------------------- Print list of functions.</span><br><span class="line">    goroutine (alias: gr) ------- Shows or changes current goroutine</span><br><span class="line">    goroutines (alias: grs) ----- List program goroutines.</span><br><span class="line">    help (alias: h) ------------- Prints the help message.</span><br><span class="line">    libraries ------------------- List loaded dynamic libraries</span><br><span class="line">    list (alias: ls | l) -------- Show source code.    // 显示代码</span><br><span class="line">    locals ---------------------- Print local variables.</span><br><span class="line">    next (alias: n) ------------- Step over to next source line.  // 单步下一句</span><br><span class="line">    on -------------------------- Executes a command when a breakpoint is hit.</span><br><span class="line">    print (alias: p) ------------ Evaluate an expression.</span><br><span class="line">    regs ------------------------ Print contents of CPU registers.</span><br><span class="line">    restart (alias: r) ---------- Restart process.</span><br><span class="line">    set ------------------------- Changes the value of a variable.</span><br><span class="line">    source ---------------------- Executes a file containing a list of delve commands</span><br><span class="line">    sources --------------------- Print list of source files.</span><br><span class="line">    stack (alias: bt) ----------- Print stack trace.</span><br><span class="line">    step (alias: s) ------------- Single step through program.  // 进入函数内,单步下一句</span><br><span class="line">    step-instruction (alias: si)  Single step a single cpu instruction.</span><br><span class="line">    stepout (alias: so) --------- Step out of the current function.</span><br><span class="line">    thread (alias: tr) ---------- Switch to the specified thread.</span><br><span class="line">    threads --------------------- Print out info for every traced thread.</span><br><span class="line">    trace (alias: t) ------------ Set tracepoint.</span><br><span class="line">    types ----------------------- Print list of types</span><br><span class="line">    up -------------------------- Move the current frame up.</span><br><span class="line">    vars ------------------------ Print package variables.</span><br><span class="line">    whatis ---------------------- Prints type of an expression.</span><br><span class="line">Type help followed by a command for full documentation.</span><br></pre></td></tr></table></figure>
+
+<h2 id="dlv-exec"><a href="#dlv-exec" class="headerlink" title="dlv exec"></a>dlv exec</h2><p>Execute a precompiled binary, and begin a debug session.</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">➜  file ./main</span><br><span class="line">./main: Mach-O 64-bit executable x86_64</span><br><span class="line">➜  dlv exec ./main</span><br><span class="line">Type &#x27;help&#x27; for list of commands.</span><br><span class="line">(dlv)</span><br></pre></td></tr></table></figure>
+
+
+<h2 id="dlv-attach"><a href="#dlv-attach" class="headerlink" title="dlv attach"></a>dlv attach</h2><p>Attach to running process and begin debugging.</p>
+<p>注意：<strong>在退出时，有可选是否要kill该进程</strong>。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">[root@yg-man-uhost-set9-01 ~]# dlv attach 22063</span><br><span class="line">Type &#x27;help&#x27; for list of commands.</span><br><span class="line">(dlv) q</span><br><span class="line">Would you like to kill the process? [Y/n] n</span><br></pre></td></tr></table></figure>
+
+<h2 id="dlv-core"><a href="#dlv-core" class="headerlink" title="dlv core"></a>dlv core</h2><p>Examine a core dump.</p>
+<p>注意：<strong>dlv不支持生成core，可以通过gdb attach上去后，执行gcore来生成core；然后再dlv core来调试</strong>。</p>
+<h1 id="线上调试的例子"><a href="#线上调试的例子" class="headerlink" title="线上调试的例子"></a>线上调试的例子</h1><h2 id="排查过程"><a href="#排查过程" class="headerlink" title="排查过程"></a>排查过程</h2><p>线上一个服务出现了问题，看日志是一个接口的程序跑了一半，后面不再执行下去了。</p>
+<p>dlv attach上去后，看到有很多.runtime_SemacquireMutex这个的goroutine，一直卡着。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><span class="line">Goroutine 28232679 - User: /usr/local/go/src/runtime/sema.go:62 sync.runtime_SemacquireMutex (0x43cb74)</span><br><span class="line">Goroutine 28232684 - User: /Users/patrick.xu/go/src/uframework/task/tcp_task.go:84 uframework/task.(*TCPTask).Run (0x6ce8cc)</span><br><span class="line">Goroutine 28232685 - User: /usr/local/go/src/runtime/sema.go:62 sync.runtime_SemacquireMutex (0x43cb74)</span><br><span class="line">Goroutine 28232686 - User: /usr/local/go/src/runtime/sema.go:62 sync.runtime_SemacquireMutex (0x43cb74)</span><br><span class="line">Goroutine 28232688 - User: /Users/patrick.xu/go/src/uframework/task/tcp_task.go:84 uframework/task.(*TCPTask).Run (0x6ce8cc)</span><br><span class="line">Goroutine 28232704 - User: /Users/patrick.xu/go/src/uframework/task/tcp_task.go:84 uframework/task.(*TCPTask).Run (0x6ce8cc)</span><br><span class="line">Goroutine 28232705 - User: /usr/local/go/src/runtime/sema.go:62 sync.runtime_SemacquireMutex (0x43cb74)</span><br><span class="line">Goroutine 28232710 - User: /Users/patrick.xu/go/src/uframework/task/tcp_task.go:84 uframework/task.(*TCPTask).Run (0x6ce8cc)</span><br><span class="line">Goroutine 28232714 - User: /Users/patrick.xu/go/src/uframework/task/tcp_task.go:84 uframework/task.(*TCPTask).Run (0x6ce8cc)</span><br><span class="line">Goroutine 28232715 - User: /usr/local/go/src/runtime/sema.go:62 sync.runtime_SemacquireMutex (0x43cb74)</span><br><span class="line">Goroutine 28232718 - User: /Users/patrick.xu/go/src/uframework/task/tcp_task.go:84 uframework/task.(*TCPTask).Run (0x6ce8cc)</span><br><span class="line">Goroutine 28232719 - User: /usr/local/go/src/runtime/sema.go:62 sync.runtime_SemacquireMutex (0x43cb74)</span><br><span class="line">Goroutine 28232721 - User: /usr/local/go/src/runtime/sema.go:62 sync.runtime_SemacquireMutex (0x43cb74)</span><br><span class="line">Goroutine 28232726 - User: /Users/patrick.xu/go/src/uframework/task/tcp_task.go:84 uframework/task.(*TCPTask).Run (0x6ce8cc)</span><br><span class="line">Goroutine 28232727 - User: /usr/local/go/src/runtime/sema.go:62 sync.runtime_SemacquireMutex (0x43cb74)</span><br><span class="line">Goroutine 28232939 - User: /Users/patrick.xu/go/src/uframework/task/tcp_task.go:84 uframework/task.(*TCPTask).Run (0x6ce8cc)</span><br><span class="line">Goroutine 28232940 - User: /usr/local/go/src/runtime/sema.go:62 sync.runtime_SemacquireMutex (0x43cb74)</span><br><span class="line">Goroutine 28239464 - User: /Users/patrick.xu/go/src/uframework/task/tcp_task.go:84 uframework/task.(*TCPTask).Run (0x6ce8cc)</span><br><span class="line">Goroutine 28239465 - User: /usr/local/go/src/runtime/sema.go:62 sync.runtime_SemacquireMutex (0x43cb74)</span><br><span class="line">Goroutine 28239914 - User: /Users/patrick.xu/go/src/uframework/task/tcp_task.go:84 uframework/task.(*TCPTask).Run (0x6ce8cc)</span><br><span class="line">Goroutine 28239915 - User: /usr/local/go/src/runtime/sema.go:62 sync.runtime_SemacquireMutex (0x43cb74)</span><br><span class="line">Goroutine 28239938 - User: /Users/patrick.xu/go/src/uframework/task/tcp_task.go:84 uframework/task.(*TCPTask).Run (0x6ce8cc)</span><br><span class="line">Goroutine 28239939 - User: /usr/local/go/src/runtime/sema.go:62 sync.runtime_SemacquireMutex (0x43cb74)</span><br><span class="line">Goroutine 28239965 - User: /Users/patrick.xu/go/src/uframework/task/tcp_task.go:84 uframework/task.(*TCPTask).Run (0x6ce8cc)</span><br><span class="line">Goroutine 28239966 - User: /usr/local/go/src/runtime/sema.go:62 sync.runtime_SemacquireMutex (0x43cb74)</span><br><span class="line">Goroutine 28239968 - User: /Users/patrick.xu/go/src/uframework/task/tcp_task.go:84 uframework/task.(*TCPTask).Run (0x6ce8cc)</span><br><span class="line">Goroutine 28239984 - User: /Users/patrick.xu/go/src/uframework/task/tcp_task.go:84 uframework/task.(*TCPTask).Run (0x6ce8cc)</span><br><span class="line">Goroutine 28239985 - User: /usr/local/go/src/runtime/sema.go:62 sync.runtime_SemacquireMutex (0x43cb74)</span><br><span class="line">Goroutine 28240001 - User: /usr/local/go/src/runtime/sema.go:62 sync.runtime_SemacquireMutex (0x43cb74)</span><br><span class="line">Goroutine 28240961 - User: /Users/patrick.xu/go/src/uframework/log/logext.go:281 uframework/log.RealWrite (0x6bff2d)</span><br><span class="line">Goroutine 28241103 - User: /Users/patrick.xu/go/src/uframework/utils/zookeeper/zk/conn.go:515 uframework/utils/zookeeper/zk.(*Conn).sendLoop (0x7c7835)</span><br><span class="line">Goroutine 28241104 - User: /usr/local/go/src/runtime/netpoll.go:164 net.runtime_pollWait (0x426ec9)</span><br><span class="line">Goroutine 28241126 - User: /usr/local/go/src/runtime/sema.go:47 sync.runtime_Semacquire (0x43ca94)</span><br></pre></td></tr></table></figure>
+
+<p>看这个goroutine卡在了0x000000000046c45d in sync.(*Mutex).Lock，对应业务代码uhost-go/uhost-scheduler/logic.updateBuffer。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line">(dlv) gr 28239985</span><br><span class="line">Switched from 28241159 to 28239985 (thread 31788)</span><br><span class="line">(dlv) bt</span><br><span class="line">0  0x000000000042c76a in runtime.gopark</span><br><span class="line">   at /usr/local/go/src/runtime/proc.go:272</span><br><span class="line">1  0x000000000042c84e in runtime.goparkunlock</span><br><span class="line">   at /usr/local/go/src/runtime/proc.go:277</span><br><span class="line">2  0x000000000043ce91 in runtime.semacquire</span><br><span class="line">   at /usr/local/go/src/runtime/sema.go:130</span><br><span class="line">3  0x000000000043cb74 in sync.runtime_SemacquireMutex</span><br><span class="line">   at /usr/local/go/src/runtime/sema.go:62</span><br><span class="line">4  0x000000000046c45d in sync.(*Mutex).Lock</span><br><span class="line">   at /usr/local/go/src/sync/mutex.go:87</span><br><span class="line">5  0x0000000000817b1d in uhost-go/uhost-scheduler/logic.updateBuffer</span><br><span class="line">   at /Users/patrick.xu/go/src/uhost-go/uhost-scheduler/logic/get_suitable_resource.go:418</span><br><span class="line">6  0x0000000000814bd7 in uhost-go/uhost-scheduler/logic.getSuitableResource</span><br><span class="line">   at /Users/patrick.xu/go/src/uhost-go/uhost-scheduler/logic/get_suitable_resource.go:328</span><br><span class="line">7  0x00000000006cecd4 in uframework/task.TCPTaskFunc.ServeTCP</span><br><span class="line">   at /Users/patrick.xu/go/src/uframework/task/tcp_task_handle.go:27</span><br><span class="line">8  0x00000000006d02b8 in uframework/task.(*TCPTask).Run.func1</span><br><span class="line">   at /Users/patrick.xu/go/src/uframework/task/tcp_task.go:66</span><br><span class="line">9  0x0000000000458dd1 in runtime.goexit</span><br><span class="line">   at /usr/local/go/src/runtime/asm_amd64.s:2197</span><br></pre></td></tr></table></figure>
+
+<p>再去看业务代码， <strong>frame 5 list</strong></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">(dlv) frame 5 list</span><br><span class="line">Goroutine 28239985 frame 5 at /Users/patrick.xu/go/src/uhost-go/uhost-scheduler/logic/get_suitable_resource.go:418 (PC: 0x817b1d)</span><br><span class="line">Command failed: open /Users/patrick.xu/go/src/uhost-go/uhost-scheduler/logic/get_suitable_resource.go: no such file or directory</span><br></pre></td></tr></table></figure>
+
+<p>由于线上没有源代码，提示文件不存在。到本地查看这行的代码。<br><img src="/.io//lock.jpg" alt="image"></p>
+<p>定位到这行后，再结合业务逻辑去分析，就能定位到是哪里问题，造成了这里的死锁。</p>
+<p>最后退出来后，注意向上代码别重启。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">(dlv) q</span><br><span class="line">Would you like to kill the process? [Y/n] n</span><br></pre></td></tr></table></figure>
+
+<p>最后查明原因是：</p>
+<p>调用updatePUhostSlice时，有多个不同wh.hostId的mapHostIdLock[wh.hostId].Lock()，没执行完时不会unlock；如果有并发调用updatePUhostSlice，且遍历whs的顺序和第一次不一样，有可能陷入死锁。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">func updatePUhostSlice(</span><br><span class="line">        ......</span><br><span class="line">        for _, wh := range whs &#123;</span><br><span class="line"></span><br><span class="line">             if mapHostIdLock[wh.hostId] == nil &#123;</span><br><span class="line">                 mapHostIdLock[wh.hostId] = new(sync.Mutex)</span><br><span class="line">             &#125;</span><br><span class="line">              mapHostIdLock[wh.hostId].Lock()</span><br><span class="line">              defer mapHostIdLock[wh.hostId].Unlock()</span><br><span class="line">              ......</span><br><span class="line">        &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>改进方法是：<br>把Lock()和defer Unlock()抽到一个函数里。注意：不能在循环里出现直接调用Lock()的代码。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line">func updatePUhostSlice(</span><br><span class="line">        ......</span><br><span class="line">        for _, wh := range whs &#123;</span><br><span class="line">               recheckHostResource(xxx......)</span><br><span class="line">        &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">func recheckHostResource(</span><br><span class="line">       sessionNo string,</span><br><span class="line">       hostId uint64,</span><br><span class="line">       alreadyMatched *uint32,</span><br><span class="line">       pBHRrs *uhost.HostResourceSurvey,</span><br><span class="line">       uhostParams UhostParams,</span><br><span class="line">       )(isEnough bool) &#123;</span><br><span class="line"></span><br><span class="line">    if mapHostIdLock[hostId] == nil &#123;</span><br><span class="line">       mapHostIdLock[hostId] = new(sync.Mutex)</span><br><span class="line">    &#125;</span><br><span class="line">    mapHostIdLock[hostId].Lock()</span><br><span class="line">    defer mapHostIdLock[hostId].Unlock()</span><br><span class="line">    .......</span><br><span class="line"> &#125;</span><br></pre></td></tr></table></figure>
+<h2 id="和gdb的对比"><a href="#和gdb的对比" class="headerlink" title="和gdb的对比"></a>和gdb的对比</h2><p>gdb能看出的信息有限，只能定位到线程这个层面，无法到goroutine这一层，很难定位出问题。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line">(gdb) info threads</span><br><span class="line">* 1 process 10732  runtime.epollwait () at /usr/local/go/src/runtime/sys_linux_amd64.s:560</span><br><span class="line">(gdb) thread apply all bt</span><br><span class="line"></span><br><span class="line">Thread 1 (process 10732):</span><br><span class="line">#0  runtime.epollwait () at /usr/local/go/src/runtime/sys_linux_amd64.s:560</span><br><span class="line">#1  0x00000000004280d1 in runtime.netpoll (block=true, ~r1=0x1) at /usr/local/go/src/runtime/netpoll_epoll.go:67</span><br><span class="line">#2  0x0000000000430f8f in runtime.findrunnable (gp#10=0xc42001c000, inheritTime=false) at /usr/local/go/src/runtime/proc.go:2084</span><br><span class="line">#3  0x0000000000431aec in runtime.schedule () at /usr/local/go/src/runtime/proc.go:2222</span><br><span class="line">#4  0x0000000000431deb in runtime.park_m (gp=0xc4200011e0) at /usr/local/go/src/runtime/proc.go:2285</span><br><span class="line">#5  0x000000000045626b in runtime.mcall () at /usr/local/go/src/runtime/asm_amd64.s:269</span><br><span class="line">#6  0x0000000000cebd00 in runtime.work ()</span><br><span class="line">#7  0x00007ffe3162bc70 in ?? ()</span><br><span class="line">#8  0x0000000000cebd80 in runtime.work ()</span><br><span class="line">#9  0x00007ffe3162bc60 in ?? ()</span><br><span class="line">#10 0x000000000042f0e4 in runtime.mstart () at /usr/local/go/src/runtime/proc.go:1149</span><br><span class="line">#11 0x00000000004560d9 in runtime.rt0_go () at /usr/local/go/src/runtime/asm_amd64.s:169</span><br><span class="line">#12 0x0000000000000009 in ?? ()</span><br><span class="line">#13 0x00007ffe3162bca8 in ?? ()</span><br><span class="line">#14 0x0000000000000009 in ?? ()</span><br><span class="line">#15 0x00007ffe3162bca8 in ?? ()</span><br><span class="line">#16 0x0000000000000000 in ?? ()</span><br></pre></td></tr></table></figure>
+
+<p>但可以用gdb产生core，采集一些现场信息，然后重启尽快恢复业务，事后再用dlv分析core来定位原因。</p>
+<h1 id="参考链接"><a href="#参考链接" class="headerlink" title="参考链接"></a>参考链接</h1><ol>
+<li><a target="_blank" rel="noopener" href="https://golang.google.cn/doc/gdb">Debugging Go Code with GDB</a></li>
+<li><a target="_blank" rel="noopener" href="https://github.com/go-delve/delve">go-delve/delve</a></li>
+<li><a target="_blank" rel="noopener" href="http://lday.me/2017/02/27/0005_gdb-vs-dlv/">Golang程序调试工具介绍(gdb vs dlv)</a><ol start="4">
+<li><a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/66228858">实战分析一个运行起来会卡死的Go程序</a></li>
+</ol>
+</li>
+</ol>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/debug/" rel="tag"># debug</a>
+              <a href="/tags/delve/" rel="tag"># delve</a>
+              <a href="/tags/dlv/" rel="tag"># dlv</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2019/08/23/Visual-Studio-Code%E7%9A%84%E4%BD%BF%E7%94%A8%E6%80%BB%E7%BB%93/" rel="prev" title="Visual Studio Code的使用总结">
+      <i class="fa fa-chevron-left"></i> Visual Studio Code的使用总结
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2019/08/31/%E8%BF%99%E4%BA%9B%E5%B9%B4%E8%AF%BB%E8%BF%87%E7%9A%84%E9%82%A3%E4%BA%9B%E4%B9%A6-%E5%BE%85%E8%AF%BB%E6%B8%85%E5%8D%95%E5%88%97%E8%A1%A8/" rel="next" title="这些年读过的那些书&&待读清单列表">
+      这些年读过的那些书&&待读清单列表 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+  </div>
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let activeClass = CONFIG.comments.activeClass;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%BB%8B%E7%BB%8D"><span class="nav-number">1.</span> <span class="nav-text">介绍</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%AE%89%E8%A3%85"><span class="nav-number">2.</span> <span class="nav-text">安装</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E8%B0%83%E8%AF%95%E6%96%B9%E6%B3%95"><span class="nav-number">3.</span> <span class="nav-text">调试方法</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#dlv-debug"><span class="nav-number">3.1.</span> <span class="nav-text">dlv debug</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#dlv-exec"><span class="nav-number">3.2.</span> <span class="nav-text">dlv exec</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#dlv-attach"><span class="nav-number">3.3.</span> <span class="nav-text">dlv attach</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#dlv-core"><span class="nav-number">3.4.</span> <span class="nav-text">dlv core</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E7%BA%BF%E4%B8%8A%E8%B0%83%E8%AF%95%E7%9A%84%E4%BE%8B%E5%AD%90"><span class="nav-number">4.</span> <span class="nav-text">线上调试的例子</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%8E%92%E6%9F%A5%E8%BF%87%E7%A8%8B"><span class="nav-number">4.1.</span> <span class="nav-text">排查过程</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%92%8Cgdb%E7%9A%84%E5%AF%B9%E6%AF%94"><span class="nav-number">4.2.</span> <span class="nav-text">和gdb的对比</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%8F%82%E8%80%83%E9%93%BE%E6%8E%A5"><span class="nav-number">5.</span> <span class="nav-text">参考链接</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">patrick.xu</p>
+  <div class="site-description" itemprop="description">完成比完美更重要</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">28</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">12</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">37</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="/atom.xml" title="RSS → &#x2F;atom.xml"><i class="fa fa-fw fa-rss"></i>RSS</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">patrick.xu</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-area-chart"></i>
+    </span>
+    <span title="Symbols count total">124k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="Reading time total">3:27</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> v5.4.0
+  </div>
+  <span class="post-meta-divider">|</span>
+  <div class="theme-info">Theme – <a href="https://muse.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a> v7.7.0
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

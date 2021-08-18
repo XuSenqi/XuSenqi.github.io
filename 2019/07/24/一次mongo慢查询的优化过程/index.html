@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.4.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    hostname: new URL('https://xusenqi.github.io').hostname,
+    root: '/',
+    scheme: 'Muse',
+    version: '7.7.0',
+    exturl: false,
+    sidebar: {"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},
+    copycode: {"enable":false,"show_result":false,"style":null},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":false},
+    bookmark: {"enable":false,"color":"#222","save":"auto"},
+    fancybox: false,
+    mediumzoom: false,
+    lazyload: false,
+    pangu: false,
+    comments: {"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: '',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}
+  };
+</script>
+
+  <meta name="description" content="今天发现查询mongo时容易慢查询，现在将整个排查及优化过程,总结记录如下。 Database Profiler介绍类似于mysql,Profiler可以实现慢查询日志的功能，它把数据收集在system.profile集合里。该集合是一个capped collection（有上限的集合）。Profiler默认是关闭的，可以在一个database或者一个instance上设置开启，设置不同的prof">
+<meta property="og:type" content="article">
+<meta property="og:title" content="一次mongo慢查询的优化过程">
+<meta property="og:url" content="https://xusenqi.github.io/2019/07/24/%E4%B8%80%E6%AC%A1mongo%E6%85%A2%E6%9F%A5%E8%AF%A2%E7%9A%84%E4%BC%98%E5%8C%96%E8%BF%87%E7%A8%8B/index.html">
+<meta property="og:site_name" content="森几许的博客">
+<meta property="og:description" content="今天发现查询mongo时容易慢查询，现在将整个排查及优化过程,总结记录如下。 Database Profiler介绍类似于mysql,Profiler可以实现慢查询日志的功能，它把数据收集在system.profile集合里。该集合是一个capped collection（有上限的集合）。Profiler默认是关闭的，可以在一个database或者一个instance上设置开启，设置不同的prof">
+<meta property="og:locale">
+<meta property="article:published_time" content="2019-07-23T16:39:19.000Z">
+<meta property="article:modified_time" content="2021-08-18T13:13:06.244Z">
+<meta property="article:author" content="patrick.xu">
+<meta property="article:tag" content="mongo">
+<meta property="article:tag" content="MongoDB">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="https://xusenqi.github.io/2019/07/24/%E4%B8%80%E6%AC%A1mongo%E6%85%A2%E6%9F%A5%E8%AF%A2%E7%9A%84%E4%BC%98%E5%8C%96%E8%BF%87%E7%A8%8B/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true
+  };
+</script>
+
+  <title>一次mongo慢查询的优化过程 | 森几许的博客</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+<link rel="alternate" href="/atom.xml" title="森几许的博客" type="application/atom+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">森几许的博客</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+        <p class="site-subtitle">空杯心态</p>
+  </div>
+
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-fw fa-user"></i>About</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>Tags</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-fw fa-th"></i>Categories</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>Archives</a>
+
+  </li>
+  </ul>
+
+</nav>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content">
+            
+
+  <div class="posts-expand">
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block " lang="zh-Hans">
+    <link itemprop="mainEntityOfPage" href="https://xusenqi.github.io/2019/07/24/%E4%B8%80%E6%AC%A1mongo%E6%85%A2%E6%9F%A5%E8%AF%A2%E7%9A%84%E4%BC%98%E5%8C%96%E8%BF%87%E7%A8%8B/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="patrick.xu">
+      <meta itemprop="description" content="完成比完美更重要">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="森几许的博客">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          一次mongo慢查询的优化过程
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2019-07-24 00:39:19" itemprop="dateCreated datePublished" datetime="2019-07-24T00:39:19+08:00">2019-07-24</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2021-08-18 21:13:06" itemprop="dateModified" datetime="2021-08-18T21:13:06+08:00">2021-08-18</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E6%95%B0%E6%8D%AE%E5%BA%93/" itemprop="url" rel="index">
+                    <span itemprop="name">数据库</span>
+                  </a>
+                </span>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="Symbols count in article">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-file-word-o"></i>
+              </span>
+                <span class="post-meta-item-text">Symbols count in article: </span>
+              <span>9.1k</span>
+            </span>
+            <span class="post-meta-item" title="Reading time">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-clock-o"></i>
+              </span>
+                <span class="post-meta-item-text">Reading time &asymp;</span>
+              <span>15 mins.</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>今天发现查询mongo时容易慢查询，现在将整个排查及优化过程,总结记录如下。</p>
+<h1 id="Database-Profiler介绍"><a href="#Database-Profiler介绍" class="headerlink" title="Database Profiler介绍"></a>Database Profiler介绍</h1><p>类似于mysql,Profiler可以实现慢查询日志的功能，它把数据收集在system.profile集合里。该集合是一个capped collection（有上限的集合）。Profiler默认是关闭的，可以在一个database或者一个instance上设置开启，设置不同的profiling levels.<br>具体描述见<a target="_blank" rel="noopener" href="https://docs.mongodb.com/manual/tutorial/manage-the-database-profiler/">Database Profiler</a>。</p>
+<span id="more"></span>
+
+<h1 id="慢查询分析流程"><a href="#慢查询分析流程" class="headerlink" title="慢查询分析流程"></a>慢查询分析流程</h1><p>慢查询日志一般作为优化步骤里的第一步。通过慢查询日志，定位每一条语句的查询时间。比如超过了200ms，那么查询超过200ms的语句需要优化。然后它通过 .explain() 解析影响行数是不是过大，所以导致查询语句超过200ms。<br>所以优化步骤一般就是：</p>
+<ol>
+<li>用慢查询日志（system.profile）找到超过200ms的语句</li>
+<li>然后再通过.explain()解析影响行数，分析为什么超过200ms </li>
+<li>决定是不是需要添加索引</li>
+</ol>
+<h1 id="开启慢查询"><a href="#开启慢查询" class="headerlink" title="开启慢查询"></a>开启慢查询</h1><h2 id="Profiling-Levels"><a href="#Profiling-Levels" class="headerlink" title="Profiling Levels"></a>Profiling Levels</h2><table>
+<thead>
+<tr>
+<th align="center">Level</th>
+<th align="center">Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">0</td>
+<td align="center">The profiler is off and does not collect any data. This is the default profiler level.</td>
+</tr>
+<tr>
+<td align="center">1</td>
+<td align="center">The profiler collects data for operations that take longer than the value of slowms.</td>
+</tr>
+<tr>
+<td align="center">2</td>
+<td align="center">The profiler collects data for all operations.</td>
+</tr>
+</tbody></table>
+<h2 id="Enable-and-Configure-Database-Profiling"><a href="#Enable-and-Configure-Database-Profiling" class="headerlink" title="Enable and Configure Database Profiling"></a>Enable and Configure Database Profiling</h2><h3 id="方式1-from-the-mongo-shell"><a href="#方式1-from-the-mongo-shell" class="headerlink" title="方式1 - from the mongo shell"></a>方式1 - from the mongo shell</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"># 查看状态：级别和时间</span><br><span class="line">uhost:PRIMARY&gt; db.getProfilingStatus()</span><br><span class="line">&#123; &quot;was&quot; : 0, &quot;slowms&quot; : 100 &#125;</span><br><span class="line"># 设置Profiling Level，返回的是之前设置的Level,返回&quot;ok&quot;:1表示设置成功</span><br><span class="line">uhost:PRIMARY&gt; db.setProfilingLevel(1)</span><br><span class="line">&#123; &quot;was&quot; : 0, &quot;slowms&quot; : 100, &quot;ok&quot; : 1 &#125;</span><br><span class="line">uhost:PRIMARY&gt; db.getProfilingStatus()</span><br><span class="line">&#123; &quot;was&quot; : 1, &quot;slowms&quot; : 100 &#125;</span><br><span class="line"># 设置Profiling Level和slowms</span><br><span class="line">uhost:PRIMARY&gt; db.setProfilingLevel(1,200)</span><br><span class="line">&#123; &quot;was&quot; : 1, &quot;slowms&quot; : 100, &quot;ok&quot; : 1 &#125;</span><br><span class="line">uhost:PRIMARY&gt; db.getProfilingStatus()</span><br><span class="line">&#123; &quot;was&quot; : 1, &quot;slowms&quot; : 200 &#125;</span><br><span class="line"></span><br><span class="line"># New in version 3.6，支持设置sampleRate。</span><br><span class="line"># 默认是1，以下设置0.42，表示采样42%的慢查询</span><br><span class="line">db.setProfilingLevel(1, &#123; sampleRate: 0.42 &#125;)</span><br></pre></td></tr></table></figure>
+
+<p>注意：</p>
+<ol>
+<li><font color="#FF0000">每次设置之后，返回的是之前的状态</font></li>
+<li><font color="#FF0000">每次设置仅对当前所在的database有效</font></li>
+</ol>
+<h3 id="方式2-在mongo启动时设置"><a href="#方式2-在mongo启动时设置" class="headerlink" title="方式2 - 在mongo启动时设置"></a>方式2 - 在mongo启动时设置</h3><p>作为命令行参数传入：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">mongod --profile 1 --slowms 15 --slowOpSampleRate 0.5</span><br></pre></td></tr></table></figure>
+<p>还可以在配置文件里设置</p>
+<p>具体设置参考<a target="_blank" rel="noopener" href="https://docs.mongodb.com/manual/reference/command/profile/#dbcmd.profile">profile</a></p>
+<h3 id="关闭Profiling"><a href="#关闭Profiling" class="headerlink" title="关闭Profiling"></a>关闭Profiling</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">uhost:PRIMARY&gt; db.setProfilingLevel(0)</span><br><span class="line">&#123; &quot;was&quot; : 1, &quot;slowms&quot; : 200, &quot;ok&quot; : 1 &#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="Profiling的效率问题"><a href="#Profiling的效率问题" class="headerlink" title="Profiling的效率问题"></a>Profiling的效率问题</h2><p>这是我能搜到的说法，但是具体原理和数据我还没找到，官网也没看到介绍。</p>
+<p>从其他地方复制过来的说法，待论证。”Profiling 功能肯定是会影响效率的，但是不太严重，原因是他使用的是system.profile 来记录，而system.profile 是一个capped collection 这种collection 在操作上有一些限制和特点，但是效率更高“</p>
+<h1 id="慢查询结果分析"><a href="#慢查询结果分析" class="headerlink" title="慢查询结果分析"></a>慢查询结果分析</h1><h2 id="各项参数含义"><a href="#各项参数含义" class="headerlink" title="各项参数含义"></a>各项参数含义</h2><p>这里用的MongoDB版本是2.6, 具体可以参考 <a target="_blank" rel="noopener" href="https://docs.mongodb.com/v2.6/reference/database-profiler/">https://docs.mongodb.com/v2.6/reference/database-profiler/</a></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br></pre></td><td class="code"><pre><span class="line">uhost:PRIMARY&gt; db.system.profile.find(&#123;&quot;ns&quot; : &quot;uhost.DiskAttachInfo&quot;,&quot;ts&quot;:&#123;$gt:new ISODate(&quot;2019-07-23T10:11:00Z&quot;)&#125;&#125;).pretty()</span><br><span class="line"></span><br><span class="line">&#123;</span><br><span class="line">	&quot;op&quot; : &quot;query&quot;, #操作类型，有insert、query、update、remove、getmore、command</span><br><span class="line">	&quot;ns&quot; : &quot;uhost.DiskAttachInfo&quot;, #操作的collection</span><br><span class="line">	&quot;query&quot; : &#123;</span><br><span class="line">		&quot;backend_types&quot; : &#123;</span><br><span class="line">			&quot;$in&quot; : [</span><br><span class="line">				&quot;ssd&quot;</span><br><span class="line">			]</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;,</span><br><span class="line">	&quot;ntoreturn&quot; : 0, #返回的数量</span><br><span class="line">	&quot;ntoskip&quot; : 0, #The number of documents the skip() method specified to skip.</span><br><span class="line">	&quot;nscanned&quot; : 520144, #MongoDB在索引中扫描以执行操作的文档数。 通常，如果nscanned远高于nredurned，则数据库会扫描许多对象以查找目标对象。 考虑创建一个索引来改善这一点。</span><br><span class="line">	&quot;nscannedObjects&quot; : 520144, # The number of documents that MongoDB scans from the collection in order to carry out the operation.</span><br><span class="line">	&quot;keyUpdates&quot; : 0,</span><br><span class="line">	&quot;numYield&quot; : 6,</span><br><span class="line">	&quot;lockStats&quot; : &#123;</span><br><span class="line">		&quot;timeLockedMicros&quot; : &#123;</span><br><span class="line">			&quot;r&quot; : NumberLong(1536711),</span><br><span class="line">			&quot;w&quot; : NumberLong(0)</span><br><span class="line">		&#125;,</span><br><span class="line">		&quot;timeAcquiringMicros&quot; : &#123;</span><br><span class="line">			&quot;r&quot; : NumberLong(913),</span><br><span class="line">			&quot;w&quot; : NumberLong(4)</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;,</span><br><span class="line">	&quot;nreturned&quot; : 0, // 返回的文档数量</span><br><span class="line">	&quot;responseLength&quot; : 20, // 返回字节长度，如果这个数字很大，考虑值返回所需字段</span><br><span class="line">	&quot;millis&quot; : 820, #消耗的时间（毫秒）</span><br><span class="line">	&quot;execStats&quot; : &#123;</span><br><span class="line">		&quot;type&quot; : &quot;COLLSCAN&quot;, #”COLLSCAN“：整个集合扫描，效果最差；”IXSCAN“：索引扫描；&quot;Fetch&quot;: ?</span><br><span class="line">		&quot;works&quot; : 520146,</span><br><span class="line">		&quot;yields&quot; : 4063,</span><br><span class="line">		&quot;unyields&quot; : 4063,</span><br><span class="line">		&quot;invalidates&quot; : 0,</span><br><span class="line">		&quot;advanced&quot; : 0,</span><br><span class="line">		&quot;needTime&quot; : 520145,</span><br><span class="line">		&quot;needFetch&quot; : 0,</span><br><span class="line">		&quot;isEOF&quot; : 1,</span><br><span class="line">		&quot;docsTested&quot; : 520144,</span><br><span class="line">		&quot;children&quot; : [ ]</span><br><span class="line">	&#125;,</span><br><span class="line">	&quot;ts&quot; : ISODate(&quot;2019-07-23T10:11:54.468Z&quot;), #该命令在何时执行</span><br><span class="line">	&quot;client&quot; : &quot;127.0.0.1&quot;, #链接ip或则主机</span><br><span class="line">	&quot;allUsers&quot; : [ ],</span><br><span class="line">	&quot;user&quot; : &quot;&quot;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="分析"><a href="#分析" class="headerlink" title="分析"></a>分析</h2><p>如果发现 millis 值比较大，那么就需要作优化。</p>
+<p>1  如果nscanned数很大，或者接近记录总数（文档数），那么可能没有用到索引查询，而是全表扫描。</p>
+<p>2  如果nscanned值高于nreturned的值，说明数据库为了找到目标文档扫描了很多文档。这时可以考虑创建索引来提高效率。</p>
+<h2 id="system-profile补充-这部分待验证"><a href="#system-profile补充-这部分待验证" class="headerlink" title="system.profile补充(这部分待验证)"></a>system.profile补充(<font color="#FF0000">这部分待验证</font>)</h2><p>‘type’的返回参数说明：</p>
+<ul>
+<li>COLLSCAN #全表扫描</li>
+<li>IXSCAN #索引扫描</li>
+<li>FETCH #根据索引去检索指定document</li>
+<li>SHARD_MERGE #将各个分片返回数据进行merge</li>
+<li>SORT #表明在内存中进行了排序（与老版本的scanAndOrder:true一致）</li>
+<li>LIMIT #使用limit限制返回数</li>
+<li>SKIP #使用skip进行跳过</li>
+<li>IDHACK #针对_id进行查询</li>
+<li>SHARDING_FILTER #通过mongos对分片数据进行查询</li>
+<li>COUNT #利用db.coll.explain().count()之类进行count运算</li>
+<li>COUNTSCAN #count不使用Index进行count时的stage返回</li>
+<li>COUNT_SCAN #count使用了Index进行count时的stage返回</li>
+<li>SUBPLA #未使用到索引的$or查询的stage返回</li>
+<li>TEXT #使用全文索引进行查询时候的stage返回</li>
+<li>PROJECTION #限定返回字段时候stage的返回</li>
+</ul>
+<p>对于普通查询，我们最希望看到的组合有这些：</p>
+<ul>
+<li>Fetch+IDHACK</li>
+<li>Fetch+ixscan</li>
+<li>Limit+（Fetch+ixscan）</li>
+<li>PROJECTION+ixscan</li>
+<li>SHARDING_FILTER+ixscan</li>
+</ul>
+<p>不希望看到包含如下的type：</p>
+<ul>
+<li>COLLSCAN（全表扫）</li>
+<li>SORT（使用sort但是无index）</li>
+<li>不合理的SKIP，SUBPLA（未用到index的$or）</li>
+</ul>
+<p>对于count查询，希望看到的有:COUNT_SCAN</p>
+<p>不希望看到的有:COUNTSCAN</p>
+<h1 id="常见的慢日志-system-profile-查询语句"><a href="#常见的慢日志-system-profile-查询语句" class="headerlink" title="常见的慢日志(system.profile)查询语句"></a>常见的慢日志(system.profile)查询语句</h1><p>返回最近的10条记录：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">db.system.profile.find().limit(10).sort( &#123; ts : -1 &#125; ).pretty()</span><br></pre></td></tr></table></figure>
+
+<p>返回所有的操作，除command类型的</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">db.system.profile.find( &#123; op: &#123; $ne : ‘command‘ &#125; &#125;).pretty()</span><br></pre></td></tr></table></figure>
+
+<p>返回特定集合</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">db.system.profile.find( &#123; ns: &quot;uhost.DiskAttachInfo&quot;&#125; ).pretty()</span><br></pre></td></tr></table></figure>
+
+<p>To return operations slower than 5 milliseconds, run a query similar to the following:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">db.system.profile.find( &#123; millis : &#123; $gt : 5 &#125; &#125; ).pretty()</span><br></pre></td></tr></table></figure>
+
+<p>To return information from a certain time range, run a query similar to the following:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">db.system.profile.find(&#123;</span><br><span class="line">  ts : &#123;</span><br><span class="line">    $gt: new ISODate(&quot;2012-12-09T03:00:00Z&quot;),</span><br><span class="line">    $lt: new ISODate(&quot;2012-12-09T03:40:00Z&quot;)</span><br><span class="line">  &#125;</span><br><span class="line">&#125;).pretty()</span><br></pre></td></tr></table></figure>
+
+<p>The following example looks at the time range, suppresses the user field from the output to make it easier to read, and sorts the results by how long each operation took to run:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">db.system.profile.find(&#123;</span><br><span class="line">  ts : &#123;</span><br><span class="line">    $gt: new ISODate(&quot;2011-07-12T03:00:00Z&quot;),</span><br><span class="line">    $lt: new ISODate(&quot;2011-07-12T03:40:00Z&quot;)</span><br><span class="line">  &#125;</span><br><span class="line">&#125;, &#123; user: 0 &#125;).sort( &#123; millis: -1 &#125; )</span><br></pre></td></tr></table></figure>
+
+<p>Show the Five Most Recent Events</p>
+<p>On a database that has profiling enabled, the show profile helper in the mongo shell displays the 5 most recent operations that took at least 1 millisecond to execute. Issue show profile from the mongo shell, as follows:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">show profile</span><br></pre></td></tr></table></figure>
+
+<h1 id="explain分析"><a href="#explain分析" class="headerlink" title="explain分析"></a>explain分析</h1><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">uhost:PRIMARY&gt; db.getCollection(&#x27;DiskAttachInfo&#x27;).find(&#123;&quot;backend_types&quot;:&#123;$in:[&quot;ssd&quot;]&#125;&#125;).explain()</span><br><span class="line">&#123;</span><br><span class="line">	&quot;cursor&quot; : &quot;BasicCursor&quot;, #返回游标类型，有BasicCursor和BtreeCursor，后者意味着使用了索引。</span><br><span class="line">    &quot;isMultiKey&quot; : false,</span><br><span class="line">	&quot;isMultiKey&quot; : false,</span><br><span class="line">	&quot;n&quot; : 0,</span><br><span class="line">	&quot;nscannedObjects&quot; : 522072, #the total number of documents scanned.</span><br><span class="line">	&quot;nscanned&quot; : 522072,  #the total number of index entries scanned (or documents for a collection scan).</span><br><span class="line">	&quot;nscannedObjectsAllPlans&quot; : 522072,</span><br><span class="line">	&quot;nscannedAllPlans&quot; : 522072,</span><br><span class="line">	&quot;scanAndOrder&quot; : false, #MongoDB是否在内存中对结果集进行了排序</span><br><span class="line">	&quot;indexOnly&quot; : false, #MongoDB是否只使用索引就能完成此次查询</span><br><span class="line">	&quot;nYields&quot; : 4078,  #为了让写入请求能够顺利执行，本次查询暂停暂停的次数。如果有写入请求需求处理，查询会周期性的释放他们的锁，以便写入能够顺利执行</span><br><span class="line">	&quot;nChunkSkips&quot; : 0,</span><br><span class="line">	&quot;millis&quot; : 918, #数据库执行本次查询所耗费的毫秒数。这个数字越小，说明效率越高</span><br><span class="line">	&quot;server&quot; : &quot;172-18-38-130:27017&quot;,</span><br><span class="line">	&quot;filterSet&quot; : false</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>详细见<a target="_blank" rel="noopener" href="https://docs.mongodb.com/v2.6/reference/method/cursor.explain/index.html">cursor.explain()</a></p>
+<h1 id="添加索引"><a href="#添加索引" class="headerlink" title="添加索引"></a>添加索引</h1><p>在以上的分析中，”nscanned” 过大，且”type” : “COLLSCAN”为整个集合扫描，”indexOnly” : false表示没有用到索引。考虑创建一个索引来改善这一点。</p>
+<p>查看当前索引，在backend_type上并没有索引。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br></pre></td><td class="code"><pre><span class="line">uhost:PRIMARY&gt; db.getCollection(&#x27;DiskAttachInfo&#x27;).getIndexes()</span><br><span class="line">[</span><br><span class="line">	&#123;</span><br><span class="line">		&quot;v&quot; : 1,</span><br><span class="line">		&quot;key&quot; : &#123;</span><br><span class="line">			&quot;_id&quot; : 1</span><br><span class="line">		&#125;,</span><br><span class="line">		&quot;name&quot; : &quot;_id_&quot;,</span><br><span class="line">		&quot;ns&quot; : &quot;uhost.DiskAttachInfo&quot;</span><br><span class="line">	&#125;,</span><br><span class="line">	&#123;</span><br><span class="line">		&quot;v&quot; : 1,</span><br><span class="line">		&quot;key&quot; : &#123;</span><br><span class="line">			&quot;uhost_id&quot; : 1</span><br><span class="line">		&#125;,</span><br><span class="line">		&quot;name&quot; : &quot;uhost_id_1&quot;,</span><br><span class="line">		&quot;ns&quot; : &quot;uhost.DiskAttachInfo&quot;,</span><br><span class="line">		&quot;background&quot; : true,</span><br><span class="line">		&quot;safe&quot; : null</span><br><span class="line">	&#125;,</span><br><span class="line">	&#123;</span><br><span class="line">		&quot;v&quot; : 1,</span><br><span class="line">		&quot;key&quot; : &#123;</span><br><span class="line">			&quot;attached&quot; : 1</span><br><span class="line">		&#125;,</span><br><span class="line">		&quot;name&quot; : &quot;attached_1&quot;,</span><br><span class="line">		&quot;ns&quot; : &quot;uhost.DiskAttachInfo&quot;,</span><br><span class="line">		&quot;background&quot; : true,</span><br><span class="line">		&quot;safe&quot; : null</span><br><span class="line">	&#125;,</span><br><span class="line">	&#123;</span><br><span class="line">		&quot;v&quot; : 1,</span><br><span class="line">		&quot;key&quot; : &#123;</span><br><span class="line">			&quot;disk_id&quot; : 1</span><br><span class="line">		&#125;,</span><br><span class="line">		&quot;name&quot; : &quot;disk_id_1&quot;,</span><br><span class="line">		&quot;ns&quot; : &quot;uhost.DiskAttachInfo&quot;,</span><br><span class="line">		&quot;background&quot; : true,</span><br><span class="line">		&quot;safe&quot; : null</span><br><span class="line">	&#125;</span><br><span class="line">]</span><br></pre></td></tr></table></figure>
+
+<p>添加index</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">uhost:PRIMARY&gt; db.DiskAttachInfo.createIndex(&#123;&quot;backend_type&quot;:1&#125;,&#123;background: true, safe: null&#125;)</span><br><span class="line">&#123;</span><br><span class="line">	&quot;createdCollectionAutomatically&quot; : false,</span><br><span class="line">	&quot;numIndexesBefore&quot; : 4,</span><br><span class="line">	&quot;numIndexesAfter&quot; : 5,</span><br><span class="line">	&quot;ok&quot; : 1</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h1 id="添加索引后测试效果"><a href="#添加索引后测试效果" class="headerlink" title="添加索引后测试效果"></a>添加索引后测试效果</h1><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line">uhost:PRIMARY&gt; db.getCollection(&#x27;DiskAttachInfo&#x27;).find(&#123;&quot;backend_type&quot;:&#123;$in:[&quot;ssd&quot;]&#125;&#125;).explain()</span><br><span class="line">&#123;</span><br><span class="line">	&quot;cursor&quot; : &quot;BtreeCursor backend_type_1&quot;,</span><br><span class="line">	&quot;isMultiKey&quot; : false,</span><br><span class="line">	&quot;n&quot; : 98023,</span><br><span class="line">	&quot;nscannedObjects&quot; : 98023,</span><br><span class="line">	&quot;nscanned&quot; : 98023,</span><br><span class="line">	&quot;nscannedObjectsAllPlans&quot; : 98023,</span><br><span class="line">	&quot;nscannedAllPlans&quot; : 98023,</span><br><span class="line">	&quot;scanAndOrder&quot; : false,</span><br><span class="line">	&quot;indexOnly&quot; : false,</span><br><span class="line">	&quot;nYields&quot; : 765,</span><br><span class="line">	&quot;nChunkSkips&quot; : 0,</span><br><span class="line">	&quot;millis&quot; : 169,</span><br><span class="line">	&quot;indexBounds&quot; : &#123;</span><br><span class="line">		&quot;backend_type&quot; : [</span><br><span class="line">			[</span><br><span class="line">				&quot;ssd&quot;,</span><br><span class="line">				&quot;ssd&quot;</span><br><span class="line">			]</span><br><span class="line">		]</span><br><span class="line">	&#125;,</span><br><span class="line">	&quot;server&quot; : &quot;172-18-38-130:27017&quot;,</span><br><span class="line">	&quot;filterSet&quot; : false</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>“nscanned” 由原来的52w降低到9w多。<br>时间（”millis” ）由828ms降低到169ms。</p>
+<h1 id="参考链接"><a href="#参考链接" class="headerlink" title="参考链接"></a>参考链接</h1><ol>
+<li><a target="_blank" rel="noopener" href="https://docs.mongodb.com/manual/tutorial/manage-the-database-profiler/">Database Profiler</a></li>
+<li><a target="_blank" rel="noopener" href="https://docs.mongodb.com/v2.6/reference/method/cursor.explain/index.html">cursor.explain()</a></li>
+<li><a target="_blank" rel="noopener" href="https://blog.csdn.net/yisun123456/article/details/78274477">转 mongodb Profiling 通过慢查询日志分析查询慢的原因 相应优化</a></li>
+<li><a target="_blank" rel="noopener" href="https://blog.csdn.net/joy0921/article/details/80131186">MongoDB查询优化：从10s到10ms</a>   </li>
+</ol>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/mongo/" rel="tag"># mongo</a>
+              <a href="/tags/MongoDB/" rel="tag"># MongoDB</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2019/07/13/%E4%B8%80%E6%AC%A1node%E8%BF%9B%E7%A8%8Bcpu%E8%B4%9F%E8%BD%BD100-%E9%97%AE%E9%A2%98%E7%9A%84%E5%A4%84%E7%90%86/" rel="prev" title="一次node进程cpu负载100%问题的处理">
+      <i class="fa fa-chevron-left"></i> 一次node进程cpu负载100%问题的处理
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2019/07/28/goroutine%E8%B0%83%E5%BA%A6%E5%99%A8/" rel="next" title="goroutine调度器">
+      goroutine调度器 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+  </div>
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let activeClass = CONFIG.comments.activeClass;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Database-Profiler%E4%BB%8B%E7%BB%8D"><span class="nav-number">1.</span> <span class="nav-text">Database Profiler介绍</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%85%A2%E6%9F%A5%E8%AF%A2%E5%88%86%E6%9E%90%E6%B5%81%E7%A8%8B"><span class="nav-number">2.</span> <span class="nav-text">慢查询分析流程</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%BC%80%E5%90%AF%E6%85%A2%E6%9F%A5%E8%AF%A2"><span class="nav-number">3.</span> <span class="nav-text">开启慢查询</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Profiling-Levels"><span class="nav-number">3.1.</span> <span class="nav-text">Profiling Levels</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Enable-and-Configure-Database-Profiling"><span class="nav-number">3.2.</span> <span class="nav-text">Enable and Configure Database Profiling</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%96%B9%E5%BC%8F1-from-the-mongo-shell"><span class="nav-number">3.2.1.</span> <span class="nav-text">方式1 - from the mongo shell</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%96%B9%E5%BC%8F2-%E5%9C%A8mongo%E5%90%AF%E5%8A%A8%E6%97%B6%E8%AE%BE%E7%BD%AE"><span class="nav-number">3.2.2.</span> <span class="nav-text">方式2 - 在mongo启动时设置</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%85%B3%E9%97%ADProfiling"><span class="nav-number">3.2.3.</span> <span class="nav-text">关闭Profiling</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Profiling%E7%9A%84%E6%95%88%E7%8E%87%E9%97%AE%E9%A2%98"><span class="nav-number">3.3.</span> <span class="nav-text">Profiling的效率问题</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%85%A2%E6%9F%A5%E8%AF%A2%E7%BB%93%E6%9E%9C%E5%88%86%E6%9E%90"><span class="nav-number">4.</span> <span class="nav-text">慢查询结果分析</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%90%84%E9%A1%B9%E5%8F%82%E6%95%B0%E5%90%AB%E4%B9%89"><span class="nav-number">4.1.</span> <span class="nav-text">各项参数含义</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%88%86%E6%9E%90"><span class="nav-number">4.2.</span> <span class="nav-text">分析</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#system-profile%E8%A1%A5%E5%85%85-%E8%BF%99%E9%83%A8%E5%88%86%E5%BE%85%E9%AA%8C%E8%AF%81"><span class="nav-number">4.3.</span> <span class="nav-text">system.profile补充(这部分待验证)</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%B8%B8%E8%A7%81%E7%9A%84%E6%85%A2%E6%97%A5%E5%BF%97-system-profile-%E6%9F%A5%E8%AF%A2%E8%AF%AD%E5%8F%A5"><span class="nav-number">5.</span> <span class="nav-text">常见的慢日志(system.profile)查询语句</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#explain%E5%88%86%E6%9E%90"><span class="nav-number">6.</span> <span class="nav-text">explain分析</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%B7%BB%E5%8A%A0%E7%B4%A2%E5%BC%95"><span class="nav-number">7.</span> <span class="nav-text">添加索引</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%B7%BB%E5%8A%A0%E7%B4%A2%E5%BC%95%E5%90%8E%E6%B5%8B%E8%AF%95%E6%95%88%E6%9E%9C"><span class="nav-number">8.</span> <span class="nav-text">添加索引后测试效果</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%8F%82%E8%80%83%E9%93%BE%E6%8E%A5"><span class="nav-number">9.</span> <span class="nav-text">参考链接</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">patrick.xu</p>
+  <div class="site-description" itemprop="description">完成比完美更重要</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">28</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">12</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">37</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="/atom.xml" title="RSS → &#x2F;atom.xml"><i class="fa fa-fw fa-rss"></i>RSS</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">patrick.xu</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-area-chart"></i>
+    </span>
+    <span title="Symbols count total">124k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="Reading time total">3:27</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> v5.4.0
+  </div>
+  <span class="post-meta-divider">|</span>
+  <div class="theme-info">Theme – <a href="https://muse.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a> v7.7.0
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

@@ -1,0 +1,505 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <title>森几许的博客</title>
+  <icon>https://xusenqi.github.io/icon.png</icon>
+  <subtitle>空杯心态</subtitle>
+  <link href="https://xusenqi.github.io/atom.xml" rel="self"/>
+  
+  <link href="https://xusenqi.github.io/"/>
+  <updated>2021-08-18T13:13:06.119Z</updated>
+  <id>https://xusenqi.github.io/</id>
+  
+  <author>
+    <name>patrick.xu</name>
+    
+  </author>
+  
+  <generator uri="https://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>Hello World</title>
+    <link href="https://xusenqi.github.io/2021/08/18/hexo/"/>
+    <id>https://xusenqi.github.io/2021/08/18/hexo/</id>
+    <published>2021-08-18T13:13:06.118Z</published>
+    <updated>2021-08-18T13:13:06.119Z</updated>
+    
+    
+      
+      
+        
+        
+    <summary type="html">&lt;p&gt;Welcome to &lt;a href=&quot;https://hexo.io/&quot;&gt;Hexo&lt;/a&gt;! This is your very first post. Check &lt;a href=&quot;https://hexo.io/docs/&quot;&gt;documentation&lt;/a&gt;</summary>
+        
+      
+    
+    
+    
+    
+  </entry>
+  
+  <entry>
+    <title>c++服务内存持续增长问题的解决</title>
+    <link href="https://xusenqi.github.io/2020/12/07/c++%E6%9C%8D%E5%8A%A1%E5%86%85%E5%AD%98%E6%8C%81%E7%BB%AD%E5%A2%9E%E9%95%BF%E9%97%AE%E9%A2%98%E7%9A%84%E8%A7%A3%E5%86%B3/"/>
+    <id>https://xusenqi.github.io/2020/12/07/c++%E6%9C%8D%E5%8A%A1%E5%86%85%E5%AD%98%E6%8C%81%E7%BB%AD%E5%A2%9E%E9%95%BF%E9%97%AE%E9%A2%98%E7%9A%84%E8%A7%A3%E5%86%B3/</id>
+    <published>2020-12-07T14:37:10.000Z</published>
+    <updated>2021-08-18T13:13:06.052Z</updated>
+    
+    
+    <summary type="html">&lt;h1 id=&quot;问题&quot;&gt;&lt;a href=&quot;#问题&quot; class=&quot;headerlink&quot; title=&quot;问题&quot;&gt;&lt;/a&gt;问题&lt;/h1&gt;&lt;p&gt;线上有个用C++写的b服务，随着运行时间的增减，占用内存也会不断增加，最终kernel会触发OOM，导致服务不可用。&lt;br&gt;&lt;img src=&quot;/.io//1_%E5%86%85%E5%AD%98%E5%A2%9E%E9%95%BF.png&quot; alt=&quot;image.png&quot;&gt;&lt;br&gt;所使用的物理机内存为160GB，以上图中一个broker进程就占了大约6.6GB的内存，运行了10天后内存还在持续增长，存在内存泄漏的问题。&lt;/p&gt;</summary>
+    
+    
+    
+    <category term="c++" scheme="https://xusenqi.github.io/categories/c/"/>
+    
+    
+    <category term="c++" scheme="https://xusenqi.github.io/tags/c/"/>
+    
+    <category term="内存 - valgrind - gperftools - pprof" scheme="https://xusenqi.github.io/tags/%E5%86%85%E5%AD%98-valgrind-gperftools-pprof/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>c++ profile的大杀器-gperftools的使用</title>
+    <link href="https://xusenqi.github.io/2020/12/06/C++Profile%E7%9A%84%E5%A4%A7%E6%9D%80%E5%99%A8_gperftools%E7%9A%84%E4%BD%BF%E7%94%A8/"/>
+    <id>https://xusenqi.github.io/2020/12/06/C++Profile%E7%9A%84%E5%A4%A7%E6%9D%80%E5%99%A8_gperftools%E7%9A%84%E4%BD%BF%E7%94%A8/</id>
+    <published>2020-12-06T13:57:10.000Z</published>
+    <updated>2021-08-18T13:13:05.989Z</updated>
+    
+    
+    <summary type="html">&lt;p&gt;熟悉golang的同学，一定很熟悉用pprof来作为性能分析和可视化的工具，包括 cpu profile, memery profile等。这么方便且炫的功能，在C++里也一样能实现。所需要的工具就是gperftools。&lt;/p&gt;</summary>
+    
+    
+    
+    <category term="c++" scheme="https://xusenqi.github.io/categories/c/"/>
+    
+    
+    <category term="c++" scheme="https://xusenqi.github.io/tags/c/"/>
+    
+    <category term="profile" scheme="https://xusenqi.github.io/tags/profile/"/>
+    
+    <category term="gperftools" scheme="https://xusenqi.github.io/tags/gperftools/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>golang中的map并发读写问题</title>
+    <link href="https://xusenqi.github.io/2020/03/08/golang%E4%B8%AD%E7%9A%84map%E5%B9%B6%E5%8F%91%E8%AF%BB%E5%86%99%E9%97%AE%E9%A2%98/"/>
+    <id>https://xusenqi.github.io/2020/03/08/golang%E4%B8%AD%E7%9A%84map%E5%B9%B6%E5%8F%91%E8%AF%BB%E5%86%99%E9%97%AE%E9%A2%98/</id>
+    <published>2020-03-08T13:32:07.000Z</published>
+    <updated>2021-08-18T13:13:06.051Z</updated>
+    
+    
+    <summary type="html">&lt;h1 id=&quot;map不是并发安全的&quot;&gt;&lt;a href=&quot;#map不是并发安全的&quot; class=&quot;headerlink&quot; title=&quot;map不是并发安全的&quot;&gt;&lt;/a&gt;map不是并发安全的&lt;/h1&gt;&lt;p&gt;官方的&lt;a href=&quot;https://golang.org/doc/faq#atomic_maps&quot;&gt;faq&lt;/a&gt;里有说明，考虑到有性能损失，map没有设计成原子操作，在并发读写时会有问题。&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;Map access is unsafe only when updates are occurring. As long as all goroutines are only reading—looking up elements in the map, including iterating through it using a for range loop—and not changing the map by assigning to elements or doing deletions, it is safe for them to access the map concurrently without synchronization.&lt;/p&gt;
+&lt;/blockquote&gt;</summary>
+    
+    
+    
+    <category term="go" scheme="https://xusenqi.github.io/categories/go/"/>
+    
+    
+    <category term="map" scheme="https://xusenqi.github.io/tags/map/"/>
+    
+    <category term="并发" scheme="https://xusenqi.github.io/tags/%E5%B9%B6%E5%8F%91/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>Remote Debugging Go Code with Visual Studio Code</title>
+    <link href="https://xusenqi.github.io/2019/12/23/Remote-Debug-Go-Code-with-Visual-Studio-Code/"/>
+    <id>https://xusenqi.github.io/2019/12/23/Remote-Debug-Go-Code-with-Visual-Studio-Code/</id>
+    <published>2019-12-23T13:24:20.000Z</published>
+    <updated>2021-08-18T13:13:05.944Z</updated>
+    
+    
+    <summary type="html">&lt;p&gt;当了解一些大型项目的代码逻辑时，如kubernetes，跟着调试器跟踪代码学习，是很好的方式。当项目部署在远程环境时，在本机进行开发，很自然对Remote Debug有迫切需求，这也是和调试一般golang程序最主要的诉求区别点，本文将通过两个实际例子，来介绍如何Remote Debug。&lt;/p&gt;</summary>
+    
+    
+    
+    <category term="vscode" scheme="https://xusenqi.github.io/categories/vscode/"/>
+    
+    
+    <category term="vscode" scheme="https://xusenqi.github.io/tags/vscode/"/>
+    
+    <category term="remote debug" scheme="https://xusenqi.github.io/tags/remote-debug/"/>
+    
+    <category term="k8s" scheme="https://xusenqi.github.io/tags/k8s/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>kubeadm部署single control-plane k8s集群</title>
+    <link href="https://xusenqi.github.io/2019/12/11/kubeadm%E9%83%A8%E7%BD%B2single-control-plane-k8s%E9%9B%86%E7%BE%A4/"/>
+    <id>https://xusenqi.github.io/2019/12/11/kubeadm%E9%83%A8%E7%BD%B2single-control-plane-k8s%E9%9B%86%E7%BE%A4/</id>
+    <published>2019-12-10T16:58:25.000Z</published>
+    <updated>2021-08-18T13:13:05.857Z</updated>
+    
+    
+    <summary type="html">&lt;h1 id=&quot;kubeadm介绍&quot;&gt;&lt;a href=&quot;#kubeadm介绍&quot; class=&quot;headerlink&quot; title=&quot;kubeadm介绍&quot;&gt;&lt;/a&gt;kubeadm介绍&lt;/h1&gt;&lt;blockquote&gt;
+&lt;p&gt;Kubeadm is a tool built to provide kubeadm init and kubeadm join as best-practice “fast paths” for creating Kubernetes clusters.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;ul&gt;
+&lt;li&gt;kubeadm init  创建一个 Master节点 &lt;/li&gt;
+&lt;li&gt;kubeadm join 将一个 Node 节点加入到当前集群中&lt;/li&gt;
+&lt;/ul&gt;</summary>
+    
+    
+    
+    <category term="k8s" scheme="https://xusenqi.github.io/categories/k8s/"/>
+    
+    
+    <category term="k8s" scheme="https://xusenqi.github.io/tags/k8s/"/>
+    
+    <category term="kubeadm" scheme="https://xusenqi.github.io/tags/kubeadm/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>这些年读过的那些书&amp;&amp;待读清单列表</title>
+    <link href="https://xusenqi.github.io/2019/08/31/%E8%BF%99%E4%BA%9B%E5%B9%B4%E8%AF%BB%E8%BF%87%E7%9A%84%E9%82%A3%E4%BA%9B%E4%B9%A6-%E5%BE%85%E8%AF%BB%E6%B8%85%E5%8D%95%E5%88%97%E8%A1%A8/"/>
+    <id>https://xusenqi.github.io/2019/08/31/%E8%BF%99%E4%BA%9B%E5%B9%B4%E8%AF%BB%E8%BF%87%E7%9A%84%E9%82%A3%E4%BA%9B%E4%B9%A6-%E5%BE%85%E8%AF%BB%E6%B8%85%E5%8D%95%E5%88%97%E8%A1%A8/</id>
+    <published>2019-08-31T15:23:54.000Z</published>
+    <updated>2021-08-18T13:13:06.181Z</updated>
+    
+    
+    <summary type="html">&lt;p&gt;每年给自己列个计划，要读哪些书，到年尾看看真正看完的有多少。&lt;/p&gt;
+&lt;h1 id=&quot;2020年待读清单列表&quot;&gt;&lt;a href=&quot;#2020年待读清单列表&quot; class=&quot;headerlink&quot; title=&quot;2020年待读清单列表&quot;&gt;&lt;/a&gt;2020年待读清单列表&lt;/h1&gt;&lt;ol&gt;
+&lt;li&gt; 《Designing Data-Intensive Applications》&lt;/li&gt;
+&lt;/ol&gt;
+&lt;h1 id=&quot;2019年待读清单列表&quot;&gt;&lt;a href=&quot;#2019年待读清单列表&quot; class=&quot;headerlink&quot; title=&quot;2019年待读清单列表&quot;&gt;&lt;/a&gt;2019年待读清单列表&lt;/h1&gt;&lt;ol&gt;
+&lt;li&gt;UNIX环境高级编程（第3版）&lt;/li&gt;
+&lt;li&gt;重构网络 SDN架构与实现&lt;/li&gt;
+&lt;li&gt;软件定义网络&lt;/li&gt;
+&lt;li&gt;全球通史 从史前史到21实际 第7版修订版 上&lt;/li&gt;
+&lt;li&gt;全球通史 从史前史到21实际 第7版修订版 下&lt;/li&gt;&lt;/ol&gt;</summary>
+    
+    
+    
+    <category term="读书笔记" scheme="https://xusenqi.github.io/categories/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0/"/>
+    
+    
+    <category term="清单" scheme="https://xusenqi.github.io/tags/%E6%B8%85%E5%8D%95/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>通过delve(dlv)调试golang程序</title>
+    <link href="https://xusenqi.github.io/2019/08/25/%E9%80%9A%E8%BF%87delve-dlv-%E8%B0%83%E8%AF%95golang%E7%A8%8B%E5%BA%8F/"/>
+    <id>https://xusenqi.github.io/2019/08/25/%E9%80%9A%E8%BF%87delve-dlv-%E8%B0%83%E8%AF%95golang%E7%A8%8B%E5%BA%8F/</id>
+    <published>2019-08-25T13:04:13.000Z</published>
+    <updated>2021-08-18T13:13:06.211Z</updated>
+    
+    
+    <summary type="html">&lt;h1 id=&quot;介绍&quot;&gt;&lt;a href=&quot;#介绍&quot; class=&quot;headerlink&quot; title=&quot;介绍&quot;&gt;&lt;/a&gt;介绍&lt;/h1&gt;&lt;p&gt;gdb是强大的调试工具。但对于golang程序来说，delve是个更好的选择，它能更好地理解Go runtime, data structures, and expressions，尤其是goroutine。&lt;/p&gt;
+&lt;p&gt;以下描述引用自&lt;a href=&quot;https://golang.google.cn/doc/gdb&quot;&gt;Debugging Go Code with GDB&lt;/a&gt;【1】&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;Note that Delve is a better alternative to GDB when debugging Go programs built with the standard toolchain. It understands the Go runtime, data structures, and expressions better than GDB. Delve currently supports Linux, OSX, and Windows on amd64. For the most up-to-date list of supported platforms, please see the Delve documentation.&lt;/p&gt;
+&lt;/blockquote&gt;</summary>
+    
+    
+    
+    <category term="go" scheme="https://xusenqi.github.io/categories/go/"/>
+    
+    
+    <category term="debug" scheme="https://xusenqi.github.io/tags/debug/"/>
+    
+    <category term="delve" scheme="https://xusenqi.github.io/tags/delve/"/>
+    
+    <category term="dlv" scheme="https://xusenqi.github.io/tags/dlv/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>Visual Studio Code的使用总结</title>
+    <link href="https://xusenqi.github.io/2019/08/23/Visual-Studio-Code%E7%9A%84%E4%BD%BF%E7%94%A8%E6%80%BB%E7%BB%93/"/>
+    <id>https://xusenqi.github.io/2019/08/23/Visual-Studio-Code%E7%9A%84%E4%BD%BF%E7%94%A8%E6%80%BB%E7%BB%93/</id>
+    <published>2019-08-23T14:57:05.000Z</published>
+    <updated>2021-08-18T13:13:06.212Z</updated>
+    
+    
+    <summary type="html">&lt;h1 id=&quot;Visual-Studio-Code介绍&quot;&gt;&lt;a href=&quot;#Visual-Studio-Code介绍&quot; class=&quot;headerlink&quot; title=&quot;Visual Studio Code介绍&quot;&gt;&lt;/a&gt;Visual Studio Code介绍&lt;/h1&gt;&lt;p&gt;Visual Studio Code是很轻量但功能强大的代码编辑器，可以在Windows、macOS和 Linux上运行。&lt;/p&gt;</summary>
+    
+    
+    
+    <category term="vscode" scheme="https://xusenqi.github.io/categories/vscode/"/>
+    
+    
+    <category term="快捷键" scheme="https://xusenqi.github.io/tags/%E5%BF%AB%E6%8D%B7%E9%94%AE/"/>
+    
+    <category term="插件" scheme="https://xusenqi.github.io/tags/%E6%8F%92%E4%BB%B6/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>goroutine调度器</title>
+    <link href="https://xusenqi.github.io/2019/07/28/goroutine%E8%B0%83%E5%BA%A6%E5%99%A8/"/>
+    <id>https://xusenqi.github.io/2019/07/28/goroutine%E8%B0%83%E5%BA%A6%E5%99%A8/</id>
+    <published>2019-07-28T15:54:16.000Z</published>
+    <updated>2021-08-18T13:13:06.233Z</updated>
+    
+    
+    <summary type="html">&lt;h1 id=&quot;goroutine调度器简介&quot;&gt;&lt;a href=&quot;#goroutine调度器简介&quot; class=&quot;headerlink&quot; title=&quot;goroutine调度器简介&quot;&gt;&lt;/a&gt;goroutine调度器简介&lt;/h1&gt;&lt;p&gt;G-P-M模型，下面这张图很直观。&lt;br&gt;&lt;img src=&quot;/.io//goroutine-scheduler-model.png&quot; alt=&quot;image&quot;&gt;&lt;/p&gt;</summary>
+    
+    
+    
+    <category term="go" scheme="https://xusenqi.github.io/categories/go/"/>
+    
+    
+    <category term="goroutine" scheme="https://xusenqi.github.io/tags/goroutine/"/>
+    
+    <category term="调度" scheme="https://xusenqi.github.io/tags/%E8%B0%83%E5%BA%A6/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>一次mongo慢查询的优化过程</title>
+    <link href="https://xusenqi.github.io/2019/07/24/%E4%B8%80%E6%AC%A1mongo%E6%85%A2%E6%9F%A5%E8%AF%A2%E7%9A%84%E4%BC%98%E5%8C%96%E8%BF%87%E7%A8%8B/"/>
+    <id>https://xusenqi.github.io/2019/07/24/%E4%B8%80%E6%AC%A1mongo%E6%85%A2%E6%9F%A5%E8%AF%A2%E7%9A%84%E4%BC%98%E5%8C%96%E8%BF%87%E7%A8%8B/</id>
+    <published>2019-07-23T16:39:19.000Z</published>
+    <updated>2021-08-18T13:13:06.244Z</updated>
+    
+    
+    <summary type="html">&lt;p&gt;今天发现查询mongo时容易慢查询，现在将整个排查及优化过程,总结记录如下。&lt;/p&gt;
+&lt;h1 id=&quot;Database-Profiler介绍&quot;&gt;&lt;a href=&quot;#Database-Profiler介绍&quot; class=&quot;headerlink&quot; title=&quot;Database Profiler介绍&quot;&gt;&lt;/a&gt;Database Profiler介绍&lt;/h1&gt;&lt;p&gt;类似于mysql,Profiler可以实现慢查询日志的功能，它把数据收集在system.profile集合里。该集合是一个capped collection（有上限的集合）。Profiler默认是关闭的，可以在一个database或者一个instance上设置开启，设置不同的profiling levels.&lt;br&gt;具体描述见&lt;a href=&quot;https://docs.mongodb.com/manual/tutorial/manage-the-database-profiler/&quot;&gt;Database Profiler&lt;/a&gt;。&lt;/p&gt;</summary>
+    
+    
+    
+    <category term="数据库" scheme="https://xusenqi.github.io/categories/%E6%95%B0%E6%8D%AE%E5%BA%93/"/>
+    
+    
+    <category term="mongo" scheme="https://xusenqi.github.io/tags/mongo/"/>
+    
+    <category term="MongoDB" scheme="https://xusenqi.github.io/tags/MongoDB/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>一次node进程cpu负载100%问题的处理</title>
+    <link href="https://xusenqi.github.io/2019/07/13/%E4%B8%80%E6%AC%A1node%E8%BF%9B%E7%A8%8Bcpu%E8%B4%9F%E8%BD%BD100-%E9%97%AE%E9%A2%98%E7%9A%84%E5%A4%84%E7%90%86/"/>
+    <id>https://xusenqi.github.io/2019/07/13/%E4%B8%80%E6%AC%A1node%E8%BF%9B%E7%A8%8Bcpu%E8%B4%9F%E8%BD%BD100-%E9%97%AE%E9%A2%98%E7%9A%84%E5%A4%84%E7%90%86/</id>
+    <published>2019-07-13T15:17:28.000Z</published>
+    <updated>2021-08-18T13:13:05.997Z</updated>
+    
+    
+    <summary type="html">&lt;h1 id=&quot;1-node进程负载高的问题&quot;&gt;&lt;a href=&quot;#1-node进程负载高的问题&quot; class=&quot;headerlink&quot; title=&quot;1 node进程负载高的问题&quot;&gt;&lt;/a&gt;1 node进程负载高的问题&lt;/h1&gt;&lt;ul&gt;
+&lt;li&gt;线上有个用node开发的uhost-manager的服务。每个set内会有多台物理机，每台物理机（宿主机）上存在着1台或者多台虚拟机。uhost-manager里有个定时逻辑：每隔30s,从MongoDB里拉取所有的虚拟机的记录，数量为2000多台；将位于同一台宿主机上的虚拟机资源，包括cpu、内存、磁盘容量等，做个sum，将sum再填入对应宿主机（共200多台）的记录里，表示已经被占用的资源。&lt;/li&gt;
+&lt;li&gt;由于计算量大，和代码写得差，导致在该定时的计算任务执行时，会把占用的cpu单核打满；如果uhost-manager此时又有其他接口被调用时，就会出现响应慢的问题，导致调用方的服务也响应慢，甚至会因超时导致服务接口不可用。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;img src=&quot;/.io//uhost-manager-cpu-100.png&quot; alt=&quot;image&quot;&gt;&lt;br&gt;这个单核打满持续的时间短，在1s左右。&lt;/p&gt;</summary>
+    
+    
+    
+    <category term="linux性能优化" scheme="https://xusenqi.github.io/categories/linux%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96/"/>
+    
+    
+    <category term="cpu" scheme="https://xusenqi.github.io/tags/cpu/"/>
+    
+    <category term="node" scheme="https://xusenqi.github.io/tags/node/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>关于客户端重连ZooKeeper的的那些事儿</title>
+    <link href="https://xusenqi.github.io/2019/06/06/%E5%85%B3%E4%BA%8E%E5%AE%A2%E6%88%B7%E7%AB%AF%E9%87%8D%E8%BF%9EZooKeeper%E7%9A%84%E7%9A%84%E9%82%A3%E4%BA%9B%E4%BA%8B%E5%84%BF/"/>
+    <id>https://xusenqi.github.io/2019/06/06/%E5%85%B3%E4%BA%8E%E5%AE%A2%E6%88%B7%E7%AB%AF%E9%87%8D%E8%BF%9EZooKeeper%E7%9A%84%E7%9A%84%E9%82%A3%E4%BA%9B%E4%BA%8B%E5%84%BF/</id>
+    <published>2019-06-06T06:24:24.000Z</published>
+    <updated>2021-08-18T13:13:06.056Z</updated>
+    
+    
+    <summary type="html">&lt;h1 id=&quot;ZooKeeper-Sessions&quot;&gt;&lt;a href=&quot;#ZooKeeper-Sessions&quot; class=&quot;headerlink&quot; title=&quot;ZooKeeper Sessions&quot;&gt;&lt;/a&gt;ZooKeeper Sessions&lt;/h1&gt;&lt;p&gt;![image](关于客户端重连ZooKeeper的的那些事儿/ZooKeeper Sessions.jpg)&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;ZooKeeper客户端初始化后转换到CONNECTING状态，与ZooKeeper服务器（或者ZooKeeper集群中的一台服务器）建立连接后，进入CONNECTED状态&lt;/li&gt;
+&lt;li&gt;当客户端与ZooKeeper服务器断开连接或者无法收到服务器响应时，就会转回到CONNECTING状态，此时会一直收到CONNECTION_LOSS。&lt;/li&gt;
+&lt;li&gt;这时ZooKeeper客户端会自动地从列表中逐个选取新的地址进行重连，如果成功，状态又会转回CONNECTED状态&lt;/li&gt;
+&lt;li&gt;如果一直无法重连，超过会话超时时间(sessionTimeout)后，服务器认为这个session已经结束了，此时客户端无法感知&lt;/li&gt;
+&lt;li&gt;最后当客户端终于自动重连到ZooKeeper服务器时，会收到Session Expired；这种情况下，需要应用层关闭当前会话，然后重连。&lt;/li&gt;
+&lt;li&gt;在CONNECTING状态和CONNECTED状态，客户端都可以显示地关闭，进入CLOSED状态&lt;/li&gt;
+&lt;/ul&gt;</summary>
+    
+    
+    
+    
+  </entry>
+  
+  <entry>
+    <title>读书笔记-TCP/IP详解 卷1：协议</title>
+    <link href="https://xusenqi.github.io/2019/04/24/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0-TCP-IP%E8%AF%A6%E8%A7%A3-%E5%8D%B71%EF%BC%9A%E5%8D%8F%E8%AE%AE/"/>
+    <id>https://xusenqi.github.io/2019/04/24/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0-TCP-IP%E8%AF%A6%E8%A7%A3-%E5%8D%B71%EF%BC%9A%E5%8D%8F%E8%AE%AE/</id>
+    <published>2019-04-24T15:38:54.000Z</published>
+    <updated>2021-08-18T13:13:06.182Z</updated>
+    
+    
+    <summary type="html">&lt;p&gt;不同层的PDU（Protocol Data Unit）&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;传输层：Segment(帧)&lt;/li&gt;
+&lt;li&gt;网络层： Packet&lt;/li&gt;
+&lt;li&gt;链路层：Frame&lt;/li&gt;
+&lt;li&gt;物理层： Bit&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;img src=&quot;/.io//%E4%BC%A0%E5%85%A5%E7%9A%84%E5%B8%A7%E5%9C%A8%E4%B8%BB%E6%9C%BA%E4%B8%8A%E7%9A%84%E5%88%86%E8%A7%A3.png&quot; alt=&quot;image&quot;&gt;&lt;/p&gt;</summary>
+    
+    
+    
+    <category term="读书笔记" scheme="https://xusenqi.github.io/categories/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0/"/>
+    
+    
+    <category term="网络" scheme="https://xusenqi.github.io/tags/%E7%BD%91%E7%BB%9C/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>分布式系统架构的简介</title>
+    <link href="https://xusenqi.github.io/2019/03/18/%E5%88%86%E5%B8%83%E5%BC%8F%E7%B3%BB%E7%BB%9F%E6%9E%B6%E6%9E%84%E7%9A%84%E7%AE%80%E4%BB%8B/"/>
+    <id>https://xusenqi.github.io/2019/03/18/%E5%88%86%E5%B8%83%E5%BC%8F%E7%B3%BB%E7%BB%9F%E6%9E%B6%E6%9E%84%E7%9A%84%E7%AE%80%E4%BB%8B/</id>
+    <published>2019-03-18T12:47:18.000Z</published>
+    <updated>2021-08-18T13:13:06.213Z</updated>
+    
+    
+      
+      
+        
+        
+    <summary type="html">&lt;p&gt;摘自 分布式系统架构的冰与火 左耳听风&lt;/p&gt;
+&lt;h2 id=&quot;分布式系统架构的优缺点&quot;&gt;&lt;a href=&quot;#分布式系统架构的优缺点&quot; class=&quot;headerlink&quot;</summary>
+        
+      
+    
+    
+    
+    <category term="分布式系统" scheme="https://xusenqi.github.io/categories/%E5%88%86%E5%B8%83%E5%BC%8F%E7%B3%BB%E7%BB%9F/"/>
+    
+    
+    <category term="分布式系统" scheme="https://xusenqi.github.io/tags/%E5%88%86%E5%B8%83%E5%BC%8F%E7%B3%BB%E7%BB%9F/"/>
+    
+    <category term="架构" scheme="https://xusenqi.github.io/tags/%E6%9E%B6%E6%9E%84/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>nodejs获取客户端IP Address(转)</title>
+    <link href="https://xusenqi.github.io/2018/12/14/nodejs%E8%8E%B7%E5%8F%96%E5%AE%A2%E6%88%B7%E7%AB%AFIP-Address/"/>
+    <id>https://xusenqi.github.io/2018/12/14/nodejs%E8%8E%B7%E5%8F%96%E5%AE%A2%E6%88%B7%E7%AB%AFIP-Address/</id>
+    <published>2018-12-14T12:44:51.000Z</published>
+    <updated>2021-08-18T13:13:06.243Z</updated>
+    
+    
+      
+      
+        
+        
+    <summary type="html">&lt;p&gt;在网上看见很多问node.js如何获取客户端IP,所以记录下来，以供大家参考。&lt;/p&gt;
+&lt;figure class=&quot;highlight plaintext&quot;&gt;&lt;table&gt;&lt;tr&gt;&lt;td class=&quot;gutter&quot;&gt;&lt;pre&gt;&lt;span</summary>
+        
+      
+    
+    
+    
+    
+  </entry>
+  
+  <entry>
+    <title>一次go语言内存泄漏的排查过程</title>
+    <link href="https://xusenqi.github.io/2018/12/11/%E4%B8%80%E6%AC%A1go%E5%86%85%E5%AD%98%E6%B3%84%E6%BC%8F%E7%9A%84%E6%8E%92%E6%9F%A5%E8%BF%87%E7%A8%8B/"/>
+    <id>https://xusenqi.github.io/2018/12/11/%E4%B8%80%E6%AC%A1go%E5%86%85%E5%AD%98%E6%B3%84%E6%BC%8F%E7%9A%84%E6%8E%92%E6%9F%A5%E8%BF%87%E7%A8%8B/</id>
+    <published>2018-12-10T16:29:12.000Z</published>
+    <updated>2021-08-18T13:13:06.180Z</updated>
+    
+    
+      
+      
+        
+        
+    <summary type="html">&lt;h2 id=&quot;背景&quot;&gt;&lt;a href=&quot;#背景&quot; class=&quot;headerlink&quot;</summary>
+        
+      
+    
+    
+    
+    <category term="Go" scheme="https://xusenqi.github.io/categories/Go/"/>
+    
+    
+    <category term="Go" scheme="https://xusenqi.github.io/tags/Go/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>网卡多队列总结（转）</title>
+    <link href="https://xusenqi.github.io/2018/11/23/%E7%BD%91%E5%8D%A1%E5%A4%9A%E9%98%9F%E5%88%97%E6%80%BB%E7%BB%93/"/>
+    <id>https://xusenqi.github.io/2018/11/23/%E7%BD%91%E5%8D%A1%E5%A4%9A%E9%98%9F%E5%88%97%E6%80%BB%E7%BB%93/</id>
+    <published>2018-11-23T07:11:59.000Z</published>
+    <updated>2021-08-18T13:13:05.898Z</updated>
+    
+    
+      
+      
+        
+        
+    <summary type="html">&lt;h2 id=&quot;中断是什么&quot;&gt;&lt;a href=&quot;#中断是什么&quot; class=&quot;headerlink&quot;</summary>
+        
+      
+    
+    
+    
+    <category term="网络" scheme="https://xusenqi.github.io/categories/%E7%BD%91%E7%BB%9C/"/>
+    
+    
+    <category term="网卡" scheme="https://xusenqi.github.io/tags/%E7%BD%91%E5%8D%A1/"/>
+    
+    <category term="多队列" scheme="https://xusenqi.github.io/tags/%E5%A4%9A%E9%98%9F%E5%88%97/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>du、df和ls的区别</title>
+    <link href="https://xusenqi.github.io/2018/11/10/du%E3%80%81df%E5%92%8Cls%E7%9A%84%E5%8C%BA%E5%88%AB/"/>
+    <id>https://xusenqi.github.io/2018/11/10/du%E3%80%81df%E5%92%8Cls%E7%9A%84%E5%8C%BA%E5%88%AB/</id>
+    <published>2018-11-10T08:24:21.000Z</published>
+    <updated>2021-08-18T13:13:06.179Z</updated>
+    
+    
+      
+      
+        
+        
+    <summary type="html">&lt;p&gt;待整理。。。。&lt;/p&gt;
+</summary>
+        
+      
+    
+    
+    
+    <category term="linux" scheme="https://xusenqi.github.io/categories/linux/"/>
+    
+    
+    <category term="linux命令" scheme="https://xusenqi.github.io/tags/linux%E5%91%BD%E4%BB%A4/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>文件删除空间未释放的例子</title>
+    <link href="https://xusenqi.github.io/2018/11/10/%E6%96%87%E4%BB%B6%E5%B7%B2%E5%88%A0%E9%99%A4%E7%A9%BA%E9%97%B4%E6%9C%AA%E9%87%8A%E6%94%BE%E7%9A%84%E4%BE%8B%E5%AD%90/"/>
+    <id>https://xusenqi.github.io/2018/11/10/%E6%96%87%E4%BB%B6%E5%B7%B2%E5%88%A0%E9%99%A4%E7%A9%BA%E9%97%B4%E6%9C%AA%E9%87%8A%E6%94%BE%E7%9A%84%E4%BE%8B%E5%AD%90/</id>
+    <published>2018-11-10T06:31:28.000Z</published>
+    <updated>2021-08-18T13:13:06.215Z</updated>
+    
+    
+      
+      
+        
+        
+    <summary type="html">&lt;h2 id=&quot;背景&quot;&gt;&lt;a href=&quot;#背景&quot; class=&quot;headerlink&quot; title=&quot;背景&quot;&gt;&lt;/a&gt;背景&lt;/h2&gt;&lt;p&gt;在删除文件后，有时会遇到磁盘空间并未被释放的场景。这里自己尝试复现，并去做相关的说明。&lt;/p&gt;
+&lt;h2 id=&quot;删除后空间未释放&quot;&gt;&lt;a</summary>
+        
+      
+    
+    
+    
+    <category term="linux" scheme="https://xusenqi.github.io/categories/linux/"/>
+    
+    
+    <category term="文件系统" scheme="https://xusenqi.github.io/tags/%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F/"/>
+    
+  </entry>
+  
+</feed>

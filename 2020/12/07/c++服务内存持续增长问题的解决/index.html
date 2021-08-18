@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.4.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    hostname: new URL('https://xusenqi.github.io').hostname,
+    root: '/',
+    scheme: 'Muse',
+    version: '7.7.0',
+    exturl: false,
+    sidebar: {"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},
+    copycode: {"enable":false,"show_result":false,"style":null},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":false},
+    bookmark: {"enable":false,"color":"#222","save":"auto"},
+    fancybox: false,
+    mediumzoom: false,
+    lazyload: false,
+    pangu: false,
+    comments: {"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: '',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}
+  };
+</script>
+
+  <meta name="description" content="问题线上有个用C++写的b服务，随着运行时间的增减，占用内存也会不断增加，最终kernel会触发OOM，导致服务不可用。所使用的物理机内存为160GB，以上图中一个broker进程就占了大约6.6GB的内存，运行了10天后内存还在持续增长，存在内存泄漏的问题。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="c++服务内存持续增长问题的解决">
+<meta property="og:url" content="https://xusenqi.github.io/2020/12/07/c++%E6%9C%8D%E5%8A%A1%E5%86%85%E5%AD%98%E6%8C%81%E7%BB%AD%E5%A2%9E%E9%95%BF%E9%97%AE%E9%A2%98%E7%9A%84%E8%A7%A3%E5%86%B3/index.html">
+<meta property="og:site_name" content="森几许的博客">
+<meta property="og:description" content="问题线上有个用C++写的b服务，随着运行时间的增减，占用内存也会不断增加，最终kernel会触发OOM，导致服务不可用。所使用的物理机内存为160GB，以上图中一个broker进程就占了大约6.6GB的内存，运行了10天后内存还在持续增长，存在内存泄漏的问题。">
+<meta property="og:locale">
+<meta property="og:image" content="https://xusenqi.github.io/.io//1_%E5%86%85%E5%AD%98%E5%A2%9E%E9%95%BF.png">
+<meta property="og:image" content="https://xusenqi.github.io/.io//2_add_delete_it.png">
+<meta property="og:image" content="https://xusenqi.github.io/.io//3_add_delete_connector.png">
+<meta property="og:image" content="https://xusenqi.github.io/.io//4_pmap.png">
+<meta property="og:image" content="https://xusenqi.github.io/.io//5_massif.png">
+<meta property="og:image" content="https://xusenqi.github.io/.io//broker_1003_3GB.jpeg">
+<meta property="og:image" content="https://xusenqi.github.io/.io//6_buffer_retrieve.png">
+<meta property="og:image" content="https://xusenqi.github.io/.io//7_restart_osd_goproxy.png">
+<meta property="og:image" content="https://xusenqi.github.io/.io//8_gcc_check_mem_leak.png">
+<meta property="article:published_time" content="2020-12-07T14:37:10.000Z">
+<meta property="article:modified_time" content="2021-08-18T13:13:06.052Z">
+<meta property="article:author" content="patrick.xu">
+<meta property="article:tag" content="c++">
+<meta property="article:tag" content="内存 - valgrind - gperftools - pprof">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://xusenqi.github.io/.io//1_%E5%86%85%E5%AD%98%E5%A2%9E%E9%95%BF.png">
+
+<link rel="canonical" href="https://xusenqi.github.io/2020/12/07/c++%E6%9C%8D%E5%8A%A1%E5%86%85%E5%AD%98%E6%8C%81%E7%BB%AD%E5%A2%9E%E9%95%BF%E9%97%AE%E9%A2%98%E7%9A%84%E8%A7%A3%E5%86%B3/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true
+  };
+</script>
+
+  <title>c++服务内存持续增长问题的解决 | 森几许的博客</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+<link rel="alternate" href="/atom.xml" title="森几许的博客" type="application/atom+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">森几许的博客</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+        <p class="site-subtitle">空杯心态</p>
+  </div>
+
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-fw fa-user"></i>About</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>Tags</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-fw fa-th"></i>Categories</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>Archives</a>
+
+  </li>
+  </ul>
+
+</nav>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content">
+            
+
+  <div class="posts-expand">
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block " lang="zh-Hans">
+    <link itemprop="mainEntityOfPage" href="https://xusenqi.github.io/2020/12/07/c++%E6%9C%8D%E5%8A%A1%E5%86%85%E5%AD%98%E6%8C%81%E7%BB%AD%E5%A2%9E%E9%95%BF%E9%97%AE%E9%A2%98%E7%9A%84%E8%A7%A3%E5%86%B3/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="patrick.xu">
+      <meta itemprop="description" content="完成比完美更重要">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="森几许的博客">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          c++服务内存持续增长问题的解决
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2020-12-07 22:37:10" itemprop="dateCreated datePublished" datetime="2020-12-07T22:37:10+08:00">2020-12-07</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2021-08-18 21:13:06" itemprop="dateModified" datetime="2021-08-18T21:13:06+08:00">2021-08-18</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/c/" itemprop="url" rel="index">
+                    <span itemprop="name">c++</span>
+                  </a>
+                </span>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="Symbols count in article">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-file-word-o"></i>
+              </span>
+                <span class="post-meta-item-text">Symbols count in article: </span>
+              <span>11k</span>
+            </span>
+            <span class="post-meta-item" title="Reading time">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-clock-o"></i>
+              </span>
+                <span class="post-meta-item-text">Reading time &asymp;</span>
+              <span>19 mins.</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="问题"><a href="#问题" class="headerlink" title="问题"></a>问题</h1><p>线上有个用C++写的b服务，随着运行时间的增减，占用内存也会不断增加，最终kernel会触发OOM，导致服务不可用。<br><img src="/.io//1_%E5%86%85%E5%AD%98%E5%A2%9E%E9%95%BF.png" alt="image.png"><br>所使用的物理机内存为160GB，以上图中一个broker进程就占了大约6.6GB的内存，运行了10天后内存还在持续增长，存在内存泄漏的问题。</p>
+<span id="more"></span>
+
+<h1 id="排查过程"><a href="#排查过程" class="headerlink" title="排查过程"></a>排查过程</h1><h2 id="代码review"><a href="#代码review" class="headerlink" title="代码review"></a>代码review</h2><p>主要以下几个方面：</p>
+<ul>
+<li>malloc/free、new/delete、new []/delete []是否都配套使用了</li>
+<li>构造函数里申请的内存，在析构函数里都有相应的释放</li>
+<li>指针的错误使用，没有释放内存。</li>
+</ul>
+<p>但没有发现有问题的地方。</p>
+<h2 id="内存泄漏检查工具"><a href="#内存泄漏检查工具" class="headerlink" title="内存泄漏检查工具"></a>内存泄漏检查工具</h2><h2 id="valgrind"><a href="#valgrind" class="headerlink" title="valgrind"></a>valgrind</h2><h3 id="valgrind介绍"><a href="#valgrind介绍" class="headerlink" title="valgrind介绍"></a>valgrind介绍</h3><p><code>Valgrind</code>是一个开源工具包，提供了许多调试和分析工具。</p>
+<ul>
+<li><strong>Memcheck</strong>     detects memory-management problems</li>
+<li>Cachegrind    a cache profiler</li>
+<li>Callgrind        Cachegrind  +  callgraphs（调用关系图）</li>
+<li><strong>Massif</strong>           a heap profiler</li>
+<li>Helgrind         a thread debugger which finds data races in multithreaded programs</li>
+<li>……</li>
+</ul>
+<h3 id="代码编译"><a href="#代码编译" class="headerlink" title="代码编译"></a>代码编译</h3><p>set(CMAKE_CXX_FLAGS “${CMAKE_CXX_FLAGS} -std=c++11 -g <strong>-O0</strong> -mavx2 -Wall -DDEBUG_RING”)</p>
+<ul>
+<li>-g  include debugging information so that Memcheck’s error messages include exact line numbers</li>
+<li>-O0  禁止编译器的优化，确保valgrind的输出信息的准确性</li>
+</ul>
+<h3 id="Memcheck的使用"><a href="#Memcheck的使用" class="headerlink" title="Memcheck的使用"></a>Memcheck的使用</h3><p><code>valgrind --leak-check=yes --track-origins=yes /root/ufile/XsqUFileBroker-set7/UFileBroker -c /root/ufile/XsqUFileBroker-set7/config-set7.ini</code></p>
+<p>线上不建议开启，能使性能下降10~30倍，线上实测下来最多有下降200倍。</p>
+<p>在正常压测下，并不会出现内存泄漏的错误信息。但当把broker依赖的底层服务osd重启后，立刻出现以下的错误信息。</p>
+<p>错误信息1：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">==31907== 773,314 (9,216 direct, 764,098 indirect) bytes in 288 blocks are definitely lost in loss record 1,997 of 2,023</span><br><span class="line">==31907==    at 0x4C2A5B3: operator new(unsigned long) (vg_replace_malloc.c:342)</span><br><span class="line">==31907==    by 0x63FD3B: uevent::ConnectionLibevent::Init() (connection_libevent.cc:67)</span><br><span class="line">==31907==    by 0x63AECA: uevent::ConnectorLibevent::Connect() (connector_libevent.cc:30)</span><br><span class="line">==31907==    by 0x5FBAAE: BrokerServerHandle::GetConnection(std::shared_ptr&lt;uevent::ConnectionUevent&gt; const&amp;, std::string const&amp;, unsigned int) (broker_server.cc:587)</span><br><span class="line">==31907==    by 0x600644: BrokerManagerHandle::GetConnection(std::shared_ptr&lt;uevent::ConnectionUevent&gt; const&amp;, std::string const&amp;, unsigned int) (broker_manager.cc:87)</span><br><span class="line">==31907==    by 0x5E0194: BrokerGetHandle::GetECOnePieceData(int) (broker_get.cc:312)</span><br><span class="line">==31907==    by 0x5E1EBF: BrokerGetHandle::GetECObjectRequest() (broker_get.cc:371)</span><br><span class="line">==31907==    by 0x5E3913: BrokerGetHandle::EntryInit(std::shared_ptr&lt;uevent::ConnectionUevent&gt; const&amp;, std::shared_ptr&lt;MessageHeader&gt; const&amp;) (broker_get.cc:110)</span><br><span class="line">==31907==    by 0x5F7AC1: BrokerServerHandle::MessageDispatchHandle(std::shared_ptr&lt;uevent::ConnectionUevent&gt; const&amp;, std::shared_ptr&lt;MessageHeader&gt; const&amp;) (broker_server.cc:173)</span><br><span class="line">==31907==    by 0x5FAAA3: BrokerServerHandle::MessageReadHandle(std::shared_ptr&lt;uevent::ConnectionUevent&gt; const&amp;) (broker_server.cc:108)</span><br><span class="line">==31907==    by 0x5CE779: std::_Function_handler&lt;void (std::shared_ptr&lt;uevent::ConnectionUevent&gt; const&amp;), void (*)(std::shared_ptr&lt;uevent::ConnectionUevent&gt; const&amp;)&gt;::_M_invoke(std::_Any_data const&amp;, std::shared_ptr&lt;uevent::ConnectionUevent&gt; const&amp;) (functional:2071)</span><br><span class="line">==31907==    by 0x640D94: operator() (functional:2471)</span><br><span class="line">==31907==    by 0x640D94: uevent::ConnectionLibevent::HandleReadEvent(int, std::shared_ptr&lt;uevent::ConnectionUevent&gt; const&amp;) (connection_libevent.cc:114)</span><br></pre></td></tr></table></figure>
+
+<p>问题：某个osd进程关闭后，broker对保存长连接而占用的内存，没有释放。<br>修复方法：调用delete释放。<br><img src="/.io//2_add_delete_it.png" alt="image.png"></p>
+<p>注意：<br>这里的connectors类型是std::unordered_map&lt;ConnectorKey, uevent::ConnectorUevent*, ConnectorKeyHash&gt; connectors_<br>obj_handle→connectors_.erase(it)只会删除指针本身，并不会销毁指针指向的内容，所以导致内存泄漏。<br>参考<a target="_blank" rel="noopener" href="https://stackoverflow.com/questions/39605945/remove-element-from-unordered-map-without-calling-destructor-on-it">https://stackoverflow.com/questions/39605945/remove-element-from-unordered-map-without-calling-destructor-on-it</a></p>
+<p>错误信息2：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">==31907== 4,405,094 (507,936 direct, 3,897,158 indirect) bytes in 1,716 blocks are definitely lost in loss record 2,018 of 2,023</span><br><span class="line">==31907== at 0x4C2A5B3: operator new(unsigned long) (vg_replace_malloc.c:342)</span><br><span class="line">==31907== by 0x5FB78C: BrokerServerHandle::GetConnection(std::shared_ptr&lt;uevent::ConnectionUevent&gt; const&amp;, std::string const&amp;, unsigned int) (broker_server.cc:578)</span><br><span class="line">==31907== by 0x600644: BrokerManagerHandle::GetConnection(std::shared_ptr&lt;uevent::ConnectionUevent&gt; const&amp;, std::string const&amp;, unsigned int) (broker_manager.cc:87)</span><br><span class="line">==31907== by 0x5E0194: BrokerGetHandle::GetECOnePieceData(int) (broker_get.cc:312)</span><br><span class="line">==31907== by 0x5E1EBF: BrokerGetHandle::GetECObjectRequest() (broker_get.cc:371)</span><br><span class="line">==31907== by 0x5E3913: BrokerGetHandle::EntryInit(std::shared_ptr&lt;uevent::ConnectionUevent&gt; const&amp;, std::shared_ptr&lt;MessageHeader&gt; const&amp;) (broker_get.cc:110)</span><br><span class="line">==31907== by 0x5F7AC1: BrokerServerHandle::MessageDispatchHandle(std::shared_ptr&lt;uevent::ConnectionUevent&gt; const&amp;, std::shared_ptr&lt;MessageHeader&gt; const&amp;) (broker_server.cc:173)</span><br><span class="line">==31907== by 0x5FAAA3: BrokerServerHandle::MessageReadHandle(std::shared_ptr&lt;uevent::ConnectionUevent&gt; const&amp;) (broker_server.cc:108)</span><br><span class="line">==31907== by 0x5CE779: std::_Function_handler&lt;void (std::shared_ptr&lt;uevent::ConnectionUevent&gt; const&amp;), void (*)(std::shared_ptr&lt;uevent::ConnectionUevent&gt; const&amp;)&gt;::_M_invoke(std::_Any_data const&amp;, std::shared_ptr&lt;uevent::ConnectionUevent&gt; const&amp;) (functional:2071)</span><br><span class="line">==31907== by 0x640D94: operator() (functional:2471)</span><br><span class="line">==31907== by 0x640D94: uevent::ConnectionLibevent::HandleReadEvent(int, std::shared_ptr&lt;uevent::ConnectionUevent&gt; const&amp;) (connection_libevent.cc:114)</span><br><span class="line">==31907== by 0x4E47A13: event_base_loop (in /usr/lib64/libevent-2.0.so.5.1.9)</span><br><span class="line">==31907== by 0x630C14: uevent::PosixWorker::Running(std::string const&amp;) (posix_stack.cc:192)</span><br></pre></td></tr></table></figure>
+
+<p>问题：某个osd进程关闭后，但数据库里还没有标记成BAD。此时broker还会尝试连接该osd，因连接失败不会发送请求，这部分逻辑正确。但是，失败的连接占据的内存没有释放。<br>修复方法：调用delete释放。</p>
+<p><img src="/.io//3_add_delete_connector.png" alt="image.png"></p>
+<p>修复以上2个错误后，用valgrind已经没有其他错误信息了。但是线上broker的内存，在osd没有重启的情况下，依然还会不断增长。这说明还有其他内存泄漏的地方。</p>
+<h2 id="Dump内存并查找问题"><a href="#Dump内存并查找问题" class="headerlink" title="Dump内存并查找问题"></a>Dump内存并查找问题</h2><p>观察线上broker服务内存，在上次版本更新一周后，占用内存分布大致在1~5GB之间。<br>查看broker的虚拟内存分布，有80%的内存都是同一块内存空间，且是不同broker的共同现象。<br><img src="/.io//4_pmap.png" alt="image.png"></p>
+<p>自己通过压测环境，也能查到类似现象。<br>压测环境：6块盘；线上环境：72块盘。</p>
+<h3 id="dump内存"><a href="#dump内存" class="headerlink" title="dump内存"></a>dump内存</h3><p>所以这块内存是什么呢？可以dump下来查看。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">gdb attach 3096</span><br><span class="line"></span><br><span class="line">(gdb) dump memory /tmp/3096_broker.dump 0x7fdf33400000 0x7fdf33410000</span><br><span class="line"></span><br><span class="line">strings /tmp/3096_broker.dump</span><br><span class="line">ZZZZ7_0:4096_broker-32576-25146--7-64115</span><br><span class="line">ZZZ$</span><br><span class="line">ZZZZ7_0:4096_broker-32576-25146--7-64280</span><br><span class="line">ZZZ$</span><br><span class="line">ZZZZ7_0:4096_broker-32576-25146--7-65085</span><br><span class="line">ZZZZ7_0:4096_broker-32576-25146--7-64116</span><br><span class="line">7_0:4096_broker-32576-25146--7-64355</span><br><span class="line">7_0:4096_broker-32576-25146--7-64605</span><br><span class="line">7_0:4096_broker-32576-25146--7-64117</span><br><span class="line">ZZZZ7_0:4096_broker-32576-25146--7-64227</span><br><span class="line">ZZZZ7_0:4096_broker-32576-25146--7-64235</span><br><span class="line">ZZZZ7_0:4096_broker-32576-25146--7-64118</span><br></pre></td></tr></table></figure>
+<p>因为压测时上传的数据都是ZZZZ…格式的，可以判断跟上传文件的内容有关。</p>
+<h3 id="valgrind-massif的使用"><a href="#valgrind-massif的使用" class="headerlink" title="valgrind massif的使用"></a>valgrind massif的使用</h3><p>再用valgrind massif的工具去剖析heap的占用情况。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">valgrind --tool=massif /root/ufile/XsqUFileBroker-set7/UFileBroker -c /root/ufile/XsqUFileBroker-set7/config-set7.ini</span><br><span class="line">ms_print massif.out.907</span><br></pre></td></tr></table></figure>
+
+<p>发现有lru_cache的部分占用，但为了分析内存占用，lru_cache已经禁止使用了，但为什么还会有呢？<br><img src="/.io//5_massif.png" alt="image.png"></p>
+<h3 id="lru-cache的问题"><a href="#lru-cache的问题" class="headerlink" title="lru_cache的问题"></a>lru_cache的问题</h3><p>再去查看跟lru_cache相关的代码，<br>7_0:4096_broker-32576-25146–7-64605的格式正好是定义的BROKER_CACHE_KEY的格式，</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash">define BROKER_CACHE_KEY \</span></span><br><span class="line"><span class="bash">    to_string(SET_ID) + <span class="string">&quot;_&quot;</span> + to_string(offset_) + <span class="string">&quot;:&quot;</span> + to_string(data_size_) + <span class="string">&quot;_&quot;</span> + objectid_</span></span><br></pre></td></tr></table></figure>
+
+
+<p>并进一步分析lru_cache相关的代码，最后发现又是unordered_map的错误使用。<br>每次get数据的时候，代码里都会判断下在lru_cache里是否已经存在；如果不存在，则插入该数据。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">lru_cache.h</span><br><span class="line"></span><br><span class="line">private:</span><br><span class="line">  std::unordered_map&lt;K, Node&lt;K, T&gt; *&gt; umap;</span><br><span class="line">  </span><br><span class="line">void Put(K key, T data) &#123; </span><br><span class="line">  ......</span><br><span class="line">  Node&lt;K, T&gt; *node = umap[key]; //放入cache前，都会先判断下是否已经存在</span><br><span class="line">  if (node)&#123;</span><br><span class="line">    ......</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>但是std::unordered_map&lt;&gt;::[key]在查不到时，会自动插入该数据。</p>
+<blockquote>
+<p>Returns a reference to the value that is mapped to a key equivalent to <code>key</code>, performing an insertion if such key does not already exist.</p>
+</blockquote>
+<p>到这里就真相大白了，罪魁祸首就是std::unordered_map&lt;&gt;::[key]的使用不当，每次get一个没有在cache里的key时，就会插入一条数据，导致内存不断增大。</p>
+<h2 id="TCP-Connection的buffer问题"><a href="#TCP-Connection的buffer问题" class="headerlink" title="TCP Connection的buffer问题"></a>TCP Connection的buffer问题</h2><p>再压测时，pmap看时，还是有一块几个GB的内存空间，dump出来也看不出来是什么。</p>
+<h3 id="Buffer-问题"><a href="#Buffer-问题" class="headerlink" title="Buffer 问题"></a>Buffer 问题</h3><p>那么到底是哪里占用的呢？<br>想到golang里面的heap profile，搜到C++里也能用类似的工具gperftools。<br>具体使用过程参考<a href="https://xusenqi.github.io/2020/12/06/C++Profile%E7%9A%84%E5%A4%A7%E6%9D%80%E5%99%A8_gperftools%E7%9A%84%E4%BD%BF%E7%94%A8/">c++ profile的大杀器-gperftools的使用</a>。</p>
+<p>发现压测后占用3GB的内存中，95%都是每条TCP连接的buffer。<br><img src="/.io//broker_1003_3GB.jpeg" alt="image.png"></p>
+<p>网络框架里有一个buffe模块r，维护tcp conncetion占用的Buffer。<br>Buffer底层由std::vector<char>实现，是一块连续的内存；可以自适应增长；保存数据并提供相应的访问函数。<br>上层代码，只要对Buffer发送数据或者接收数据，而不用管理具体的存放和容量等。</char></p>
+<p>然后查看Buffer的代码，发现retrive（回收内存的函数）的实现逻辑有问题。<br><img src="/.io//6_buffer_retrieve.png" alt="image.png"></p>
+<p>修改后再次压测，对比结果如下：<br>6磁盘的测试环境，跑压测脚本，证明修改的逻辑有效。</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>改进前</th>
+<th>改进后</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>retrieve后，&gt;=8Mb的buffer出现的次数</td>
+<td>7219</td>
+<td>449</td>
+</tr>
+</tbody></table>
+<p>72磁盘的大数据测试环境，连续压测2h:</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>改进前</th>
+<th>改进后</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>占用内存RSS</td>
+<td>4.5GB</td>
+<td>3.0GB</td>
+</tr>
+</tbody></table>
+<h3 id="Broker服务的内存模型"><a href="#Broker服务的内存模型" class="headerlink" title="Broker服务的内存模型"></a>Broker服务的内存模型</h3><p>进一步验证：既然是tcp conncetion占用的Buffer，那么把连接断开后，是否会释放buffer呢？</p>
+<p>查看跟brorker服务的连接分为两类：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line">Broker服务的内存模型</span><br><span class="line">进一步验证：既然是tcp conncetion占用的Buffer，那么把连接断开后，是否会释放buffer呢？</span><br><span class="line"></span><br><span class="line">查看跟brorker服务的连接分为两类：</span><br><span class="line"></span><br><span class="line">// 总共的连接数</span><br><span class="line">[root@bj-ufile-storage-set-osd ~]# netstat -antp | grep 8219 | wc -l</span><br><span class="line">986</span><br><span class="line"> </span><br><span class="line">// broker --&gt; osd的连接</span><br><span class="line">[root@bj-ufile-storage-set-osd ~]# netstat -antp | grep 8219 | grep :200 | wc -l</span><br><span class="line">711</span><br><span class="line">[root@bj-ufile-storage-set-osd ~]# netstat -antp | grep 8219 | grep 172.22.18.9:20011 | wc -l</span><br><span class="line">10</span><br><span class="line">[root@bj-ufile-storage-set-osd ~]# netstat -antp | grep 8219 | grep 172.22.18.9:20011</span><br><span class="line">tcp        0      0 172.22.18.9:39996       172.22.18.9:20011       ESTABLISHED 8219/ufile-broker-s</span><br><span class="line">tcp        0      0 172.22.18.9:37220       172.22.18.9:20011       ESTABLISHED 8219/ufile-broker-s</span><br><span class="line">tcp        0      0 172.22.18.9:11742       172.22.18.9:20011       ESTABLISHED 8219/ufile-broker-s</span><br><span class="line">tcp        0      0 172.22.18.9:30720       172.22.18.9:20011       ESTABLISHED 8219/ufile-broker-s</span><br><span class="line">tcp        0      0 172.22.18.9:58094       172.22.18.9:20011       ESTABLISHED 8219/ufile-broker-s</span><br><span class="line">tcp        0      0 172.22.18.9:10776       172.22.18.9:20011       ESTABLISHED 8219/ufile-broker-s</span><br><span class="line">tcp        0      0 172.22.18.9:45502       172.22.18.9:20011       ESTABLISHED 8219/ufile-broker-s</span><br><span class="line">tcp        0      0 172.22.18.9:40626       172.22.18.9:20011       ESTABLISHED 8219/ufile-broker-s</span><br><span class="line">tcp        0      0 172.22.18.9:11806       172.22.18.9:20011       ESTABLISHED 8219/ufile-broker-s</span><br><span class="line">tcp        0      0 172.22.18.9:37098       172.22.18.9:20011       ESTABLISHED 8219/ufile-broker-s</span><br><span class="line"> </span><br><span class="line">// goproxy --&gt; broker的连接</span><br><span class="line">[root@bj-ufile-storage-set-osd ~]# netstat -antp | grep 8219 | egrep &quot;172.22.14.33|172.22.14.35|172.22.14.32|172.22.14.34|172.22.14.36|172.22.14.37|172.22.18.23|172.22.18.18&quot; | wc -l</span><br><span class="line">271</span><br></pre></td></tr></table></figure>
+
+<p>重启大数据set的osd和goproxy后，内存释放。<br><img src="/.io//7_restart_osd_goproxy.png" alt="image.png"></p>
+<p>所以衡量broker服务的占用内存可以用公式：</p>
+<p>broker_rss = 3MB * (osd连接数+goproxy连接数)  ≈ 4MB * osd连接数</p>
+<p>再经过反复压测，内存不再增长，问题得到解决。</p>
+<h1 id="一般排查步骤的总结"><a href="#一般排查步骤的总结" class="headerlink" title="一般排查步骤的总结"></a>一般排查步骤的总结</h1><h2 id="命令"><a href="#命令" class="headerlink" title="命令"></a>命令</h2><h3 id="lsof-列举出正在使用的文件"><a href="#lsof-列举出正在使用的文件" class="headerlink" title="lsof 列举出正在使用的文件"></a>lsof 列举出正在使用的文件</h3><p>lsof，这个工具用于排查是否存在很在很多超出预料的文件的情况，比如打开某文件未关闭，建立很多的socket连接等等。当然，发现问题只能靠眼力劲了。<br>lsof -p <pid> #查看进程打开的文件情况。</pid></p>
+<h3 id="pmap-查看进程内存概要"><a href="#pmap-查看进程内存概要" class="headerlink" title="pmap 查看进程内存概要"></a>pmap 查看进程内存概要</h3><p>pmap，用于查看进程的内存映像信息， 发现内存中大块的占用所在，以及分析内存可能存在的异常。<br>pmap {pid}<br>pmap -x {pid}<br>pmap -X {pid}</p>
+<p>或者<br>cat /proc/{pid}/maps, 以及cat /proc/{pid}/smaps，都可以查看内存段的具体起始位置</p>
+<h3 id="perf"><a href="#perf" class="headerlink" title="perf"></a>perf</h3><p>可以先捕获数据，然后进行性能分析，然后得到可疑的点。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">perf record -g -e cpu-clock -p 5545        # 记录进程 5545 的相关性能信息</span><br><span class="line">perf report -i perf.data                # 读取刚刚记录的数据，可以显示出种操作的占用情况，如下</span><br><span class="line">Samples: 908  of event &#x27;cpu-clock&#x27;, Event count (approx.): 227000000</span><br><span class="line">  Children      Self  Command  Shared Object       Symbol</span><br><span class="line">+   32.27%     0.00%  java     libpthread-2.17.so  [.] start_thread</span><br><span class="line">+   32.27%     0.00%  java     libjvm.so           [.] java_start</span><br><span class="line">+   26.54%     0.00%  java     libjvm.so           [.] ConcurrentG1RefineThread::run</span><br><span class="line">+   26.54%     0.11%  java     libjvm.so           [.] ConcurrentG1RefineThread::run_young_rs_sampling</span><br><span class="line">+   25.77%     5.62%  java     libjvm.so           [.] YoungList::rs_length_sampling_next</span><br><span class="line">+   22.58%     0.55%  java     [kernel.kallsyms]   [k] tracesys</span><br><span class="line">+   11.01%     0.00%  java     perf-5545.map       [.] 0x00007f553ec1e981</span><br><span class="line">+   10.79%     0.44%  java     libjvm.so           [.] JVM_Sleep</span><br><span class="line">+    9.36%     0.55%  java     libjvm.so           [.] G1CollectorPolicy::update_incremental_cset_info</span><br><span class="line">+    8.70%     0.55%  java     libjvm.so           [.] os::sleep</span><br><span class="line">+    8.26%     0.00%  java     [unknown]           [k] 0xee83b0ac00709650</span><br><span class="line">+    8.15%     0.99%  java     libpthread-2.17.so  [.] pthread_cond_timedwait@@GLIBC_2.3.2</span><br><span class="line">+    7.93%     0.00%  java     perf-5545.map       [.] 0x00007f553f7f7d30</span><br></pre></td></tr></table></figure>
+
+
+<h3 id="gdb-调试工具dump出可疑内存"><a href="#gdb-调试工具dump出可疑内存" class="headerlink" title="gdb 调试工具dump出可疑内存"></a>gdb 调试工具dump出可疑内存</h3><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">gdb attach &lt;pid&gt;                    # 先连接到进程中</span><br><span class="line">dump memory /path/dump.bin 0x0011  0x0021    # dump 出内存段的信息,具体要 dump 的内存段地址，可以借助之前pmap 或 cat /proc/&lt;pid&gt;/smaps 或 cat /proc/&lt;pid&gt;/maps 中指示的地址段得出</span><br><span class="line"></span><br><span class="line">更好的方式</span><br><span class="line">gdb --batch --pid &#123;PID&#125; -ex &quot;dump memory native_memory.dump 0x7f7588000000 0x7f7588001A40&quot; </span><br><span class="line"></span><br><span class="line">strings /path/dump.bin | less # 查看内存内容, 相信你能从中发现一些不一样的东西</span><br><span class="line">strings  -n 10 /path/dump.bin | less # 只查看&gt;=10B字符串的行</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+
+<p>以上这些命令，在不需要改变线上服务的二进制或服务启动方式下，就可以使用，比较方便。如果以上手段都没有效果，再用更复杂的工具。</p>
+<h2 id="工具"><a href="#工具" class="headerlink" title="工具"></a>工具</h2><h3 id="valgrind-1"><a href="#valgrind-1" class="headerlink" title="valgrind"></a>valgrind</h3><p>以上已经介绍过，这里就不再说明了。<br>需要注意的是10~30倍的性能损耗，在线上一般无法接受使用。</p>
+<h3 id="gcc"><a href="#gcc" class="headerlink" title="gcc"></a>gcc</h3><p>gcc 命令行参数 -fsanitize=address -fno-omit-frame-pointer<br>新版本的gcc（gcc49）提供了很好的内存访问检查机制，实践中发现对性能的影响居然比Valgrind小很多。在实践中 Electric Fence 和 Valgrind 严重影响了程序的性能，难以触发内存访问问题，而gcc的-fsanitize=address编译参数解决了大问题，唯一的缺点是gcc高版本才支持，而实践中，生成环境的代码都是老版本编译器编译的。<br><img src="/.io//8_gcc_check_mem_leak.png" alt="image.png"></p>
+<p>这里有gcc版本问题的讨论。<br><a target="_blank" rel="noopener" href="https://github.com/Raymo111/i3lock-color/issues/79">https://github.com/Raymo111/i3lock-color/issues/79</a> </p>
+<h3 id="bcc"><a href="#bcc" class="headerlink" title="bcc"></a>bcc</h3><p>可以输出内存火焰图.<br>具体参考<br><a target="_blank" rel="noopener" href="http://www.brendangregg.com/FlameGraphs/memoryflamegraphs.html">http://www.brendangregg.com/FlameGraphs/memoryflamegraphs.html</a><br><a target="_blank" rel="noopener" href="http://www.brendangregg.com/ebpf.html#bcc%22">http://www.brendangregg.com/ebpf.html#bcc%22</a><br>对os有要求，centos仅限于7.6。</p>
+<h3 id="pprof-gperftools"><a href="#pprof-gperftools" class="headerlink" title="pprof / gperftools"></a>pprof / gperftools</h3><p><a target="_blank" rel="noopener" href="https://github.com/gperftools/gperftools">https://github.com/gperftools/gperftools</a><br>对性能影响小，可以直接压测，但建议有问题时开启，不要一直运行。</p>
+<h1 id="参考链接"><a href="#参考链接" class="headerlink" title="参考链接"></a>参考链接</h1><ol>
+<li><a target="_blank" rel="noopener" href="https://valgrind.org/info/tools.html">Valgrind’s Tool Suite</a></li>
+<li><a target="_blank" rel="noopener" href="https://valgrind.org/docs/manual/quick-start.html">The Valgrind Quick Start Guide</a></li>
+<li><a target="_blank" rel="noopener" href="https://simonis.github.io/Memory/">The Memory Layout of a 64-bit Linux Process</a></li>
+<li><a target="_blank" rel="noopener" href="https://www.cnblogs.com/yougewe/p/11334342.html#_label4">内存泄漏排查攻略之：Show me your Memory</a></li>
+<li><a target="_blank" rel="noopener" href="https://www.0xffffff.org/2017/01/22/39-multi-thread-memory-bug/">Linux 环境下多线程 C/C++ 程序的内存问题调试</a></li>
+</ol>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/c/" rel="tag"># c++</a>
+              <a href="/tags/%E5%86%85%E5%AD%98-valgrind-gperftools-pprof/" rel="tag"># 内存 - valgrind - gperftools - pprof</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2020/12/06/C++Profile%E7%9A%84%E5%A4%A7%E6%9D%80%E5%99%A8_gperftools%E7%9A%84%E4%BD%BF%E7%94%A8/" rel="prev" title="c++ profile的大杀器-gperftools的使用">
+      <i class="fa fa-chevron-left"></i> c++ profile的大杀器-gperftools的使用
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2021/08/18/hexo/" rel="next" title="Hello World">
+      Hello World <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+  </div>
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let activeClass = CONFIG.comments.activeClass;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E9%97%AE%E9%A2%98"><span class="nav-number">1.</span> <span class="nav-text">问题</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%8E%92%E6%9F%A5%E8%BF%87%E7%A8%8B"><span class="nav-number">2.</span> <span class="nav-text">排查过程</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BB%A3%E7%A0%81review"><span class="nav-number">2.1.</span> <span class="nav-text">代码review</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%86%85%E5%AD%98%E6%B3%84%E6%BC%8F%E6%A3%80%E6%9F%A5%E5%B7%A5%E5%85%B7"><span class="nav-number">2.2.</span> <span class="nav-text">内存泄漏检查工具</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#valgrind"><span class="nav-number">2.3.</span> <span class="nav-text">valgrind</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#valgrind%E4%BB%8B%E7%BB%8D"><span class="nav-number">2.3.1.</span> <span class="nav-text">valgrind介绍</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BB%A3%E7%A0%81%E7%BC%96%E8%AF%91"><span class="nav-number">2.3.2.</span> <span class="nav-text">代码编译</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Memcheck%E7%9A%84%E4%BD%BF%E7%94%A8"><span class="nav-number">2.3.3.</span> <span class="nav-text">Memcheck的使用</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Dump%E5%86%85%E5%AD%98%E5%B9%B6%E6%9F%A5%E6%89%BE%E9%97%AE%E9%A2%98"><span class="nav-number">2.4.</span> <span class="nav-text">Dump内存并查找问题</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#dump%E5%86%85%E5%AD%98"><span class="nav-number">2.4.1.</span> <span class="nav-text">dump内存</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#valgrind-massif%E7%9A%84%E4%BD%BF%E7%94%A8"><span class="nav-number">2.4.2.</span> <span class="nav-text">valgrind massif的使用</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#lru-cache%E7%9A%84%E9%97%AE%E9%A2%98"><span class="nav-number">2.4.3.</span> <span class="nav-text">lru_cache的问题</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#TCP-Connection%E7%9A%84buffer%E9%97%AE%E9%A2%98"><span class="nav-number">2.5.</span> <span class="nav-text">TCP Connection的buffer问题</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Buffer-%E9%97%AE%E9%A2%98"><span class="nav-number">2.5.1.</span> <span class="nav-text">Buffer 问题</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Broker%E6%9C%8D%E5%8A%A1%E7%9A%84%E5%86%85%E5%AD%98%E6%A8%A1%E5%9E%8B"><span class="nav-number">2.5.2.</span> <span class="nav-text">Broker服务的内存模型</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%B8%80%E8%88%AC%E6%8E%92%E6%9F%A5%E6%AD%A5%E9%AA%A4%E7%9A%84%E6%80%BB%E7%BB%93"><span class="nav-number">3.</span> <span class="nav-text">一般排查步骤的总结</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%91%BD%E4%BB%A4"><span class="nav-number">3.1.</span> <span class="nav-text">命令</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#lsof-%E5%88%97%E4%B8%BE%E5%87%BA%E6%AD%A3%E5%9C%A8%E4%BD%BF%E7%94%A8%E7%9A%84%E6%96%87%E4%BB%B6"><span class="nav-number">3.1.1.</span> <span class="nav-text">lsof 列举出正在使用的文件</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#pmap-%E6%9F%A5%E7%9C%8B%E8%BF%9B%E7%A8%8B%E5%86%85%E5%AD%98%E6%A6%82%E8%A6%81"><span class="nav-number">3.1.2.</span> <span class="nav-text">pmap 查看进程内存概要</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#perf"><span class="nav-number">3.1.3.</span> <span class="nav-text">perf</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#gdb-%E8%B0%83%E8%AF%95%E5%B7%A5%E5%85%B7dump%E5%87%BA%E5%8F%AF%E7%96%91%E5%86%85%E5%AD%98"><span class="nav-number">3.1.4.</span> <span class="nav-text">gdb 调试工具dump出可疑内存</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%B7%A5%E5%85%B7"><span class="nav-number">3.2.</span> <span class="nav-text">工具</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#valgrind-1"><span class="nav-number">3.2.1.</span> <span class="nav-text">valgrind</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#gcc"><span class="nav-number">3.2.2.</span> <span class="nav-text">gcc</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#bcc"><span class="nav-number">3.2.3.</span> <span class="nav-text">bcc</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#pprof-gperftools"><span class="nav-number">3.2.4.</span> <span class="nav-text">pprof &#x2F; gperftools</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%8F%82%E8%80%83%E9%93%BE%E6%8E%A5"><span class="nav-number">4.</span> <span class="nav-text">参考链接</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">patrick.xu</p>
+  <div class="site-description" itemprop="description">完成比完美更重要</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">28</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">12</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">37</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="/atom.xml" title="RSS → &#x2F;atom.xml"><i class="fa fa-fw fa-rss"></i>RSS</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">patrick.xu</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-area-chart"></i>
+    </span>
+    <span title="Symbols count total">124k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="Reading time total">3:27</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> v5.4.0
+  </div>
+  <span class="post-meta-divider">|</span>
+  <div class="theme-info">Theme – <a href="https://muse.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a> v7.7.0
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

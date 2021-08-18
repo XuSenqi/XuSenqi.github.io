@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.4.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    hostname: new URL('https://xusenqi.github.io').hostname,
+    root: '/',
+    scheme: 'Muse',
+    version: '7.7.0',
+    exturl: false,
+    sidebar: {"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},
+    copycode: {"enable":false,"show_result":false,"style":null},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":false},
+    bookmark: {"enable":false,"color":"#222","save":"auto"},
+    fancybox: false,
+    mediumzoom: false,
+    lazyload: false,
+    pangu: false,
+    comments: {"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: '',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}
+  };
+</script>
+
+  <meta name="description" content="1 node进程负载高的问题 线上有个用node开发的uhost-manager的服务。每个set内会有多台物理机，每台物理机（宿主机）上存在着1台或者多台虚拟机。uhost-manager里有个定时逻辑：每隔30s,从MongoDB里拉取所有的虚拟机的记录，数量为2000多台；将位于同一台宿主机上的虚拟机资源，包括cpu、内存、磁盘容量等，做个sum，将sum再填入对应宿主机（共200多台）的记">
+<meta property="og:type" content="article">
+<meta property="og:title" content="一次node进程cpu负载100%问题的处理">
+<meta property="og:url" content="https://xusenqi.github.io/2019/07/13/%E4%B8%80%E6%AC%A1node%E8%BF%9B%E7%A8%8Bcpu%E8%B4%9F%E8%BD%BD100-%E9%97%AE%E9%A2%98%E7%9A%84%E5%A4%84%E7%90%86/index.html">
+<meta property="og:site_name" content="森几许的博客">
+<meta property="og:description" content="1 node进程负载高的问题 线上有个用node开发的uhost-manager的服务。每个set内会有多台物理机，每台物理机（宿主机）上存在着1台或者多台虚拟机。uhost-manager里有个定时逻辑：每隔30s,从MongoDB里拉取所有的虚拟机的记录，数量为2000多台；将位于同一台宿主机上的虚拟机资源，包括cpu、内存、磁盘容量等，做个sum，将sum再填入对应宿主机（共200多台）的记">
+<meta property="og:locale">
+<meta property="og:image" content="https://xusenqi.github.io/.io//uhost-manager-cpu-100.png">
+<meta property="og:image" content="https://xusenqi.github.io/.io//perf_top.png">
+<meta property="og:image" content="https://xusenqi.github.io/.io//perf_flamegraph.png">
+<meta property="og:image" content="https://xusenqi.github.io/.io//query%E6%97%B6lean%E7%9A%84%E4%BD%BF%E7%94%A8.png">
+<meta property="og:image" content="https://xusenqi.github.io/.io//%E9%87%8D%E5%A4%8D%E5%88%A4%E6%96%AD%E8%AE%BE%E7%BD%AE%E5%88%9D%E5%A7%8B%E5%80%BC%E7%9A%84%E4%BB%A3%E7%A0%81.png">
+<meta property="og:image" content="https://xusenqi.github.io/.io//%E8%BF%9B%E7%A8%8B%E7%9A%84cpu%E6%97%B6%E9%97%B4.png">
+<meta property="article:published_time" content="2019-07-13T15:17:28.000Z">
+<meta property="article:modified_time" content="2021-08-18T13:13:05.997Z">
+<meta property="article:author" content="patrick.xu">
+<meta property="article:tag" content="cpu">
+<meta property="article:tag" content="node">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://xusenqi.github.io/.io//uhost-manager-cpu-100.png">
+
+<link rel="canonical" href="https://xusenqi.github.io/2019/07/13/%E4%B8%80%E6%AC%A1node%E8%BF%9B%E7%A8%8Bcpu%E8%B4%9F%E8%BD%BD100-%E9%97%AE%E9%A2%98%E7%9A%84%E5%A4%84%E7%90%86/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true
+  };
+</script>
+
+  <title>一次node进程cpu负载100%问题的处理 | 森几许的博客</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+<link rel="alternate" href="/atom.xml" title="森几许的博客" type="application/atom+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">森几许的博客</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+        <p class="site-subtitle">空杯心态</p>
+  </div>
+
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-fw fa-user"></i>About</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>Tags</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-fw fa-th"></i>Categories</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>Archives</a>
+
+  </li>
+  </ul>
+
+</nav>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content">
+            
+
+  <div class="posts-expand">
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block " lang="zh-Hans">
+    <link itemprop="mainEntityOfPage" href="https://xusenqi.github.io/2019/07/13/%E4%B8%80%E6%AC%A1node%E8%BF%9B%E7%A8%8Bcpu%E8%B4%9F%E8%BD%BD100-%E9%97%AE%E9%A2%98%E7%9A%84%E5%A4%84%E7%90%86/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="patrick.xu">
+      <meta itemprop="description" content="完成比完美更重要">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="森几许的博客">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          一次node进程cpu负载100%问题的处理
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2019-07-13 23:17:28" itemprop="dateCreated datePublished" datetime="2019-07-13T23:17:28+08:00">2019-07-13</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2021-08-18 21:13:05" itemprop="dateModified" datetime="2021-08-18T21:13:05+08:00">2021-08-18</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/linux%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96/" itemprop="url" rel="index">
+                    <span itemprop="name">linux性能优化</span>
+                  </a>
+                </span>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="Symbols count in article">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-file-word-o"></i>
+              </span>
+                <span class="post-meta-item-text">Symbols count in article: </span>
+              <span>3.5k</span>
+            </span>
+            <span class="post-meta-item" title="Reading time">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-clock-o"></i>
+              </span>
+                <span class="post-meta-item-text">Reading time &asymp;</span>
+              <span>6 mins.</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="1-node进程负载高的问题"><a href="#1-node进程负载高的问题" class="headerlink" title="1 node进程负载高的问题"></a>1 node进程负载高的问题</h1><ul>
+<li>线上有个用node开发的uhost-manager的服务。每个set内会有多台物理机，每台物理机（宿主机）上存在着1台或者多台虚拟机。uhost-manager里有个定时逻辑：每隔30s,从MongoDB里拉取所有的虚拟机的记录，数量为2000多台；将位于同一台宿主机上的虚拟机资源，包括cpu、内存、磁盘容量等，做个sum，将sum再填入对应宿主机（共200多台）的记录里，表示已经被占用的资源。</li>
+<li>由于计算量大，和代码写得差，导致在该定时的计算任务执行时，会把占用的cpu单核打满；如果uhost-manager此时又有其他接口被调用时，就会出现响应慢的问题，导致调用方的服务也响应慢，甚至会因超时导致服务接口不可用。</li>
+</ul>
+<p><img src="/.io//uhost-manager-cpu-100.png" alt="image"><br>这个单核打满持续的时间短，在1s左右。</p>
+<span id="more"></span>
+
+<h1 id="2-问题的解决"><a href="#2-问题的解决" class="headerlink" title="2 问题的解决"></a>2 问题的解决</h1><p>为了解决这个问题，带来两个要思考的问题：</p>
+<ul>
+<li>解决方法 –&gt; 怎么改进代码</li>
+<li>怎么衡量改进的效果 –&gt;<br>因为负载高的时间短，统计实时cpu负载，想到的命令只有top，但top命令本身无法做到统计，加入单核打满时间从1秒降到0.9秒，是无法凭肉眼感知的；像ps、vmstat等，也都不满足统计某个进程的实时负载</li>
+</ul>
+<h2 id="2-1-统计进程占用的cpu运行时间"><a href="#2-1-统计进程占用的cpu运行时间" class="headerlink" title="2.1 统计进程占用的cpu运行时间"></a>2.1 统计进程占用的cpu运行时间</h2><p>/proc/<pid>/stat该文件包含了某一进程所有的活动的信息，该文件中的所有值都是从系统启动开始累计到当前时刻。</pid></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"># cat /proc/17273/stat</span><br><span class="line">17273 (node) R 1369 17273 17273 0 -1 4218880 12446677 0 2 0 380634 40519 0 0 20 0 6 0 3525562392 964878336 38584 18446744073709551615 4194304 5593643 140724209068064 140400647923040 140400819234755 0 0 4096 16898 0 0 0 17 1 0 0 3 0 0 7692288 7703720 35180544 140724209071315 140724209071434 140724209071434 140724209074154 0</span><br></pre></td></tr></table></figure>
+<p>这样看非常不直观，通过网上找的一段小代码procstat[1]，以人类可读的方式显示。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">[root@172-30-38-65 uhost-manager.logs]# procstat 17273</span><br><span class="line">                 pid: 17273</span><br><span class="line">               tcomm: (node)</span><br><span class="line">                ...</span><br><span class="line">               utime: 3818.830000</span><br><span class="line">               stime: 406.260000</span><br><span class="line">              cutime: 0.000000</span><br><span class="line">              cstime: 0.000000</span><br><span class="line">                 ...</span><br><span class="line">              start_time: 07.13 03:00 (77599.65s)</span><br><span class="line">                 ...</span><br></pre></td></tr></table></figure>
+<p>进程的总Cpu时间processCpuTime = utime + stime + cutime + cstime，该值包括其所有线程的cpu时间[2]。注：这里统计出来的单位不是s，是相对于clock ticks来说的[3]。</p>
+<p>我们的衡量手段为统计一段时间内新增的该进程的cpu时间；该值越小，表示运行时间越短。</p>
+<p>具体步骤如下：</p>
+<ul>
+<li>以其他端口，再起一个uhost-manager服务，防止被其他服务调用；</li>
+<li>另外，定时任务里只保留定时更新宿主机占用资源的接口（ smi_update_host_resource ）。</li>
+<li>为了使统计的cpu占用时间长一点，smi改成每5秒执行一次；总共统计60s。查看新增的cpu时间，processCpuTime_60s - processCpuTime_0s。</li>
+</ul>
+<h2 id="2-2-解决方法"><a href="#2-2-解决方法" class="headerlink" title="2.2 解决方法"></a>2.2 解决方法</h2><p>为了解决，需要知道消耗cpu性能的环节在哪些步骤上，好进一步优化。</p>
+<h3 id="2-2-1-perf"><a href="#2-2-1-perf" class="headerlink" title="2.2.1 perf"></a>2.2.1 perf</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">perf top -g -p 26642 -d 1  #此时uhost-manager pid为26642</span><br></pre></td></tr></table></figure>
+<p><img src="/.io//perf_top.png" alt="image"><br>这里看起来不直观，并不能看清楚是哪个操作引起的。</p>
+<h3 id="2-2-2-FlameGraph"><a href="#2-2-2-FlameGraph" class="headerlink" title="2.2.2 FlameGraph"></a>2.2.2 FlameGraph</h3><p>火焰图的方式比较直观，这里测试下效果。</p>
+<ul>
+<li>采集脚本： perf record -F 99 -p 26642 -g – sleep 60</li>
+</ul>
+<p>参数说明如下：</p>
+<table>
+<thead>
+<tr>
+<th align="center">采集频率(ms)</th>
+<th align="center">进程pid</th>
+<th align="center">调用记录</th>
+<th align="center">记录时长</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">-F 99</td>
+<td align="center">-p 26642</td>
+<td align="center">-g</td>
+<td align="center">–sleep 60</td>
+</tr>
+</tbody></table>
+<ul>
+<li>进程对应的符号表perf-pid.map权限设置：$chown root /tmp/perf-pid.map。</li>
+</ul>
+<p>踩过的坑！！！是为了消除下面这个问题的</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">File /tmp/perf-PID.map not owned by current user or root, ignoring it (use -f to override).</span><br><span class="line">Failed to open /tmp/perf-PID.map, continuing without symbols</span><br></pre></td></tr></table></figure>
+<ul>
+<li>FlameGraph使用方式如下：</li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">git clone https://github.com/brendangregg/FlameGraph.git</span><br><span class="line">cd FlameGraph</span><br><span class="line">perf script -i perf.data &amp;&gt; perf.unfold  # 以下几个命令都是在FlameGraph目录下执行的</span><br><span class="line">perl stackcollapse-perf.pl perf.unfold &amp;&gt; perf.folded</span><br><span class="line">perl flamegraph.pl perf.folded &gt; perf.svg</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>火焰图效果</li>
+</ul>
+<p><img src="/.io//perf_flamegraph.png" alt="image"></p>
+<p>火焰图中看到libv8.so.3.14.5是消耗cpu最多的，但底下的方块（父函数）是unknown，所以还是无法知晓是哪里调用的。</p>
+<p>火焰图形状对应关系</p>
+<table>
+<thead>
+<tr>
+<th align="left">形状</th>
+<th align="left">含义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left">每一个平面方块</td>
+<td align="left">一个函数在栈中的位置（也称一个栈帧）</td>
+</tr>
+<tr>
+<td align="left">Y轴</td>
+<td align="left">栈的深度(也叫栈的帧数)</td>
+</tr>
+<tr>
+<td align="left">X轴</td>
+<td align="left">表示总的样例，不过它们左右顺序没有特殊含义</td>
+</tr>
+<tr>
+<td align="left">每个平面方块的宽度</td>
+<td align="left">方块的宽度标示CPU使用时间或者说相对父函数而言使用CPU的比率，越宽代表占用CPU的时间越长，或者使用CPU很频繁</td>
+</tr>
+</tbody></table>
+<h3 id="2-2-3-原始的分析代码方式（肉眼看）"><a href="#2-2-3-原始的分析代码方式（肉眼看）" class="headerlink" title="2.2.3 原始的分析代码方式（肉眼看）"></a>2.2.3 原始的分析代码方式（肉眼看）</h3><p>以上手段不起作用后，只能逐行分析代码，看哪里可能消耗的cpu多，然后优化掉。</p>
+<h4 id="原始的消耗时间"><a href="#原始的消耗时间" class="headerlink" title="原始的消耗时间"></a>原始的消耗时间</h4><p>先按照2.1中的采集uhost-manager进程在60s内消耗的cpu时间，为10.65。这里的时间采集是5次测量，然后取平均值。</p>
+<h4 id="lean"><a href="#lean" class="headerlink" title="lean"></a>lean</h4><p>从MongoDB里读取数据时，用到mongoose的模块。使用lean可以加快查询速度。</p>
+<p><img src="/.io//query%E6%97%B6lean%E7%9A%84%E4%BD%BF%E7%94%A8.png" alt="image"></p>
+<blockquote>
+<p>The lean option tells Mongoose to skip hydrating the result documents. This makes queries faster and less memory intensive, <strong>but the result documents are plain old JavaScript objects (POJOs), not Mongoose documents</strong>.</p>
+</blockquote>
+<blockquote>
+<p>If you’re executing a query and sending the results without modification to, say, an Express response, you should use lean. <font color="#FF0000">In general, if you do not modify the query results and do not use custom getters, you should use lean(). If you modify the query results or rely on features like getters or transforms, you should not use lean()</font>.</p>
+</blockquote>
+<p>测试下来结果为6.5，降低了40%左右，效果明显。</p>
+<h4 id="减少无用的重复执行的语句"><a href="#减少无用的重复执行的语句" class="headerlink" title="减少无用的重复执行的语句"></a>减少无用的重复执行的语句</h4><p>修改之后，测试下来结果为5.3。<br><img src="/.io//%E9%87%8D%E5%A4%8D%E5%88%A4%E6%96%AD%E8%AE%BE%E7%BD%AE%E5%88%9D%E5%A7%8B%E5%80%BC%E7%9A%84%E4%BB%A3%E7%A0%81.png" alt="image"></p>
+<h4 id="减少日志打印"><a href="#减少日志打印" class="headerlink" title="减少日志打印"></a>减少日志打印</h4><p>减少量大的无用的日志打印后，测试下来结果为1.9。所以日志打印的cpu消耗在原始基础上占了32%，即（5.3-1.9)/10.65。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">// 每台虚机打印下vcpu的个数，&gt;2000</span><br><span class="line">GLOBAL.logger.info(_vcpus);</span><br><span class="line"></span><br><span class="line">// 每台宿主机打印下host_id, &gt;200</span><br><span class="line">GLOBAL.logger.info(&quot;[SMI]check:&quot;, host_ids[i]);</span><br></pre></td></tr></table></figure>
+
+<h1 id="3-优化效果"><a href="#3-优化效果" class="headerlink" title="3 优化效果"></a>3 优化效果</h1><p>经过优化后，消耗时间是1.9 clock ticks，相对于原来的10.65 clock ticks，减少了82.16%。<br><img src="/.io//%E8%BF%9B%E7%A8%8B%E7%9A%84cpu%E6%97%B6%E9%97%B4.png" alt="image"><br>单核峰值CPU消耗为70%左右，且持续时间很短，为100ms左右。</p>
+<h1 id="参考链接"><a href="#参考链接" class="headerlink" title="参考链接"></a>参考链接</h1><ol>
+<li><a target="_blank" rel="noopener" href="http://brokestream.com/procstat.html">procstat - displays linux proc stat (/proc/pid/stat) in human-readable format
+</a></li>
+<li><a target="_blank" rel="noopener" href="http://www.samirchen.com/linux-cpu-performance/">Linux环境下进程的CPU占用率</a></li>
+<li><a target="_blank" rel="noopener" href="http://man7.org/linux/man-pages/man5/proc.5.html">Linux Programmer’s Manual PROC(5)</a></li>
+<li><a target="_blank" rel="noopener" href="https://cloud.tencent.com/developer/article/1005867">NodeJS 性能优化之 CPU 看图篇</a></li>
+<li><a target="_blank" rel="noopener" href="http://www.cpper.cn/2017/06/04/linux/perf/">Linux性能调优工具perf的使用</a></li>
+<li><a target="_blank" rel="noopener" href="https://www.yangcs.net/posts/how-to-deal-with-increasing-of-cpu-usage/">某个应用的 CPU 使用率居然达到 100%，我该怎么办？</a></li>
+<li><a target="_blank" rel="noopener" href="https://mongoosejs.com/docs/tutorials/lean.html#lean-and-populate">Faster Mongoose Queries With Lean</a></li>
+</ol>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/cpu/" rel="tag"># cpu</a>
+              <a href="/tags/node/" rel="tag"># node</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2019/06/06/%E5%85%B3%E4%BA%8E%E5%AE%A2%E6%88%B7%E7%AB%AF%E9%87%8D%E8%BF%9EZooKeeper%E7%9A%84%E7%9A%84%E9%82%A3%E4%BA%9B%E4%BA%8B%E5%84%BF/" rel="prev" title="关于客户端重连ZooKeeper的的那些事儿">
+      <i class="fa fa-chevron-left"></i> 关于客户端重连ZooKeeper的的那些事儿
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2019/07/24/%E4%B8%80%E6%AC%A1mongo%E6%85%A2%E6%9F%A5%E8%AF%A2%E7%9A%84%E4%BC%98%E5%8C%96%E8%BF%87%E7%A8%8B/" rel="next" title="一次mongo慢查询的优化过程">
+      一次mongo慢查询的优化过程 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+  </div>
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let activeClass = CONFIG.comments.activeClass;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#1-node%E8%BF%9B%E7%A8%8B%E8%B4%9F%E8%BD%BD%E9%AB%98%E7%9A%84%E9%97%AE%E9%A2%98"><span class="nav-number">1.</span> <span class="nav-text">1 node进程负载高的问题</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#2-%E9%97%AE%E9%A2%98%E7%9A%84%E8%A7%A3%E5%86%B3"><span class="nav-number">2.</span> <span class="nav-text">2 问题的解决</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#2-1-%E7%BB%9F%E8%AE%A1%E8%BF%9B%E7%A8%8B%E5%8D%A0%E7%94%A8%E7%9A%84cpu%E8%BF%90%E8%A1%8C%E6%97%B6%E9%97%B4"><span class="nav-number">2.1.</span> <span class="nav-text">2.1 统计进程占用的cpu运行时间</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-2-%E8%A7%A3%E5%86%B3%E6%96%B9%E6%B3%95"><span class="nav-number">2.2.</span> <span class="nav-text">2.2 解决方法</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#2-2-1-perf"><span class="nav-number">2.2.1.</span> <span class="nav-text">2.2.1 perf</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-2-2-FlameGraph"><span class="nav-number">2.2.2.</span> <span class="nav-text">2.2.2 FlameGraph</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-2-3-%E5%8E%9F%E5%A7%8B%E7%9A%84%E5%88%86%E6%9E%90%E4%BB%A3%E7%A0%81%E6%96%B9%E5%BC%8F%EF%BC%88%E8%82%89%E7%9C%BC%E7%9C%8B%EF%BC%89"><span class="nav-number">2.2.3.</span> <span class="nav-text">2.2.3 原始的分析代码方式（肉眼看）</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%8E%9F%E5%A7%8B%E7%9A%84%E6%B6%88%E8%80%97%E6%97%B6%E9%97%B4"><span class="nav-number">2.2.3.1.</span> <span class="nav-text">原始的消耗时间</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#lean"><span class="nav-number">2.2.3.2.</span> <span class="nav-text">lean</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%87%8F%E5%B0%91%E6%97%A0%E7%94%A8%E7%9A%84%E9%87%8D%E5%A4%8D%E6%89%A7%E8%A1%8C%E7%9A%84%E8%AF%AD%E5%8F%A5"><span class="nav-number">2.2.3.3.</span> <span class="nav-text">减少无用的重复执行的语句</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%87%8F%E5%B0%91%E6%97%A5%E5%BF%97%E6%89%93%E5%8D%B0"><span class="nav-number">2.2.3.4.</span> <span class="nav-text">减少日志打印</span></a></li></ol></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#3-%E4%BC%98%E5%8C%96%E6%95%88%E6%9E%9C"><span class="nav-number">3.</span> <span class="nav-text">3 优化效果</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%8F%82%E8%80%83%E9%93%BE%E6%8E%A5"><span class="nav-number">4.</span> <span class="nav-text">参考链接</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">patrick.xu</p>
+  <div class="site-description" itemprop="description">完成比完美更重要</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">28</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">12</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">37</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="/atom.xml" title="RSS → &#x2F;atom.xml"><i class="fa fa-fw fa-rss"></i>RSS</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">patrick.xu</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-area-chart"></i>
+    </span>
+    <span title="Symbols count total">124k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="Reading time total">3:27</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> v5.4.0
+  </div>
+  <span class="post-meta-divider">|</span>
+  <div class="theme-info">Theme – <a href="https://muse.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a> v7.7.0
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>
