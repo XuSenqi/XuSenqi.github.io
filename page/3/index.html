@@ -40,8 +40,8 @@
       hits: {"per_page":10},
       labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
     },
-    localsearch: {"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
-    path: '',
+    localsearch: {"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: 'search.xml',
     motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}
   };
 </script>
@@ -121,7 +121,7 @@
   </div>
 
   <div class="site-nav-toggle">
-    <div class="toggle" aria-label="Toggle navigation bar">
+    <div class="toggle" aria-label="切换导航栏">
       <span class="toggle-line toggle-line-first"></span>
       <span class="toggle-line toggle-line-middle"></span>
       <span class="toggle-line toggle-line-last"></span>
@@ -135,32 +135,57 @@
   <ul id="menu" class="menu">
         <li class="menu-item menu-item-home">
 
-    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>Home</a>
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
 
   </li>
         <li class="menu-item menu-item-about">
 
-    <a href="/about/" rel="section"><i class="fa fa-fw fa-user"></i>About</a>
+    <a href="/about/" rel="section"><i class="fa fa-fw fa-user"></i>关于</a>
 
   </li>
         <li class="menu-item menu-item-tags">
 
-    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>Tags</a>
+    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>标签</a>
 
   </li>
         <li class="menu-item menu-item-categories">
 
-    <a href="/categories/" rel="section"><i class="fa fa-fw fa-th"></i>Categories</a>
+    <a href="/categories/" rel="section"><i class="fa fa-fw fa-th"></i>分类</a>
 
   </li>
         <li class="menu-item menu-item-archives">
 
-    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>Archives</a>
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档</a>
 
   </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
   </ul>
 
 </nav>
+  <div class="site-search">
+    <div class="popup search-popup">
+    <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocorrect="off" autocapitalize="none"
+           placeholder="搜索..." spellcheck="false"
+           type="text" id="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result"></div>
+
+</div>
+<div class="search-pop-overlay"></div>
+
+  </div>
 </div>
     </header>
 
@@ -180,132 +205,6 @@
             
 
   <div class="posts-expand">
-        
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block home" lang="zh-Hans">
-    <link itemprop="mainEntityOfPage" href="https://xusenqi.github.io/2018/10/22/golang-json%E6%93%8D%E4%BD%9C%E7%9A%84%E6%B3%A8%E6%84%8F%E7%82%B9/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="patrick.xu">
-      <meta itemprop="description" content="完成比完美更重要">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="森几许的博客">
-    </span>
-      <header class="post-header">
-        <h1 class="post-title" itemprop="name headline">
-          
-            <a href="/2018/10/22/golang-json%E6%93%8D%E4%BD%9C%E7%9A%84%E6%B3%A8%E6%84%8F%E7%82%B9/" class="post-title-link" itemprop="url">golang - json操作的注意点</a>
-        </h1>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              <span class="post-meta-item-text">Posted on</span>
-
-              <time title="Created: 2018-10-22 21:36:19" itemprop="dateCreated datePublished" datetime="2018-10-22T21:36:19+08:00">2018-10-22</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-calendar-check-o"></i>
-                </span>
-                <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2021-08-18 21:13:05" itemprop="dateModified" datetime="2021-08-18T21:13:05+08:00">2021-08-18</time>
-              </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              <span class="post-meta-item-text">In</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Go/" itemprop="url" rel="index">
-                    <span itemprop="name">Go</span>
-                  </a>
-                </span>
-            </span>
-
-          <br>
-            <span class="post-meta-item" title="Symbols count in article">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-file-word-o"></i>
-              </span>
-                <span class="post-meta-item-text">Symbols count in article: </span>
-              <span>3.2k</span>
-            </span>
-            <span class="post-meta-item" title="Reading time">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-clock-o"></i>
-              </span>
-                <span class="post-meta-item-text">Reading time &asymp;</span>
-              <span>5 mins.</span>
-            </span>
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <h2 id="变量的大小写"><a href="#变量的大小写" class="headerlink" title="变量的大小写"></a>变量的大小写</h2><p>go中根据首字母的大小写来确定可以访问的权限。如果首字母大写，则可以被其他的包访问；如果首字母小写，则只能在本包中使用。包括接口、类型、函数和变量等。</p>
-<p>可以简单的理解成，首字母大写是公有的，首字母小写是私有的</p>
-<p>下面是一个排查该问题的例子：</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br></pre></td><td class="code"><pre><span class="line">package main</span><br><span class="line"></span><br><span class="line">import (</span><br><span class="line">	&quot;encoding/json&quot;</span><br><span class="line">	&quot;fmt&quot;</span><br><span class="line">)</span><br><span class="line"></span><br><span class="line">type Position struct &#123;</span><br><span class="line">	X int</span><br><span class="line">	Y int</span><br><span class="line">	Z int</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">type Student struct &#123;</span><br><span class="line">	Name     string</span><br><span class="line">	Sex      string</span><br><span class="line">	Age      int</span><br><span class="line">	position Position</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">func main() &#123;</span><br><span class="line">	position1 := Position&#123;10, 20, 30&#125;</span><br><span class="line">	student1 := Student&#123;&quot;zhangsan&quot;, &quot;male&quot;, 20, position1&#125;</span><br><span class="line">	position2 := Position&#123;15, 10, 20&#125;</span><br><span class="line">	student2 := Student&#123;&quot;lisi&quot;, &quot;female&quot;, 18, position2&#125;</span><br><span class="line"></span><br><span class="line">	var srcSlice = make([]Student, 2)</span><br><span class="line">	srcSlice[0] = student1</span><br><span class="line">	srcSlice[1] = student2</span><br><span class="line">	fmt.Printf(&quot;Init:srcSlice is : %v\n&quot;, srcSlice)</span><br><span class="line">	data, err := json.Marshal(srcSlice)</span><br><span class="line">	if err != nil &#123;</span><br><span class="line">		fmt.Printf(&quot;Serialize:json.Marshal error! %v\n&quot;, err)</span><br><span class="line">		return</span><br><span class="line">	&#125;</span><br><span class="line">	fmt.Println(&quot;After serialize, data : \n&quot;, string(data))</span><br><span class="line"></span><br><span class="line">	var dstSliece = make([]Student, 2)</span><br><span class="line">	err = json.Unmarshal(data, &amp;dstSliece)</span><br><span class="line">	if err != nil &#123;</span><br><span class="line">		fmt.Printf(&quot;Deserialize: json.Unmarshal error! %v\n&quot;, err)</span><br><span class="line">		return</span><br><span class="line">	&#125;</span><br><span class="line">	fmt.Printf(&quot;Deserialize:dstSlice is : %v\n&quot;, dstSliece)</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
-
-<p><img src="/.io//1_%E5%B0%8F%E5%86%99%E5%AF%BC%E8%87%B4%E5%BA%8F%E5%88%97%E5%8C%96%E5%90%8E%E6%95%B0%E6%8D%AE%E4%B8%A2%E5%A4%B1.png" alt="image"></p>
-<p>很意外的是，我们反序列化后获取的对象数据dstSliece是错误的，Position里的数据都变成了0。而json.Unmarshal没有返回任何异常。</p>
-<p>观察将序列化后的json串，Position的数据丢了，这使得我们想到了可见性，即大写的符号在包外可见。通过走查代码，我们发现Student的定义中，Position的变量名是小写开始的。</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">type Student struct &#123;</span><br><span class="line">    Name string</span><br><span class="line">    Sex string</span><br><span class="line">    Age int</span><br><span class="line">    //position Position</span><br><span class="line">    Position Position</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>改成大写后再观察结果，可以正常序列化。<br><img src="/.io//2_%E5%BA%8F%E5%88%97%E5%8C%96%E6%AD%A3%E5%B8%B8%E7%9A%84%E7%BB%93%E6%9E%9C.png" alt="image"></p>
-<h2 id="序列化到json后改成小写"><a href="#序列化到json后改成小写" class="headerlink" title="序列化到json后改成小写"></a>序列化到json后改成小写</h2><p>对于json串，很多人喜欢全小写，对于大写开头的key感觉很刺眼，我们继续改进：</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">type Position struct &#123;</span><br><span class="line">    X int `json:&quot;x&quot;`</span><br><span class="line">    Y int `json:&quot;y&quot;`</span><br><span class="line">    Z int `json:&quot;z&quot;`</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">type Student struct &#123;</span><br><span class="line">    Name string `json:&quot;name&quot;`</span><br><span class="line">    Sex string `json:&quot;sex&quot;`</span><br><span class="line">    Age int `json:&quot;age&quot;`</span><br><span class="line">    Posi Position `json:&quot;position&quot;`</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>再次运行程序，结果是我们期望的，打印如下：</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">Init:srcSlice is : [&#123;zhangsan male 20 &#123;10 20 30&#125;&#125; &#123;lisi female 18 &#123;15 10 20&#125;&#125;]</span><br><span class="line">After serialize, data :</span><br><span class="line"> [&#123;&quot;name&quot;:&quot;zhangsan&quot;,&quot;sex&quot;:&quot;male&quot;,&quot;age&quot;:20,&quot;position&quot;:&#123;&quot;x&quot;:10,&quot;y&quot;:20,&quot;z&quot;:30&#125;&#125;,&#123;&quot;name&quot;:&quot;lisi&quot;,&quot;sex&quot;:&quot;female&quot;,&quot;age&quot;:18,&quot;position&quot;:&#123;&quot;x&quot;:15,&quot;y&quot;:10,&quot;z&quot;:20&#125;&#125;]</span><br><span class="line">Deserialize:dstSlice is : [&#123;zhangsan male 20 &#123;10 20 30&#125;&#125; &#123;lisi female 18 &#123;15 10 20&#125;&#125;]</span><br></pre></td></tr></table></figure>
-
-<h2 id="omitempty"><a href="#omitempty" class="headerlink" title="omitempty"></a>omitempty</h2><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">type Dog struct &#123;</span><br><span class="line">	Breed string</span><br><span class="line">	WeightKg int</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">func main() &#123;</span><br><span class="line">	d := Dog&#123;</span><br><span class="line">		Breed:    &quot;dalmation&quot;,</span><br><span class="line">		WeightKg: 45,</span><br><span class="line">	&#125;</span><br><span class="line">	b, _ := json.Marshal(d)</span><br><span class="line">	fmt.Println(string(b))</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>output:</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&#123;&quot;Breed&quot;:&quot;dalmation&quot;,&quot;WeightKg&quot;:45&#125;</span><br></pre></td></tr></table></figure>
-
-<p>如果对dog没有设置：</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">func main() &#123;</span><br><span class="line">	d := Dog&#123;</span><br><span class="line">		Breed:    &quot;pug&quot;,</span><br><span class="line">	&#125;</span><br><span class="line">	b, _ := json.Marshal(d)</span><br><span class="line">	fmt.Println(string(b))</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>这会输出</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&#123;&quot;Breed&quot;:&quot;pug&quot;,&quot;WeightKg&quot;:0&#125;</span><br></pre></td></tr></table></figure>
-
-<p>即使WeightKg的值是未知的。</p>
-<p>更好的方式是使“WeightKg”为null, 或者根本没有这个值。</p>
-<p>omitempty tag 正好可以起到这个作用.</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">type Dog struct &#123;</span><br><span class="line">	Breed    string</span><br><span class="line">	// The first comma below is to separate the name tag from the omitempty tag </span><br><span class="line">	WeightKg int `json:&quot;,omitempty&quot;`</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>这会输出</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&#123;&quot;Breed&quot;:&quot;pug&quot;&#125;</span><br></pre></td></tr></table></figure>
-
-<h2 id="参考链接"><a href="#参考链接" class="headerlink" title="参考链接"></a>参考链接</h2><p><a target="_blank" rel="noopener" href="https://www.jianshu.com/p/e737cb26c141">Golang初学者易犯的三种错误</a></p>
-<p><a target="_blank" rel="noopener" href="https://www.sohamkamani.com/blog/golang/2018-07-19-golang-omitempty/">Go’s “omitempty” explained</a></p>
-
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
         
   
   
@@ -332,32 +231,32 @@
               <span class="post-meta-item-icon">
                 <i class="fa fa-calendar-o"></i>
               </span>
-              <span class="post-meta-item-text">Posted on</span>
+              <span class="post-meta-item-text">发表于</span>
 
-              <time title="Created: 2018-10-08 16:22:18" itemprop="dateCreated datePublished" datetime="2018-10-08T16:22:18+08:00">2018-10-08</time>
+              <time title="创建时间：2018-10-08 16:22:18" itemprop="dateCreated datePublished" datetime="2018-10-08T16:22:18+08:00">2018-10-08</time>
             </span>
               <span class="post-meta-item">
                 <span class="post-meta-item-icon">
                   <i class="fa fa-calendar-check-o"></i>
                 </span>
-                <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2021-08-18 21:13:06" itemprop="dateModified" datetime="2021-08-18T21:13:06+08:00">2021-08-18</time>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-08-19 17:54:38" itemprop="dateModified" datetime="2021-08-19T17:54:38+08:00">2021-08-19</time>
               </span>
 
           <br>
-            <span class="post-meta-item" title="Symbols count in article">
+            <span class="post-meta-item" title="本文字数">
               <span class="post-meta-item-icon">
                 <i class="fa fa-file-word-o"></i>
               </span>
-                <span class="post-meta-item-text">Symbols count in article: </span>
+                <span class="post-meta-item-text">本文字数：</span>
               <span>34</span>
             </span>
-            <span class="post-meta-item" title="Reading time">
+            <span class="post-meta-item" title="阅读时长">
               <span class="post-meta-item-icon">
                 <i class="fa fa-clock-o"></i>
               </span>
-                <span class="post-meta-item-text">Reading time &asymp;</span>
-              <span>1 mins.</span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>1 分钟</span>
             </span>
 
         </div>
@@ -411,22 +310,22 @@
               <span class="post-meta-item-icon">
                 <i class="fa fa-calendar-o"></i>
               </span>
-              <span class="post-meta-item-text">Posted on</span>
+              <span class="post-meta-item-text">发表于</span>
 
-              <time title="Created: 2018-10-08 16:22:10" itemprop="dateCreated datePublished" datetime="2018-10-08T16:22:10+08:00">2018-10-08</time>
+              <time title="创建时间：2018-10-08 16:22:10" itemprop="dateCreated datePublished" datetime="2018-10-08T16:22:10+08:00">2018-10-08</time>
             </span>
               <span class="post-meta-item">
                 <span class="post-meta-item-icon">
                   <i class="fa fa-calendar-check-o"></i>
                 </span>
-                <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2021-08-18 21:13:05" itemprop="dateModified" datetime="2021-08-18T21:13:05+08:00">2021-08-18</time>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-08-19 17:54:38" itemprop="dateModified" datetime="2021-08-19T17:54:38+08:00">2021-08-19</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
                 <i class="fa fa-folder-o"></i>
               </span>
-              <span class="post-meta-item-text">In</span>
+              <span class="post-meta-item-text">分类于</span>
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
                   <a href="/categories/%E7%BD%91%E7%BB%9C/" itemprop="url" rel="index">
                     <span itemprop="name">网络</span>
@@ -435,19 +334,19 @@
             </span>
 
           <br>
-            <span class="post-meta-item" title="Symbols count in article">
+            <span class="post-meta-item" title="本文字数">
               <span class="post-meta-item-icon">
                 <i class="fa fa-file-word-o"></i>
               </span>
-                <span class="post-meta-item-text">Symbols count in article: </span>
+                <span class="post-meta-item-text">本文字数：</span>
               <span>1.3k</span>
             </span>
-            <span class="post-meta-item" title="Reading time">
+            <span class="post-meta-item" title="阅读时长">
               <span class="post-meta-item-icon">
                 <i class="fa fa-clock-o"></i>
               </span>
-                <span class="post-meta-item-text">Reading time &asymp;</span>
-              <span>2 mins.</span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>2 分钟</span>
             </span>
 
         </div>
@@ -464,7 +363,7 @@
           <!--noindex-->
             <div class="post-button">
               <a class="btn" href="/2018/10/08/TCP-Keepalive/#more" rel="contents">
-                Read more &raquo;
+                阅读全文 &raquo;
               </a>
             </div>
           <!--/noindex-->
@@ -509,22 +408,22 @@
               <span class="post-meta-item-icon">
                 <i class="fa fa-calendar-o"></i>
               </span>
-              <span class="post-meta-item-text">Posted on</span>
+              <span class="post-meta-item-text">发表于</span>
 
-              <time title="Created: 2018-08-14 23:31:28" itemprop="dateCreated datePublished" datetime="2018-08-14T23:31:28+08:00">2018-08-14</time>
+              <time title="创建时间：2018-08-14 23:31:28" itemprop="dateCreated datePublished" datetime="2018-08-14T23:31:28+08:00">2018-08-14</time>
             </span>
               <span class="post-meta-item">
                 <span class="post-meta-item-icon">
                   <i class="fa fa-calendar-check-o"></i>
                 </span>
-                <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2021-08-18 21:13:05" itemprop="dateModified" datetime="2021-08-18T21:13:05+08:00">2021-08-18</time>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-08-19 17:54:38" itemprop="dateModified" datetime="2021-08-19T17:54:38+08:00">2021-08-19</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
                 <i class="fa fa-folder-o"></i>
               </span>
-              <span class="post-meta-item-text">In</span>
+              <span class="post-meta-item-text">分类于</span>
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
                   <a href="/categories/%E6%9E%B6%E6%9E%84%E8%AE%BE%E8%AE%A1/" itemprop="url" rel="index">
                     <span itemprop="name">架构设计</span>
@@ -533,19 +432,19 @@
             </span>
 
           <br>
-            <span class="post-meta-item" title="Symbols count in article">
+            <span class="post-meta-item" title="本文字数">
               <span class="post-meta-item-icon">
                 <i class="fa fa-file-word-o"></i>
               </span>
-                <span class="post-meta-item-text">Symbols count in article: </span>
+                <span class="post-meta-item-text">本文字数：</span>
               <span>1.8k</span>
             </span>
-            <span class="post-meta-item" title="Reading time">
+            <span class="post-meta-item" title="阅读时长">
               <span class="post-meta-item-icon">
                 <i class="fa fa-clock-o"></i>
               </span>
-                <span class="post-meta-item-text">Reading time &asymp;</span>
-              <span>3 mins.</span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>3 分钟</span>
             </span>
 
         </div>
@@ -557,7 +456,9 @@
     <div class="post-body" itemprop="articleBody">
 
       
-          <h2 id="并发场景"><a href="#并发场景" class="headerlink" title="并发场景"></a>并发场景</h2><p>秒杀场景，多人并发申请购买同一种商品。<br>下面以2人抢购同一件商品举例，商品数量为1。<br>基本流程如下：<br><img src="/.io//%E8%B4%AD%E4%B9%B0%E8%AE%B0%E5%BD%95.png" alt="image"><br>这个流程中存在明显的并发问题，当进程A查看有1个商品，但未开始创建购买记录，此时另一个进程B也进行了资源检查，发现有1个商品，顺利通过，并完成购买操作，此时A继续执行，则1个商品会产生两条购买的记录。（这个并发场景很简单，很普遍）</p>
+          <h2 id="并发场景"><a href="#并发场景" class="headerlink" title="并发场景"></a>并发场景</h2><p>秒杀场景，多人并发申请购买同一种商品。<br>下面以2人抢购同一件商品举例，商品数量为1。<br>基本流程如下：</p>
+<img src="/2018/08/14/%E5%B9%B6%E5%8F%91%E6%8E%A7%E5%88%B6/%E8%B4%AD%E4%B9%B0%E8%AE%B0%E5%BD%95.png" class="" title="image">
+<p>这个流程中存在明显的并发问题，当进程A查看有1个商品，但未开始创建购买记录，此时另一个进程B也进行了资源检查，发现有1个商品，顺利通过，并完成购买操作，此时A继续执行，则1个商品会产生两条购买的记录。（这个并发场景很简单，很普遍）</p>
 <h2 id="解决方案"><a href="#解决方案" class="headerlink" title="解决方案"></a>解决方案</h2><p>解决方案通常是2类：<br>1 通过将请求分发到不同set，减少并发的可能性，分而治之。这里暂时不讨论。<br>2 当收到并发请求时，如何处理。</p>
 <h3 id="加锁操作先占有锁资源，再占有资源"><a href="#加锁操作先占有锁资源，再占有资源" class="headerlink" title="加锁操作先占有锁资源，再占有资源"></a>加锁操作先占有锁资源，再占有资源</h3><p>a. 锁库存<br>b. 插入“秒杀”记录<br>c. 更新库存</p>
 <p>“秒杀”系统的设计难点就在这个事务操作上。商品库存在DB中记为一行，大量用户同时“秒杀”同一商品时，第一个到达DB的请求锁住了这行库存记录。在第一个事务完成提交之前这个锁一直被第一个请求占用，其他到达的请求全部失败。</p>
@@ -610,22 +511,22 @@
               <span class="post-meta-item-icon">
                 <i class="fa fa-calendar-o"></i>
               </span>
-              <span class="post-meta-item-text">Posted on</span>
+              <span class="post-meta-item-text">发表于</span>
 
-              <time title="Created: 2018-08-12 20:01:39" itemprop="dateCreated datePublished" datetime="2018-08-12T20:01:39+08:00">2018-08-12</time>
+              <time title="创建时间：2018-08-12 20:01:39" itemprop="dateCreated datePublished" datetime="2018-08-12T20:01:39+08:00">2018-08-12</time>
             </span>
               <span class="post-meta-item">
                 <span class="post-meta-item-icon">
                   <i class="fa fa-calendar-check-o"></i>
                 </span>
-                <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2021-08-18 21:13:05" itemprop="dateModified" datetime="2021-08-18T21:13:05+08:00">2021-08-18</time>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-08-19 17:54:38" itemprop="dateModified" datetime="2021-08-19T17:54:38+08:00">2021-08-19</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
                 <i class="fa fa-folder-o"></i>
               </span>
-              <span class="post-meta-item-text">In</span>
+              <span class="post-meta-item-text">分类于</span>
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
                   <a href="/categories/Go/" itemprop="url" rel="index">
                     <span itemprop="name">Go</span>
@@ -634,19 +535,19 @@
             </span>
 
           <br>
-            <span class="post-meta-item" title="Symbols count in article">
+            <span class="post-meta-item" title="本文字数">
               <span class="post-meta-item-icon">
                 <i class="fa fa-file-word-o"></i>
               </span>
-                <span class="post-meta-item-text">Symbols count in article: </span>
+                <span class="post-meta-item-text">本文字数：</span>
               <span>3.2k</span>
             </span>
-            <span class="post-meta-item" title="Reading time">
+            <span class="post-meta-item" title="阅读时长">
               <span class="post-meta-item-icon">
                 <i class="fa fa-clock-o"></i>
               </span>
-                <span class="post-meta-item-text">Reading time &asymp;</span>
-              <span>5 mins.</span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>5 分钟</span>
             </span>
 
         </div>
@@ -666,11 +567,11 @@
 <p>2个环境变量，即 GOROOT、GOPATH和GOBIN:</p>
 <ul>
 <li>GOROOT：go的安装路径</li>
-<li>GOPATH：go的工作路径</li></ul>
+<li>GOPATH：go的工作路径
           <!--noindex-->
             <div class="post-button">
               <a class="btn" href="/2018/08/12/Go%E8%AF%AD%E8%A8%80-01-%E5%B7%A5%E4%BD%9C%E5%8C%BA%E5%92%8CGOPATH/#more" rel="contents">
-                Read more &raquo;
+                阅读全文 &raquo;
               </a>
             </div>
           <!--/noindex-->
@@ -715,22 +616,22 @@
               <span class="post-meta-item-icon">
                 <i class="fa fa-calendar-o"></i>
               </span>
-              <span class="post-meta-item-text">Posted on</span>
+              <span class="post-meta-item-text">发表于</span>
 
-              <time title="Created: 2018-05-15 11:21:20" itemprop="dateCreated datePublished" datetime="2018-05-15T11:21:20+08:00">2018-05-15</time>
+              <time title="创建时间：2018-05-15 11:21:20" itemprop="dateCreated datePublished" datetime="2018-05-15T11:21:20+08:00">2018-05-15</time>
             </span>
               <span class="post-meta-item">
                 <span class="post-meta-item-icon">
                   <i class="fa fa-calendar-check-o"></i>
                 </span>
-                <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2021-08-18 21:13:05" itemprop="dateModified" datetime="2021-08-18T21:13:05+08:00">2021-08-18</time>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-08-19 17:54:38" itemprop="dateModified" datetime="2021-08-19T17:54:38+08:00">2021-08-19</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
                 <i class="fa fa-folder-o"></i>
               </span>
-              <span class="post-meta-item-text">In</span>
+              <span class="post-meta-item-text">分类于</span>
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
                   <a href="/categories/%E7%BD%91%E7%BB%9C/" itemprop="url" rel="index">
                     <span itemprop="name">网络</span>
@@ -739,19 +640,19 @@
             </span>
 
           <br>
-            <span class="post-meta-item" title="Symbols count in article">
+            <span class="post-meta-item" title="本文字数">
               <span class="post-meta-item-icon">
                 <i class="fa fa-file-word-o"></i>
               </span>
-                <span class="post-meta-item-text">Symbols count in article: </span>
+                <span class="post-meta-item-text">本文字数：</span>
               <span>3.2k</span>
             </span>
-            <span class="post-meta-item" title="Reading time">
+            <span class="post-meta-item" title="阅读时长">
               <span class="post-meta-item-icon">
                 <i class="fa fa-clock-o"></i>
               </span>
-                <span class="post-meta-item-text">Reading time &asymp;</span>
-              <span>5 mins.</span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>5 分钟</span>
             </span>
 
         </div>
@@ -773,7 +674,8 @@
 </ul>
 <p>其中核心的特点：tcp是可以可靠传输协议，它的其他所有特点都为这个可靠传输服务。</p>
 <h2 id="如何保证可靠传输"><a href="#如何保证可靠传输" class="headerlink" title="如何保证可靠传输"></a>如何保证可靠传输</h2><p>tcp在传输过程中都有一个ack，接收方通过ack告诉发送方收到那些包了。这样发送方能知道有没有丢包，进而确定重传。</p>
-<h2 id="tcp三次握手"><a href="#tcp三次握手" class="headerlink" title="tcp三次握手"></a>tcp三次握手</h2><p><img src="/.io//%E4%B8%89%E6%AC%A1%E6%8F%A1%E6%89%8B.png" alt="image"></p>
+<h2 id="tcp三次握手"><a href="#tcp三次握手" class="headerlink" title="tcp三次握手"></a>tcp三次握手</h2><img src="/2018/05/15/TCP%E4%B8%89%E6%AC%A1%E6%8F%A1%E6%89%8B/%E4%B8%89%E6%AC%A1%E6%8F%A1%E6%89%8B.png" class="" title="image">
+
 <ul>
 <li><p>第一步：client发送连接请求报文段，将SYN位置为1，Seq(Sequence Number)为X(由操作系统动态随机选取一个32位长的序列号)。然后，客户端进入SYN_SEND状态，等待服务器的确认。</p>
 </li>
@@ -783,7 +685,8 @@
 </li>
 </ul>
 <h2 id="tcp首部简介"><a href="#tcp首部简介" class="headerlink" title="tcp首部简介"></a>tcp首部简介</h2><p>这里先介绍下TCP首部的相关知识。三次握手相关的是主要是ACK和SYN这两个标志比特位。</p>
-<p><img src="/.io//TCP%E9%A6%96%E9%83%A8.png" alt="image"></p>
+<img src="/2018/05/15/TCP%E4%B8%89%E6%AC%A1%E6%8F%A1%E6%89%8B/TCP%E9%A6%96%E9%83%A8.png" class="" title="image">
+
 <p>（1）源端口和目的端口：各占2字节。</p>
 <p>（2）序号(Seq, Sequence Number)：占4个字节。用来标识从TCP发端向TCP收端发送的数据字节流，它表示在这个报文段中的的第一个数据字节在数据流中的序号。主要用来解决网络报乱序的问题。序号范围是[0, 2^32 - 1],共2^32个序号。</p>
 <p>（3）确认号(Ack, Acknowledgment Number): 占4个字节。期望收到对方下一个报文段的第一个数据字节的序号，因此，确认序号应当是上次已成功收到数据字节序号加1。不过，只有当标志位中的ACK标志（下面介绍）为1时该确认序列号的字段才有效。主要用来解决不丢包的问题。</p>
@@ -803,7 +706,8 @@
 <p>（9）紧急指针: 占2个字节，紧急指针仅在URG=1时才有意义，它指出本报文段中的紧急数据的字节数。当所有紧急数据处理完毕时，TCP就告诉应用程序恢复到正常操作。值得注意的是，即使窗口为0时也可发送紧急数据。</p>
 <p>（10）选项: 长度可变，最长可达40字节，当没有选项时，TCP的首部长度是20字节。最初只规定了一种选项，即最大报文段长度MSS(Maximum Segment Size)，MSS是指每一个TCP报文段中的数据字段的最大长度。</p>
 <h2 id="抓包实践"><a href="#抓包实践" class="headerlink" title="抓包实践"></a>抓包实践</h2><p>来看一个pb请求的三次握手过程</p>
-<p><img src="/.io//%E4%B8%89%E6%AC%A1%E6%8F%A1%E6%89%8B%E6%8A%93%E5%8C%85.jpg" alt="image"></p>
+<img src="/2018/05/15/TCP%E4%B8%89%E6%AC%A1%E6%8F%A1%E6%89%8B/%E4%B8%89%E6%AC%A1%E6%8F%A1%E6%89%8B%E6%8A%93%E5%8C%85.jpg" class="" title="image">
+
 <p>client: 172.17.1.217  server: 172.27.247.168</p>
 <p>握手的核心目的是告知对方seq（client的初始seq，server的初始seq），对方回复ack（收到的seq+包的大小），这样发送端就知道有没有丢包了。</p>
 <p>握手的次要目的是告知和协商一些信息。</p>
@@ -813,9 +717,11 @@
 <li>WS–窗口计算指数（有点复杂的话先不用管）</li>
 </ul>
 <p><strong>这就是tcp为什么要握手建立连接，就是为了解决tcp的可靠传输。</strong></p>
-<h3 id="查看第一次握手的详情"><a href="#查看第一次握手的详情" class="headerlink" title="查看第一次握手的详情"></a>查看第一次握手的详情</h3><p><img src="/.io//%E7%AC%AC%E4%B8%80%E6%AC%A1%E6%8F%A1%E6%89%8B%E6%8A%93%E5%8C%85.jpg" alt="image"></p>
-<h3 id="查看第二次握手的详情"><a href="#查看第二次握手的详情" class="headerlink" title="查看第二次握手的详情"></a>查看第二次握手的详情</h3><p><img src="/.io//%E7%AC%AC%E4%B8%80%E6%AC%A1%E6%8F%A1%E6%89%8B%E6%8A%93%E5%8C%85.jpg" alt="image"></p>
-<h3 id="查看第三次握手的详情"><a href="#查看第三次握手的详情" class="headerlink" title="查看第三次握手的详情"></a>查看第三次握手的详情</h3><p><img src="/.io//%E7%AC%AC%E4%B8%89%E6%AC%A1%E6%8F%A1%E6%89%8B%E6%8A%93%E5%8C%85.jpg" alt="image"></p>
+<h3 id="查看第一次握手的详情"><a href="#查看第一次握手的详情" class="headerlink" title="查看第一次握手的详情"></a>查看第一次握手的详情</h3><img src="/2018/05/15/TCP%E4%B8%89%E6%AC%A1%E6%8F%A1%E6%89%8B/%E7%AC%AC%E4%B8%80%E6%AC%A1%E6%8F%A1%E6%89%8B%E6%8A%93%E5%8C%85.jpg" class="" title="image">
+<h3 id="查看第二次握手的详情"><a href="#查看第二次握手的详情" class="headerlink" title="查看第二次握手的详情"></a>查看第二次握手的详情</h3><img src="/2018/05/15/TCP%E4%B8%89%E6%AC%A1%E6%8F%A1%E6%89%8B/%E7%AC%AC%E4%B8%80%E6%AC%A1%E6%8F%A1%E6%89%8B%E6%8A%93%E5%8C%85.jpg" class="" title="image">
+<h3 id="查看第三次握手的详情"><a href="#查看第三次握手的详情" class="headerlink" title="查看第三次握手的详情"></a>查看第三次握手的详情</h3><img src="/2018/05/15/TCP%E4%B8%89%E6%AC%A1%E6%8F%A1%E6%89%8B/%E7%AC%AC%E4%B8%89%E6%AC%A1%E6%8F%A1%E6%89%8B%E6%8A%93%E5%8C%85.jpg" class="" title="image">
+
+
 <h3 id="为什么要三次握手？"><a href="#为什么要三次握手？" class="headerlink" title="为什么要三次握手？"></a>为什么要三次握手？</h3><ul>
 <li><p>如果只有一次握手，Client不能确定与Server的单向连接，更加不能确定Server与Client的单向连接；</p>
 </li>
@@ -877,22 +783,22 @@
               <span class="post-meta-item-icon">
                 <i class="fa fa-calendar-o"></i>
               </span>
-              <span class="post-meta-item-text">Posted on</span>
+              <span class="post-meta-item-text">发表于</span>
 
-              <time title="Created: 2018-05-15 11:21:20" itemprop="dateCreated datePublished" datetime="2018-05-15T11:21:20+08:00">2018-05-15</time>
+              <time title="创建时间：2018-05-15 11:21:20" itemprop="dateCreated datePublished" datetime="2018-05-15T11:21:20+08:00">2018-05-15</time>
             </span>
               <span class="post-meta-item">
                 <span class="post-meta-item-icon">
                   <i class="fa fa-calendar-check-o"></i>
                 </span>
-                <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2021-08-18 21:13:05" itemprop="dateModified" datetime="2021-08-18T21:13:05+08:00">2021-08-18</time>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-08-19 17:54:38" itemprop="dateModified" datetime="2021-08-19T17:54:38+08:00">2021-08-19</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
                 <i class="fa fa-folder-o"></i>
               </span>
-              <span class="post-meta-item-text">In</span>
+              <span class="post-meta-item-text">分类于</span>
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
                   <a href="/categories/%E7%BD%91%E7%BB%9C/" itemprop="url" rel="index">
                     <span itemprop="name">网络</span>
@@ -901,19 +807,19 @@
             </span>
 
           <br>
-            <span class="post-meta-item" title="Symbols count in article">
+            <span class="post-meta-item" title="本文字数">
               <span class="post-meta-item-icon">
                 <i class="fa fa-file-word-o"></i>
               </span>
-                <span class="post-meta-item-text">Symbols count in article: </span>
+                <span class="post-meta-item-text">本文字数：</span>
               <span>2.5k</span>
             </span>
-            <span class="post-meta-item" title="Reading time">
+            <span class="post-meta-item" title="阅读时长">
               <span class="post-meta-item-icon">
                 <i class="fa fa-clock-o"></i>
               </span>
-                <span class="post-meta-item-text">Reading time &asymp;</span>
-              <span>4 mins.</span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>4 分钟</span>
             </span>
 
         </div>
@@ -926,7 +832,8 @@
 
       
           <h2 id="tcp四次挥手"><a href="#tcp四次挥手" class="headerlink" title="tcp四次挥手"></a>tcp四次挥手</h2><p>TCP四次挥手的过程以及握手两端状态的变化。</p>
-<p><img src="/.io//tcp%E5%9B%9B%E6%AC%A1%E6%8C%A5%E6%89%8B.png" alt="image"></p>
+<img src="/2018/05/15/TCP%E5%9B%9B%E6%AC%A1%E6%8C%A5%E6%89%8B/tcp%E5%9B%9B%E6%AC%A1%E6%8C%A5%E6%89%8B.png" class="" title="image">
+
 <p>挥手过程</p>
 <ul>
 <li><p>第一次挥手: 主动关闭方(可以使客户端，也可以是服务器端，这里标记为：A)，将FIN置为1，ACK置为1，Seq(Sequence Number)设置为X为上一次对方传送过来的Ack(Acknowledgment Number)值，Ack(Acknowledgment Number)设置为Y为上一次对方传过来的Seq(Sequence Number)值+1。设置好以上值后，将数据发送至被动关闭方(这里标记为：B)。然后A进入FIN_WAIT_1状态。</p>
@@ -946,7 +853,8 @@
 <li><p>防止已失效的连接请求报文段出现在本连接中。A在发送完最后一个ACK报文段后，在经过2MSL，就可以使本连接持续的时间内所产生的所有报文段都从网络中消失。这样就可以使下一个新的连接中不会出现这种旧的连接请求报文段。</p>
 </li>
 </ul>
-<h2 id="抓包实践"><a href="#抓包实践" class="headerlink" title="抓包实践"></a>抓包实践</h2><p><img src="/.io//%E5%9B%9B%E6%AC%A1%E6%8C%A5%E6%89%8B%E6%8A%93%E5%8C%85.jpg" alt="image"></p>
+<h2 id="抓包实践"><a href="#抓包实践" class="headerlink" title="抓包实践"></a>抓包实践</h2><img src="/2018/05/15/TCP%E5%9B%9B%E6%AC%A1%E6%8C%A5%E6%89%8B/%E5%9B%9B%E6%AC%A1%E6%8C%A5%E6%89%8B%E6%8A%93%E5%8C%85.jpg" class="" title="image">
+
 <p>抓包看，挥手的过程却只有三次。这是因为数据传输中的延迟确认策略。</p>
 <p>何谓延迟确认策略？</p>
 <p>WIKI:TCP delayed acknowledgment is a technique used by some implementations of the Transmission Control Protocol in an effort to improve network performance. In essence, several ACK responses may be combined together into a single response, reducing protocol overhead. However, in some circumstances, the technique can reduce application performance.即接收方收到包后，如果暂时没有内容回复给发送方，则延迟一段时间再确认，假如在这个时间范围内刚好有数据需要传输，则和确认包一起回复。这种也被称为数据捎带。延迟确认只是减轻网络负担，未必可以提升网络性能，有些情况下反而会影响性能。</p>
@@ -1000,22 +908,22 @@
               <span class="post-meta-item-icon">
                 <i class="fa fa-calendar-o"></i>
               </span>
-              <span class="post-meta-item-text">Posted on</span>
+              <span class="post-meta-item-text">发表于</span>
 
-              <time title="Created: 2018-04-18 01:19:50" itemprop="dateCreated datePublished" datetime="2018-04-18T01:19:50+08:00">2018-04-18</time>
+              <time title="创建时间：2018-04-18 01:19:50" itemprop="dateCreated datePublished" datetime="2018-04-18T01:19:50+08:00">2018-04-18</time>
             </span>
               <span class="post-meta-item">
                 <span class="post-meta-item-icon">
                   <i class="fa fa-calendar-check-o"></i>
                 </span>
-                <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2021-08-18 21:13:05" itemprop="dateModified" datetime="2021-08-18T21:13:05+08:00">2021-08-18</time>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-08-19 17:54:38" itemprop="dateModified" datetime="2021-08-19T17:54:38+08:00">2021-08-19</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
                 <i class="fa fa-folder-o"></i>
               </span>
-              <span class="post-meta-item-text">In</span>
+              <span class="post-meta-item-text">分类于</span>
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
                   <a href="/categories/linux%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96/" itemprop="url" rel="index">
                     <span itemprop="name">linux性能优化</span>
@@ -1024,19 +932,19 @@
             </span>
 
           <br>
-            <span class="post-meta-item" title="Symbols count in article">
+            <span class="post-meta-item" title="本文字数">
               <span class="post-meta-item-icon">
                 <i class="fa fa-file-word-o"></i>
               </span>
-                <span class="post-meta-item-text">Symbols count in article: </span>
+                <span class="post-meta-item-text">本文字数：</span>
               <span>1.8k</span>
             </span>
-            <span class="post-meta-item" title="Reading time">
+            <span class="post-meta-item" title="阅读时长">
               <span class="post-meta-item-icon">
                 <i class="fa fa-clock-o"></i>
               </span>
-                <span class="post-meta-item-text">Reading time &asymp;</span>
-              <span>3 mins.</span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>3 分钟</span>
             </span>
 
         </div>
@@ -1053,32 +961,58 @@
 <p>dm-0是物理机上的数据盘，有通过多快盘做raid。</p>
 <p>以下在rsc_server的IO优化过程中，对不同方案测试结果的比较和分析。</p>
 <h2 id="无限速方案"><a href="#无限速方案" class="headerlink" title="无限速方案"></a>无限速方案</h2><p>测试环境为:</p>
-<p>测试镜像： Windows 2008 64位 EN<br><img src="/.io//2-nolimit-1.png" alt="image"><br>镜像文件为qcow2格式，总共40G，实际占用空间20G。</p>
+<p>测试镜像： Windows 2008 64位 EN </p>
+<img src="/2018/04/18/%E7%A3%81%E7%9B%98IO%E5%9C%A8%E6%96%87%E4%BB%B6%E4%BC%A0%E8%BE%93%E8%BF%87%E7%A8%8B%E4%B8%AD%E7%9A%84%E7%A8%B3%E5%AE%9A%E6%8E%A7%E5%88%B6%E6%96%B9%E6%B3%95/2-nolimit-1.png" class="" title="image">
+<p>镜像文件为qcow2格式，总共40G，实际占用空间20G。</p>
 <p>宿主机: </p>
 <p>172.27.162.108 –&gt; 172.27.172.226（V3）</p>
 <p>172.28.160.151–&gt; 172.28.161.86（V4）</p>
 <p>rsc_server端，接收到数据时，write到cache，就立刻返回。当cache满时，由系统一次性flush到磁盘。会使磁盘util=100%，持续10~20s，导致影响到客户虚机的IO性能。</p>
-<p><img src="/.io//2-nolimit-2.png" alt="image"></p>
-<p><img src="/.io//2-nolimit-3.png" alt="image"></p>
+<img src="/2018/04/18/%E7%A3%81%E7%9B%98IO%E5%9C%A8%E6%96%87%E4%BB%B6%E4%BC%A0%E8%BE%93%E8%BF%87%E7%A8%8B%E4%B8%AD%E7%9A%84%E7%A8%B3%E5%AE%9A%E6%8E%A7%E5%88%B6%E6%96%B9%E6%B3%95/2-nolimit-2.png" class="" title="image">
+
+<img src="/2018/04/18/%E7%A3%81%E7%9B%98IO%E5%9C%A8%E6%96%87%E4%BB%B6%E4%BC%A0%E8%BE%93%E8%BF%87%E7%A8%8B%E4%B8%AD%E7%9A%84%E7%A8%B3%E5%AE%9A%E6%8E%A7%E5%88%B6%E6%96%B9%E6%B3%95/2-nolimit-3.png" class="" title="image">
 <h2 id="限速方案"><a href="#限速方案" class="headerlink" title="限速方案"></a>限速方案</h2><p>不同方案的测试和比较：<br>（1）对rsc_server进程的IO限速；<br>（2）对flush进程的IO限速；<br>（3）每次write时都sync；<br>（4）收到一定数量的包，调用fsync<br>其中对进程的限速是通过cgroup。</p>
-<h3 id="对rsc-server进程的IO限速"><a href="#对rsc-server进程的IO限速" class="headerlink" title="对rsc_server进程的IO限速"></a>对rsc_server进程的IO限速</h3><p>设置写到磁盘的限速参数：Bps=40MB/s，iops=15000。<br><img src="/.io//3-1-limit-1.png" alt="image"></p>
-<p>把rsc_server进程PID添加到限速的tasks里。<br><img src="/.io//3-1-limit-2.png" alt="image"></p>
+<h3 id="对rsc-server进程的IO限速"><a href="#对rsc-server进程的IO限速" class="headerlink" title="对rsc_server进程的IO限速"></a>对rsc_server进程的IO限速</h3><p>设置写到磁盘的限速参数：Bps=40MB/s，iops=15000。</p>
+<img src="/2018/04/18/%E7%A3%81%E7%9B%98IO%E5%9C%A8%E6%96%87%E4%BB%B6%E4%BC%A0%E8%BE%93%E8%BF%87%E7%A8%8B%E4%B8%AD%E7%9A%84%E7%A8%B3%E5%AE%9A%E6%8E%A7%E5%88%B6%E6%96%B9%E6%B3%95/3-1-limit-1.png" class="" title="image">
+
+<p>把rsc_server进程PID添加到限速的tasks里。</p>
+<img src="/2018/04/18/%E7%A3%81%E7%9B%98IO%E5%9C%A8%E6%96%87%E4%BB%B6%E4%BC%A0%E8%BE%93%E8%BF%87%E7%A8%8B%E4%B8%AD%E7%9A%84%E7%A8%B3%E5%AE%9A%E6%8E%A7%E5%88%B6%E6%96%B9%E6%B3%95/3-1-limit-2.png" class="" title="image">
+
 <p>无法限制住磁盘的IO。</p>
-<p><img src="/.io//3-1-limit-3.png" alt="image"></p>
+<img src="/2018/04/18/%E7%A3%81%E7%9B%98IO%E5%9C%A8%E6%96%87%E4%BB%B6%E4%BC%A0%E8%BE%93%E8%BF%87%E7%A8%8B%E4%B8%AD%E7%9A%84%E7%A8%B3%E5%AE%9A%E6%8E%A7%E5%88%B6%E6%96%B9%E6%B3%95/3-1-limit-3.png" class="" title="image">
+
 <p>原因：将cache刷到磁盘时，是由flush进程执行的，并不是rsc_server本身。所以考虑到将flush进程限速。</p>
-<h3 id="对flush-进程的IO限速"><a href="#对flush-进程的IO限速" class="headerlink" title="对flush 进程的IO限速"></a>对flush 进程的IO限速</h3><p>把flush进程的PID加入tasks里，可以限制磁盘到40M/s。<br><img src="/.io//3-2-flushlimit-1.png" alt="image"></p>
-<p><img src="/.io//3-2-flushlimit-2.png" alt="image"></p>
-<p><img src="/.io//3-2-flushlimit-3.png" alt="image"></p>
+<h3 id="对flush-进程的IO限速"><a href="#对flush-进程的IO限速" class="headerlink" title="对flush 进程的IO限速"></a>对flush 进程的IO限速</h3><p>把flush进程的PID加入tasks里，可以限制磁盘到40M/s。</p>
+<img src="/2018/04/18/%E7%A3%81%E7%9B%98IO%E5%9C%A8%E6%96%87%E4%BB%B6%E4%BC%A0%E8%BE%93%E8%BF%87%E7%A8%8B%E4%B8%AD%E7%9A%84%E7%A8%B3%E5%AE%9A%E6%8E%A7%E5%88%B6%E6%96%B9%E6%B3%95/3-2-flushlimit-1.png" class="" title="image">
+
+<img src="/2018/04/18/%E7%A3%81%E7%9B%98IO%E5%9C%A8%E6%96%87%E4%BB%B6%E4%BC%A0%E8%BE%93%E8%BF%87%E7%A8%8B%E4%B8%AD%E7%9A%84%E7%A8%B3%E5%AE%9A%E6%8E%A7%E5%88%B6%E6%96%B9%E6%B3%95/3-2-flushlimit-2.png" class="" title="image">
+
+<img src="/2018/04/18/%E7%A3%81%E7%9B%98IO%E5%9C%A8%E6%96%87%E4%BB%B6%E4%BC%A0%E8%BE%93%E8%BF%87%E7%A8%8B%E4%B8%AD%E7%9A%84%E7%A8%B3%E5%AE%9A%E6%8E%A7%E5%88%B6%E6%96%B9%E6%B3%95/3-2-flushlimit-3.png" class="" title="image">
+
 <p>带来的问题，会影响所有通过flush来刷磁盘的操作：</p>
-<p>1 宿主机的磁盘dm-0上，其他会将数据写到cahe就返回的操作都受到影响，如jbd2服务。jbd2(journaling block device 2)是ext4文件系统的服务，可以完成数据备份和恢复。<br><img src="/.io//3-2-flushlimit-4.png" alt="image"><br>2 虚机内部<br><img src="/.io//3-2-flushlimit-5.png" alt="image"></p>
-<p><img src="/.io//3-2-flushlimit-6.png" alt="image"></p>
-<h3 id="每次write时都sync"><a href="#每次write时都sync" class="headerlink" title="每次write时都sync"></a>每次write时都sync</h3><p>每次write都sync到磁盘，可以绕过从cache flush到磁盘的过程,也就不会产生flush过程中产生的IO过大的问题。<br><img src="/.io//3-3-sync-1.png" alt="image"></p>
-<p>但每次write都sync带来写磁盘性能过低,落盘速度5M/s左右,util为98%~100%。<br><img src="/.io//3-3-sync-2.png" alt="image"></p>
+<p>1 宿主机的磁盘dm-0上，其他会将数据写到cahe就返回的操作都受到影响，如jbd2服务。jbd2(journaling block device 2)是ext4文件系统的服务，可以完成数据备份和恢复。</p>
+<img src="/2018/04/18/%E7%A3%81%E7%9B%98IO%E5%9C%A8%E6%96%87%E4%BB%B6%E4%BC%A0%E8%BE%93%E8%BF%87%E7%A8%8B%E4%B8%AD%E7%9A%84%E7%A8%B3%E5%AE%9A%E6%8E%A7%E5%88%B6%E6%96%B9%E6%B3%95/3-2-flushlimit-4.png" class="" title="image">
+<p>2 虚机内部</p>
+<img src="/2018/04/18/%E7%A3%81%E7%9B%98IO%E5%9C%A8%E6%96%87%E4%BB%B6%E4%BC%A0%E8%BE%93%E8%BF%87%E7%A8%8B%E4%B8%AD%E7%9A%84%E7%A8%B3%E5%AE%9A%E6%8E%A7%E5%88%B6%E6%96%B9%E6%B3%95/3-2-flushlimit-5.png" class="" title="image">
+
+<img src="/2018/04/18/%E7%A3%81%E7%9B%98IO%E5%9C%A8%E6%96%87%E4%BB%B6%E4%BC%A0%E8%BE%93%E8%BF%87%E7%A8%8B%E4%B8%AD%E7%9A%84%E7%A8%B3%E5%AE%9A%E6%8E%A7%E5%88%B6%E6%96%B9%E6%B3%95/3-2-flushlimit-6.png" class="" title="image">
+<h3 id="每次write时都sync"><a href="#每次write时都sync" class="headerlink" title="每次write时都sync"></a>每次write时都sync</h3><p>每次write都sync到磁盘，可以绕过从cache flush到磁盘的过程,也就不会产生flush过程中产生的IO过大的问题。</p>
+<img src="/2018/04/18/%E7%A3%81%E7%9B%98IO%E5%9C%A8%E6%96%87%E4%BB%B6%E4%BC%A0%E8%BE%93%E8%BF%87%E7%A8%8B%E4%B8%AD%E7%9A%84%E7%A8%B3%E5%AE%9A%E6%8E%A7%E5%88%B6%E6%96%B9%E6%B3%95/3-3-sync-1.png" class="" title="image">
+
+<p>但每次write都sync带来写磁盘性能过低,落盘速度5M/s左右,util为98%~100%。</p>
+<img src="/2018/04/18/%E7%A3%81%E7%9B%98IO%E5%9C%A8%E6%96%87%E4%BB%B6%E4%BC%A0%E8%BE%93%E8%BF%87%E7%A8%8B%E4%B8%AD%E7%9A%84%E7%A8%B3%E5%AE%9A%E6%8E%A7%E5%88%B6%E6%96%B9%E6%B3%95/3-3-sync-2.png" class="" title="image">
 <h3 id="每收到10个64K的包，调用一次fsync"><a href="#每收到10个64K的包，调用一次fsync" class="headerlink" title="每收到10个64K的包，调用一次fsync"></a>每收到10个64K的包，调用一次fsync</h3><p>考虑到每次write都sync，影响磁盘性能，考虑减少sync的次数。改成累积到一定数量的包后，再调用fsync的方案。</p>
-<p>172.27.162.108 –&gt; 172.27.172.226( V3 )<br><img src="/.io//3-4-fsync-1.png" alt="image"></p>
-<p><img src="/.io//3-4-fsync-2.png" alt="image"></p>
-<p>172.28.160.151–&gt; 172.28.161.86( V4 )<br><img src="/.io//3-4-fsync-3.png" alt="image"></p>
-<p><img src="/.io//3-4-fsync-4.png" alt="image"></p>
+<p>172.27.162.108 –&gt; 172.27.172.226( V3 )</p>
+<img src="/2018/04/18/%E7%A3%81%E7%9B%98IO%E5%9C%A8%E6%96%87%E4%BB%B6%E4%BC%A0%E8%BE%93%E8%BF%87%E7%A8%8B%E4%B8%AD%E7%9A%84%E7%A8%B3%E5%AE%9A%E6%8E%A7%E5%88%B6%E6%96%B9%E6%B3%95/3-4-fsync-1.png" class="" title="image">
+
+<img src="/2018/04/18/%E7%A3%81%E7%9B%98IO%E5%9C%A8%E6%96%87%E4%BB%B6%E4%BC%A0%E8%BE%93%E8%BF%87%E7%A8%8B%E4%B8%AD%E7%9A%84%E7%A8%B3%E5%AE%9A%E6%8E%A7%E5%88%B6%E6%96%B9%E6%B3%95/3-4-fsync-2.png" class="" title="image">
+
+
+<p>172.28.160.151–&gt; 172.28.161.86( V4 )</p>
+<img src="/2018/04/18/%E7%A3%81%E7%9B%98IO%E5%9C%A8%E6%96%87%E4%BB%B6%E4%BC%A0%E8%BE%93%E8%BF%87%E7%A8%8B%E4%B8%AD%E7%9A%84%E7%A8%B3%E5%AE%9A%E6%8E%A7%E5%88%B6%E6%96%B9%E6%B3%95/3-4-fsync-3.png" class="" title="image">
+
+<img src="/2018/04/18/%E7%A3%81%E7%9B%98IO%E5%9C%A8%E6%96%87%E4%BB%B6%E4%BC%A0%E8%BE%93%E8%BF%87%E7%A8%8B%E4%B8%AD%E7%9A%84%E7%A8%B3%E5%AE%9A%E6%8E%A7%E5%88%B6%E6%96%B9%E6%B3%95/3-4-fsync-4.png" class="" title="image">
+
 <p>可以结果：</p>
 <p>（1）写入IO得到很大提高，在30M/s ~ 200M/s之间，受宿主机影响较大；</p>
 <p>（2）传输过程中，IO一直很稳定，util保持在40%或70%，也没有看到flush进程的出现，说明IO落地是由fsync执行；</p>
@@ -1086,19 +1020,31 @@
 <p>小插曲：</p>
 <p>前面由于代码bug， 在每第10个64K包sync了n次。n为该64K的包，在跳过0的空洞后，拆成的小包的个数。sync次数过多导致IO性能过低，测试数据为6M/s左右。</p>
 <p>172.28.160.151–&gt; 172.28.161.86（V4）</p>
-<p><img src="/.io//3-4-fsync-5.png" alt="image"></p>
+<img src="/2018/04/18/%E7%A3%81%E7%9B%98IO%E5%9C%A8%E6%96%87%E4%BB%B6%E4%BC%A0%E8%BE%93%E8%BF%87%E7%A8%8B%E4%B8%AD%E7%9A%84%E7%A8%B3%E5%AE%9A%E6%8E%A7%E5%88%B6%E6%96%B9%E6%B3%95/3-4-fsync-5.png" class="" title="image">
+
 <p>strace的查看结果：</p>
 <p>strace -T -p 21712( rsc_server进程PID ) -o test_rsc_server.txt</p>
-<p><img src="/.io//3-4-fsync-6.png" alt="image"></p>
-<p>IO性能过低。<br><img src="/.io//3-4-fsync-7.png" alt="image"></p>
-<p><img src="/.io//3-4-fsync-8.png" alt="image"></p>
+<img src="/2018/04/18/%E7%A3%81%E7%9B%98IO%E5%9C%A8%E6%96%87%E4%BB%B6%E4%BC%A0%E8%BE%93%E8%BF%87%E7%A8%8B%E4%B8%AD%E7%9A%84%E7%A8%B3%E5%AE%9A%E6%8E%A7%E5%88%B6%E6%96%B9%E6%B3%95/3-4-fsync-6.png" class="" title="image">
+
+
+<p>IO性能过低。</p>
+<img src="/2018/04/18/%E7%A3%81%E7%9B%98IO%E5%9C%A8%E6%96%87%E4%BB%B6%E4%BC%A0%E8%BE%93%E8%BF%87%E7%A8%8B%E4%B8%AD%E7%9A%84%E7%A8%B3%E5%AE%9A%E6%8E%A7%E5%88%B6%E6%96%B9%E6%B3%95/3-4-fsync-7.png" class="" title="image">
+
+<img src="/2018/04/18/%E7%A3%81%E7%9B%98IO%E5%9C%A8%E6%96%87%E4%BB%B6%E4%BC%A0%E8%BE%93%E8%BF%87%E7%A8%8B%E4%B8%AD%E7%9A%84%E7%A8%B3%E5%AE%9A%E6%8E%A7%E5%88%B6%E6%96%B9%E6%B3%95/3-4-fsync-8.png" class="" title="image">
+
+
 <h2 id="最终方案"><a href="#最终方案" class="headerlink" title="最终方案"></a>最终方案</h2><p>“每收到10个64K的包，调用一次fsync”，由于宿主机的磁盘性能不同，不排除依然可能会有IO打满的情况，因为此时cache到磁盘的过程，是由rsc_server自己控制的，所以可以通过cgroup对rsc_server限速。</p>
 <p>172.27.162.108 –&gt; 172.27.172.226( V3 )</p>
-<p>限速： rsc_server写入dm-0的 Bps=60M/s。<br><img src="/.io//4-final-1.png" alt="image"></p>
-<p><img src="/.io//4-final-2.png" alt="image"></p>
+<p>限速： rsc_server写入dm-0的 Bps=60M/s。</p>
+<img src="/2018/04/18/%E7%A3%81%E7%9B%98IO%E5%9C%A8%E6%96%87%E4%BB%B6%E4%BC%A0%E8%BE%93%E8%BF%87%E7%A8%8B%E4%B8%AD%E7%9A%84%E7%A8%B3%E5%AE%9A%E6%8E%A7%E5%88%B6%E6%96%B9%E6%B3%95/4-final-1.png" class="" title="image">
+
+<img src="/2018/04/18/%E7%A3%81%E7%9B%98IO%E5%9C%A8%E6%96%87%E4%BB%B6%E4%BC%A0%E8%BE%93%E8%BF%87%E7%A8%8B%E4%B8%AD%E7%9A%84%E7%A8%B3%E5%AE%9A%E6%8E%A7%E5%88%B6%E6%96%B9%E6%B3%95/4-final-2.png" class="" title="image">
+
 <p>结果：rsc_server的落盘速度稳定在60M/s。</p>
-<p><img src="/.io//4-final-3.png" alt="image"></p>
-<p><img src="/.io//4-final-4.png" alt="image"></p>
+<img src="/2018/04/18/%E7%A3%81%E7%9B%98IO%E5%9C%A8%E6%96%87%E4%BB%B6%E4%BC%A0%E8%BE%93%E8%BF%87%E7%A8%8B%E4%B8%AD%E7%9A%84%E7%A8%B3%E5%AE%9A%E6%8E%A7%E5%88%B6%E6%96%B9%E6%B3%95/4-final-3.png" class="" title="image">
+
+<img src="/2018/04/18/%E7%A3%81%E7%9B%98IO%E5%9C%A8%E6%96%87%E4%BB%B6%E4%BC%A0%E8%BE%93%E8%BF%87%E7%A8%8B%E4%B8%AD%E7%9A%84%E7%A8%B3%E5%AE%9A%E6%8E%A7%E5%88%B6%E6%96%B9%E6%B3%95/4-final-4.png" class="" title="image">
+
 <p>因此最终的方案是“fsync + cgroup限速”。</p>
 
       
@@ -1119,7 +1065,7 @@
 
   
   <nav class="pagination">
-    <a class="extend prev" rel="prev" href="/page/2/"><i class="fa fa-angle-left" aria-label="Previous page"></i></a><a class="page-number" href="/">1</a><a class="page-number" href="/page/2/">2</a><span class="page-number current">3</span>
+    <a class="extend prev" rel="prev" href="/page/2/"><i class="fa fa-angle-left" aria-label="上一页"></i></a><a class="page-number" href="/">1</a><a class="page-number" href="/page/2/">2</a><span class="page-number current">3</span>
   </nav>
 
 
@@ -1163,10 +1109,10 @@
 
       <ul class="sidebar-nav motion-element">
         <li class="sidebar-nav-toc">
-          Table of Contents
+          文章目录
         </li>
         <li class="sidebar-nav-overview">
-          Overview
+          站点概览
         </li>
       </ul>
 
@@ -1185,21 +1131,21 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">28</span>
-          <span class="site-state-item-name">posts</span>
+          <span class="site-state-item-count">27</span>
+          <span class="site-state-item-name">日志</span>
         </a>
       </div>
       <div class="site-state-item site-state-categories">
             <a href="/categories/">
           
         <span class="site-state-item-count">12</span>
-        <span class="site-state-item-name">categories</span></a>
+        <span class="site-state-item-name">分类</span></a>
       </div>
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
         <span class="site-state-item-count">37</span>
-        <span class="site-state-item-name">tags</span></a>
+        <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
 </div>
@@ -1237,17 +1183,17 @@
     <span class="post-meta-item-icon">
       <i class="fa fa-area-chart"></i>
     </span>
-    <span title="Symbols count total">124k</span>
+    <span title="站点总字数">124k</span>
     <span class="post-meta-divider">|</span>
     <span class="post-meta-item-icon">
       <i class="fa fa-coffee"></i>
     </span>
-    <span title="Reading time total">3:27</span>
+    <span title="站点阅读时长">3:26</span>
 </div>
-  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> v5.4.0
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> 强力驱动 v5.4.0
   </div>
   <span class="post-meta-divider">|</span>
-  <div class="theme-info">Theme – <a href="https://muse.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a> v7.7.0
+  <div class="theme-info">主题 – <a href="https://muse.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a> v7.7.0
   </div>
 
         
@@ -1284,6 +1230,10 @@
   
 
 
+
+
+  
+<script src="/js/local-search.js"></script>
 
 
 

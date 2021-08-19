@@ -40,8 +40,8 @@
       hits: {"per_page":10},
       labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
     },
-    localsearch: {"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
-    path: '',
+    localsearch: {"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: 'search.xml',
     motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}
   };
 </script>
@@ -53,23 +53,23 @@
 <meta property="og:site_name" content="森几许的博客">
 <meta property="og:description" content="Visual Studio Code介绍Visual Studio Code是很轻量但功能强大的代码编辑器，可以在Windows、macOS和 Linux上运行。">
 <meta property="og:locale">
-<meta property="og:image" content="https://xusenqi.github.io/.io//Settings.jpg">
-<meta property="og:image" content="https://xusenqi.github.io/.io//CommandPalette.jpg">
-<meta property="og:image" content="https://xusenqi.github.io/.io//OpenKeyboardShotcuts.jpg">
-<meta property="og:image" content="https://xusenqi.github.io/.io//KeyboardShotcuts.jpg">
-<meta property="og:image" content="https://xusenqi.github.io/.io//KeyboardShotcuts_json.jpg">
-<meta property="og:image" content="https://xusenqi.github.io/.io//PeekReferences.jpg">
-<meta property="og:image" content="https://xusenqi.github.io/.io//symbols.jpg">
-<meta property="og:image" content="https://xusenqi.github.io/.io//GoDebugConfigurations.jpg">
-<meta property="og:image" content="https://xusenqi.github.io/.io//code.jpg">
-<meta property="og:image" content="https://xusenqi.github.io/.io//CodeLink.jpg">
+<meta property="og:image" content="https://xusenqi.github.io/2019/08/23/Visual-Studio-Code%E7%9A%84%E4%BD%BF%E7%94%A8%E6%80%BB%E7%BB%93/Settings.jpg">
+<meta property="og:image" content="https://xusenqi.github.io/2019/08/23/Visual-Studio-Code%E7%9A%84%E4%BD%BF%E7%94%A8%E6%80%BB%E7%BB%93/CommandPalette.jpg">
+<meta property="og:image" content="https://xusenqi.github.io/2019/08/23/Visual-Studio-Code%E7%9A%84%E4%BD%BF%E7%94%A8%E6%80%BB%E7%BB%93/OpenKeyboardShotcuts.jpg">
+<meta property="og:image" content="https://xusenqi.github.io/2019/08/23/Visual-Studio-Code%E7%9A%84%E4%BD%BF%E7%94%A8%E6%80%BB%E7%BB%93/KeyboardShotcuts.jpg">
+<meta property="og:image" content="https://xusenqi.github.io/2019/08/23/Visual-Studio-Code%E7%9A%84%E4%BD%BF%E7%94%A8%E6%80%BB%E7%BB%93/KeyboardShotcuts_json.jpg">
+<meta property="og:image" content="https://xusenqi.github.io/2019/08/23/Visual-Studio-Code%E7%9A%84%E4%BD%BF%E7%94%A8%E6%80%BB%E7%BB%93/PeekReferences.jpg">
+<meta property="og:image" content="https://xusenqi.github.io/2019/08/23/Visual-Studio-Code%E7%9A%84%E4%BD%BF%E7%94%A8%E6%80%BB%E7%BB%93/symbols.jpg">
+<meta property="og:image" content="https://xusenqi.github.io/2019/08/23/Visual-Studio-Code%E7%9A%84%E4%BD%BF%E7%94%A8%E6%80%BB%E7%BB%93/GoDebugConfigurations.jpg">
+<meta property="og:image" content="https://xusenqi.github.io/2019/08/23/Visual-Studio-Code%E7%9A%84%E4%BD%BF%E7%94%A8%E6%80%BB%E7%BB%93/code.jpg">
+<meta property="og:image" content="https://xusenqi.github.io/2019/08/23/Visual-Studio-Code%E7%9A%84%E4%BD%BF%E7%94%A8%E6%80%BB%E7%BB%93/CodeLink.jpg">
 <meta property="article:published_time" content="2019-08-23T14:57:05.000Z">
-<meta property="article:modified_time" content="2021-08-18T13:13:06.212Z">
+<meta property="article:modified_time" content="2021-08-19T09:54:38.602Z">
 <meta property="article:author" content="patrick.xu">
 <meta property="article:tag" content="快捷键">
 <meta property="article:tag" content="插件">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="https://xusenqi.github.io/.io//Settings.jpg">
+<meta name="twitter:image" content="https://xusenqi.github.io/2019/08/23/Visual-Studio-Code%E7%9A%84%E4%BD%BF%E7%94%A8%E6%80%BB%E7%BB%93/Settings.jpg">
 
 <link rel="canonical" href="https://xusenqi.github.io/2019/08/23/Visual-Studio-Code%E7%9A%84%E4%BD%BF%E7%94%A8%E6%80%BB%E7%BB%93/">
 
@@ -136,7 +136,7 @@
   </div>
 
   <div class="site-nav-toggle">
-    <div class="toggle" aria-label="Toggle navigation bar">
+    <div class="toggle" aria-label="切换导航栏">
       <span class="toggle-line toggle-line-first"></span>
       <span class="toggle-line toggle-line-middle"></span>
       <span class="toggle-line toggle-line-last"></span>
@@ -150,32 +150,57 @@
   <ul id="menu" class="menu">
         <li class="menu-item menu-item-home">
 
-    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>Home</a>
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
 
   </li>
         <li class="menu-item menu-item-about">
 
-    <a href="/about/" rel="section"><i class="fa fa-fw fa-user"></i>About</a>
+    <a href="/about/" rel="section"><i class="fa fa-fw fa-user"></i>关于</a>
 
   </li>
         <li class="menu-item menu-item-tags">
 
-    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>Tags</a>
+    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>标签</a>
 
   </li>
         <li class="menu-item menu-item-categories">
 
-    <a href="/categories/" rel="section"><i class="fa fa-fw fa-th"></i>Categories</a>
+    <a href="/categories/" rel="section"><i class="fa fa-fw fa-th"></i>分类</a>
 
   </li>
         <li class="menu-item menu-item-archives">
 
-    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>Archives</a>
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档</a>
 
   </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
   </ul>
 
 </nav>
+  <div class="site-search">
+    <div class="popup search-popup">
+    <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocorrect="off" autocapitalize="none"
+           placeholder="搜索..." spellcheck="false"
+           type="text" id="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result"></div>
+
+</div>
+<div class="search-pop-overlay"></div>
+
+  </div>
 </div>
     </header>
 
@@ -220,22 +245,22 @@
               <span class="post-meta-item-icon">
                 <i class="fa fa-calendar-o"></i>
               </span>
-              <span class="post-meta-item-text">Posted on</span>
+              <span class="post-meta-item-text">发表于</span>
 
-              <time title="Created: 2019-08-23 22:57:05" itemprop="dateCreated datePublished" datetime="2019-08-23T22:57:05+08:00">2019-08-23</time>
+              <time title="创建时间：2019-08-23 22:57:05" itemprop="dateCreated datePublished" datetime="2019-08-23T22:57:05+08:00">2019-08-23</time>
             </span>
               <span class="post-meta-item">
                 <span class="post-meta-item-icon">
                   <i class="fa fa-calendar-check-o"></i>
                 </span>
-                <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2021-08-18 21:13:06" itemprop="dateModified" datetime="2021-08-18T21:13:06+08:00">2021-08-18</time>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-08-19 17:54:38" itemprop="dateModified" datetime="2021-08-19T17:54:38+08:00">2021-08-19</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
                 <i class="fa fa-folder-o"></i>
               </span>
-              <span class="post-meta-item-text">In</span>
+              <span class="post-meta-item-text">分类于</span>
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
                   <a href="/categories/vscode/" itemprop="url" rel="index">
                     <span itemprop="name">vscode</span>
@@ -244,19 +269,19 @@
             </span>
 
           <br>
-            <span class="post-meta-item" title="Symbols count in article">
+            <span class="post-meta-item" title="本文字数">
               <span class="post-meta-item-icon">
                 <i class="fa fa-file-word-o"></i>
               </span>
-                <span class="post-meta-item-text">Symbols count in article: </span>
+                <span class="post-meta-item-text">本文字数：</span>
               <span>4.5k</span>
             </span>
-            <span class="post-meta-item" title="Reading time">
+            <span class="post-meta-item" title="阅读时长">
               <span class="post-meta-item-icon">
                 <i class="fa fa-clock-o"></i>
               </span>
-                <span class="post-meta-item-text">Reading time &asymp;</span>
-              <span>8 mins.</span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>8 分钟</span>
             </span>
 
         </div>
@@ -277,7 +302,9 @@
 <li>Workspace Settings - Settings stored inside your workspace and only apply when the workspace is opened.</li>
 </ul>
 <p>Workspace settings override user settings.</p>
-<h2 id="打开方式"><a href="#打开方式" class="headerlink" title="打开方式"></a>打开方式</h2><p>页面打开：Code –&gt; Preferences –&gt; Settings，这种方式可以很直观地配置<br><img src="/.io//Settings.jpg" alt="image"></p>
+<h2 id="打开方式"><a href="#打开方式" class="headerlink" title="打开方式"></a>打开方式</h2><p>页面打开：Code –&gt; Preferences –&gt; Settings，这种方式可以很直观地配置</p>
+<img src="/2019/08/23/Visual-Studio-Code%E7%9A%84%E4%BD%BF%E7%94%A8%E6%80%BB%E7%BB%93/Settings.jpg" class="" title="image">
+
 <p>也可以在json文件里直接修改：</p>
 <ul>
 <li>User Settings:   </li>
@@ -287,7 +314,7 @@
 <li>Wrokspace: …</li>
 </ul>
 <h1 id="快捷键"><a href="#快捷键" class="headerlink" title="快捷键"></a>快捷键</h1><h2 id="默认常用快捷键"><a href="#默认常用快捷键" class="headerlink" title="默认常用快捷键"></a>默认常用快捷键</h2><ul>
-<li>(Command Palette | Show All Commands)  shift + command + p 或者 F1<br><img src="/.io//CommandPalette.jpg" alt="image"></li>
+<li>(Command Palette | Show All Commands)  shift + command + p 或者 F1<img src="/2019/08/23/Visual-Studio-Code%E7%9A%84%E4%BD%BF%E7%94%A8%E6%80%BB%E7%BB%93/CommandPalette.jpg" class="" title="image"></li>
 <li>搜索文件 command + p</li>
 <li>搜索内容(Find in Files) shift + command + f</li>
 <li>回到上一个地方(Go Back) ctrl + -</li>
@@ -302,9 +329,15 @@
 <li>跳转到定义(Go to Definition) F12</li>
 <li>(showAllSymbols) command + t</li>
 </ul>
-<h2 id="自定义快捷键"><a href="#自定义快捷键" class="headerlink" title="自定义快捷键"></a>自定义快捷键</h2><h3 id="更改方式"><a href="#更改方式" class="headerlink" title="更改方式"></a>更改方式</h3><p>打开键盘快捷键<br><img src="/.io//OpenKeyboardShotcuts.jpg" alt="image"></p>
-<p>Keyboard Shotcuts里显示当前支持哪些快捷键，包括默认的和自定义的；也可以在里面直接更改<br><img src="/.io//KeyboardShotcuts.jpg" alt="image"></p>
-<p>Keyboard Shotcuts(json)里了自定义的快捷键；前面在Keyboard Shotcuts修改的会展示在这里，也可以在这里直接修改<br><img src="/.io//KeyboardShotcuts_json.jpg" alt="image"></p>
+<h2 id="自定义快捷键"><a href="#自定义快捷键" class="headerlink" title="自定义快捷键"></a>自定义快捷键</h2><h3 id="更改方式"><a href="#更改方式" class="headerlink" title="更改方式"></a>更改方式</h3><p>打开键盘快捷键</p>
+<img src="/2019/08/23/Visual-Studio-Code%E7%9A%84%E4%BD%BF%E7%94%A8%E6%80%BB%E7%BB%93/OpenKeyboardShotcuts.jpg" class="" title="image">
+
+<p>Keyboard Shotcuts里显示当前支持哪些快捷键，包括默认的和自定义的；也可以在里面直接更改</p>
+<img src="/2019/08/23/Visual-Studio-Code%E7%9A%84%E4%BD%BF%E7%94%A8%E6%80%BB%E7%BB%93/KeyboardShotcuts.jpg" class="" title="image">
+
+<p>Keyboard Shotcuts(json)里了自定义的快捷键；前面在Keyboard Shotcuts修改的会展示在这里，也可以在这里直接修改</p>
+<img src="/2019/08/23/Visual-Studio-Code%E7%9A%84%E4%BD%BF%E7%94%A8%E6%80%BB%E7%BB%93/KeyboardShotcuts_json.jpg" class="" title="image">
+
 <h3 id="常用自定义快捷键"><a href="#常用自定义快捷键" class="headerlink" title="常用自定义快捷键"></a>常用自定义快捷键</h3><p>根绝个人喜好，常用的如下：</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"> &#123;</span><br><span class="line">     &quot;key&quot;: &quot;cmd+enter&quot;,</span><br><span class="line">     &quot;command&quot;: &quot;workbench.action.toggleFullScreen&quot;  //切换全屏</span><br><span class="line"> &#125;,</span><br><span class="line"> &#123;</span><br><span class="line">     &quot;key&quot;: &quot;cmd+right&quot;,</span><br><span class="line">     &quot;command&quot;: &quot;workbench.action.nextEditor&quot;   //下个编辑器</span><br><span class="line"> &#125;,</span><br><span class="line"> &#123;</span><br><span class="line">     &quot;key&quot;: &quot;cmd+left&quot;,</span><br><span class="line">     &quot;command&quot;: &quot;workbench.action.previousEditor&quot; //上个编辑器</span><br><span class="line"> &#125;,</span><br><span class="line"> &#123;</span><br><span class="line">    &quot;key&quot;: &quot;alt+cmd+n&quot;,</span><br><span class="line">    &quot;command&quot;: &quot;openInTerminal&quot;  //打开Terminal,并跳到当前文件的目录</span><br><span class="line">&#125;,</span><br><span class="line">&#123;</span><br><span class="line">    &quot;key&quot;: &quot;cmd+s cmd+w&quot;,</span><br><span class="line">    &quot;command&quot;: &quot;workbench.action.quickSwitchWindow&quot; // 切换窗口</span><br><span class="line">&#125;,</span><br><span class="line">&#123;</span><br><span class="line">    &quot;key&quot;: &quot;cmd+2&quot;,</span><br><span class="line">    &quot;command&quot;: &quot;workbench.action.focusPanel&quot;   // 跳到Panel</span><br><span class="line">&#125; </span><br></pre></td></tr></table></figure>
 
@@ -327,17 +360,24 @@
 <ul>
 <li>Go To Definition F12 - Go to the source code of the type definition.</li>
 <li>Peek Definition ⌥F12 - Bring up a Peek window with the type definition.</li>
-<li>Peek References <strong>⇧F12</strong> - Show all references for the type. (显示该类型的所有引用,个人觉得这个功能很强大)<br><img src="/.io//PeekReferences.jpg" alt="image"></li>
+<li>Peek References <strong>⇧F12</strong> - Show all references for the type. (显示该类型的所有引用,个人觉得这个功能很强大)<img src="/2019/08/23/Visual-Studio-Code%E7%9A%84%E4%BD%BF%E7%94%A8%E6%80%BB%E7%BB%93/PeekReferences.jpg" class="" title="image"></li>
 </ul>
 <p>You can navigate via symbol search using the Go to Symbol commands from the Command Palette (⇧⌘P).</p>
-<p>Go to Symbol in File - ⇧⌘O<br>显示该文件的symbol,symbol: 指定义的函数，变量，类型等<br><img src="/.io//symbols.jpg" alt="image"></p>
+<p>Go to Symbol in File - ⇧⌘O<br>显示该文件的symbol,symbol: 指定义的函数，变量，类型等</p>
+<img src="/2019/08/23/Visual-Studio-Code%E7%9A%84%E4%BD%BF%E7%94%A8%E6%80%BB%E7%BB%93/symbols.jpg" class="" title="image">
+
 <p>Go to Symbol in Workspace - ⌘T</p>
 <p>You can also navigate back and forth between a Go file and its test implementation using the Go: Toggle Test File command.</p>
-<h3 id="Debugging-Go-code-using-VS-Code"><a href="#Debugging-Go-code-using-VS-Code" class="headerlink" title="Debugging Go code using VS Code"></a><a target="_blank" rel="noopener" href="https://github.com/Microsoft/vscode-go/wiki/Debugging-Go-code-using-VS-Code">Debugging Go code using VS Code</a></h3><p>设置一个或者多个GOPATH<br><img src="/.io//GoDebugConfigurations.jpg" alt="image"></p>
+<h3 id="Debugging-Go-code-using-VS-Code"><a href="#Debugging-Go-code-using-VS-Code" class="headerlink" title="Debugging Go code using VS Code"></a><a target="_blank" rel="noopener" href="https://github.com/Microsoft/vscode-go/wiki/Debugging-Go-code-using-VS-Code">Debugging Go code using VS Code</a></h3><p>设置一个或者多个GOPATH</p>
+<img src="/2019/08/23/Visual-Studio-Code%E7%9A%84%E4%BD%BF%E7%94%A8%E6%80%BB%E7%BB%93/GoDebugConfigurations.jpg" class="" title="image">
+
 <h2 id="C-C"><a href="#C-C" class="headerlink" title="C/C++"></a>C/C++</h2><h3 id="Edit-Configurations"><a href="#Edit-Configurations" class="headerlink" title="Edit Configurations"></a>Edit Configurations</h3><p>F1打开Command Palette –&gt; C/C++: Edit configurations (JSON)</p>
 <p>主要设置”includePath”, 便于代码跳转，参考 <a target="_blank" rel="noopener" href="https://code.visualstudio.com/docs/cpp/c-cpp-properties-schema-reference">https://code.visualstudio.com/docs/cpp/c-cpp-properties-schema-reference</a></p>
-<h1 id="在终端里直接打开vscode"><a href="#在终端里直接打开vscode" class="headerlink" title="在终端里直接打开vscode"></a>在终端里直接打开vscode</h1><p><img src="/.io//code.jpg" alt="image"></p>
-<p>在vscode 中快捷键 shift + command + p 输入 code ,选择安装code 命令。<br>本质是做了个软链/usr/local/bin/code<br><img src="/.io//CodeLink.jpg" alt="image"></p>
+<h1 id="在终端里直接打开vscode"><a href="#在终端里直接打开vscode" class="headerlink" title="在终端里直接打开vscode"></a>在终端里直接打开vscode</h1><img src="/2019/08/23/Visual-Studio-Code%E7%9A%84%E4%BD%BF%E7%94%A8%E6%80%BB%E7%BB%93/code.jpg" class="" title="image">
+
+<p>在vscode 中快捷键 shift + command + p 输入 code ,选择安装code 命令。<br>本质是做了个软链/usr/local/bin/code</p>
+<img src="/2019/08/23/Visual-Studio-Code%E7%9A%84%E4%BD%BF%E7%94%A8%E6%80%BB%E7%BB%93/CodeLink.jpg" class="" title="image">
+
 <p>用vscode打开当前目录：</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">code .</span><br></pre></td></tr></table></figure>
 
@@ -418,10 +458,10 @@
 
       <ul class="sidebar-nav motion-element">
         <li class="sidebar-nav-toc">
-          Table of Contents
+          文章目录
         </li>
         <li class="sidebar-nav-overview">
-          Overview
+          站点概览
         </li>
       </ul>
 
@@ -441,21 +481,21 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">28</span>
-          <span class="site-state-item-name">posts</span>
+          <span class="site-state-item-count">27</span>
+          <span class="site-state-item-name">日志</span>
         </a>
       </div>
       <div class="site-state-item site-state-categories">
             <a href="/categories/">
           
         <span class="site-state-item-count">12</span>
-        <span class="site-state-item-name">categories</span></a>
+        <span class="site-state-item-name">分类</span></a>
       </div>
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
         <span class="site-state-item-count">37</span>
-        <span class="site-state-item-name">tags</span></a>
+        <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
 </div>
@@ -493,17 +533,17 @@
     <span class="post-meta-item-icon">
       <i class="fa fa-area-chart"></i>
     </span>
-    <span title="Symbols count total">124k</span>
+    <span title="站点总字数">124k</span>
     <span class="post-meta-divider">|</span>
     <span class="post-meta-item-icon">
       <i class="fa fa-coffee"></i>
     </span>
-    <span title="Reading time total">3:27</span>
+    <span title="站点阅读时长">3:26</span>
 </div>
-  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> v5.4.0
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> 强力驱动 v5.4.0
   </div>
   <span class="post-meta-divider">|</span>
-  <div class="theme-info">Theme – <a href="https://muse.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a> v7.7.0
+  <div class="theme-info">主题 – <a href="https://muse.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a> v7.7.0
   </div>
 
         
@@ -540,6 +580,10 @@
   
 
 
+
+
+  
+<script src="/js/local-search.js"></script>
 
 
 

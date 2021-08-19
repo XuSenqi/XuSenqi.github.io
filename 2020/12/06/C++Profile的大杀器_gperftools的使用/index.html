@@ -40,8 +40,8 @@
       hits: {"per_page":10},
       labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
     },
-    localsearch: {"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
-    path: '',
+    localsearch: {"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: 'search.xml',
     motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}
   };
 </script>
@@ -53,17 +53,17 @@
 <meta property="og:site_name" content="森几许的博客">
 <meta property="og:description" content="熟悉golang的同学，一定很熟悉用pprof来作为性能分析和可视化的工具，包括 cpu profile, memery profile等。这么方便且炫的功能，在C++里也一样能实现。所需要的工具就是gperftools。">
 <meta property="og:locale">
-<meta property="og:image" content="https://xusenqi.github.io/.io//gperftoos_cpuprofile.png">
-<meta property="og:image" content="https://xusenqi.github.io/.io//gperftools_heapprofile.png">
-<meta property="og:image" content="https://xusenqi.github.io/.io//broker_1003_3GB.jpeg">
+<meta property="og:image" content="https://xusenqi.github.io/2020/12/06/C++Profile%E7%9A%84%E5%A4%A7%E6%9D%80%E5%99%A8_gperftools%E7%9A%84%E4%BD%BF%E7%94%A8/gperftoos_cpuprofile.png">
+<meta property="og:image" content="https://xusenqi.github.io/2020/12/06/C++Profile%E7%9A%84%E5%A4%A7%E6%9D%80%E5%99%A8_gperftools%E7%9A%84%E4%BD%BF%E7%94%A8/gperftools_heapprofile.png">
+<meta property="og:image" content="https://xusenqi.github.io/2020/12/06/C++Profile%E7%9A%84%E5%A4%A7%E6%9D%80%E5%99%A8_gperftools%E7%9A%84%E4%BD%BF%E7%94%A8/broker_1003_3GB.jpeg">
 <meta property="article:published_time" content="2020-12-06T13:57:10.000Z">
-<meta property="article:modified_time" content="2021-08-18T13:13:05.989Z">
+<meta property="article:modified_time" content="2021-08-19T09:54:38.488Z">
 <meta property="article:author" content="patrick.xu">
 <meta property="article:tag" content="c++">
 <meta property="article:tag" content="profile">
 <meta property="article:tag" content="gperftools">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="https://xusenqi.github.io/.io//gperftoos_cpuprofile.png">
+<meta name="twitter:image" content="https://xusenqi.github.io/2020/12/06/C++Profile%E7%9A%84%E5%A4%A7%E6%9D%80%E5%99%A8_gperftools%E7%9A%84%E4%BD%BF%E7%94%A8/gperftoos_cpuprofile.png">
 
 <link rel="canonical" href="https://xusenqi.github.io/2020/12/06/C++Profile%E7%9A%84%E5%A4%A7%E6%9D%80%E5%99%A8_gperftools%E7%9A%84%E4%BD%BF%E7%94%A8/">
 
@@ -130,7 +130,7 @@
   </div>
 
   <div class="site-nav-toggle">
-    <div class="toggle" aria-label="Toggle navigation bar">
+    <div class="toggle" aria-label="切换导航栏">
       <span class="toggle-line toggle-line-first"></span>
       <span class="toggle-line toggle-line-middle"></span>
       <span class="toggle-line toggle-line-last"></span>
@@ -144,32 +144,57 @@
   <ul id="menu" class="menu">
         <li class="menu-item menu-item-home">
 
-    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>Home</a>
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
 
   </li>
         <li class="menu-item menu-item-about">
 
-    <a href="/about/" rel="section"><i class="fa fa-fw fa-user"></i>About</a>
+    <a href="/about/" rel="section"><i class="fa fa-fw fa-user"></i>关于</a>
 
   </li>
         <li class="menu-item menu-item-tags">
 
-    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>Tags</a>
+    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>标签</a>
 
   </li>
         <li class="menu-item menu-item-categories">
 
-    <a href="/categories/" rel="section"><i class="fa fa-fw fa-th"></i>Categories</a>
+    <a href="/categories/" rel="section"><i class="fa fa-fw fa-th"></i>分类</a>
 
   </li>
         <li class="menu-item menu-item-archives">
 
-    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>Archives</a>
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档</a>
 
   </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
   </ul>
 
 </nav>
+  <div class="site-search">
+    <div class="popup search-popup">
+    <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocorrect="off" autocapitalize="none"
+           placeholder="搜索..." spellcheck="false"
+           type="text" id="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result"></div>
+
+</div>
+<div class="search-pop-overlay"></div>
+
+  </div>
 </div>
     </header>
 
@@ -214,22 +239,22 @@
               <span class="post-meta-item-icon">
                 <i class="fa fa-calendar-o"></i>
               </span>
-              <span class="post-meta-item-text">Posted on</span>
+              <span class="post-meta-item-text">发表于</span>
 
-              <time title="Created: 2020-12-06 21:57:10" itemprop="dateCreated datePublished" datetime="2020-12-06T21:57:10+08:00">2020-12-06</time>
+              <time title="创建时间：2020-12-06 21:57:10" itemprop="dateCreated datePublished" datetime="2020-12-06T21:57:10+08:00">2020-12-06</time>
             </span>
               <span class="post-meta-item">
                 <span class="post-meta-item-icon">
                   <i class="fa fa-calendar-check-o"></i>
                 </span>
-                <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2021-08-18 21:13:05" itemprop="dateModified" datetime="2021-08-18T21:13:05+08:00">2021-08-18</time>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-08-19 17:54:38" itemprop="dateModified" datetime="2021-08-19T17:54:38+08:00">2021-08-19</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
                 <i class="fa fa-folder-o"></i>
               </span>
-              <span class="post-meta-item-text">In</span>
+              <span class="post-meta-item-text">分类于</span>
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
                   <a href="/categories/c/" itemprop="url" rel="index">
                     <span itemprop="name">c++</span>
@@ -238,19 +263,19 @@
             </span>
 
           <br>
-            <span class="post-meta-item" title="Symbols count in article">
+            <span class="post-meta-item" title="本文字数">
               <span class="post-meta-item-icon">
                 <i class="fa fa-file-word-o"></i>
               </span>
-                <span class="post-meta-item-text">Symbols count in article: </span>
+                <span class="post-meta-item-text">本文字数：</span>
               <span>9.5k</span>
             </span>
-            <span class="post-meta-item" title="Reading time">
+            <span class="post-meta-item" title="阅读时长">
               <span class="post-meta-item-icon">
                 <i class="fa fa-clock-o"></i>
               </span>
-                <span class="post-meta-item-text">Reading time &asymp;</span>
-              <span>16 mins.</span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>16 分钟</span>
             </span>
 
         </div>
@@ -271,8 +296,8 @@
 <p>因为默认的libunwind安装在/usr/local/lib目录下，需要将这个目录添加到系统动态库缓存中。</p>
 <figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">echo &quot;/usr/local/lib&quot; &gt; /etc/ld.so.conf.d/usr_local_lib.conf</span><br><span class="line">/sbin/ldconfig</span><br></pre></td></tr></table></figure>
 
-<h2 id="安装graphviz"><a href="#安装graphviz" class="headerlink" title="安装graphviz"></a>安装graphviz</h2><p>Graphviz是一个由AT&amp;T实验室启动的开源工具包，用于绘制DOT语言脚本描述的图形，gperftools依靠此工具生成图形分析结果。<br>安装命令：yum install graphviz</p>
-<p>生成图像时依赖ps2pdf<br>安装命令：yum -y install ghostscript<br></p>
+<h2 id="安装graphviz"><a href="#安装graphviz" class="headerlink" title="安装graphviz"></a>安装graphviz</h2><p>Graphviz是一个由AT&amp;T实验室启动的开源工具包，用于绘制DOT语言脚本描述的图形，gperftools依靠此工具生成图形分析结果。<br />安装命令：yum install graphviz</p>
+<p>生成图像时依赖ps2pdf<br />安装命令：yum -y install ghostscript<br /></p>
 <h2 id="安装perftools"><a href="#安装perftools" class="headerlink" title="安装perftools"></a>安装perftools</h2><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">git clone https://github.com/gperftools/gperftools.git</span><br><span class="line">cd gperftools/</span><br><span class="line">./autogen.sh</span><br><span class="line">./configure</span><br><span class="line">make</span><br><span class="line">make install</span><br></pre></td></tr></table></figure>
 
 <p>遇到的问题1：</p>
@@ -319,7 +344,8 @@
 <p>运行命令生成函数调用树形式的pdf分析报告：</p>
 <figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">pprof --pdf a.out test.prof &gt; test.pdf</span><br></pre></td></tr></table></figure>
 
-<p><img src="/.io//gperftoos_cpuprofile.png" alt="image.png"><br></p>
+<img src="/2020/12/06/C++Profile%E7%9A%84%E5%A4%A7%E6%9D%80%E5%99%A8_gperftools%E7%9A%84%E4%BD%BF%E7%94%A8/gperftoos_cpuprofile.png" class="" title="image.png"><br />
+
 <p>树上的每个节点代表一个函数，节点数据格式：</p>
 <ol>
 <li>函数名 或者 类名+方法名</li>
@@ -337,15 +363,16 @@
 
 <p>编译运行如下：</p>
 <figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">[root@<span class="number">10</span><span class="number">-8</span><span class="number">-152</span><span class="number">-53</span> cpuprofilertest]<span class="meta"># g++ run_always.cpp -lprofiler -ltcmalloc</span></span><br><span class="line">[root@<span class="number">10</span><span class="number">-8</span><span class="number">-152</span><span class="number">-53</span> cpuprofilertest]# ./a.out</span><br><span class="line">call f</span><br><span class="line">call f</span><br><span class="line">...</span><br><span class="line">    </span><br></pre></td></tr></table></figure>
-<p><strong>通过kill命令发送信号给进程来开启/关闭性能分析：</strong><br>用top命令查看进程的PID<br>kill -s SIGUSR1 PID //第一次运行命令启动性能分析<br>kill -s SIGUSR1 PID //再次运行命令关闭性能分析，产生test.prof</p>
-<p>后续查看分析报告和之前一样。<br>这种方式适合灵活关闭profile，不用重启启动服务，适合在线上临时查看。<br></p>
+<p><strong>通过kill命令发送信号给进程来开启/关闭性能分析：</strong><br />用top命令查看进程的PID<br />kill -s SIGUSR1 PID //第一次运行命令启动性能分析<br />kill -s SIGUSR1 PID //再次运行命令关闭性能分析，产生test.prof</p>
+<p>后续查看分析报告和之前一样。<br />这种方式适合灵活关闭profile，不用重启启动服务，适合在线上临时查看。<br /></p>
 <h2 id="Heap-Profiler"><a href="#Heap-Profiler" class="headerlink" title="Heap Profiler"></a>Heap Profiler</h2><h3 id="示例1-修改启动方式"><a href="#示例1-修改启动方式" class="headerlink" title="示例1 - 修改启动方式"></a>示例1 - 修改启动方式</h3><p>示例代码如下：</p>
 <figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;gperftools/profiler.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;iostream&gt;</span></span></span><br><span class="line"><span class="keyword">using</span> <span class="keyword">namespace</span> std;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">f1</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">int</span> i;</span><br><span class="line">    <span class="keyword">for</span> (i=<span class="number">0</span>; i&lt;<span class="number">1024</span>*<span class="number">1024</span>; ++i)</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">int</span>* p2 = <span class="keyword">new</span> <span class="keyword">int</span>;</span><br><span class="line">        <span class="comment">//delete[] p2;</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">f2</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">int</span> i;</span><br><span class="line">    <span class="keyword">for</span> (i=<span class="number">0</span>; i&lt;<span class="number">1024</span>*<span class="number">1024</span>; ++i)</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">int</span>* p2 = <span class="keyword">new</span> <span class="keyword">int</span>;</span><br><span class="line">        <span class="comment">//delete[] p2;</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">()</span></span>&#123;</span><br><span class="line">   <span class="built_in">f1</span>();</span><br><span class="line">   <span class="built_in">f2</span>();</span><br><span class="line">   <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
 <p>编译运行如下：</p>
 <figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line">[root@<span class="number">10</span><span class="number">-8</span><span class="number">-152</span><span class="number">-53</span> heapprofilertest]<span class="meta"># g++ test.cpp -ltcmalloc</span></span><br><span class="line">[root@<span class="number">10</span><span class="number">-8</span><span class="number">-152</span><span class="number">-53</span> heapprofilertest]<span class="meta"># env HEAPPROFILE=./test_heap.prof ./a.out</span></span><br><span class="line">Starting tracking the heap</span><br><span class="line">Dumping heap profile to ./test_heap.prof<span class="number">.0001</span>.<span class="built_in">heap</span> (Exiting, <span class="number">8</span> MB in use)</span><br><span class="line">[root@<span class="number">10</span><span class="number">-8</span><span class="number">-152</span><span class="number">-53</span> heapprofilertest]<span class="meta"># pprof --text ./a.out ./test_heap.prof.0001.heap</span></span><br><span class="line">Using local file ./a.out.</span><br><span class="line">Using local file ./test_heap.prof<span class="number">.0001</span>.heap.</span><br><span class="line">Total: <span class="number">8.0</span> MB</span><br><span class="line">     <span class="number">4.0</span>  <span class="number">50.0</span>%  <span class="number">50.0</span>%      <span class="number">4.0</span>  <span class="number">50.0</span>% f1</span><br><span class="line">     <span class="number">4.0</span>  <span class="number">50.0</span>% <span class="number">100.0</span>%      <span class="number">4.0</span>  <span class="number">50.0</span>% f2</span><br><span class="line">     <span class="number">0.0</span>   <span class="number">0.0</span>% <span class="number">100.0</span>%      <span class="number">8.0</span> <span class="number">100.0</span>% __libc_start_main</span><br><span class="line">     <span class="number">0.0</span>   <span class="number">0.0</span>% <span class="number">100.0</span>%      <span class="number">8.0</span> <span class="number">100.0</span>% _start</span><br><span class="line">     <span class="number">0.0</span>   <span class="number">0.0</span>% <span class="number">100.0</span>%      <span class="number">8.0</span> <span class="number">100.0</span>% main</span><br><span class="line">[root@<span class="number">10</span><span class="number">-8</span><span class="number">-152</span><span class="number">-53</span> heapprofilertest]<span class="meta"># pprof --pdf ./a.out ./test_heap.prof.0001.heap &gt; ./test_heap.pdf</span></span><br><span class="line">Using local file ./a.out.</span><br><span class="line">Using local file ./test_heap.prof<span class="number">.0001</span>.heap.</span><br><span class="line">Dropping nodes with &lt;= <span class="number">0.0</span> MB; edges with &lt;= <span class="number">0.0</span> <span class="built_in">abs</span>(MB)</span><br><span class="line">[root@<span class="number">10</span><span class="number">-8</span><span class="number">-152</span><span class="number">-53</span> heapprofilertest]<span class="meta"># ls</span></span><br><span class="line">a.out  test.cpp  test_heap.pdf  test_heap.prof<span class="number">.0001</span>.heap</span><br></pre></td></tr></table></figure>
 
-<p><img src="/.io//gperftools_heapprofile.png" alt="image.png"></p>
+<img src="/2020/12/06/C++Profile%E7%9A%84%E5%A4%A7%E6%9D%80%E5%99%A8_gperftools%E7%9A%84%E4%BD%BF%E7%94%A8/gperftools_heapprofile.png" class="" title="image.png">
+
 <p>在生成heap的过程中，还有另外的一些属性可以设置[2]：</p>
 <table>
 <thead>
@@ -396,7 +423,8 @@
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">Dumping heap profile to /tmp/broker_1003_xxx_heap.prof.0001.heap (10240 MB allocated cumulatively, 1118 MB currently in use)</span><br><span class="line">Dumping heap profile to /tmp/broker_1003_xxx_heap.prof.0002.heap (20480 MB allocated cumulatively, 2005 MB currently in use)</span><br><span class="line">Dumping heap profile to /tmp/broker_1003_xxx_heap.prof.0003.heap (30720 MB allocated cumulatively, 2383 MB currently in use)</span><br><span class="line">Dumping heap profile to /tmp/broker_1003_xxx_heap.prof.0004.heap (40960 MB allocated cumulatively, 2482 MB currently in use)</span><br><span class="line">......</span><br><span class="line">Dumping heap profile to /tmp/broker_1003_xxx_heap.prof.0126.heap (1290366 MB allocated cumulatively, 2876 MB currently in use)</span><br><span class="line">Dumping heap profile to /tmp/broker_1003_xxx_heap.prof.0127.heap (1300606 MB allocated cumulatively, 2871 MB currently in use)</span><br><span class="line">Dumping heap profile to /tmp/broker_1003_xxx_heap.prof.0128.heap (1310849 MB allocated cumulatively, 2870 MB currently in use)</span><br><span class="line">Dumping heap profile to /tmp/broker_1003_xxx_heap.prof.0129.heap (1321090 MB allocated cumulatively, 2878 MB currently in use)</span><br></pre></td></tr></table></figure>
 
 
-<h4 id="分析heap"><a href="#分析heap" class="headerlink" title="分析heap"></a>分析heap</h4><p><img src="/.io//broker_1003_3GB.jpeg" alt="image.png"><br>可以看到95%的heap都是从同一个地方分配出来的，是需要优化的方向。</p>
+<h4 id="分析heap"><a href="#分析heap" class="headerlink" title="分析heap"></a>分析heap</h4><img src="/2020/12/06/C++Profile%E7%9A%84%E5%A4%A7%E6%9D%80%E5%99%A8_gperftools%E7%9A%84%E4%BD%BF%E7%94%A8/broker_1003_3GB.jpeg" class="" title="image.png">
+<p>可以看到95%的heap都是从同一个地方分配出来的，是需要优化的方向。</p>
 <h1 id="参考链接"><a href="#参考链接" class="headerlink" title="参考链接"></a>参考链接</h1><ol>
 <li><a target="_blank" rel="noopener" href="https://github.com/gperftools/gperftools/wiki">https://github.com/gperftools/gperftools/wiki</a></li>
 <li><a target="_blank" rel="noopener" href="https://gperftools.github.io/gperftools/heapprofile.html">https://gperftools.github.io/gperftools/heapprofile.html</a></li>
@@ -480,10 +508,10 @@
 
       <ul class="sidebar-nav motion-element">
         <li class="sidebar-nav-toc">
-          Table of Contents
+          文章目录
         </li>
         <li class="sidebar-nav-overview">
-          Overview
+          站点概览
         </li>
       </ul>
 
@@ -503,21 +531,21 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">28</span>
-          <span class="site-state-item-name">posts</span>
+          <span class="site-state-item-count">27</span>
+          <span class="site-state-item-name">日志</span>
         </a>
       </div>
       <div class="site-state-item site-state-categories">
             <a href="/categories/">
           
         <span class="site-state-item-count">12</span>
-        <span class="site-state-item-name">categories</span></a>
+        <span class="site-state-item-name">分类</span></a>
       </div>
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
         <span class="site-state-item-count">37</span>
-        <span class="site-state-item-name">tags</span></a>
+        <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
 </div>
@@ -555,17 +583,17 @@
     <span class="post-meta-item-icon">
       <i class="fa fa-area-chart"></i>
     </span>
-    <span title="Symbols count total">124k</span>
+    <span title="站点总字数">124k</span>
     <span class="post-meta-divider">|</span>
     <span class="post-meta-item-icon">
       <i class="fa fa-coffee"></i>
     </span>
-    <span title="Reading time total">3:27</span>
+    <span title="站点阅读时长">3:26</span>
 </div>
-  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> v5.4.0
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> 强力驱动 v5.4.0
   </div>
   <span class="post-meta-divider">|</span>
-  <div class="theme-info">Theme – <a href="https://muse.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a> v7.7.0
+  <div class="theme-info">主题 – <a href="https://muse.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a> v7.7.0
   </div>
 
         
@@ -602,6 +630,10 @@
   
 
 
+
+
+  
+<script src="/js/local-search.js"></script>
 
 
 

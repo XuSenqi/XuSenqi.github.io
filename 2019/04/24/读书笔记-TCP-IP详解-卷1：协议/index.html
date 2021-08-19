@@ -40,8 +40,8 @@
       hits: {"per_page":10},
       labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
     },
-    localsearch: {"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
-    path: '',
+    localsearch: {"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: 'search.xml',
     motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}
   };
 </script>
@@ -53,35 +53,35 @@
 <meta property="og:site_name" content="森几许的博客">
 <meta property="og:description" content="不同层的PDU（Protocol Data Unit）  传输层：Segment(帧) 网络层： Packet 链路层：Frame 物理层： Bit">
 <meta property="og:locale">
-<meta property="og:image" content="https://xusenqi.github.io/.io//%E4%BC%A0%E5%85%A5%E7%9A%84%E5%B8%A7%E5%9C%A8%E4%B8%BB%E6%9C%BA%E4%B8%8A%E7%9A%84%E5%88%86%E8%A7%A3.png">
-<meta property="og:image" content="https://xusenqi.github.io/.io//%E4%BB%A5%E5%A4%AA%E7%BD%91%E5%B8%A7%E6%A0%BC%E5%BC%8F.png">
-<meta property="og:image" content="https://xusenqi.github.io/.io//IPV4%E6%95%B0%E6%8D%AE%E6%8A%A5.png">
-<meta property="og:image" content="https://xusenqi.github.io/.io//DHCP%E4%BA%A4%E6%8D%A2.png">
-<meta property="og:image" content="https://xusenqi.github.io/.io//IPV4_udp%E6%95%B0%E6%8D%AE%E6%8A%A5.jpg">
-<meta property="og:image" content="https://xusenqi.github.io/.io//udp%E5%A4%B4%E9%83%A8%E5%92%8C%E8%B4%9F%E8%BD%BD%E5%8C%BA.jpg">
-<meta property="og:image" content="https://xusenqi.github.io/.io//%E7%94%A8%E4%BA%8E%E8%AE%A1%E7%AE%97UDPIPV4%E6%95%B0%E6%8D%AE%E6%8A%A5%E7%9A%84%E5%AD%97%E6%AE%B5.jpg">
-<meta property="og:image" content="https://xusenqi.github.io/.io//%E5%8F%91%E9%80%81%E6%96%B9%E7%AA%97%E5%8F%A3.png">
-<meta property="og:image" content="https://xusenqi.github.io/.io//TCP%E5%9C%A8IP%E6%95%B0%E6%8D%AE%E6%8A%A5%E4%B8%AD%E7%9A%84%E5%B0%81%E8%A3%85.png">
-<meta property="og:image" content="https://xusenqi.github.io/.io//TCP%E5%A4%B4%E9%83%A8.png">
-<meta property="og:image" content="https://xusenqi.github.io/.io//TCP_flags.png">
-<meta property="og:image" content="https://xusenqi.github.io/.io//TCP%E4%B8%89%E6%AC%A1%E6%8F%A1%E6%89%8B.png">
-<meta property="og:image" content="https://xusenqi.github.io/.io//TCP%E5%8D%8A%E5%85%B3%E9%97%AD.png">
-<meta property="og:image" content="https://xusenqi.github.io/.io//%E4%BD%BF%E7%94%A8%E5%9B%BA%E5%AE%9A%E5%BA%8F%E5%88%97%E5%8F%B7%E7%9A%84%E9%97%AE%E9%A2%98.png">
-<meta property="og:image" content="https://xusenqi.github.io/.io//TCP%E9%80%89%E9%A1%B9.jpg">
-<meta property="og:image" content="https://xusenqi.github.io/.io//%E4%BA%A4%E4%BA%92%E5%BC%8F%E9%80%9A%E4%BF%A1.png">
-<meta property="og:image" content="https://xusenqi.github.io/.io//%E5%BB%B6%E6%97%B6%E7%A1%AE%E8%AE%A4.png">
-<meta property="og:image" content="https://xusenqi.github.io/.io//Nagle%E7%AE%97%E6%B3%95%E7%9A%84%E5%AF%B9%E6%AF%94.png">
-<meta property="og:image" content="https://xusenqi.github.io/.io//%E5%BB%B6%E6%97%B6ACK%E5%92%8CNagle%E7%AE%97%E6%B3%95%E7%9B%B8%E7%BB%93%E5%90%88.png">
-<meta property="og:image" content="https://xusenqi.github.io/.io//%E5%8F%91%E9%80%81%E7%AB%AF%E6%BB%91%E5%8A%A8%E7%AA%97%E5%8F%A3.png">
-<meta property="og:image" content="https://xusenqi.github.io/.io//%E6%8E%A5%E6%94%B6%E7%AB%AF%E6%BB%91%E5%8A%A8%E7%AA%97%E5%8F%A3.png">
-<meta property="og:image" content="https://xusenqi.github.io/.io//KeepAlive%E6%8A%A5%E6%96%87%E5%BA%8F%E5%88%97%E5%8F%B7.png">
-<meta property="og:image" content="https://xusenqi.github.io/.io//TCPKeepAlive%E6%8E%A2%E6%B5%8B%E6%9C%BA%E5%88%B6.png">
+<meta property="og:image" content="https://xusenqi.github.io/2019/04/24/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0-TCP-IP%E8%AF%A6%E8%A7%A3-%E5%8D%B71%EF%BC%9A%E5%8D%8F%E8%AE%AE/%E4%BC%A0%E5%85%A5%E7%9A%84%E5%B8%A7%E5%9C%A8%E4%B8%BB%E6%9C%BA%E4%B8%8A%E7%9A%84%E5%88%86%E8%A7%A3.png">
+<meta property="og:image" content="https://xusenqi.github.io/2019/04/24/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0-TCP-IP%E8%AF%A6%E8%A7%A3-%E5%8D%B71%EF%BC%9A%E5%8D%8F%E8%AE%AE/%E4%BB%A5%E5%A4%AA%E7%BD%91%E5%B8%A7%E6%A0%BC%E5%BC%8F.png">
+<meta property="og:image" content="https://xusenqi.github.io/2019/04/24/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0-TCP-IP%E8%AF%A6%E8%A7%A3-%E5%8D%B71%EF%BC%9A%E5%8D%8F%E8%AE%AE/IPV4%E6%95%B0%E6%8D%AE%E6%8A%A5.png">
+<meta property="og:image" content="https://xusenqi.github.io/2019/04/24/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0-TCP-IP%E8%AF%A6%E8%A7%A3-%E5%8D%B71%EF%BC%9A%E5%8D%8F%E8%AE%AE/DHCP%E4%BA%A4%E6%8D%A2.png">
+<meta property="og:image" content="https://xusenqi.github.io/2019/04/24/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0-TCP-IP%E8%AF%A6%E8%A7%A3-%E5%8D%B71%EF%BC%9A%E5%8D%8F%E8%AE%AE/IPV4_udp%E6%95%B0%E6%8D%AE%E6%8A%A5.jpg">
+<meta property="og:image" content="https://xusenqi.github.io/2019/04/24/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0-TCP-IP%E8%AF%A6%E8%A7%A3-%E5%8D%B71%EF%BC%9A%E5%8D%8F%E8%AE%AE/udp%E5%A4%B4%E9%83%A8%E5%92%8C%E8%B4%9F%E8%BD%BD%E5%8C%BA.jpg">
+<meta property="og:image" content="https://xusenqi.github.io/2019/04/24/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0-TCP-IP%E8%AF%A6%E8%A7%A3-%E5%8D%B71%EF%BC%9A%E5%8D%8F%E8%AE%AE/%E7%94%A8%E4%BA%8E%E8%AE%A1%E7%AE%97UDPIPV4%E6%95%B0%E6%8D%AE%E6%8A%A5%E7%9A%84%E5%AD%97%E6%AE%B5.jpg">
+<meta property="og:image" content="https://xusenqi.github.io/2019/04/24/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0-TCP-IP%E8%AF%A6%E8%A7%A3-%E5%8D%B71%EF%BC%9A%E5%8D%8F%E8%AE%AE/%E5%8F%91%E9%80%81%E6%96%B9%E7%AA%97%E5%8F%A3.png">
+<meta property="og:image" content="https://xusenqi.github.io/2019/04/24/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0-TCP-IP%E8%AF%A6%E8%A7%A3-%E5%8D%B71%EF%BC%9A%E5%8D%8F%E8%AE%AE/TCP%E5%9C%A8IP%E6%95%B0%E6%8D%AE%E6%8A%A5%E4%B8%AD%E7%9A%84%E5%B0%81%E8%A3%85.png">
+<meta property="og:image" content="https://xusenqi.github.io/2019/04/24/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0-TCP-IP%E8%AF%A6%E8%A7%A3-%E5%8D%B71%EF%BC%9A%E5%8D%8F%E8%AE%AE/TCP%E5%A4%B4%E9%83%A8.png">
+<meta property="og:image" content="https://xusenqi.github.io/2019/04/24/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0-TCP-IP%E8%AF%A6%E8%A7%A3-%E5%8D%B71%EF%BC%9A%E5%8D%8F%E8%AE%AE/TCP_flags.png">
+<meta property="og:image" content="https://xusenqi.github.io/2019/04/24/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0-TCP-IP%E8%AF%A6%E8%A7%A3-%E5%8D%B71%EF%BC%9A%E5%8D%8F%E8%AE%AE/TCP%E4%B8%89%E6%AC%A1%E6%8F%A1%E6%89%8B.png">
+<meta property="og:image" content="https://xusenqi.github.io/2019/04/24/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0-TCP-IP%E8%AF%A6%E8%A7%A3-%E5%8D%B71%EF%BC%9A%E5%8D%8F%E8%AE%AE/TCP%E5%8D%8A%E5%85%B3%E9%97%AD.png">
+<meta property="og:image" content="https://xusenqi.github.io/2019/04/24/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0-TCP-IP%E8%AF%A6%E8%A7%A3-%E5%8D%B71%EF%BC%9A%E5%8D%8F%E8%AE%AE/%E4%BD%BF%E7%94%A8%E5%9B%BA%E5%AE%9A%E5%BA%8F%E5%88%97%E5%8F%B7%E7%9A%84%E9%97%AE%E9%A2%98.png">
+<meta property="og:image" content="https://xusenqi.github.io/2019/04/24/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0-TCP-IP%E8%AF%A6%E8%A7%A3-%E5%8D%B71%EF%BC%9A%E5%8D%8F%E8%AE%AE/TCP%E9%80%89%E9%A1%B9.jpg">
+<meta property="og:image" content="https://xusenqi.github.io/2019/04/24/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0-TCP-IP%E8%AF%A6%E8%A7%A3-%E5%8D%B71%EF%BC%9A%E5%8D%8F%E8%AE%AE/%E4%BA%A4%E4%BA%92%E5%BC%8F%E9%80%9A%E4%BF%A1.png">
+<meta property="og:image" content="https://xusenqi.github.io/2019/04/24/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0-TCP-IP%E8%AF%A6%E8%A7%A3-%E5%8D%B71%EF%BC%9A%E5%8D%8F%E8%AE%AE/%E5%BB%B6%E6%97%B6%E7%A1%AE%E8%AE%A4.png">
+<meta property="og:image" content="https://xusenqi.github.io/2019/04/24/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0-TCP-IP%E8%AF%A6%E8%A7%A3-%E5%8D%B71%EF%BC%9A%E5%8D%8F%E8%AE%AE/Nagle%E7%AE%97%E6%B3%95%E7%9A%84%E5%AF%B9%E6%AF%94.png">
+<meta property="og:image" content="https://xusenqi.github.io/2019/04/24/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0-TCP-IP%E8%AF%A6%E8%A7%A3-%E5%8D%B71%EF%BC%9A%E5%8D%8F%E8%AE%AE/%E5%BB%B6%E6%97%B6ACK%E5%92%8CNagle%E7%AE%97%E6%B3%95%E7%9B%B8%E7%BB%93%E5%90%88.png">
+<meta property="og:image" content="https://xusenqi.github.io/2019/04/24/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0-TCP-IP%E8%AF%A6%E8%A7%A3-%E5%8D%B71%EF%BC%9A%E5%8D%8F%E8%AE%AE/%E5%8F%91%E9%80%81%E7%AB%AF%E6%BB%91%E5%8A%A8%E7%AA%97%E5%8F%A3.png">
+<meta property="og:image" content="https://xusenqi.github.io/2019/04/24/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0-TCP-IP%E8%AF%A6%E8%A7%A3-%E5%8D%B71%EF%BC%9A%E5%8D%8F%E8%AE%AE/%E6%8E%A5%E6%94%B6%E7%AB%AF%E6%BB%91%E5%8A%A8%E7%AA%97%E5%8F%A3.png">
+<meta property="og:image" content="https://xusenqi.github.io/2019/04/24/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0-TCP-IP%E8%AF%A6%E8%A7%A3-%E5%8D%B71%EF%BC%9A%E5%8D%8F%E8%AE%AE/KeepAlive%E6%8A%A5%E6%96%87%E5%BA%8F%E5%88%97%E5%8F%B7.png">
+<meta property="og:image" content="https://xusenqi.github.io/2019/04/24/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0-TCP-IP%E8%AF%A6%E8%A7%A3-%E5%8D%B71%EF%BC%9A%E5%8D%8F%E8%AE%AE/TCPKeepAlive%E6%8E%A2%E6%B5%8B%E6%9C%BA%E5%88%B6.png">
 <meta property="article:published_time" content="2019-04-24T15:38:54.000Z">
-<meta property="article:modified_time" content="2021-08-18T13:13:06.182Z">
+<meta property="article:modified_time" content="2021-08-19T09:54:38.837Z">
 <meta property="article:author" content="patrick.xu">
 <meta property="article:tag" content="网络">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="https://xusenqi.github.io/.io//%E4%BC%A0%E5%85%A5%E7%9A%84%E5%B8%A7%E5%9C%A8%E4%B8%BB%E6%9C%BA%E4%B8%8A%E7%9A%84%E5%88%86%E8%A7%A3.png">
+<meta name="twitter:image" content="https://xusenqi.github.io/2019/04/24/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0-TCP-IP%E8%AF%A6%E8%A7%A3-%E5%8D%B71%EF%BC%9A%E5%8D%8F%E8%AE%AE/%E4%BC%A0%E5%85%A5%E7%9A%84%E5%B8%A7%E5%9C%A8%E4%B8%BB%E6%9C%BA%E4%B8%8A%E7%9A%84%E5%88%86%E8%A7%A3.png">
 
 <link rel="canonical" href="https://xusenqi.github.io/2019/04/24/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0-TCP-IP%E8%AF%A6%E8%A7%A3-%E5%8D%B71%EF%BC%9A%E5%8D%8F%E8%AE%AE/">
 
@@ -148,7 +148,7 @@
   </div>
 
   <div class="site-nav-toggle">
-    <div class="toggle" aria-label="Toggle navigation bar">
+    <div class="toggle" aria-label="切换导航栏">
       <span class="toggle-line toggle-line-first"></span>
       <span class="toggle-line toggle-line-middle"></span>
       <span class="toggle-line toggle-line-last"></span>
@@ -162,32 +162,57 @@
   <ul id="menu" class="menu">
         <li class="menu-item menu-item-home">
 
-    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>Home</a>
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
 
   </li>
         <li class="menu-item menu-item-about">
 
-    <a href="/about/" rel="section"><i class="fa fa-fw fa-user"></i>About</a>
+    <a href="/about/" rel="section"><i class="fa fa-fw fa-user"></i>关于</a>
 
   </li>
         <li class="menu-item menu-item-tags">
 
-    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>Tags</a>
+    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>标签</a>
 
   </li>
         <li class="menu-item menu-item-categories">
 
-    <a href="/categories/" rel="section"><i class="fa fa-fw fa-th"></i>Categories</a>
+    <a href="/categories/" rel="section"><i class="fa fa-fw fa-th"></i>分类</a>
 
   </li>
         <li class="menu-item menu-item-archives">
 
-    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>Archives</a>
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档</a>
 
   </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
   </ul>
 
 </nav>
+  <div class="site-search">
+    <div class="popup search-popup">
+    <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocorrect="off" autocapitalize="none"
+           placeholder="搜索..." spellcheck="false"
+           type="text" id="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result"></div>
+
+</div>
+<div class="search-pop-overlay"></div>
+
+  </div>
 </div>
     </header>
 
@@ -232,22 +257,22 @@
               <span class="post-meta-item-icon">
                 <i class="fa fa-calendar-o"></i>
               </span>
-              <span class="post-meta-item-text">Posted on</span>
+              <span class="post-meta-item-text">发表于</span>
 
-              <time title="Created: 2019-04-24 23:38:54" itemprop="dateCreated datePublished" datetime="2019-04-24T23:38:54+08:00">2019-04-24</time>
+              <time title="创建时间：2019-04-24 23:38:54" itemprop="dateCreated datePublished" datetime="2019-04-24T23:38:54+08:00">2019-04-24</time>
             </span>
               <span class="post-meta-item">
                 <span class="post-meta-item-icon">
                   <i class="fa fa-calendar-check-o"></i>
                 </span>
-                <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2021-08-18 21:13:06" itemprop="dateModified" datetime="2021-08-18T21:13:06+08:00">2021-08-18</time>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-08-19 17:54:38" itemprop="dateModified" datetime="2021-08-19T17:54:38+08:00">2021-08-19</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
                 <i class="fa fa-folder-o"></i>
               </span>
-              <span class="post-meta-item-text">In</span>
+              <span class="post-meta-item-text">分类于</span>
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
                   <a href="/categories/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0/" itemprop="url" rel="index">
                     <span itemprop="name">读书笔记</span>
@@ -256,19 +281,19 @@
             </span>
 
           <br>
-            <span class="post-meta-item" title="Symbols count in article">
+            <span class="post-meta-item" title="本文字数">
               <span class="post-meta-item-icon">
                 <i class="fa fa-file-word-o"></i>
               </span>
-                <span class="post-meta-item-text">Symbols count in article: </span>
+                <span class="post-meta-item-text">本文字数：</span>
               <span>3.6k</span>
             </span>
-            <span class="post-meta-item" title="Reading time">
+            <span class="post-meta-item" title="阅读时长">
               <span class="post-meta-item-icon">
                 <i class="fa fa-clock-o"></i>
               </span>
-                <span class="post-meta-item-text">Reading time &asymp;</span>
-              <span>6 mins.</span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>6 分钟</span>
             </span>
 
         </div>
@@ -287,10 +312,11 @@
 <li>链路层：Frame</li>
 <li>物理层： Bit</li>
 </ul>
-<p><img src="/.io//%E4%BC%A0%E5%85%A5%E7%9A%84%E5%B8%A7%E5%9C%A8%E4%B8%BB%E6%9C%BA%E4%B8%8A%E7%9A%84%E5%88%86%E8%A7%A3.png" alt="image"></p>
+<img src="/2019/04/24/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0-TCP-IP%E8%AF%A6%E8%A7%A3-%E5%8D%B71%EF%BC%9A%E5%8D%8F%E8%AE%AE/%E4%BC%A0%E5%85%A5%E7%9A%84%E5%B8%A7%E5%9C%A8%E4%B8%BB%E6%9C%BA%E4%B8%8A%E7%9A%84%E5%88%86%E8%A7%A3.png" class="" title="image">
 <span id="more"></span>
 
-<h3 id="链路层"><a href="#链路层" class="headerlink" title="链路层"></a>链路层</h3><p><img src="/.io//%E4%BB%A5%E5%A4%AA%E7%BD%91%E5%B8%A7%E6%A0%BC%E5%BC%8F.png" alt="image"></p>
+<h3 id="链路层"><a href="#链路层" class="headerlink" title="链路层"></a>链路层</h3><img src="/2019/04/24/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0-TCP-IP%E8%AF%A6%E8%A7%A3-%E5%8D%B71%EF%BC%9A%E5%8D%8F%E8%AE%AE/%E4%BB%A5%E5%A4%AA%E7%BD%91%E5%B8%A7%E6%A0%BC%E5%BC%8F.png" class="" title="image">
+
 <ul>
 <li>MTU 到底是怎么来的</li>
 </ul>
@@ -298,12 +324,17 @@
 <p>MTU：46~1500</p>
 <p>物理层扩展以太网：集线器<br>链路层扩展以太网：网桥、交换机</p>
 <p>隧道：在高层（或同等层）分组中携带底层数据</p>
-<h3 id="Internet协议"><a href="#Internet协议" class="headerlink" title="Internet协议"></a>Internet协议</h3><p><img src="/.io//IPV4%E6%95%B0%E6%8D%AE%E6%8A%A5.png" alt="image"></p>
+<h3 id="Internet协议"><a href="#Internet协议" class="headerlink" title="Internet协议"></a>Internet协议</h3><img src="/2019/04/24/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0-TCP-IP%E8%AF%A6%E8%A7%A3-%E5%8D%B71%EF%BC%9A%E5%8D%8F%E8%AE%AE/IPV4%E6%95%B0%E6%8D%AE%E6%8A%A5.png" class="" title="image">
+
 <p><a target="_blank" rel="noopener" href="https://www.tutorialspoint.com/ipv4/ipv4_packet_structure.htm">IPv4 - Packet Structure</a></p>
-<h3 id="DHCP"><a href="#DHCP" class="headerlink" title="DHCP"></a>DHCP</h3><p><img src="/.io//DHCP%E4%BA%A4%E6%8D%A2.png" alt="image"></p>
-<h3 id="防火墙、NAT"><a href="#防火墙、NAT" class="headerlink" title="防火墙、NAT"></a>防火墙、NAT</h3><h3 id="ICMP"><a href="#ICMP" class="headerlink" title="ICMP"></a>ICMP</h3><h3 id="UDP"><a href="#UDP" class="headerlink" title="UDP"></a>UDP</h3><p><img src="/.io//IPV4_udp%E6%95%B0%E6%8D%AE%E6%8A%A5.jpg" alt="image"></p>
-<p><img src="/.io//udp%E5%A4%B4%E9%83%A8%E5%92%8C%E8%B4%9F%E8%BD%BD%E5%8C%BA.jpg" alt="image"></p>
-<p><img src="/.io//%E7%94%A8%E4%BA%8E%E8%AE%A1%E7%AE%97UDPIPV4%E6%95%B0%E6%8D%AE%E6%8A%A5%E7%9A%84%E5%AD%97%E6%AE%B5.jpg" alt="image"><br>UDP校验和覆盖了UDP头部、UDP数据和一个伪头部。<br>它不提供差错纠正、队列管理、流量控制和拥塞控制。</p>
+<h3 id="DHCP"><a href="#DHCP" class="headerlink" title="DHCP"></a>DHCP</h3><img src="/2019/04/24/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0-TCP-IP%E8%AF%A6%E8%A7%A3-%E5%8D%B71%EF%BC%9A%E5%8D%8F%E8%AE%AE/DHCP%E4%BA%A4%E6%8D%A2.png" class="" title="image">
+
+<h3 id="防火墙、NAT"><a href="#防火墙、NAT" class="headerlink" title="防火墙、NAT"></a>防火墙、NAT</h3><h3 id="ICMP"><a href="#ICMP" class="headerlink" title="ICMP"></a>ICMP</h3><h3 id="UDP"><a href="#UDP" class="headerlink" title="UDP"></a>UDP</h3><img src="/2019/04/24/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0-TCP-IP%E8%AF%A6%E8%A7%A3-%E5%8D%B71%EF%BC%9A%E5%8D%8F%E8%AE%AE/IPV4_udp%E6%95%B0%E6%8D%AE%E6%8A%A5.jpg" class="" title="image">
+
+<img src="/2019/04/24/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0-TCP-IP%E8%AF%A6%E8%A7%A3-%E5%8D%B71%EF%BC%9A%E5%8D%8F%E8%AE%AE/udp%E5%A4%B4%E9%83%A8%E5%92%8C%E8%B4%9F%E8%BD%BD%E5%8C%BA.jpg" class="" title="image">
+
+<img src="/2019/04/24/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0-TCP-IP%E8%AF%A6%E8%A7%A3-%E5%8D%B71%EF%BC%9A%E5%8D%8F%E8%AE%AE/%E7%94%A8%E4%BA%8E%E8%AE%A1%E7%AE%97UDPIPV4%E6%95%B0%E6%8D%AE%E6%8A%A5%E7%9A%84%E5%AD%97%E6%AE%B5.jpg" class="" title="image">
+<p>UDP校验和覆盖了UDP头部、UDP数据和一个伪头部。<br>它不提供差错纠正、队列管理、流量控制和拥塞控制。</p>
 <p>面向数据报：应用层交给UDP多长的报文，UDP就照样发送，即一次发送一个报文。因此，应用程序必须选择合适大小的报文。若报文太长，则IP层需要分片，降低效率。若太短，会是IP太小。UDP对应用层交下来的报文，既不合并，也不拆分，而是保留这些报文的边界。这也就是说，应用层交给UDP多长的报文，UDP就照样发送，即一次发送一个报文。</p>
 <h3 id="TCP-传输控制协议（初步）"><a href="#TCP-传输控制协议（初步）" class="headerlink" title="TCP: 传输控制协议（初步）"></a>TCP: 传输控制协议（初步）</h3><ul>
 <li>差错纠正：接收方收报，校验和字段，校验失败时，不回ACK；发送端会重新发送。</li>
@@ -311,7 +342,8 @@
 <li>拥塞控制(congestion control)：中间的网络（比如路由器）丢包，减缓TCP发送</li>
 <li>面向字节流： 虽然应用程序和TCP的交互是一次一个数据块（大小不等），但TCP把应用程序看成是一连串的无结构的字节流。TCP有一个缓冲，当应用程序传送的数据块太长，TCP就可以把它划分短一些再传送。如果应用程序一次只发送一个字节，TCP也可以等待积累有足够多的字节后再构成报文段发送出去。</li>
 </ul>
-<p><img src="/.io//%E5%8F%91%E9%80%81%E6%96%B9%E7%AA%97%E5%8F%A3.png" alt="image"></p>
+<img src="/2019/04/24/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0-TCP-IP%E8%AF%A6%E8%A7%A3-%E5%8D%B71%EF%BC%9A%E5%8D%8F%E8%AE%AE/%E5%8F%91%E9%80%81%E6%96%B9%E7%AA%97%E5%8F%A3.png" class="" title="image">
+
 <ul>
 <li><p>分组窗口（window）</p>
 </li>
@@ -330,28 +362,34 @@
 <li><p>使用序列号，TCP丢弃重复报文和记录以杂乱次序到达的报文段，将正确次序的数据交给应用程序。因此，TCP接收端可能会被迫先保持大序列号的数据不交给应用程序，直到确实的小序列号到达报文段（一个“洞“）被填满。</p>
 </li>
 </ul>
-<h4 id="TCP头部和封装"><a href="#TCP头部和封装" class="headerlink" title="TCP头部和封装"></a>TCP头部和封装</h4><p><img src="/.io//TCP%E5%9C%A8IP%E6%95%B0%E6%8D%AE%E6%8A%A5%E4%B8%AD%E7%9A%84%E5%B0%81%E8%A3%85.png" alt="image"></p>
-<p><img src="/.io//TCP%E5%A4%B4%E9%83%A8.png" alt="image"></p>
-<p><img src="/.io//TCP_flags.png" alt="image"></p>
+<h4 id="TCP头部和封装"><a href="#TCP头部和封装" class="headerlink" title="TCP头部和封装"></a>TCP头部和封装</h4><img src="/2019/04/24/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0-TCP-IP%E8%AF%A6%E8%A7%A3-%E5%8D%B71%EF%BC%9A%E5%8D%8F%E8%AE%AE/TCP%E5%9C%A8IP%E6%95%B0%E6%8D%AE%E6%8A%A5%E4%B8%AD%E7%9A%84%E5%B0%81%E8%A3%85.png" class="" title="image">
+
+<img src="/2019/04/24/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0-TCP-IP%E8%AF%A6%E8%A7%A3-%E5%8D%B71%EF%BC%9A%E5%8D%8F%E8%AE%AE/TCP%E5%A4%B4%E9%83%A8.png" class="" title="image">
+
+<img src="/2019/04/24/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0-TCP-IP%E8%AF%A6%E8%A7%A3-%E5%8D%B71%EF%BC%9A%E5%8D%8F%E8%AE%AE/TCP_flags.png" class="" title="image">
+
 <ul>
 <li>TCP MSS</li>
 </ul>
 <p>MSS (Maximum Segment Size)是 TCP Layer (L4) 的属性, MSS 指的是 TCP payload的长度. 当在MTU 1500 的网络上传输时, MSS 为 1460 (即 1500 减去 20 字节 IP 头, 20 字节 TCP 头).</p>
 <h3 id="TCP连接管理"><a href="#TCP连接管理" class="headerlink" title="TCP连接管理"></a>TCP连接管理</h3><ul>
-<li><p>普通TCP连接的建立与终止<br><img src="/.io//TCP%E4%B8%89%E6%AC%A1%E6%8F%A1%E6%89%8B.png" alt="image"></p>
-</li>
+<li><p>普通TCP连接的建立与终止</p>
+<img src="/2019/04/24/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0-TCP-IP%E8%AF%A6%E8%A7%A3-%E5%8D%B71%EF%BC%9A%E5%8D%8F%E8%AE%AE/TCP%E4%B8%89%E6%AC%A1%E6%8F%A1%E6%89%8B.png" class="" title="image"></li>
 <li><p>TCP半关闭</p>
 </li>
 </ul>
 <p>TCP的半关闭操作是指仅关闭数据流的⼀一个传输⽅方向, ⽽而两个半关闭操作合在⼀一起就能够关闭整个连接。<br>例如, 应⽤用程序表明“ 我 已经完成了了数据的发送⼯工作, 并发送⼀一个F I N 给对⽅方, 但是我仍然希望接收来⾃自对⽅方的数据 直到它发送⼀一个F I N 给我” 。伯克利利套接字的A P I 提供了了半关闭操作。应⽤用程序只需要调⽤用shutdown函数来代替基本的close函数, 就能实现上述操作。然⽽而, 绝⼤大部分应⽤用程序仍然会调⽤用close函数来同时关闭⼀一条连接的两个传输⽅方向。</p>
-<p>图中左侧的客户端发起了半关闭<br><img src="/.io//TCP%E5%8D%8A%E5%85%B3%E9%97%AD.png" alt="image"></p>
+<p>图中左侧的客户端发起了半关闭</p>
+<img src="/2019/04/24/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0-TCP-IP%E8%AF%A6%E8%A7%A3-%E5%8D%B71%EF%BC%9A%E5%8D%8F%E8%AE%AE/TCP%E5%8D%8A%E5%85%B3%E9%97%AD.png" class="" title="image">
+
 <ul>
-<li>初始序列号（英文为：Initial Sequence Number，简称ISN）<br><img src="/.io//%E4%BD%BF%E7%94%A8%E5%9B%BA%E5%AE%9A%E5%BA%8F%E5%88%97%E5%8F%B7%E7%9A%84%E9%97%AE%E9%A2%98.png" alt="image"><br>按理来说，B应该把这个数据报丢弃掉才是。但是由于A每次发送报文都使用了相同的序号（SEQ = 1），这可能会让B误认为这200字节是属于新建立的tcp连接的，因此B会对这200字节数据照收不误。这就导致B在收到新tcp连接的数据后，又收到旧tcp连接的数据，从而出现数据乱序的问题。</li>
+<li>初始序列号（英文为：Initial Sequence Number，简称ISN）<img src="/2019/04/24/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0-TCP-IP%E8%AF%A6%E8%A7%A3-%E5%8D%B71%EF%BC%9A%E5%8D%8F%E8%AE%AE/%E4%BD%BF%E7%94%A8%E5%9B%BA%E5%AE%9A%E5%BA%8F%E5%88%97%E5%8F%B7%E7%9A%84%E9%97%AE%E9%A2%98.png" class="" title="image">
+按理来说，B应该把这个数据报丢弃掉才是。但是由于A每次发送报文都使用了相同的序号（SEQ = 1），这可能会让B误认为这200字节是属于新建立的tcp连接的，因此B会对这200字节数据照收不误。这就导致B在收到新tcp连接的数据后，又收到旧tcp连接的数据，从而出现数据乱序的问题。</li>
 </ul>
 <p>这其实反映了tcp的一些缺点，如果被一些恶意攻击者加以利用tcp的这种缺点：选择合适的序号，ip地址和端口的话，就能伪造出一个tcp报文段，从而打断正常的tcp连接。但是初始化序号的方式（通过算法来随机生成序号）就会使序号难以猜出，也就不容易利用这种缺点来进行一些恶意攻击行为。</p>
 <p>一般来说，这个序号的范围是0  ~  2^31 - 1之间，而且序号的生成也是随机的，</p>
 <ul>
-<li>TCP选项<br><img src="/.io//TCP%E9%80%89%E9%A1%B9.jpg" alt="image"></li>
+<li>TCP选项<img src="/2019/04/24/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0-TCP-IP%E8%AF%A6%E8%A7%A3-%E5%8D%B71%EF%BC%9A%E5%8D%8F%E8%AE%AE/TCP%E9%80%89%E9%A1%B9.jpg" class="" title="image"></li>
 </ul>
 <p>MSS: 最⼤段⼤小是指TCP协议所允许的从对⽅方接收到的最⼤大报⽂文段。只记录TCP的payload的字节数。典型值1460</p>
 <ul>
@@ -372,10 +410,10 @@
 <h3 id="TCP超时与重传"><a href="#TCP超时与重传" class="headerlink" title="TCP超时与重传"></a>TCP超时与重传</h3><p>RTO： Retransmission Timeout 重传超时</p>
 <p>RTT： Round Trip Time</p>
 <h3 id="TCP数据流与窗口管理"><a href="#TCP数据流与窗口管理" class="headerlink" title="TCP数据流与窗口管理"></a>TCP数据流与窗口管理</h3><ul>
-<li><p>交互式通信<br><img src="/.io//%E4%BA%A4%E4%BA%92%E5%BC%8F%E9%80%9A%E4%BF%A1.png" alt="image"></p>
-</li>
-<li><p>延时确认（Delayed Acknowledgement）<br><img src="/.io//%E5%BB%B6%E6%97%B6%E7%A1%AE%E8%AE%A4.png" alt="image"></p>
-</li>
+<li><p>交互式通信</p>
+<img src="/2019/04/24/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0-TCP-IP%E8%AF%A6%E8%A7%A3-%E5%8D%B71%EF%BC%9A%E5%8D%8F%E8%AE%AE/%E4%BA%A4%E4%BA%92%E5%BC%8F%E9%80%9A%E4%BF%A1.png" class="" title="image"></li>
+<li><p>延时确认（Delayed Acknowledgement）</p>
+<img src="/2019/04/24/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0-TCP-IP%E8%AF%A6%E8%A7%A3-%E5%8D%B71%EF%BC%9A%E5%8D%8F%E8%AE%AE/%E5%BB%B6%E6%97%B6%E7%A1%AE%E8%AE%A4.png" class="" title="image"></li>
 <li><p>Nagle算法</p>
 </li>
 </ul>
@@ -383,10 +421,15 @@
 <pre><code>迫使TCP遵循停等( stop-and-Wait)规程⼀只有等接收到所有在传数据的ACK后才能继续发送。
 该算法的精妙之处在于它实现了⾃时钟( self-clocking) 控制: ACK返回越快, 数据传输也越快。在相对高延迟的广域⽹网中, 更需要减少微型报的数⽬目, 该算法使得单位时间内发送的报⽂文段数目更少。也就是说, RTT控制着发包速率。
 </code></pre>
-<p><img src="/.io//Nagle%E7%AE%97%E6%B3%95%E7%9A%84%E5%AF%B9%E6%AF%94.png" alt="image"></p>
-<p><img src="/.io//%E5%BB%B6%E6%97%B6ACK%E5%92%8CNagle%E7%AE%97%E6%B3%95%E7%9B%B8%E7%BB%93%E5%90%88.png" alt="image"></p>
+<img src="/2019/04/24/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0-TCP-IP%E8%AF%A6%E8%A7%A3-%E5%8D%B71%EF%BC%9A%E5%8D%8F%E8%AE%AE/Nagle%E7%AE%97%E6%B3%95%E7%9A%84%E5%AF%B9%E6%AF%94.png" class="" title="image">
+
+<img src="/2019/04/24/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0-TCP-IP%E8%AF%A6%E8%A7%A3-%E5%8D%B71%EF%BC%9A%E5%8D%8F%E8%AE%AE/%E5%BB%B6%E6%97%B6ACK%E5%92%8CNagle%E7%AE%97%E6%B3%95%E7%9B%B8%E7%BB%93%E5%90%88.png" class="" title="image">
+
 <ul>
-<li><p>流量控制与窗口管理<br><img src="/.io//%E5%8F%91%E9%80%81%E7%AB%AF%E6%BB%91%E5%8A%A8%E7%AA%97%E5%8F%A3.png" alt="image"><br><img src="/.io//%E6%8E%A5%E6%94%B6%E7%AB%AF%E6%BB%91%E5%8A%A8%E7%AA%97%E5%8F%A3.png" alt="image"></p>
+<li><p>流量控制与窗口管理</p>
+<img src="/2019/04/24/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0-TCP-IP%E8%AF%A6%E8%A7%A3-%E5%8D%B71%EF%BC%9A%E5%8D%8F%E8%AE%AE/%E5%8F%91%E9%80%81%E7%AB%AF%E6%BB%91%E5%8A%A8%E7%AA%97%E5%8F%A3.png" class="" title="image">
+<img src="/2019/04/24/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0-TCP-IP%E8%AF%A6%E8%A7%A3-%E5%8D%B71%EF%BC%9A%E5%8D%8F%E8%AE%AE/%E6%8E%A5%E6%94%B6%E7%AB%AF%E6%BB%91%E5%8A%A8%E7%AA%97%E5%8F%A3.png" class="" title="image">
+
 <pre><code>  当TPC通信的接收方的接收速度无法匹配发送速度时，发送方会降低发送速度。
   TCP的流量控制机制完成了对发送速率的调节，它是基于ACK数据包中的通告窗口大小来实现的。
   这种方式提供了明确的接收方返回的状态信息，避免接收方缓存溢出。
@@ -402,9 +445,11 @@
 <p>利用TCP保活功能来探测离开的主机, 有助于服务器与⾮交互性客户端进行相对短时间的对话, 例如, Web服务器、POP和IMAP电子邮件服务器器。短时间内一般网络稳定，且在相对短时间内一般能操作完。当操作完后，所以即使网络抖动原因，被keepalive断开连接，影响不大。</p>
 <p>而更多地实现⻓时间交互服务的服务器可能不希望使用保活功能, 如ssh和Windows远程桌面这样的远程登录系统。需要长时间操作的，不希望断开连接，即使有网络抖动。</p>
 <ul>
-<li>KeepAlive报文序列号<br><img src="/.io//KeepAlive%E6%8A%A5%E6%96%87%E5%BA%8F%E5%88%97%E5%8F%B7.png" alt="image"></li>
+<li>KeepAlive报文序列号<img src="/2019/04/24/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0-TCP-IP%E8%AF%A6%E8%A7%A3-%E5%8D%B71%EF%BC%9A%E5%8D%8F%E8%AE%AE/KeepAlive%E6%8A%A5%E6%96%87%E5%BA%8F%E5%88%97%E5%8F%B7.png" class="" title="image"></li>
 </ul>
-<p><img src="/.io//TCPKeepAlive%E6%8E%A2%E6%B5%8B%E6%9C%BA%E5%88%B6.png" alt="image"></p>
+<img src="/2019/04/24/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0-TCP-IP%E8%AF%A6%E8%A7%A3-%E5%8D%B71%EF%BC%9A%E5%8D%8F%E8%AE%AE/TCPKeepAlive%E6%8E%A2%E6%B5%8B%E6%9C%BA%E5%88%B6.png" class="" title="image">
+
+
 
     </div>
 
@@ -480,10 +525,10 @@
 
       <ul class="sidebar-nav motion-element">
         <li class="sidebar-nav-toc">
-          Table of Contents
+          文章目录
         </li>
         <li class="sidebar-nav-overview">
-          Overview
+          站点概览
         </li>
       </ul>
 
@@ -503,21 +548,21 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">28</span>
-          <span class="site-state-item-name">posts</span>
+          <span class="site-state-item-count">27</span>
+          <span class="site-state-item-name">日志</span>
         </a>
       </div>
       <div class="site-state-item site-state-categories">
             <a href="/categories/">
           
         <span class="site-state-item-count">12</span>
-        <span class="site-state-item-name">categories</span></a>
+        <span class="site-state-item-name">分类</span></a>
       </div>
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
         <span class="site-state-item-count">37</span>
-        <span class="site-state-item-name">tags</span></a>
+        <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
 </div>
@@ -555,17 +600,17 @@
     <span class="post-meta-item-icon">
       <i class="fa fa-area-chart"></i>
     </span>
-    <span title="Symbols count total">124k</span>
+    <span title="站点总字数">124k</span>
     <span class="post-meta-divider">|</span>
     <span class="post-meta-item-icon">
       <i class="fa fa-coffee"></i>
     </span>
-    <span title="Reading time total">3:27</span>
+    <span title="站点阅读时长">3:26</span>
 </div>
-  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> v5.4.0
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> 强力驱动 v5.4.0
   </div>
   <span class="post-meta-divider">|</span>
-  <div class="theme-info">Theme – <a href="https://muse.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a> v7.7.0
+  <div class="theme-info">主题 – <a href="https://muse.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a> v7.7.0
   </div>
 
         
@@ -602,6 +647,10 @@
   
 
 
+
+
+  
+<script src="/js/local-search.js"></script>
 
 
 

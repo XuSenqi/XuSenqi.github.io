@@ -40,8 +40,8 @@
       hits: {"per_page":10},
       labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
     },
-    localsearch: {"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
-    path: '',
+    localsearch: {"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: 'search.xml',
     motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}
   };
 </script>
@@ -53,21 +53,21 @@
 <meta property="og:site_name" content="森几许的博客">
 <meta property="og:description" content="ZooKeeper Sessions![image](关于客户端重连ZooKeeper的的那些事儿&#x2F;ZooKeeper Sessions.jpg)  ZooKeeper客户端初始化后转换到CONNECTING状态，与ZooKeeper服务器（或者ZooKeeper集群中的一台服务器）建立连接后，进入CONNECTED状态 当客户端与ZooKeeper服务器断开连接或者无法收到服务器响应时，就会转回">
 <meta property="og:locale">
-<meta property="og:image" content="https://xusenqi.github.io/.io//%E5%AE%A2%E6%88%B7%E7%AB%AF%E8%87%AA%E5%8A%A8%E9%87%8D%E8%BF%9Ezk%E7%9A%84%E6%BC%94%E7%A4%BA.png">
-<meta property="og:image" content="https://xusenqi.github.io/.io//ephemeral_node_access_1.png">
-<meta property="og:image" content="https://xusenqi.github.io/.io//connecting_state_1.jpg">
-<meta property="og:image" content="https://xusenqi.github.io/.io//zkjs_on_close.jpg">
-<meta property="og:image" content="https://xusenqi.github.io/.io//zkjs_reconnect.jpg">
-<meta property="og:image" content="https://xusenqi.github.io/.io//zk%E8%BF%9E%E6%8E%A5%E6%95%B0%E6%8E%89.jpg">
-<meta property="og:image" content="https://xusenqi.github.io/.io//singapore_session_expire.png">
-<meta property="og:image" content="https://xusenqi.github.io/.io//uframework_reconnect_zk_1.png">
-<meta property="og:image" content="https://xusenqi.github.io/.io//uframework_reconnect_zk_2.png">
-<meta property="og:image" content="https://xusenqi.github.io/.io//uframework_reconnect_zk_3.png">
+<meta property="og:image" content="https://xusenqi.github.io/2019/06/06/%E5%85%B3%E4%BA%8E%E5%AE%A2%E6%88%B7%E7%AB%AF%E9%87%8D%E8%BF%9EZooKeeper%E7%9A%84%E7%9A%84%E9%82%A3%E4%BA%9B%E4%BA%8B%E5%84%BF/%E5%AE%A2%E6%88%B7%E7%AB%AF%E8%87%AA%E5%8A%A8%E9%87%8D%E8%BF%9Ezk%E7%9A%84%E6%BC%94%E7%A4%BA.png">
+<meta property="og:image" content="https://xusenqi.github.io/2019/06/06/%E5%85%B3%E4%BA%8E%E5%AE%A2%E6%88%B7%E7%AB%AF%E9%87%8D%E8%BF%9EZooKeeper%E7%9A%84%E7%9A%84%E9%82%A3%E4%BA%9B%E4%BA%8B%E5%84%BF/ephemeral_node_access_1.png">
+<meta property="og:image" content="https://xusenqi.github.io/2019/06/06/%E5%85%B3%E4%BA%8E%E5%AE%A2%E6%88%B7%E7%AB%AF%E9%87%8D%E8%BF%9EZooKeeper%E7%9A%84%E7%9A%84%E9%82%A3%E4%BA%9B%E4%BA%8B%E5%84%BF/connecting_state_1.jpg">
+<meta property="og:image" content="https://xusenqi.github.io/2019/06/06/%E5%85%B3%E4%BA%8E%E5%AE%A2%E6%88%B7%E7%AB%AF%E9%87%8D%E8%BF%9EZooKeeper%E7%9A%84%E7%9A%84%E9%82%A3%E4%BA%9B%E4%BA%8B%E5%84%BF/zkjs_on_close.jpg">
+<meta property="og:image" content="https://xusenqi.github.io/2019/06/06/%E5%85%B3%E4%BA%8E%E5%AE%A2%E6%88%B7%E7%AB%AF%E9%87%8D%E8%BF%9EZooKeeper%E7%9A%84%E7%9A%84%E9%82%A3%E4%BA%9B%E4%BA%8B%E5%84%BF/zkjs_reconnect.jpg">
+<meta property="og:image" content="https://xusenqi.github.io/2019/06/06/%E5%85%B3%E4%BA%8E%E5%AE%A2%E6%88%B7%E7%AB%AF%E9%87%8D%E8%BF%9EZooKeeper%E7%9A%84%E7%9A%84%E9%82%A3%E4%BA%9B%E4%BA%8B%E5%84%BF/zk%E8%BF%9E%E6%8E%A5%E6%95%B0%E6%8E%89.jpg">
+<meta property="og:image" content="https://xusenqi.github.io/2019/06/06/%E5%85%B3%E4%BA%8E%E5%AE%A2%E6%88%B7%E7%AB%AF%E9%87%8D%E8%BF%9EZooKeeper%E7%9A%84%E7%9A%84%E9%82%A3%E4%BA%9B%E4%BA%8B%E5%84%BF/singapore_session_expire.png">
+<meta property="og:image" content="https://xusenqi.github.io/2019/06/06/%E5%85%B3%E4%BA%8E%E5%AE%A2%E6%88%B7%E7%AB%AF%E9%87%8D%E8%BF%9EZooKeeper%E7%9A%84%E7%9A%84%E9%82%A3%E4%BA%9B%E4%BA%8B%E5%84%BF/uframework_reconnect_zk_1.png">
+<meta property="og:image" content="https://xusenqi.github.io/2019/06/06/%E5%85%B3%E4%BA%8E%E5%AE%A2%E6%88%B7%E7%AB%AF%E9%87%8D%E8%BF%9EZooKeeper%E7%9A%84%E7%9A%84%E9%82%A3%E4%BA%9B%E4%BA%8B%E5%84%BF/uframework_reconnect_zk_2.png">
+<meta property="og:image" content="https://xusenqi.github.io/2019/06/06/%E5%85%B3%E4%BA%8E%E5%AE%A2%E6%88%B7%E7%AB%AF%E9%87%8D%E8%BF%9EZooKeeper%E7%9A%84%E7%9A%84%E9%82%A3%E4%BA%9B%E4%BA%8B%E5%84%BF/uframework_reconnect_zk_3.png">
 <meta property="article:published_time" content="2019-06-06T06:24:24.000Z">
-<meta property="article:modified_time" content="2021-08-18T13:13:06.056Z">
+<meta property="article:modified_time" content="2021-08-19T09:54:38.914Z">
 <meta property="article:author" content="patrick.xu">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="https://xusenqi.github.io/.io//%E5%AE%A2%E6%88%B7%E7%AB%AF%E8%87%AA%E5%8A%A8%E9%87%8D%E8%BF%9Ezk%E7%9A%84%E6%BC%94%E7%A4%BA.png">
+<meta name="twitter:image" content="https://xusenqi.github.io/2019/06/06/%E5%85%B3%E4%BA%8E%E5%AE%A2%E6%88%B7%E7%AB%AF%E9%87%8D%E8%BF%9EZooKeeper%E7%9A%84%E7%9A%84%E9%82%A3%E4%BA%9B%E4%BA%8B%E5%84%BF/%E5%AE%A2%E6%88%B7%E7%AB%AF%E8%87%AA%E5%8A%A8%E9%87%8D%E8%BF%9Ezk%E7%9A%84%E6%BC%94%E7%A4%BA.png">
 
 <link rel="canonical" href="https://xusenqi.github.io/2019/06/06/%E5%85%B3%E4%BA%8E%E5%AE%A2%E6%88%B7%E7%AB%AF%E9%87%8D%E8%BF%9EZooKeeper%E7%9A%84%E7%9A%84%E9%82%A3%E4%BA%9B%E4%BA%8B%E5%84%BF/">
 
@@ -134,7 +134,7 @@
   </div>
 
   <div class="site-nav-toggle">
-    <div class="toggle" aria-label="Toggle navigation bar">
+    <div class="toggle" aria-label="切换导航栏">
       <span class="toggle-line toggle-line-first"></span>
       <span class="toggle-line toggle-line-middle"></span>
       <span class="toggle-line toggle-line-last"></span>
@@ -148,32 +148,57 @@
   <ul id="menu" class="menu">
         <li class="menu-item menu-item-home">
 
-    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>Home</a>
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
 
   </li>
         <li class="menu-item menu-item-about">
 
-    <a href="/about/" rel="section"><i class="fa fa-fw fa-user"></i>About</a>
+    <a href="/about/" rel="section"><i class="fa fa-fw fa-user"></i>关于</a>
 
   </li>
         <li class="menu-item menu-item-tags">
 
-    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>Tags</a>
+    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>标签</a>
 
   </li>
         <li class="menu-item menu-item-categories">
 
-    <a href="/categories/" rel="section"><i class="fa fa-fw fa-th"></i>Categories</a>
+    <a href="/categories/" rel="section"><i class="fa fa-fw fa-th"></i>分类</a>
 
   </li>
         <li class="menu-item menu-item-archives">
 
-    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>Archives</a>
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档</a>
 
   </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
   </ul>
 
 </nav>
+  <div class="site-search">
+    <div class="popup search-popup">
+    <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocorrect="off" autocapitalize="none"
+           placeholder="搜索..." spellcheck="false"
+           type="text" id="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result"></div>
+
+</div>
+<div class="search-pop-overlay"></div>
+
+  </div>
 </div>
     </header>
 
@@ -218,32 +243,32 @@
               <span class="post-meta-item-icon">
                 <i class="fa fa-calendar-o"></i>
               </span>
-              <span class="post-meta-item-text">Posted on</span>
+              <span class="post-meta-item-text">发表于</span>
 
-              <time title="Created: 2019-06-06 14:24:24" itemprop="dateCreated datePublished" datetime="2019-06-06T14:24:24+08:00">2019-06-06</time>
+              <time title="创建时间：2019-06-06 14:24:24" itemprop="dateCreated datePublished" datetime="2019-06-06T14:24:24+08:00">2019-06-06</time>
             </span>
               <span class="post-meta-item">
                 <span class="post-meta-item-icon">
                   <i class="fa fa-calendar-check-o"></i>
                 </span>
-                <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2021-08-18 21:13:06" itemprop="dateModified" datetime="2021-08-18T21:13:06+08:00">2021-08-18</time>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-08-19 17:54:38" itemprop="dateModified" datetime="2021-08-19T17:54:38+08:00">2021-08-19</time>
               </span>
 
           <br>
-            <span class="post-meta-item" title="Symbols count in article">
+            <span class="post-meta-item" title="本文字数">
               <span class="post-meta-item-icon">
                 <i class="fa fa-file-word-o"></i>
               </span>
-                <span class="post-meta-item-text">Symbols count in article: </span>
+                <span class="post-meta-item-text">本文字数：</span>
               <span>14k</span>
             </span>
-            <span class="post-meta-item" title="Reading time">
+            <span class="post-meta-item" title="阅读时长">
               <span class="post-meta-item-icon">
                 <i class="fa fa-clock-o"></i>
               </span>
-                <span class="post-meta-item-text">Reading time &asymp;</span>
-              <span>23 mins.</span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>23 分钟</span>
             </span>
 
         </div>
@@ -269,7 +294,9 @@
 <blockquote>
 <p>当建立session时，客户会收到由服务器创建的session id和password。当自动重连时，客户端都会发送session id和password给服务端，重建的还是原来的session。以上的自动重连都是由底层的API库来实现，非应用层面去实现的重连</p>
 </blockquote>
-<h1 id="客户端自动重连zk的测试"><a href="#客户端自动重连zk的测试" class="headerlink" title="客户端自动重连zk的测试"></a>客户端自动重连zk的测试</h1><p>cons 查看连接到服务端的信息，看到在自动重连之后，session id保持不变。<br><img src="/.io//%E5%AE%A2%E6%88%B7%E7%AB%AF%E8%87%AA%E5%8A%A8%E9%87%8D%E8%BF%9Ezk%E7%9A%84%E6%BC%94%E7%A4%BA.png" alt="image"></p>
+<h1 id="客户端自动重连zk的测试"><a href="#客户端自动重连zk的测试" class="headerlink" title="客户端自动重连zk的测试"></a>客户端自动重连zk的测试</h1><p>cons 查看连接到服务端的信息，看到在自动重连之后，session id保持不变。</p>
+<img src="/2019/06/06/%E5%85%B3%E4%BA%8E%E5%AE%A2%E6%88%B7%E7%AB%AF%E9%87%8D%E8%BF%9EZooKeeper%E7%9A%84%E7%9A%84%E9%82%A3%E4%BA%9B%E4%BA%8B%E5%84%BF/%E5%AE%A2%E6%88%B7%E7%AB%AF%E8%87%AA%E5%8A%A8%E9%87%8D%E8%BF%9Ezk%E7%9A%84%E6%BC%94%E7%A4%BA.png" class="" title="image">
+
 <h1 id="Session-Expired后的重连实践"><a href="#Session-Expired后的重连实践" class="headerlink" title="Session Expired后的重连实践"></a>Session Expired后的重连实践</h1><h2 id="Session-Expired产生的过程"><a href="#Session-Expired产生的过程" class="headerlink" title="Session Expired产生的过程"></a>Session Expired产生的过程</h2><p>再来回顾下产生session expired的过程，官网上的说明很清楚。</p>
 <p>Session expiration is managed by the ZooKeeper cluster itself, not by the client. When the ZK client establishes a session with the cluster it provides a “timeout” value detailed above. This value is used by the cluster to determine when the client’s session expires. Expirations happens when the cluster does not hear from the client within the specified session timeout period (i.e. no heartbeat). At session expiration the cluster will delete any/all ephemeral nodes owned by that session and immediately notify any/all connected clients of the change (anyone watching those znodes).* At this point the client of the expired session is still disconnected from the cluster, it will not be notified of the session expiration until/unless it is able to re-establish a connection to the cluster.* The client will stay in disconnected state until the TCP connection is re-established with the cluster, at which point the watcher of the expired session will receive the “session expired” notification.</p>
 <p>Example state transitions for an expired session as seen by the expired session’s watcher:</p>
@@ -289,7 +316,7 @@
 <li>客户端：192.168.154.106 uhost-access</li>
 </ul>
 <p>重连的过程如下：</p>
-<p>（1）客户端拉起uhost-access服务:<br>   临时节点 /NS/region666888/set12/uhost/access/0注册成功，session建立成功<br>   <img src="/.io//ephemeral_node_access_1.png" alt="image"></p>
+<p>（1）客户端拉起uhost-access服务:<br>   临时节点 /NS/region666888/set12/uhost/access/0注册成功，session建立成功<br>   <img src="/2019/06/06/%E5%85%B3%E4%BA%8E%E5%AE%A2%E6%88%B7%E7%AB%AF%E9%87%8D%E8%BF%9EZooKeeper%E7%9A%84%E7%9A%84%E9%82%A3%E4%BA%9B%E4%BA%8B%E5%84%BF/ephemeral_node_access_1.png" class="" title="image"></p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">[root@192-168-153-51 node-common]# echo cons | nc 192.168.154.103 2181 | grep &quot;192.168.154.106&quot;</span><br><span class="line"> /192.168.154.106:48146[1](queued=0,recved=99,sent=102,sid=0x6b364768a90001,lop=NA,est=1560000679478,to=40000,lcxid=0x5cfbb93f,lzxid=0x1300013dd4,lresp=1560000745134,llat=1,minlat=0,avglat=1,maxlat=6)</span><br><span class="line"> /192.168.154.106:48149[1](queued=0,recved=7,sent=7,sid=0x6b364768a90000,lop=PING,est=1560000679478,to=40000,lcxid=0x5cfbb8b6,lzxid=0xffffffffffffffff,lresp=1560000732987,llat=0,minlat=0,avglat=0,maxlat=4)</span><br><span class="line">[root@192-168-153-51 node-common]# echo cons | nc 192.168.154.104 2181 | grep &quot;192.168.154.106&quot;</span><br><span class="line">[root@192-168-153-51 node-common]# echo cons | nc 192.168.154.105 2181 | grep &quot;192.168.154.106&quot;</span><br></pre></td></tr></table></figure>
 
 <p>（2）客户端添加防火墙规则，模拟网络分区</p>
@@ -302,7 +329,8 @@
 <p>zk.js（在node-zookeeper上层封装的代码）打印on connecting的日志</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">[2019-06-08 21:38:52.739] [WARN] uhost-access - zk connection 192.168.154.103:2181,192.168.154.104:2181,192.168.154.105:2181 connecting</span><br><span class="line"></span><br><span class="line">[2019-06-08 21:38:53.016] [WARN] uhost-access - zk connection 192.168.154.103:2181,192.168.154.104:2181,192.168.154.105:2181 connecting</span><br></pre></td></tr></table></figure>
 
-<p>   <img src="/.io//connecting_state_1.jpg" alt="image"></p>
+   <img src="/2019/06/06/%E5%85%B3%E4%BA%8E%E5%AE%A2%E6%88%B7%E7%AB%AF%E9%87%8D%E8%BF%9EZooKeeper%E7%9A%84%E7%9A%84%E9%82%A3%E4%BA%9B%E4%BA%8B%E5%84%BF/connecting_state_1.jpg" class="" title="image">
+
 <p>/NS/region666888/set12/uhost/access/0临时节点和会话被清理</p>
 <p>（3）删除防火墙规则，模拟网络恢复</p>
 <p>清楚防火墙规则：iptables -F</p>
@@ -318,12 +346,16 @@
 
 
 <ul>
-<li>在自己封装的上层业务库里，捕获到这个close event，并重连到zk<br><img src="/.io//zkjs_on_close.jpg" alt="image"><br><img src="/.io//zkjs_reconnect.jpg" alt="image"></li>
+<li>在自己封装的上层业务库里，捕获到这个close event，并重连到zk<img src="/2019/06/06/%E5%85%B3%E4%BA%8E%E5%AE%A2%E6%88%B7%E7%AB%AF%E9%87%8D%E8%BF%9EZooKeeper%E7%9A%84%E7%9A%84%E9%82%A3%E4%BA%9B%E4%BA%8B%E5%84%BF/zkjs_on_close.jpg" class="" title="image">
+<img src="/2019/06/06/%E5%85%B3%E4%BA%8E%E5%AE%A2%E6%88%B7%E7%AB%AF%E9%87%8D%E8%BF%9EZooKeeper%E7%9A%84%E7%9A%84%E9%82%A3%E4%BA%9B%E4%BA%8B%E5%84%BF/zkjs_reconnect.jpg" class="" title="image"></li>
 </ul>
 <p>重连之后，session id改变，建立了新的session</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">[root@192-168-153-51 node-common]# echo cons | nc 192.168.154.103 2181 | grep &quot;192.168.154.106&quot;</span><br><span class="line">[root@192-168-153-51 node-common]# echo cons | nc 192.168.154.104 2181 | grep &quot;192.168.154.106&quot;</span><br><span class="line">[root@192-168-153-51 node-common]# echo cons | nc 192.168.154.105 2181 | grep &quot;192.168.154.106&quot;</span><br><span class="line"> /192.168.154.106:40100[1](queued=0,recved=56,sent=56,sid=0x26b3647662b0002,lop=PING,est=1560003260125,to=40000,lcxid=0x5cfbc659,lzxid=0x1300016fae,lresp=1560003948592,llat=0,minlat=0,avglat=0,maxlat=1)</span><br><span class="line"> /192.168.154.106:40106[1](queued=0,recved=837,sent=837,sid=0x26b3647662b0003,lop=NA,est=1560003279705,to=40000,lcxid=0x5cfbc841,lzxid=0x1300016fde,lresp=1560003957541,llat=1,minlat=0,avglat=1,maxlat=17)</span><br></pre></td></tr></table></figure>
 
-<h2 id="新加坡机房重连失败的分析"><a href="#新加坡机房重连失败的分析" class="headerlink" title="新加坡机房重连失败的分析"></a>新加坡机房重连失败的分析</h2><p>线上问题：5月2日新加坡机房set11出现的问题：zk异常，有2分钟处于不工作状态，主机服务（客户端）收到session expired错误。<br><img src="/.io//zk%E8%BF%9E%E6%8E%A5%E6%95%B0%E6%8E%89.jpg" alt="image"><br><img src="/.io//singapore_session_expire.png" alt="image"></p>
+<h2 id="新加坡机房重连失败的分析"><a href="#新加坡机房重连失败的分析" class="headerlink" title="新加坡机房重连失败的分析"></a>新加坡机房重连失败的分析</h2><p>线上问题：5月2日新加坡机房set11出现的问题：zk异常，有2分钟处于不工作状态，主机服务（客户端）收到session expired错误。</p>
+<img src="/2019/06/06/%E5%85%B3%E4%BA%8E%E5%AE%A2%E6%88%B7%E7%AB%AF%E9%87%8D%E8%BF%9EZooKeeper%E7%9A%84%E7%9A%84%E9%82%A3%E4%BA%9B%E4%BA%8B%E5%84%BF/zk%E8%BF%9E%E6%8E%A5%E6%95%B0%E6%8E%89.jpg" class="" title="image">
+<img src="/2019/06/06/%E5%85%B3%E4%BA%8E%E5%AE%A2%E6%88%B7%E7%AB%AF%E9%87%8D%E8%BF%9EZooKeeper%E7%9A%84%E7%9A%84%E9%82%A3%E4%BA%9B%E4%BA%8B%E5%84%BF/singapore_session_expire.png" class="" title="image">
+
 <p>当时并未重连成功，但测试下来确实是有重连的逻辑的。虽然当时zk的具体问题原因无法查清，也无法复现问题。但可以猜测是重连的时候，zk服务没有恢复，导致重连没有成功。<br>虽然2min后，zk恢复正常了，但此时客户端也不会再重试了。所以需要更可靠的重连机制。</p>
 <h1 id="在zk删除数据后的重连实践"><a href="#在zk删除数据后的重连实践" class="headerlink" title="在zk删除数据后的重连实践"></a>在zk删除数据后的重连实践</h1><h2 id="问题描述"><a href="#问题描述" class="headerlink" title="问题描述"></a>问题描述</h2><p>关闭zk, 删除节点数据，拉起zk  → 无法自动注册成功，需要重启服务</p>
 <p>测试步骤<br>zookeeper集群关闭删除数据再启动：</p>
@@ -342,7 +374,11 @@
 <p>（1）name_container.go → func FetchZkName里，注册了所有关注节点的子节点变化的watcher。</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">childs, _, ch, err := zkConn.GetChildrenWatcher(fullName)</span><br></pre></td></tr></table></figure>
 
-<p>当连接断开时，触发一个event，然后重连。又调用FetchZkName, 保证一直有个 goroutine在等待这个事件的触发。<br><img src="/.io//uframework_reconnect_zk_1.png" alt="image"><br><img src="/.io//uframework_reconnect_zk_2.png" alt="image"><br><img src="/.io//uframework_reconnect_zk_3.png" alt="image"></p>
+<p>当连接断开时，触发一个event，然后重连。又调用FetchZkName, 保证一直有个 goroutine在等待这个事件的触发。</p>
+<img src="/2019/06/06/%E5%85%B3%E4%BA%8E%E5%AE%A2%E6%88%B7%E7%AB%AF%E9%87%8D%E8%BF%9EZooKeeper%E7%9A%84%E7%9A%84%E9%82%A3%E4%BA%9B%E4%BA%8B%E5%84%BF/uframework_reconnect_zk_1.png" class="" title="image">
+<img src="/2019/06/06/%E5%85%B3%E4%BA%8E%E5%AE%A2%E6%88%B7%E7%AB%AF%E9%87%8D%E8%BF%9EZooKeeper%E7%9A%84%E7%9A%84%E9%82%A3%E4%BA%9B%E4%BA%8B%E5%84%BF/uframework_reconnect_zk_2.png" class="" title="image">
+<img src="/2019/06/06/%E5%85%B3%E4%BA%8E%E5%AE%A2%E6%88%B7%E7%AB%AF%E9%87%8D%E8%BF%9EZooKeeper%E7%9A%84%E7%9A%84%E9%82%A3%E4%BA%9B%E4%BA%8B%E5%84%BF/uframework_reconnect_zk_3.png" class="" title="image">
+
 <p>重复4.1中的测试后，可以重连(相当于新建session)</p>
 <p>在我们的服务里，关注的节点有三个uhost-access、uimage3-access、uimage3-manager，所有会有三个reconnect的动作，但只会有一个成功。</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">[2019-06-09 23:57:21.471566] [INFO]cat watcher &#123;EventNotWatching StateDisconnected /NS/region666888/set12/uhost/access zk: zookeeper is closing &#125;</span><br><span class="line">[2019-06-09 23:57:21.471724] [ERROR]********  ev.Type == zk.EventNotWatching &amp;&amp; ev.State == zk.StateDisconnected, begin to reconnect</span><br><span class="line">[2019-06-09 23:57:21.471742] [INFO]cat watcher &#123;EventNotWatching StateDisconnected /NS/region666888/set12/uimage3/access zk: zookeeper is closing &#125;</span><br><span class="line">[2019-06-09 23:57:21.471781] [INFO]cat watcher &#123;EventNotWatching StateDisconnected /NS/region666888/set12/uimage3/manager zk: zookeeper is closing &#125;</span><br><span class="line">[2019-06-09 23:57:21.471786] [ERROR]********  ev.Type == zk.EventNotWatching &amp;&amp; ev.State == zk.StateDisconnected, begin to reconnect</span><br><span class="line">[2019-06-09 23:57:21.471867] [ERROR]********  ev.Type == zk.EventNotWatching &amp;&amp; ev.State == zk.StateDisconnected, begin to reconnect</span><br><span class="line">[2019-06-09 23:57:23.472008] [ERROR]in GetZkInstance, zkConn.conn.State() != zk.StateHasSession, before initZkConn</span><br><span class="line">[2019-06-09 23:57:24.481209] [ERROR]Connect zk Servers [192.168.154.103:2181 192.168.154.104:2181 192.168.154.105:2181] failed:can not connect remote servers</span><br><span class="line">[2019-06-09 23:57:24.481379] [ERROR]in GetZkInstance, zkConn.conn.State() != zk.StateHasSession, after initZkConn fail</span><br><span class="line">[2019-06-09 23:57:24.481427] [ERROR]in GetZkInstance, zkConn.conn.State() != zk.StateHasSession, before initZkConn</span><br><span class="line">[2019-06-09 23:57:25.483472] [ERROR]Connect zk Servers [192.168.154.103:2181 192.168.154.104:2181 192.168.154.105:2181] failed:can not connect remote servers</span><br><span class="line">[2019-06-09 23:57:25.483658] [ERROR]in GetZkInstance, zkConn.conn.State() != zk.StateHasSession, after initZkConn fail</span><br><span class="line">[2019-06-09 23:57:25.483674] [ERROR]in GetZkInstance, zkConn.conn.State() != zk.StateHasSession, before initZkConn</span><br><span class="line">[2019-06-09 23:57:26.492263] [ERROR]Connect zk Servers [192.168.154.103:2181 192.168.154.104:2181 192.168.154.105:2181] failed:can not connect remote servers</span><br><span class="line">[2019-06-09 23:57:26.492371] [ERROR]in GetZkInstance, zkConn.conn.State() != zk.StateHasSession, after initZkConn fail</span><br><span class="line">[2019-06-09 23:57:26.492390] [ERROR]in GetZkInstance, zkConn.conn.State() != zk.StateHasSession, before initZkConn</span><br><span class="line">[2019-06-09 23:57:26.515713] [ERROR]in GetZkInstance, zkConn.conn.State() != zk.StateHasSession, after initZkConn success</span><br></pre></td></tr></table></figure>
@@ -385,8 +421,8 @@
       <i class="fa fa-chevron-left"></i> 读书笔记-TCP/IP详解 卷1：协议
     </a></div>
       <div class="post-nav-item">
-    <a href="/2019/07/13/%E4%B8%80%E6%AC%A1node%E8%BF%9B%E7%A8%8Bcpu%E8%B4%9F%E8%BD%BD100-%E9%97%AE%E9%A2%98%E7%9A%84%E5%A4%84%E7%90%86/" rel="next" title="一次node进程cpu负载100%问题的处理">
-      一次node进程cpu负载100%问题的处理 <i class="fa fa-chevron-right"></i>
+    <a href="/2019/07/13/%E4%B8%80%E6%AC%A1node%E8%BF%9B%E7%A8%8Bcpu%E8%B4%9F%E8%BD%BD100-%E9%97%AE%E9%A2%98%E7%9A%84%E5%A4%84%E7%90%86/" rel="next" title="一次node进程cpu负载高问题的处理">
+      一次node进程cpu负载高问题的处理 <i class="fa fa-chevron-right"></i>
     </a></div>
     </div>
       </footer>
@@ -438,10 +474,10 @@
 
       <ul class="sidebar-nav motion-element">
         <li class="sidebar-nav-toc">
-          Table of Contents
+          文章目录
         </li>
         <li class="sidebar-nav-overview">
-          Overview
+          站点概览
         </li>
       </ul>
 
@@ -461,21 +497,21 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">28</span>
-          <span class="site-state-item-name">posts</span>
+          <span class="site-state-item-count">27</span>
+          <span class="site-state-item-name">日志</span>
         </a>
       </div>
       <div class="site-state-item site-state-categories">
             <a href="/categories/">
           
         <span class="site-state-item-count">12</span>
-        <span class="site-state-item-name">categories</span></a>
+        <span class="site-state-item-name">分类</span></a>
       </div>
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
         <span class="site-state-item-count">37</span>
-        <span class="site-state-item-name">tags</span></a>
+        <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
 </div>
@@ -513,17 +549,17 @@
     <span class="post-meta-item-icon">
       <i class="fa fa-area-chart"></i>
     </span>
-    <span title="Symbols count total">124k</span>
+    <span title="站点总字数">124k</span>
     <span class="post-meta-divider">|</span>
     <span class="post-meta-item-icon">
       <i class="fa fa-coffee"></i>
     </span>
-    <span title="Reading time total">3:27</span>
+    <span title="站点阅读时长">3:26</span>
 </div>
-  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> v5.4.0
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> 强力驱动 v5.4.0
   </div>
   <span class="post-meta-divider">|</span>
-  <div class="theme-info">Theme – <a href="https://muse.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a> v7.7.0
+  <div class="theme-info">主题 – <a href="https://muse.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a> v7.7.0
   </div>
 
         
@@ -560,6 +596,10 @@
   
 
 
+
+
+  
+<script src="/js/local-search.js"></script>
 
 
 

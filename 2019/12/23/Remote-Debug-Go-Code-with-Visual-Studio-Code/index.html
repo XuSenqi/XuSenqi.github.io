@@ -40,8 +40,8 @@
       hits: {"per_page":10},
       labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
     },
-    localsearch: {"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
-    path: '',
+    localsearch: {"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: 'search.xml',
     motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}
   };
 </script>
@@ -53,23 +53,23 @@
 <meta property="og:site_name" content="森几许的博客">
 <meta property="og:description" content="当了解一些大型项目的代码逻辑时，如kubernetes，跟着调试器跟踪代码学习，是很好的方式。当项目部署在远程环境时，在本机进行开发，很自然对Remote Debug有迫切需求，这也是和调试一般golang程序最主要的诉求区别点，本文将通过两个实际例子，来介绍如何Remote Debug。">
 <meta property="og:locale">
-<meta property="og:image" content="https://xusenqi.github.io/.io//dlv_server.jpeg">
-<meta property="og:image" content="https://xusenqi.github.io/.io//Open_Configurations.jpeg">
-<meta property="og:image" content="https://xusenqi.github.io/.io//VSCode_debug_scheduler%E7%95%8C%E9%9D%A2.jpeg">
-<meta property="og:image" content="https://xusenqi.github.io/.io//dlv_server_scheduler_%E8%B0%83%E8%AF%95.jpeg">
-<meta property="og:image" content="https://xusenqi.github.io/.io//%E6%9D%A1%E4%BB%B6%E6%96%AD%E7%82%B9.png">
-<meta property="og:image" content="https://xusenqi.github.io/.io//kubernetes_components_architecture.png">
-<meta property="og:image" content="https://xusenqi.github.io/.io//kubeadm_kube_scheduler.jpeg">
-<meta property="og:image" content="https://xusenqi.github.io/.io//VSCode_debug_kube_scheduler%E7%95%8C%E9%9D%A2.jpeg">
-<meta property="og:image" content="https://xusenqi.github.io/.io//dlv_server_kube_scheduler_%E8%B0%83%E8%AF%95.jpeg">
+<meta property="og:image" content="https://xusenqi.github.io/2019/12/23/Remote-Debug-Go-Code-with-Visual-Studio-Code/dlv_server.jpeg">
+<meta property="og:image" content="https://xusenqi.github.io/2019/12/23/Remote-Debug-Go-Code-with-Visual-Studio-Code/Open_Configurations.jpeg">
+<meta property="og:image" content="https://xusenqi.github.io/2019/12/23/Remote-Debug-Go-Code-with-Visual-Studio-Code/VSCode_debug_scheduler%E7%95%8C%E9%9D%A2.jpeg">
+<meta property="og:image" content="https://xusenqi.github.io/2019/12/23/Remote-Debug-Go-Code-with-Visual-Studio-Code/dlv_server_scheduler_%E8%B0%83%E8%AF%95.jpeg">
+<meta property="og:image" content="https://xusenqi.github.io/2019/12/23/Remote-Debug-Go-Code-with-Visual-Studio-Code/%E6%9D%A1%E4%BB%B6%E6%96%AD%E7%82%B9.png">
+<meta property="og:image" content="https://xusenqi.github.io/2019/12/23/Remote-Debug-Go-Code-with-Visual-Studio-Code/kubernetes_components_architecture.png">
+<meta property="og:image" content="https://xusenqi.github.io/2019/12/23/Remote-Debug-Go-Code-with-Visual-Studio-Code/kubeadm_kube_scheduler.jpeg">
+<meta property="og:image" content="https://xusenqi.github.io/2019/12/23/Remote-Debug-Go-Code-with-Visual-Studio-Code/VSCode_debug_kube_scheduler%E7%95%8C%E9%9D%A2.jpeg">
+<meta property="og:image" content="https://xusenqi.github.io/2019/12/23/Remote-Debug-Go-Code-with-Visual-Studio-Code/dlv_server_kube_scheduler_%E8%B0%83%E8%AF%95.jpeg">
 <meta property="article:published_time" content="2019-12-23T13:24:20.000Z">
-<meta property="article:modified_time" content="2021-08-18T13:13:05.944Z">
+<meta property="article:modified_time" content="2021-08-19T09:54:38.539Z">
 <meta property="article:author" content="patrick.xu">
 <meta property="article:tag" content="vscode">
 <meta property="article:tag" content="remote debug">
 <meta property="article:tag" content="k8s">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="https://xusenqi.github.io/.io//dlv_server.jpeg">
+<meta name="twitter:image" content="https://xusenqi.github.io/2019/12/23/Remote-Debug-Go-Code-with-Visual-Studio-Code/dlv_server.jpeg">
 
 <link rel="canonical" href="https://xusenqi.github.io/2019/12/23/Remote-Debug-Go-Code-with-Visual-Studio-Code/">
 
@@ -136,7 +136,7 @@
   </div>
 
   <div class="site-nav-toggle">
-    <div class="toggle" aria-label="Toggle navigation bar">
+    <div class="toggle" aria-label="切换导航栏">
       <span class="toggle-line toggle-line-first"></span>
       <span class="toggle-line toggle-line-middle"></span>
       <span class="toggle-line toggle-line-last"></span>
@@ -150,32 +150,57 @@
   <ul id="menu" class="menu">
         <li class="menu-item menu-item-home">
 
-    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>Home</a>
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
 
   </li>
         <li class="menu-item menu-item-about">
 
-    <a href="/about/" rel="section"><i class="fa fa-fw fa-user"></i>About</a>
+    <a href="/about/" rel="section"><i class="fa fa-fw fa-user"></i>关于</a>
 
   </li>
         <li class="menu-item menu-item-tags">
 
-    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>Tags</a>
+    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>标签</a>
 
   </li>
         <li class="menu-item menu-item-categories">
 
-    <a href="/categories/" rel="section"><i class="fa fa-fw fa-th"></i>Categories</a>
+    <a href="/categories/" rel="section"><i class="fa fa-fw fa-th"></i>分类</a>
 
   </li>
         <li class="menu-item menu-item-archives">
 
-    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>Archives</a>
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档</a>
 
   </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
   </ul>
 
 </nav>
+  <div class="site-search">
+    <div class="popup search-popup">
+    <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocorrect="off" autocapitalize="none"
+           placeholder="搜索..." spellcheck="false"
+           type="text" id="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result"></div>
+
+</div>
+<div class="search-pop-overlay"></div>
+
+  </div>
 </div>
     </header>
 
@@ -220,22 +245,22 @@
               <span class="post-meta-item-icon">
                 <i class="fa fa-calendar-o"></i>
               </span>
-              <span class="post-meta-item-text">Posted on</span>
+              <span class="post-meta-item-text">发表于</span>
 
-              <time title="Created: 2019-12-23 21:24:20" itemprop="dateCreated datePublished" datetime="2019-12-23T21:24:20+08:00">2019-12-23</time>
+              <time title="创建时间：2019-12-23 21:24:20" itemprop="dateCreated datePublished" datetime="2019-12-23T21:24:20+08:00">2019-12-23</time>
             </span>
               <span class="post-meta-item">
                 <span class="post-meta-item-icon">
                   <i class="fa fa-calendar-check-o"></i>
                 </span>
-                <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2021-08-18 21:13:05" itemprop="dateModified" datetime="2021-08-18T21:13:05+08:00">2021-08-18</time>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-08-19 17:54:38" itemprop="dateModified" datetime="2021-08-19T17:54:38+08:00">2021-08-19</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
                 <i class="fa fa-folder-o"></i>
               </span>
-              <span class="post-meta-item-text">In</span>
+              <span class="post-meta-item-text">分类于</span>
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
                   <a href="/categories/vscode/" itemprop="url" rel="index">
                     <span itemprop="name">vscode</span>
@@ -244,19 +269,19 @@
             </span>
 
           <br>
-            <span class="post-meta-item" title="Symbols count in article">
+            <span class="post-meta-item" title="本文字数">
               <span class="post-meta-item-icon">
                 <i class="fa fa-file-word-o"></i>
               </span>
-                <span class="post-meta-item-text">Symbols count in article: </span>
+                <span class="post-meta-item-text">本文字数：</span>
               <span>4.2k</span>
             </span>
-            <span class="post-meta-item" title="Reading time">
+            <span class="post-meta-item" title="阅读时长">
               <span class="post-meta-item-icon">
                 <i class="fa fa-clock-o"></i>
               </span>
-                <span class="post-meta-item-text">Reading time &asymp;</span>
-              <span>7 mins.</span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>7 分钟</span>
             </span>
 
         </div>
@@ -272,7 +297,8 @@
 <span id="more"></span>
 
 <h1 id="dlv远程调试的原理"><a href="#dlv远程调试的原理" class="headerlink" title="dlv远程调试的原理"></a>dlv远程调试的原理</h1><p>vscode支持丰富的插件，dlv插件可以帮助我们调试golang代码，基本使用方法详见 <a target="_blank" rel="noopener" href="https://github.com/go-delve/delve">delve官网</a>，以及我之前的一篇文档<a href="https://xusenqi.github.io/2019/08/25/%E9%80%9A%E8%BF%87delve-dlv-%E8%B0%83%E8%AF%95golang%E7%A8%8B%E5%BA%8F/#more">通过delve(dlv)调试golang程序</a>。dlv远程调试的基本原理是，在服务端启动dlv server，客户端vscode去连接dlv server</p>
-<p><img src="/.io//dlv_server.jpeg" alt="image"></p>
+<img src="/2019/12/23/Remote-Debug-Go-Code-with-Visual-Studio-Code/dlv_server.jpeg" class="" title="image">
+
 <h1 id="远程调试的步骤"><a href="#远程调试的步骤" class="headerlink" title="远程调试的步骤"></a>远程调试的步骤</h1><p>主要参考了<a target="_blank" rel="noopener" href="https://github.com/Microsoft/vscode-go/wiki/Debugging-Go-code-using-VS-Code">Debugging Go code using VS Code</a>，现将步骤整理如下：</p>
 <h2 id="环境安装"><a href="#环境安装" class="headerlink" title="环境安装"></a>环境安装</h2><h3 id="Local安装Golang"><a href="#Local安装Golang" class="headerlink" title="Local安装Golang"></a>Local安装Golang</h3><p>参考Golang官网安装步骤<a target="_blank" rel="noopener" href="https://golang.org/doc/install">Getting Started</a></p>
 <h3 id="Local和Remote端安装dlv工具"><a href="#Local和Remote端安装dlv工具" class="headerlink" title="Local和Remote端安装dlv工具"></a>Local和Remote端安装dlv工具</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">go get -u github.com/go-delve/delve/cmd/dlv</span><br><span class="line"></span><br><span class="line">验证dlv版本</span><br><span class="line">dlv version</span><br></pre></td></tr></table></figure>
@@ -297,7 +323,8 @@
 <li>保持VS Code打开的代码，和Remote端的代码或二进制包一致</li>
 <li>在本地主机中配置远程调试的参数，会在当前项目下的.vscode目录产生一个launch.json文件</li>
 </ol>
-<p><img src="/.io//Open_Configurations.jpeg" alt="image"></p>
+<img src="/2019/12/23/Remote-Debug-Go-Code-with-Visual-Studio-Code/Open_Configurations.jpeg" class="" title="image">
+
 <ol start="3">
 <li>配置Remote端的IP和Port</li>
 </ol>
@@ -306,18 +333,25 @@
 <ol start="4">
 <li>运行Debug，可以像本地一样调试，如加断点、条件断点、单步调试等。</li>
 </ol>
-<p>本地VS Code界面<br><img src="/.io//VSCode_debug_scheduler%E7%95%8C%E9%9D%A2.jpeg" alt="image"></p>
-<p>Remote端页面<br><img src="/.io//dlv_server_scheduler_%E8%B0%83%E8%AF%95.jpeg" alt="image"></p>
+<p>本地VS Code界面</p>
+<img src="/2019/12/23/Remote-Debug-Go-Code-with-Visual-Studio-Code/VSCode_debug_scheduler%E7%95%8C%E9%9D%A2.jpeg" class="" title="image">
+
+<p>Remote端页面</p>
+<img src="/2019/12/23/Remote-Debug-Go-Code-with-Visual-Studio-Code/dlv_server_scheduler_%E8%B0%83%E8%AF%95.jpeg" class="" title="image">
+
 <p>Remote-Debug-Go-Code-with-Visual-Studio-Code.md</p>
-<p>条件断点<br><img src="/.io//%E6%9D%A1%E4%BB%B6%E6%96%AD%E7%82%B9.png" alt="image"></p>
+<p>条件断点</p>
+<img src="/2019/12/23/Remote-Debug-Go-Code-with-Visual-Studio-Code/%E6%9D%A1%E4%BB%B6%E6%96%AD%E7%82%B9.png" class="" title="image">
+
 <h1 id="k8s-scheduler的远程调试"><a href="#k8s-scheduler的远程调试" class="headerlink" title="k8s scheduler的远程调试"></a>k8s scheduler的远程调试</h1><p>k8s里有很多单独的服务，如kube-apiserver、kube-proxy、kube-scheduler等，每个都可以作为单独的调试代码。最近在看kube-scheduler的代码，所以这里以它为例。</p>
-<p><img src="/.io//kubernetes_components_architecture.png" alt="image"></p>
+<img src="/2019/12/23/Remote-Debug-Go-Code-with-Visual-Studio-Code/kubernetes_components_architecture.png" class="" title="image">
 <center>High level Kubernetes architecture diagram showing a cluster with a master and two worker nodes</center>
 <center>Source: https://x-team.com/blog/introduction-kubernetes-architecture</center>
 
 <h2 id="k8s环境的搭建"><a href="#k8s环境的搭建" class="headerlink" title="k8s环境的搭建"></a>k8s环境的搭建</h2><p>k8s环境通过kubeadm搭建在远程的4台虚机上，1台master和3台node，具体的搭建步骤见<a href="https://xusenqi.github.io/2019/12/11/kubeadm%E9%83%A8%E7%BD%B2single-control-plane-k8s%E9%9B%86%E7%BE%A4/">kubeadm部署single control-plane k8s集群</a>。</p>
 <h2 id="停止kube-scheduler服务"><a href="#停止kube-scheduler服务" class="headerlink" title="停止kube-scheduler服务"></a>停止kube-scheduler服务</h2><p>我们需要dlv拉起kube-scheduler服务，但是kubeadm部署的kube-scheduler被kill掉后<br>，会自动拉起来，占用10251的端口，影响调试。</p>
-<p><img src="/.io//kubeadm_kube_scheduler.jpeg" alt="image"></p>
+<img src="/2019/12/23/Remote-Debug-Go-Code-with-Visual-Studio-Code/kubeadm_kube_scheduler.jpeg" class="" title="image">
+
 <p>这里对对配置文件改名，防止自动拉起kube-scheduler<br><code>mv /etc/kubernetes/scheduler.conf /etc/kubernetes/scheduler_191223.conf</code></p>
 <h2 id="dlv-server"><a href="#dlv-server" class="headerlink" title="dlv server"></a>dlv server</h2><p>dlv server启动后，监听40000端口</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">dlv --listen=&quot;:40000&quot; --headless=true --log --api-version=2 exec /data/k8s/kube-scheduler \</span><br><span class="line">-- --authentication-kubeconfig=/etc/kubernetes/scheduler_191223.conf \</span><br><span class="line">--authorization-kubeconfig=/etc/kubernetes/scheduler_191223.conf \</span><br><span class="line">--bind-address=127.0.0.1 --kubeconfig=/etc/kubernetes/scheduler_191223.conf \</span><br><span class="line">--leader-elect=true</span><br></pre></td></tr></table></figure>
@@ -335,8 +369,12 @@
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">    &quot;name&quot;: &quot;Remote k8s server&quot;,</span><br><span class="line">    &quot;type&quot;: &quot;go&quot;,</span><br><span class="line">    &quot;request&quot;: &quot;attach&quot;,</span><br><span class="line">    &quot;showLog&quot;: true,</span><br><span class="line">    &quot;mode&quot;: &quot;remote&quot;,</span><br><span class="line">    &quot;remotePath&quot;: &quot;/Users/patrick.xu/go/src/k8s.io&quot;,</span><br><span class="line">    &quot;port&quot;: 40000,</span><br><span class="line">    &quot;host&quot;: &quot;152.32.173.26&quot;,</span><br><span class="line">    &quot;trace&quot;: &quot;log&quot;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
 <p>3.运行Debug，这时可以像可以像本地一样调试，如加断点、单步调试等。</p>
-<p>本地VS Code远程调试kube-scheduler界面<br><img src="/.io//VSCode_debug_kube_scheduler%E7%95%8C%E9%9D%A2.jpeg" alt="image"></p>
-<p>Remote端kube-scheduler输出，看到打断点和调试的日志<br><img src="/.io//dlv_server_kube_scheduler_%E8%B0%83%E8%AF%95.jpeg" alt="image"></p>
+<p>本地VS Code远程调试kube-scheduler界面</p>
+<img src="/2019/12/23/Remote-Debug-Go-Code-with-Visual-Studio-Code/VSCode_debug_kube_scheduler%E7%95%8C%E9%9D%A2.jpeg" class="" title="image">
+
+<p>Remote端kube-scheduler输出，看到打断点和调试的日志</p>
+<img src="/2019/12/23/Remote-Debug-Go-Code-with-Visual-Studio-Code/dlv_server_kube_scheduler_%E8%B0%83%E8%AF%95.jpeg" class="" title="image">
+
 <p>后面就是结合创建pod，去分析具体的调度逻辑了。</p>
 <h1 id="参考链接"><a href="#参考链接" class="headerlink" title="参考链接"></a>参考链接</h1><ol>
 <li><a target="_blank" rel="noopener" href="https://github.com/go-delve/delve">delve官网</a></li>
@@ -421,10 +459,10 @@
 
       <ul class="sidebar-nav motion-element">
         <li class="sidebar-nav-toc">
-          Table of Contents
+          文章目录
         </li>
         <li class="sidebar-nav-overview">
-          Overview
+          站点概览
         </li>
       </ul>
 
@@ -444,21 +482,21 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">28</span>
-          <span class="site-state-item-name">posts</span>
+          <span class="site-state-item-count">27</span>
+          <span class="site-state-item-name">日志</span>
         </a>
       </div>
       <div class="site-state-item site-state-categories">
             <a href="/categories/">
           
         <span class="site-state-item-count">12</span>
-        <span class="site-state-item-name">categories</span></a>
+        <span class="site-state-item-name">分类</span></a>
       </div>
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
         <span class="site-state-item-count">37</span>
-        <span class="site-state-item-name">tags</span></a>
+        <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
 </div>
@@ -496,17 +534,17 @@
     <span class="post-meta-item-icon">
       <i class="fa fa-area-chart"></i>
     </span>
-    <span title="Symbols count total">124k</span>
+    <span title="站点总字数">124k</span>
     <span class="post-meta-divider">|</span>
     <span class="post-meta-item-icon">
       <i class="fa fa-coffee"></i>
     </span>
-    <span title="Reading time total">3:27</span>
+    <span title="站点阅读时长">3:26</span>
 </div>
-  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> v5.4.0
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> 强力驱动 v5.4.0
   </div>
   <span class="post-meta-divider">|</span>
-  <div class="theme-info">Theme – <a href="https://muse.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a> v7.7.0
+  <div class="theme-info">主题 – <a href="https://muse.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a> v7.7.0
   </div>
 
         
@@ -543,6 +581,10 @@
   
 
 
+
+
+  
+<script src="/js/local-search.js"></script>
 
 
 

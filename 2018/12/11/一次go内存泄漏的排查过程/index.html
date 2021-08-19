@@ -40,30 +40,30 @@
       hits: {"per_page":10},
       labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
     },
-    localsearch: {"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
-    path: '',
+    localsearch: {"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: 'search.xml',
     motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}
   };
 </script>
 
-  <meta name="description" content="背景线上一个go语言写的服务，在连续跑了10多天后，占用内存从最开始的20M左右，涨到了1个多G，有内存泄漏的问题，将整个排查过程和相应方法进行整理，做个记录。  pprofGo语言自带的pprof工具，是检测Golang开发应用性能的利器。 pprof 采样数据主要有三种获取方式:  runtime&#x2F;pprof: 手动调用runtime.StartCPUProfile或者runtime.Stop">
+  <meta name="description" content="背景线上一个go语言写的服务，在连续跑了10多天后，占用内存从最开始的20M左右，涨到了1个多G，有内存泄漏的问题，将整个排查过程和相应方法进行整理，做个记录。   pprofGo语言自带的pprof工具，是检测Golang开发应用性能的利器。 pprof 采样数据主要有三种获取方式:  runtime&#x2F;pprof: 手动调用runtime.StartCPUProfile或者runtime.Sto">
 <meta property="og:type" content="article">
 <meta property="og:title" content="一次go语言内存泄漏的排查过程">
 <meta property="og:url" content="https://xusenqi.github.io/2018/12/11/%E4%B8%80%E6%AC%A1go%E5%86%85%E5%AD%98%E6%B3%84%E6%BC%8F%E7%9A%84%E6%8E%92%E6%9F%A5%E8%BF%87%E7%A8%8B/index.html">
 <meta property="og:site_name" content="森几许的博客">
-<meta property="og:description" content="背景线上一个go语言写的服务，在连续跑了10多天后，占用内存从最开始的20M左右，涨到了1个多G，有内存泄漏的问题，将整个排查过程和相应方法进行整理，做个记录。  pprofGo语言自带的pprof工具，是检测Golang开发应用性能的利器。 pprof 采样数据主要有三种获取方式:  runtime&#x2F;pprof: 手动调用runtime.StartCPUProfile或者runtime.Stop">
+<meta property="og:description" content="背景线上一个go语言写的服务，在连续跑了10多天后，占用内存从最开始的20M左右，涨到了1个多G，有内存泄漏的问题，将整个排查过程和相应方法进行整理，做个记录。   pprofGo语言自带的pprof工具，是检测Golang开发应用性能的利器。 pprof 采样数据主要有三种获取方式:  runtime&#x2F;pprof: 手动调用runtime.StartCPUProfile或者runtime.Sto">
 <meta property="og:locale">
-<meta property="og:image" content="https://xusenqi.github.io/.io//1_%E5%86%85%E5%AD%98%E6%B3%84%E6%BC%8F.png">
-<meta property="og:image" content="https://xusenqi.github.io/.io//3_netpprof%E6%B5%8F%E8%A7%88%E5%99%A8%E6%88%AA%E5%9B%BE2.png">
-<meta property="og:image" content="https://xusenqi.github.io/.io//4_netpprof_debug_1.png">
-<meta property="og:image" content="https://xusenqi.github.io/.io//6_%E5%86%85%E5%AD%98%E6%B3%84%E6%BC%8F%E8%A7%A3%E5%86%B3.png">
-<meta property="og:image" content="https://xusenqi.github.io/.io//5_cpu%E8%80%97%E6%97%B6%E8%B0%83%E5%BA%A6%E5%9B%BE.png">
+<meta property="og:image" content="https://xusenqi.github.io/2018/12/11/%E4%B8%80%E6%AC%A1go%E5%86%85%E5%AD%98%E6%B3%84%E6%BC%8F%E7%9A%84%E6%8E%92%E6%9F%A5%E8%BF%87%E7%A8%8B/1_%E5%86%85%E5%AD%98%E6%B3%84%E6%BC%8F.png">
+<meta property="og:image" content="https://xusenqi.github.io/2018/12/11/%E4%B8%80%E6%AC%A1go%E5%86%85%E5%AD%98%E6%B3%84%E6%BC%8F%E7%9A%84%E6%8E%92%E6%9F%A5%E8%BF%87%E7%A8%8B/3_netpprof%E6%B5%8F%E8%A7%88%E5%99%A8%E6%88%AA%E5%9B%BE2.png">
+<meta property="og:image" content="https://xusenqi.github.io/2018/12/11/%E4%B8%80%E6%AC%A1go%E5%86%85%E5%AD%98%E6%B3%84%E6%BC%8F%E7%9A%84%E6%8E%92%E6%9F%A5%E8%BF%87%E7%A8%8B/4_netpprof_debug_1.png">
+<meta property="og:image" content="https://xusenqi.github.io/2018/12/11/%E4%B8%80%E6%AC%A1go%E5%86%85%E5%AD%98%E6%B3%84%E6%BC%8F%E7%9A%84%E6%8E%92%E6%9F%A5%E8%BF%87%E7%A8%8B/6_%E5%86%85%E5%AD%98%E6%B3%84%E6%BC%8F%E8%A7%A3%E5%86%B3.png">
+<meta property="og:image" content="https://xusenqi.github.io/2018/12/11/%E4%B8%80%E6%AC%A1go%E5%86%85%E5%AD%98%E6%B3%84%E6%BC%8F%E7%9A%84%E6%8E%92%E6%9F%A5%E8%BF%87%E7%A8%8B/5_cpu%E8%80%97%E6%97%B6%E8%B0%83%E5%BA%A6%E5%9B%BE.png">
 <meta property="article:published_time" content="2018-12-10T16:29:12.000Z">
-<meta property="article:modified_time" content="2021-08-18T13:13:06.180Z">
+<meta property="article:modified_time" content="2021-08-19T09:54:38.730Z">
 <meta property="article:author" content="patrick.xu">
 <meta property="article:tag" content="Go">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="https://xusenqi.github.io/.io//1_%E5%86%85%E5%AD%98%E6%B3%84%E6%BC%8F.png">
+<meta name="twitter:image" content="https://xusenqi.github.io/2018/12/11/%E4%B8%80%E6%AC%A1go%E5%86%85%E5%AD%98%E6%B3%84%E6%BC%8F%E7%9A%84%E6%8E%92%E6%9F%A5%E8%BF%87%E7%A8%8B/1_%E5%86%85%E5%AD%98%E6%B3%84%E6%BC%8F.png">
 
 <link rel="canonical" href="https://xusenqi.github.io/2018/12/11/%E4%B8%80%E6%AC%A1go%E5%86%85%E5%AD%98%E6%B3%84%E6%BC%8F%E7%9A%84%E6%8E%92%E6%9F%A5%E8%BF%87%E7%A8%8B/">
 
@@ -130,7 +130,7 @@
   </div>
 
   <div class="site-nav-toggle">
-    <div class="toggle" aria-label="Toggle navigation bar">
+    <div class="toggle" aria-label="切换导航栏">
       <span class="toggle-line toggle-line-first"></span>
       <span class="toggle-line toggle-line-middle"></span>
       <span class="toggle-line toggle-line-last"></span>
@@ -144,32 +144,57 @@
   <ul id="menu" class="menu">
         <li class="menu-item menu-item-home">
 
-    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>Home</a>
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
 
   </li>
         <li class="menu-item menu-item-about">
 
-    <a href="/about/" rel="section"><i class="fa fa-fw fa-user"></i>About</a>
+    <a href="/about/" rel="section"><i class="fa fa-fw fa-user"></i>关于</a>
 
   </li>
         <li class="menu-item menu-item-tags">
 
-    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>Tags</a>
+    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>标签</a>
 
   </li>
         <li class="menu-item menu-item-categories">
 
-    <a href="/categories/" rel="section"><i class="fa fa-fw fa-th"></i>Categories</a>
+    <a href="/categories/" rel="section"><i class="fa fa-fw fa-th"></i>分类</a>
 
   </li>
         <li class="menu-item menu-item-archives">
 
-    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>Archives</a>
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档</a>
 
   </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
   </ul>
 
 </nav>
+  <div class="site-search">
+    <div class="popup search-popup">
+    <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocorrect="off" autocapitalize="none"
+           placeholder="搜索..." spellcheck="false"
+           type="text" id="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result"></div>
+
+</div>
+<div class="search-pop-overlay"></div>
+
+  </div>
 </div>
     </header>
 
@@ -214,22 +239,22 @@
               <span class="post-meta-item-icon">
                 <i class="fa fa-calendar-o"></i>
               </span>
-              <span class="post-meta-item-text">Posted on</span>
+              <span class="post-meta-item-text">发表于</span>
 
-              <time title="Created: 2018-12-11 00:29:12" itemprop="dateCreated datePublished" datetime="2018-12-11T00:29:12+08:00">2018-12-11</time>
+              <time title="创建时间：2018-12-11 00:29:12" itemprop="dateCreated datePublished" datetime="2018-12-11T00:29:12+08:00">2018-12-11</time>
             </span>
               <span class="post-meta-item">
                 <span class="post-meta-item-icon">
                   <i class="fa fa-calendar-check-o"></i>
                 </span>
-                <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2021-08-18 21:13:06" itemprop="dateModified" datetime="2021-08-18T21:13:06+08:00">2021-08-18</time>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-08-19 17:54:38" itemprop="dateModified" datetime="2021-08-19T17:54:38+08:00">2021-08-19</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
                 <i class="fa fa-folder-o"></i>
               </span>
-              <span class="post-meta-item-text">In</span>
+              <span class="post-meta-item-text">分类于</span>
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
                   <a href="/categories/Go/" itemprop="url" rel="index">
                     <span itemprop="name">Go</span>
@@ -238,19 +263,19 @@
             </span>
 
           <br>
-            <span class="post-meta-item" title="Symbols count in article">
+            <span class="post-meta-item" title="本文字数">
               <span class="post-meta-item-icon">
                 <i class="fa fa-file-word-o"></i>
               </span>
-                <span class="post-meta-item-text">Symbols count in article: </span>
+                <span class="post-meta-item-text">本文字数：</span>
               <span>6.8k</span>
             </span>
-            <span class="post-meta-item" title="Reading time">
+            <span class="post-meta-item" title="阅读时长">
               <span class="post-meta-item-icon">
                 <i class="fa fa-clock-o"></i>
               </span>
-                <span class="post-meta-item-text">Reading time &asymp;</span>
-              <span>11 mins.</span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>11 分钟</span>
             </span>
 
         </div>
@@ -263,7 +288,8 @@
 
       
         <h2 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h2><p>线上一个go语言写的服务，在连续跑了10多天后，占用内存从最开始的20M左右，涨到了1个多G，有内存泄漏的问题，将整个排查过程和相应方法进行整理，做个记录。</p>
-<p><img src="/.io//1_%E5%86%85%E5%AD%98%E6%B3%84%E6%BC%8F.png" alt="image"></p>
+<img src="/2018/12/11/%E4%B8%80%E6%AC%A1go%E5%86%85%E5%AD%98%E6%B3%84%E6%BC%8F%E7%9A%84%E6%8E%92%E6%9F%A5%E8%BF%87%E7%A8%8B/1_%E5%86%85%E5%AD%98%E6%B3%84%E6%BC%8F.png" class="" title="image">
+
 <h2 id="pprof"><a href="#pprof" class="headerlink" title="pprof"></a>pprof</h2><p>Go语言自带的pprof工具，是检测Golang开发应用性能的利器。</p>
 <p>pprof 采样数据主要有三种获取方式:</p>
 <ol>
@@ -278,7 +304,8 @@
 <h2 id="net-http-pprof"><a href="#net-http-pprof" class="headerlink" title="net/http/pprof"></a>net/http/pprof</h2><p>线上的服务是一直运行的，用过“net/http/pprof”可以看到实时的状态，看到各个信息指标，这里主要介绍这种方法。</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">import _ &quot;net/http/pprof&quot;</span><br><span class="line">func main() &#123;</span><br><span class="line">	......</span><br><span class="line">	go func() &#123;</span><br><span class="line">		log.Println(http.ListenAndServe(&quot;localhost:8211&quot;, nil))</span><br><span class="line">	&#125;()</span><br><span class="line">	......</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
-<p><img src="/.io//3_netpprof%E6%B5%8F%E8%A7%88%E5%99%A8%E6%88%AA%E5%9B%BE2.png" alt="image"></p>
+<img src="/2018/12/11/%E4%B8%80%E6%AC%A1go%E5%86%85%E5%AD%98%E6%B3%84%E6%BC%8F%E7%9A%84%E6%8E%92%E6%9F%A5%E8%BF%87%E7%A8%8B/3_netpprof%E6%B5%8F%E8%A7%88%E5%99%A8%E6%88%AA%E5%9B%BE2.png" class="" title="image">
+
 <p>之后可以通过 <a target="_blank" rel="noopener" href="http://localhost:8211/debug/pprof/CMD%E8%8E%B7%E5%8F%96%E5%AF%B9%E5%BA%94%E7%9A%84%E9%87%87%E6%A0%B7%E6%95%B0%E6%8D%AE">http://localhost:8211/debug/pprof/CMD获取对应的采样数据</a></p>
 <p><a target="_blank" rel="noopener" href="https://golang.org/src/runtime/pprof/pprof.go?s=23119:23158#L730">pprof</a></p>
 <p>Profile翻译为“剖面，侧面等”，可以理解为当前应用的的一个剖面。可以知道哪些地方耗费了cpu、memory。</p>
@@ -304,7 +331,9 @@
 <p>The debug parameter enables additional output.</p>
 <p>Passing debug=0 prints only the hexadecimal addresses that pprof needs.</p>
 <p>Passing debug=1 adds comments translating addresses to function names and line numbers, so that a programmer can read the profile without tools.</p>
-<p><img src="/.io//4_netpprof_debug_1.png" alt="image"></p>
+<img src="/2018/12/11/%E4%B8%80%E6%AC%A1go%E5%86%85%E5%AD%98%E6%B3%84%E6%BC%8F%E7%9A%84%E6%8E%92%E6%9F%A5%E8%BF%87%E7%A8%8B/4_netpprof_debug_1.png" class="" title="image">
+
+
 <p>The predefined profiles may assign meaning to other debug values;</p>
 <p>for example, when printing the “goroutine” profile, debug=2 means to print the goroutine stacks in the same form that a Go program uses when dying due to an unrecovered panic.</p>
 <p>以上几种 Profile 可在 <a target="_blank" rel="noopener" href="http://localhost:8211/debug/pprof/">http://localhost:8211/debug/pprof/</a> 中看到，除此之外，go pprof 的 CMD 还包括, </p>
@@ -320,7 +349,9 @@
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line">  // 10s去更新下zk节点</span><br><span class="line">ticker2 := time.NewTicker(time.Second * 10)</span><br><span class="line">go func() &#123;</span><br><span class="line">	for &#123;</span><br><span class="line">		select &#123;</span><br><span class="line">		case &lt;-ticker2.C:</span><br><span class="line">			UpdateInstanceFromZk()</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;()</span><br><span class="line"></span><br><span class="line">// 里面的函数调用关系如下：</span><br><span class="line">UpdateInstanceFromZk --&gt; nameservice.InitNameService </span><br><span class="line">--&gt; updateNames --&gt; FetchZkName</span><br><span class="line"></span><br><span class="line">// FetchZkName函数里起了一个goroutine,封装了watcher，自己已实现了更新zk节点的功能</span><br><span class="line">   go func() &#123;</span><br><span class="line">	select &#123;</span><br><span class="line">	case ev := &lt;-ch:</span><br><span class="line">		uflog.INFO(&quot;cat watcher&quot;, ev)</span><br><span class="line">		if ev.Type == zk.EventNotWatching &amp;&amp; ev.State == zk.StateDisconnected &#123;</span><br><span class="line">			reConnect(connStr)</span><br><span class="line">		&#125;</span><br><span class="line">		nc.FetchZkName(connStr, shortName, fullName)</span><br><span class="line">	&#125;</span><br><span class="line">&#125;()</span><br><span class="line"></span><br><span class="line">// 该goroutine不会退出，会一直watch。定时调用UpdateInstanceFromZk，会导致goroutine不断增加，内存泄漏。</span><br></pre></td></tr></table></figure>
 
 <p>解决方案是：UpdateInstanceFromZk（）调用一次即可。</p>
-<p>改进后，占用内存一直保持在20M左右，完美~<br><img src="/.io//6_%E5%86%85%E5%AD%98%E6%B3%84%E6%BC%8F%E8%A7%A3%E5%86%B3.png" alt="image"></p>
+<p>改进后，占用内存一直保持在20M左右，完美~</p>
+<img src="/2018/12/11/%E4%B8%80%E6%AC%A1go%E5%86%85%E5%AD%98%E6%B3%84%E6%BC%8F%E7%9A%84%E6%8E%92%E6%9F%A5%E8%BF%87%E7%A8%8B/6_%E5%86%85%E5%AD%98%E6%B3%84%E6%BC%8F%E8%A7%A3%E5%86%B3.png" class="" title="image">
+
 <h2 id="Go-Tool-PProf-分析工具"><a href="#Go-Tool-PProf-分析工具" class="headerlink" title="Go Tool PProf 分析工具"></a>Go Tool PProf 分析工具</h2><p>上面通过浏览器访问http服务的方式，需要有图形界面。而线上服务器通常是没有图形界面的，可以通过命令行方式来分析，或者将profile拷贝到本地，再生成调用关系图</p>
 <h3 id="Go-Tool-PProf-命令行"><a href="#Go-Tool-PProf-命令行" class="headerlink" title="Go Tool PProf 命令行"></a>Go Tool PProf 命令行</h3><p>支持的cmd跟net/http/pprof里提到的一样</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">go tool pprof http://localhost:8211/debug/pprof/goroutine</span><br><span class="line">go tool pprof http://localhost:8211/debug/pprof/profile</span><br><span class="line">go tool pprof http://localhost:8211/debug/pprof/heap</span><br><span class="line">...</span><br></pre></td></tr></table></figure>
@@ -358,7 +389,8 @@
 <p>由于我的Mac上用的是go1.8.1版本，所用pprof命令。</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">➜  uhost-go git:(from_pxu) ✗ pprof uhost_server pprof.uhost_server.samples.cpu.004.pb</span><br><span class="line">uhost_server: parsing profile: unrecognized profile format</span><br><span class="line">Fetched 1 source profiles out of 2</span><br><span class="line">File: uhost_server</span><br><span class="line">Type: cpu</span><br><span class="line">Time: Dec 11, 2018 at 6:18pm (CST)</span><br><span class="line">Duration: 30s, Total samples = 180ms (  0.6%)</span><br><span class="line">Entering interactive mode (type &quot;help&quot; for commands, &quot;o&quot; for options)</span><br><span class="line">(pprof) web</span><br></pre></td></tr></table></figure>
 
-<p><img src="/.io//5_cpu%E8%80%97%E6%97%B6%E8%B0%83%E5%BA%A6%E5%9B%BE.png" alt="image"></p>
+<img src="/2018/12/11/%E4%B8%80%E6%AC%A1go%E5%86%85%E5%AD%98%E6%B3%84%E6%BC%8F%E7%9A%84%E6%8E%92%E6%9F%A5%E8%BF%87%E7%A8%8B/5_cpu%E8%80%97%E6%97%B6%E8%B0%83%E5%BA%A6%E5%9B%BE.png" class="" title="image">
+
 <h2 id="其他工具"><a href="#其他工具" class="headerlink" title="其他工具"></a>其他工具</h2><ul>
 <li>delve<br><a target="_blank" rel="noopener" href="https://github.com/derekparker/delve">https://github.com/derekparker/delve</a></li>
 <li>go-torch 生成火焰图<br><a target="_blank" rel="noopener" href="https://github.com/uber/go-torch">https://github.com/uber/go-torch</a></li>
@@ -443,10 +475,10 @@
 
       <ul class="sidebar-nav motion-element">
         <li class="sidebar-nav-toc">
-          Table of Contents
+          文章目录
         </li>
         <li class="sidebar-nav-overview">
-          Overview
+          站点概览
         </li>
       </ul>
 
@@ -466,21 +498,21 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">28</span>
-          <span class="site-state-item-name">posts</span>
+          <span class="site-state-item-count">27</span>
+          <span class="site-state-item-name">日志</span>
         </a>
       </div>
       <div class="site-state-item site-state-categories">
             <a href="/categories/">
           
         <span class="site-state-item-count">12</span>
-        <span class="site-state-item-name">categories</span></a>
+        <span class="site-state-item-name">分类</span></a>
       </div>
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
         <span class="site-state-item-count">37</span>
-        <span class="site-state-item-name">tags</span></a>
+        <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
 </div>
@@ -518,17 +550,17 @@
     <span class="post-meta-item-icon">
       <i class="fa fa-area-chart"></i>
     </span>
-    <span title="Symbols count total">124k</span>
+    <span title="站点总字数">124k</span>
     <span class="post-meta-divider">|</span>
     <span class="post-meta-item-icon">
       <i class="fa fa-coffee"></i>
     </span>
-    <span title="Reading time total">3:27</span>
+    <span title="站点阅读时长">3:26</span>
 </div>
-  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> v5.4.0
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> 强力驱动 v5.4.0
   </div>
   <span class="post-meta-divider">|</span>
-  <div class="theme-info">Theme – <a href="https://muse.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a> v7.7.0
+  <div class="theme-info">主题 – <a href="https://muse.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a> v7.7.0
   </div>
 
         
@@ -565,6 +597,10 @@
   
 
 
+
+
+  
+<script src="/js/local-search.js"></script>
 
 
 
