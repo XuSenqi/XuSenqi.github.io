@@ -50,7 +50,7 @@
 <meta property="og:type" content="article">
 <meta property="og:title" content="一次go语言内存泄漏的排查过程">
 <meta property="og:url" content="https://xusenqi.github.io/2018/12/11/%E4%B8%80%E6%AC%A1go%E5%86%85%E5%AD%98%E6%B3%84%E6%BC%8F%E7%9A%84%E6%8E%92%E6%9F%A5%E8%BF%87%E7%A8%8B/index.html">
-<meta property="og:site_name" content="森几许的博客">
+<meta property="og:site_name" content="许森琪的博客">
 <meta property="og:description" content="背景线上一个go语言写的服务，在连续跑了10多天后，占用内存从最开始的20M左右，涨到了1个多G，有内存泄漏的问题，将整个排查过程和相应方法进行整理，做个记录。   pprofGo语言自带的pprof工具，是检测Golang开发应用性能的利器。 pprof 采样数据主要有三种获取方式:  runtime&#x2F;pprof: 手动调用runtime.StartCPUProfile或者runtime.Sto">
 <meta property="og:locale">
 <meta property="og:image" content="https://xusenqi.github.io/2018/12/11/%E4%B8%80%E6%AC%A1go%E5%86%85%E5%AD%98%E6%B3%84%E6%BC%8F%E7%9A%84%E6%8E%92%E6%9F%A5%E8%BF%87%E7%A8%8B/1_%E5%86%85%E5%AD%98%E6%B3%84%E6%BC%8F.png">
@@ -77,7 +77,7 @@
   };
 </script>
 
-  <title>一次go语言内存泄漏的排查过程 | 森几许的博客</title>
+  <title>一次go语言内存泄漏的排查过程 | 许森琪的博客</title>
   
 
 
@@ -108,7 +108,7 @@
   </style>
 </noscript>
 
-<link rel="alternate" href="/atom.xml" title="森几许的博客" type="application/atom+xml">
+<link rel="alternate" href="/atom.xml" title="许森琪的博客" type="application/atom+xml">
 </head>
 
 <body itemscope itemtype="http://schema.org/WebPage">
@@ -122,11 +122,11 @@
     <div>
       <a href="/" class="brand" rel="start">
         <span class="logo-line-before"><i></i></span>
-        <span class="site-title">森几许的博客</span>
+        <span class="site-title">许森琪的博客</span>
         <span class="logo-line-after"><i></i></span>
       </a>
     </div>
-        <p class="site-subtitle">空杯心态</p>
+        <p class="site-subtitle">问渠那得清如许，为有源头活水来</p>
   </div>
 
   <div class="site-nav-toggle">
@@ -227,7 +227,7 @@
     </span>
 
     <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="森几许的博客">
+      <meta itemprop="name" content="许森琪的博客">
     </span>
       <header class="post-header">
         <h1 class="post-title" itemprop="name headline">
@@ -262,7 +262,21 @@
                 </span>
             </span>
 
-          <br>
+          
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="fa fa-comment-o"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/2018/12/11/%E4%B8%80%E6%AC%A1go%E5%86%85%E5%AD%98%E6%B3%84%E6%BC%8F%E7%9A%84%E6%8E%92%E6%9F%A5%E8%BF%87%E7%A8%8B/#comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2018/12/11/%E4%B8%80%E6%AC%A1go%E5%86%85%E5%AD%98%E6%B3%84%E6%BC%8F%E7%9A%84%E6%8E%92%E6%9F%A5%E8%BF%87%E7%A8%8B/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  <br>
             <span class="post-meta-item" title="本文字数">
               <span class="post-meta-item-icon">
                 <i class="fa fa-file-word-o"></i>
@@ -438,6 +452,7 @@
 
           </div>
           
+    <div class="comments" id="valine-comments"></div>
 
 <script>
   window.addEventListener('tabs:register', () => {
@@ -617,6 +632,35 @@
   
 
   
+
+
+<script>
+NexT.utils.loadComments(document.querySelector('#valine-comments'), () => {
+  NexT.utils.getScript('//unpkg.com/valine/dist/Valine.min.js', () => {
+    var GUEST = ['nick', 'mail', 'link'];
+    var guest = 'nick,mail,link';
+    guest = guest.split(',').filter(item => {
+      return GUEST.includes(item);
+    });
+    new Valine({
+      el: '#valine-comments',
+      verify: false,
+      notify: true,
+      appId: 'RuNvykqCFiSKIt83PqlqJbK0-gzGzoHsz',
+      appKey: '9TDvi5mOVCQ0aBL2MXCwd9WC',
+      placeholder: "Just go go",
+      avatar: 'mm',
+      meta: guest,
+      pageSize: '10' || 10,
+      visitor: false,
+      lang: '' || 'zh-cn',
+      path: location.pathname,
+      recordIP: false,
+      serverURLs: ''
+    });
+  }, window.Valine);
+});
+</script>
 
 </body>
 </html>

@@ -50,7 +50,7 @@
 <meta property="og:type" content="article">
 <meta property="og:title" content="golang中的map并发读写问题">
 <meta property="og:url" content="https://xusenqi.github.io/2020/03/08/golang%E4%B8%AD%E7%9A%84map%E5%B9%B6%E5%8F%91%E8%AF%BB%E5%86%99%E9%97%AE%E9%A2%98/index.html">
-<meta property="og:site_name" content="森几许的博客">
+<meta property="og:site_name" content="许森琪的博客">
 <meta property="og:description" content="map不是并发安全的官方的faq里有说明，考虑到有性能损失，map没有设计成原子操作，在并发读写时会有问题。  Map access is unsafe only when updates are occurring. As long as all goroutines are only reading—looking up elements in the map, including itera">
 <meta property="og:locale">
 <meta property="article:published_time" content="2020-03-08T13:32:07.000Z">
@@ -72,7 +72,7 @@
   };
 </script>
 
-  <title>golang中的map并发读写问题 | 森几许的博客</title>
+  <title>golang中的map并发读写问题 | 许森琪的博客</title>
   
 
 
@@ -103,7 +103,7 @@
   </style>
 </noscript>
 
-<link rel="alternate" href="/atom.xml" title="森几许的博客" type="application/atom+xml">
+<link rel="alternate" href="/atom.xml" title="许森琪的博客" type="application/atom+xml">
 </head>
 
 <body itemscope itemtype="http://schema.org/WebPage">
@@ -117,11 +117,11 @@
     <div>
       <a href="/" class="brand" rel="start">
         <span class="logo-line-before"><i></i></span>
-        <span class="site-title">森几许的博客</span>
+        <span class="site-title">许森琪的博客</span>
         <span class="logo-line-after"><i></i></span>
       </a>
     </div>
-        <p class="site-subtitle">空杯心态</p>
+        <p class="site-subtitle">问渠那得清如许，为有源头活水来</p>
   </div>
 
   <div class="site-nav-toggle">
@@ -222,7 +222,7 @@
     </span>
 
     <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="森几许的博客">
+      <meta itemprop="name" content="许森琪的博客">
     </span>
       <header class="post-header">
         <h1 class="post-title" itemprop="name headline">
@@ -257,7 +257,21 @@
                 </span>
             </span>
 
-          <br>
+          
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="fa fa-comment-o"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/2020/03/08/golang%E4%B8%AD%E7%9A%84map%E5%B9%B6%E5%8F%91%E8%AF%BB%E5%86%99%E9%97%AE%E9%A2%98/#comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2020/03/08/golang%E4%B8%AD%E7%9A%84map%E5%B9%B6%E5%8F%91%E8%AF%BB%E5%86%99%E9%97%AE%E9%A2%98/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  <br>
             <span class="post-meta-item" title="本文字数">
               <span class="post-meta-item-icon">
                 <i class="fa fa-file-word-o"></i>
@@ -357,6 +371,7 @@
 
           </div>
           
+    <div class="comments" id="valine-comments"></div>
 
 <script>
   window.addEventListener('tabs:register', () => {
@@ -536,6 +551,35 @@
   
 
   
+
+
+<script>
+NexT.utils.loadComments(document.querySelector('#valine-comments'), () => {
+  NexT.utils.getScript('//unpkg.com/valine/dist/Valine.min.js', () => {
+    var GUEST = ['nick', 'mail', 'link'];
+    var guest = 'nick,mail,link';
+    guest = guest.split(',').filter(item => {
+      return GUEST.includes(item);
+    });
+    new Valine({
+      el: '#valine-comments',
+      verify: false,
+      notify: true,
+      appId: 'RuNvykqCFiSKIt83PqlqJbK0-gzGzoHsz',
+      appKey: '9TDvi5mOVCQ0aBL2MXCwd9WC',
+      placeholder: "Just go go",
+      avatar: 'mm',
+      meta: guest,
+      pageSize: '10' || 10,
+      visitor: false,
+      lang: '' || 'zh-cn',
+      path: location.pathname,
+      recordIP: false,
+      serverURLs: ''
+    });
+  }, window.Valine);
+});
+</script>
 
 </body>
 </html>

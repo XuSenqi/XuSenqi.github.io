@@ -50,7 +50,7 @@
 <meta property="og:type" content="article">
 <meta property="og:title" content="Remote Debugging Go Code with Visual Studio Code">
 <meta property="og:url" content="https://xusenqi.github.io/2019/12/23/Remote-Debug-Go-Code-with-Visual-Studio-Code/index.html">
-<meta property="og:site_name" content="森几许的博客">
+<meta property="og:site_name" content="许森琪的博客">
 <meta property="og:description" content="当了解一些大型项目的代码逻辑时，如kubernetes，跟着调试器跟踪代码学习，是很好的方式。当项目部署在远程环境时，在本机进行开发，很自然对Remote Debug有迫切需求，这也是和调试一般golang程序最主要的诉求区别点，本文将通过两个实际例子，来介绍如何Remote Debug。">
 <meta property="og:locale">
 <meta property="og:image" content="https://xusenqi.github.io/2019/12/23/Remote-Debug-Go-Code-with-Visual-Studio-Code/dlv_server.jpeg">
@@ -83,7 +83,7 @@
   };
 </script>
 
-  <title>Remote Debugging Go Code with Visual Studio Code | 森几许的博客</title>
+  <title>Remote Debugging Go Code with Visual Studio Code | 许森琪的博客</title>
   
 
 
@@ -114,7 +114,7 @@
   </style>
 </noscript>
 
-<link rel="alternate" href="/atom.xml" title="森几许的博客" type="application/atom+xml">
+<link rel="alternate" href="/atom.xml" title="许森琪的博客" type="application/atom+xml">
 </head>
 
 <body itemscope itemtype="http://schema.org/WebPage">
@@ -128,11 +128,11 @@
     <div>
       <a href="/" class="brand" rel="start">
         <span class="logo-line-before"><i></i></span>
-        <span class="site-title">森几许的博客</span>
+        <span class="site-title">许森琪的博客</span>
         <span class="logo-line-after"><i></i></span>
       </a>
     </div>
-        <p class="site-subtitle">空杯心态</p>
+        <p class="site-subtitle">问渠那得清如许，为有源头活水来</p>
   </div>
 
   <div class="site-nav-toggle">
@@ -233,7 +233,7 @@
     </span>
 
     <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="森几许的博客">
+      <meta itemprop="name" content="许森琪的博客">
     </span>
       <header class="post-header">
         <h1 class="post-title" itemprop="name headline">
@@ -268,7 +268,21 @@
                 </span>
             </span>
 
-          <br>
+          
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="fa fa-comment-o"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/2019/12/23/Remote-Debug-Go-Code-with-Visual-Studio-Code/#comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2019/12/23/Remote-Debug-Go-Code-with-Visual-Studio-Code/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  <br>
             <span class="post-meta-item" title="本文字数">
               <span class="post-meta-item-icon">
                 <i class="fa fa-file-word-o"></i>
@@ -422,6 +436,7 @@
 
           </div>
           
+    <div class="comments" id="valine-comments"></div>
 
 <script>
   window.addEventListener('tabs:register', () => {
@@ -601,6 +616,35 @@
   
 
   
+
+
+<script>
+NexT.utils.loadComments(document.querySelector('#valine-comments'), () => {
+  NexT.utils.getScript('//unpkg.com/valine/dist/Valine.min.js', () => {
+    var GUEST = ['nick', 'mail', 'link'];
+    var guest = 'nick,mail,link';
+    guest = guest.split(',').filter(item => {
+      return GUEST.includes(item);
+    });
+    new Valine({
+      el: '#valine-comments',
+      verify: false,
+      notify: true,
+      appId: 'RuNvykqCFiSKIt83PqlqJbK0-gzGzoHsz',
+      appKey: '9TDvi5mOVCQ0aBL2MXCwd9WC',
+      placeholder: "Just go go",
+      avatar: 'mm',
+      meta: guest,
+      pageSize: '10' || 10,
+      visitor: false,
+      lang: '' || 'zh-cn',
+      path: location.pathname,
+      recordIP: false,
+      serverURLs: ''
+    });
+  }, window.Valine);
+});
+</script>
 
 </body>
 </html>

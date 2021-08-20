@@ -48,9 +48,9 @@
 
   <meta name="description" content="完成比完美更重要">
 <meta property="og:type" content="website">
-<meta property="og:title" content="森几许的博客">
+<meta property="og:title" content="许森琪的博客">
 <meta property="og:url" content="https://xusenqi.github.io/archives/2018/10/index.html">
-<meta property="og:site_name" content="森几许的博客">
+<meta property="og:site_name" content="许森琪的博客">
 <meta property="og:description" content="完成比完美更重要">
 <meta property="og:locale">
 <meta property="article:author" content="patrick.xu">
@@ -68,7 +68,7 @@
   };
 </script>
 
-  <title>归档 | 森几许的博客</title>
+  <title>归档 | 许森琪的博客</title>
   
 
 
@@ -99,7 +99,7 @@
   </style>
 </noscript>
 
-<link rel="alternate" href="/atom.xml" title="森几许的博客" type="application/atom+xml">
+<link rel="alternate" href="/atom.xml" title="许森琪的博客" type="application/atom+xml">
 </head>
 
 <body itemscope itemtype="http://schema.org/WebPage">
@@ -113,11 +113,11 @@
     <div>
       <a href="/" class="brand" rel="start">
         <span class="logo-line-before"><i></i></span>
-        <span class="site-title">森几许的博客</span>
+        <span class="site-title">许森琪的博客</span>
         <span class="logo-line-after"><i></i></span>
       </a>
     </div>
-        <p class="site-subtitle">空杯心态</p>
+        <p class="site-subtitle">问渠那得清如许，为有源头活水来</p>
   </div>
 
   <div class="site-nav-toggle">
@@ -469,6 +469,35 @@
   
 
   
+
+
+<script>
+NexT.utils.loadComments(document.querySelector('#valine-comments'), () => {
+  NexT.utils.getScript('//unpkg.com/valine/dist/Valine.min.js', () => {
+    var GUEST = ['nick', 'mail', 'link'];
+    var guest = 'nick,mail,link';
+    guest = guest.split(',').filter(item => {
+      return GUEST.includes(item);
+    });
+    new Valine({
+      el: '#valine-comments',
+      verify: false,
+      notify: true,
+      appId: 'RuNvykqCFiSKIt83PqlqJbK0-gzGzoHsz',
+      appKey: '9TDvi5mOVCQ0aBL2MXCwd9WC',
+      placeholder: "Just go go",
+      avatar: 'mm',
+      meta: guest,
+      pageSize: '10' || 10,
+      visitor: false,
+      lang: '' || 'zh-cn',
+      path: location.pathname,
+      recordIP: false,
+      serverURLs: ''
+    });
+  }, window.Valine);
+});
+</script>
 
 </body>
 </html>

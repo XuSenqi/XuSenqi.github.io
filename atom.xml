@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
-  <title>森几许的博客</title>
+  <title>许森琪的博客</title>
   <icon>https://xusenqi.github.io/icon.png</icon>
-  <subtitle>空杯心态</subtitle>
+  <subtitle>问渠那得清如许，为有源头活水来</subtitle>
   <link href="https://xusenqi.github.io/atom.xml" rel="self"/>
   
   <link href="https://xusenqi.github.io/"/>
