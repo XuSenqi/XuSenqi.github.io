@@ -158,104 +158,6 @@
       </tags>
   </entry>
   <entry>
-    <title>Go语言 - 01 工作区和GOPATH</title>
-    <url>/2018/08/12/Go%E8%AF%AD%E8%A8%80-01-%E5%B7%A5%E4%BD%9C%E5%8C%BA%E5%92%8CGOPATH/</url>
-    <content><![CDATA[<h2 id="Go语言的安装"><a href="#Go语言的安装" class="headerlink" title="Go语言的安装"></a>Go语言的安装</h2><p>参照官网文档 <a href="https://golang.org/doc/install">https://golang.org/doc/install</a><br>可以在命令行中输入命令来验证是否安装成功：</p>
-<ul>
-<li>go version：查看安装的版本</li>
-<li>go env：当前go的配置环境</li>
-</ul>
-<p>2个环境变量，即 GOROOT、GOPATH和GOBIN:</p>
-<ul>
-<li>GOROOT：go的安装路径</li>
-<li>GOPATH：go的工作路径<span id="more"></span></li>
-</ul>
-<h2 id="问题-：设置-GOPATH-有什么意义？"><a href="#问题-：设置-GOPATH-有什么意义？" class="headerlink" title="问题 ：设置 GOPATH 有什么意义？"></a>问题 ：设置 GOPATH 有什么意义？</h2><p>典型回答<br>环境变量 GOPATH 的值可以是一个目录的路径，也可以包含多个目录路径，每个目录都代表 Go 语言的一个工作区（workspace）。<br>这些工作区用于放置 Go 语言的源码文件，以及安装（install）后的归档文件和可执行文件。<br>一个典型的workspace如下：</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">bin/</span><br><span class="line">    hello                 # command executable </span><br><span class="line">pkg/</span><br><span class="line">    linux_amd64/          # this will reflect your OS and architecture</span><br><span class="line">        github.com/user/</span><br><span class="line">            stringutil.a  # package object</span><br><span class="line">src/</span><br><span class="line">    github.com/user/</span><br><span class="line">        hello/</span><br><span class="line">            hello.go      # command source</span><br><span class="line">        stringutil/</span><br><span class="line">            reverse.go    # package source</span><br></pre></td></tr></table></figure>
-
-<h2 id="知识扩展"><a href="#知识扩展" class="headerlink" title="知识扩展"></a>知识扩展</h2><h3 id="Go-语言源码的组织方式"><a href="#Go-语言源码的组织方式" class="headerlink" title="Go 语言源码的组织方式"></a>Go 语言源码的组织方式</h3><p>以代码包(package)为基本组织单位的。代码包其实是与目录一一对应的。目录可以有子目录，所以代码包也可以有子包。</p>
-<p>一个代码包中可以包含任意个以.go 为扩展名的源码文件，这些源码文件都需要被声明为属于同一个代码包。代码包的名称一般会与这些源码文件所在的目录同名。如果不同名，那么在构建、安装的过程中会以代码包名称为准。</p>
-<p>代码包的导入：</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">import &quot;github.com/labstack/echo&quot;</span><br></pre></td></tr></table></figure>
-
-<p>在工作区中，一个代码包的导入路径实际上就是从 src 子目录，到该包的实际存储位置的相对路径。下面我马上就会谈到 src子目录。<br>插播：Go语言的源码文件有三大类，即：命令源码文件、库源码文件和测试源码文件。</p>
-<h3 id="构建-go-build-和安装-go-install"><a href="#构建-go-build-和安装-go-install" class="headerlink" title="构建(go build)和安装(go install)"></a>构建(go build)和安装(go install)</h3><p>go build: 用于编译我们指定的源码文件或代码包以及它们的依赖包。<br>对于只包含库源码文件的代码包, go build命令在编译时，只会做检查性的编译，操作的结果文件只会存在于临时目录中，立刻自动删除，而不会输出任何结果文件。<br>如果想保留在临时工作目录，不删除掉：</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">➜  stringutil go build -work</span><br><span class="line">WORK=/var/folders/5s/25ck5pv16rg55hr2kfdvtszc0000gp/T/go-build412712988</span><br></pre></td></tr></table></figure>
-<p>如果构建的是命令源码文件，那么操作的结果文件会被搬运到那个源码文件所在的目录中。</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">➜  hello git:(master) ✗ ls</span><br><span class="line">hello.go</span><br><span class="line">➜  hello git:(master) ✗ go build</span><br><span class="line">➜  hello git:(master) ✗ ls</span><br><span class="line">hello    hello.go</span><br></pre></td></tr></table></figure>
-<p>go install: 安装操作会先执行构建(go build)，然后还会进行链接操作，并且把结果文件搬运到指定目录。<br>进一步说，如果安装的是库源码文件，那么结果文件会被搬运到它所在工作区的 pkg 目录下的某个子目录中。</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">➜  XuSenqi ls /Users/patrick.xu/go/pkg/darwin_amd64/github.com/XuSenqi</span><br><span class="line">➜  XuSenqi go install github.com/XuSenqi/stringutil</span><br><span class="line">➜  XuSenqi ls /Users/patrick.xu/go/pkg/darwin_amd64/github.com/XuSenqi</span><br><span class="line">stringutil.a</span><br></pre></td></tr></table></figure>
-
-<p>如果安装的是命令源码文件，那么结果文件会被搬运到它所在工作区的 bin 目录中，或者环境变量GOBIN指向的目录中。同时，依赖的代码包也会安装到pgk下对应的目录中。</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">➜  XuSenqi ls /Users/patrick.xu/go/pkg/darwin_amd64/github.com/XuSenqi</span><br><span class="line">➜  XuSenqi ls /Users/patrick.xu/go/bin/hello</span><br><span class="line">ls: /Users/patrick.xu/go/bin/hello: No such file or directory</span><br><span class="line">➜  XuSenqi go install github.com/XuSenqi/hello/</span><br><span class="line">➜  XuSenqi ls /Users/patrick.xu/go/pkg/darwin_amd64/github.com/XuSenqi</span><br><span class="line">stringutil.a</span><br><span class="line">➜  XuSenqi ls /Users/patrick.xu/go/bin/hello</span><br><span class="line">/Users/patrick.xu/go/bin/hello</span><br></pre></td></tr></table></figure>
-<h3 id="go-build-命令一些可选项的用途和用法"><a href="#go-build-命令一些可选项的用途和用法" class="headerlink" title="go build 命令一些可选项的用途和用法"></a>go build 命令一些可选项的用途和用法</h3><p>在运行go build命令的时候，默认不会编译目标代码包所依赖的那些代码包。当然，如果被依赖的代码包的归档文件不存在，或者源码文件有了变化，那它还是会被编译。</p>
-<p>如果要强制编译它们，可以在执行命令的时候加入标记-a。此时，不但目标代码包总是会被编译，它依赖的代码包也总会被编译，即使依赖的是标准库中的代码包也是如此。</p>
-<p>表1 go build命令的常用标记说明</p>
-<table>
-<thead>
-<tr>
-<th>标记名称</th>
-<th align="center">标记描述</th>
-</tr>
-</thead>
-<tbody><tr>
-<td>-a</td>
-<td align="center">强行对所有涉及到的代码包（包含标准库中的代码包）进行重新构建，即使它们已经是最新的了。</td>
-</tr>
-<tr>
-<td>-n</td>
-<td align="center">打印编译期间所用到的其它命令，但是并不真正执行它们。</td>
-</tr>
-<tr>
-<td>-p n</td>
-<td align="center">指定编译过程中执行各任务的并行数量（确切地说应该是并发数量）。在默认情况下，该数量等于CPU的逻辑核数。但是在darwin/arm平台（即iPhone和iPad所用的平台）下，该数量默认是1。</td>
-</tr>
-<tr>
-<td>-race</td>
-<td align="center">开启竞态条件的检测。不过此标记目前仅在linux/amd64、freebsd/amd64、darwin/amd64和windows/amd64平台下受到支持。</td>
-</tr>
-<tr>
-<td>-v</td>
-<td align="center">打印出那些被编译的代码包的名字。</td>
-</tr>
-<tr>
-<td>-work</td>
-<td align="center">打印出编译时生成的临时工作目录的路径，并在编译结束时保留它。在默认情况下，编译结束时会删除该目录。</td>
-</tr>
-<tr>
-<td>-x</td>
-<td align="center">打印编译期间所用到的其它命令。注意它与-n标记的区别。</td>
-</tr>
-</tbody></table>
-<h3 id="go-get"><a href="#go-get" class="headerlink" title="go get"></a>go get</h3><p>go get可以根据要求和实际情况从互联网上下载或更新指定的代码包及其依赖包，并对它们进行go build和go install。</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">➜  XuSenqi go get github.com/hyper-carrot/go_lib/logging</span><br><span class="line">➜  XuSenqi ls $GOPATH/src/github.com/hyper-carrot/go_lib/logging</span><br><span class="line">base.go           console_logger.go log_manager.go    logger_test.go    tag.go</span><br><span class="line">➜  XuSenqi ls /Users/patrick.xu/go/pkg/darwin_amd64/github.com/hyper-carrot/go_lib/logging.a</span><br><span class="line">/Users/patrick.xu/go/pkg/darwin_amd64/github.com/hyper-carrot/go_lib/logging.a</span><br></pre></td></tr></table></figure>
-<p>表2 go get命令的常用标记说明</p>
-<table>
-<thead>
-<tr>
-<th>标记名称</th>
-<th align="center">标记描述</th>
-</tr>
-</thead>
-<tbody><tr>
-<td>-d</td>
-<td align="center">让命令程序只执行下载动作，而不执行安装动作。</td>
-</tr>
-<tr>
-<td>-u</td>
-<td align="center">让命令利用网络来更新已有代码包及其依赖包。默认情况下，该命令只会从网络上下载本地不存在的代码包，而不会更新已有的代码包。</td>
-</tr>
-</tbody></table>
-<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><p>go build<br><a href="http://wiki.jikexueyuan.com/project/go-command-tutorial/0.1.html">http://wiki.jikexueyuan.com/project/go-command-tutorial/0.1.html</a><br>go get<br><a href="http://wiki.jikexueyuan.com/project/go-command-tutorial/0.3.html">http://wiki.jikexueyuan.com/project/go-command-tutorial/0.3.html</a><br><a href="https://github.com/hyper0x/go_command_tutorial/blob/master/0.3.md">https://github.com/hyper0x/go_command_tutorial/blob/master/0.3.md</a></p>
-]]></content>
-      <categories>
-        <category>Go</category>
-      </categories>
-      <tags>
-        <tag>Go</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>HTTP Keepalive</title>
     <url>/2018/10/08/HTTP-Keepalive/</url>
     <content><![CDATA[<p>参考这里，已经很详细了 <a href="http://www.nowamagic.net/academy/detail/23350305">HTTP Keep-Alive是什么？如何工作？</a></p>
@@ -361,6 +263,104 @@
         <tag>vscode</tag>
         <tag>remote debug</tag>
         <tag>k8s</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>Go语言 - 01 工作区和GOPATH</title>
+    <url>/2018/08/12/Go%E8%AF%AD%E8%A8%80-01-%E5%B7%A5%E4%BD%9C%E5%8C%BA%E5%92%8CGOPATH/</url>
+    <content><![CDATA[<h2 id="Go语言的安装"><a href="#Go语言的安装" class="headerlink" title="Go语言的安装"></a>Go语言的安装</h2><p>参照官网文档 <a href="https://golang.org/doc/install">https://golang.org/doc/install</a><br>可以在命令行中输入命令来验证是否安装成功：</p>
+<ul>
+<li>go version：查看安装的版本</li>
+<li>go env：当前go的配置环境</li>
+</ul>
+<p>2个环境变量，即 GOROOT、GOPATH和GOBIN:</p>
+<ul>
+<li>GOROOT：go的安装路径</li>
+<li>GOPATH：go的工作路径<span id="more"></span></li>
+</ul>
+<h2 id="问题-：设置-GOPATH-有什么意义？"><a href="#问题-：设置-GOPATH-有什么意义？" class="headerlink" title="问题 ：设置 GOPATH 有什么意义？"></a>问题 ：设置 GOPATH 有什么意义？</h2><p>典型回答<br>环境变量 GOPATH 的值可以是一个目录的路径，也可以包含多个目录路径，每个目录都代表 Go 语言的一个工作区（workspace）。<br>这些工作区用于放置 Go 语言的源码文件，以及安装（install）后的归档文件和可执行文件。<br>一个典型的workspace如下：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">bin/</span><br><span class="line">    hello                 # command executable </span><br><span class="line">pkg/</span><br><span class="line">    linux_amd64/          # this will reflect your OS and architecture</span><br><span class="line">        github.com/user/</span><br><span class="line">            stringutil.a  # package object</span><br><span class="line">src/</span><br><span class="line">    github.com/user/</span><br><span class="line">        hello/</span><br><span class="line">            hello.go      # command source</span><br><span class="line">        stringutil/</span><br><span class="line">            reverse.go    # package source</span><br></pre></td></tr></table></figure>
+
+<h2 id="知识扩展"><a href="#知识扩展" class="headerlink" title="知识扩展"></a>知识扩展</h2><h3 id="Go-语言源码的组织方式"><a href="#Go-语言源码的组织方式" class="headerlink" title="Go 语言源码的组织方式"></a>Go 语言源码的组织方式</h3><p>以代码包(package)为基本组织单位的。代码包其实是与目录一一对应的。目录可以有子目录，所以代码包也可以有子包。</p>
+<p>一个代码包中可以包含任意个以.go 为扩展名的源码文件，这些源码文件都需要被声明为属于同一个代码包。代码包的名称一般会与这些源码文件所在的目录同名。如果不同名，那么在构建、安装的过程中会以代码包名称为准。</p>
+<p>代码包的导入：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">import &quot;github.com/labstack/echo&quot;</span><br></pre></td></tr></table></figure>
+
+<p>在工作区中，一个代码包的导入路径实际上就是从 src 子目录，到该包的实际存储位置的相对路径。下面我马上就会谈到 src子目录。<br>插播：Go语言的源码文件有三大类，即：命令源码文件、库源码文件和测试源码文件。</p>
+<h3 id="构建-go-build-和安装-go-install"><a href="#构建-go-build-和安装-go-install" class="headerlink" title="构建(go build)和安装(go install)"></a>构建(go build)和安装(go install)</h3><p>go build: 用于编译我们指定的源码文件或代码包以及它们的依赖包。<br>对于只包含库源码文件的代码包, go build命令在编译时，只会做检查性的编译，操作的结果文件只会存在于临时目录中，立刻自动删除，而不会输出任何结果文件。<br>如果想保留在临时工作目录，不删除掉：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">➜  stringutil go build -work</span><br><span class="line">WORK=/var/folders/5s/25ck5pv16rg55hr2kfdvtszc0000gp/T/go-build412712988</span><br></pre></td></tr></table></figure>
+<p>如果构建的是命令源码文件，那么操作的结果文件会被搬运到那个源码文件所在的目录中。</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">➜  hello git:(master) ✗ ls</span><br><span class="line">hello.go</span><br><span class="line">➜  hello git:(master) ✗ go build</span><br><span class="line">➜  hello git:(master) ✗ ls</span><br><span class="line">hello    hello.go</span><br></pre></td></tr></table></figure>
+<p>go install: 安装操作会先执行构建(go build)，然后还会进行链接操作，并且把结果文件搬运到指定目录。<br>进一步说，如果安装的是库源码文件，那么结果文件会被搬运到它所在工作区的 pkg 目录下的某个子目录中。</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">➜  XuSenqi ls /Users/patrick.xu/go/pkg/darwin_amd64/github.com/XuSenqi</span><br><span class="line">➜  XuSenqi go install github.com/XuSenqi/stringutil</span><br><span class="line">➜  XuSenqi ls /Users/patrick.xu/go/pkg/darwin_amd64/github.com/XuSenqi</span><br><span class="line">stringutil.a</span><br></pre></td></tr></table></figure>
+
+<p>如果安装的是命令源码文件，那么结果文件会被搬运到它所在工作区的 bin 目录中，或者环境变量GOBIN指向的目录中。同时，依赖的代码包也会安装到pgk下对应的目录中。</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">➜  XuSenqi ls /Users/patrick.xu/go/pkg/darwin_amd64/github.com/XuSenqi</span><br><span class="line">➜  XuSenqi ls /Users/patrick.xu/go/bin/hello</span><br><span class="line">ls: /Users/patrick.xu/go/bin/hello: No such file or directory</span><br><span class="line">➜  XuSenqi go install github.com/XuSenqi/hello/</span><br><span class="line">➜  XuSenqi ls /Users/patrick.xu/go/pkg/darwin_amd64/github.com/XuSenqi</span><br><span class="line">stringutil.a</span><br><span class="line">➜  XuSenqi ls /Users/patrick.xu/go/bin/hello</span><br><span class="line">/Users/patrick.xu/go/bin/hello</span><br></pre></td></tr></table></figure>
+<h3 id="go-build-命令一些可选项的用途和用法"><a href="#go-build-命令一些可选项的用途和用法" class="headerlink" title="go build 命令一些可选项的用途和用法"></a>go build 命令一些可选项的用途和用法</h3><p>在运行go build命令的时候，默认不会编译目标代码包所依赖的那些代码包。当然，如果被依赖的代码包的归档文件不存在，或者源码文件有了变化，那它还是会被编译。</p>
+<p>如果要强制编译它们，可以在执行命令的时候加入标记-a。此时，不但目标代码包总是会被编译，它依赖的代码包也总会被编译，即使依赖的是标准库中的代码包也是如此。</p>
+<p>表1 go build命令的常用标记说明</p>
+<table>
+<thead>
+<tr>
+<th>标记名称</th>
+<th align="center">标记描述</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>-a</td>
+<td align="center">强行对所有涉及到的代码包（包含标准库中的代码包）进行重新构建，即使它们已经是最新的了。</td>
+</tr>
+<tr>
+<td>-n</td>
+<td align="center">打印编译期间所用到的其它命令，但是并不真正执行它们。</td>
+</tr>
+<tr>
+<td>-p n</td>
+<td align="center">指定编译过程中执行各任务的并行数量（确切地说应该是并发数量）。在默认情况下，该数量等于CPU的逻辑核数。但是在darwin/arm平台（即iPhone和iPad所用的平台）下，该数量默认是1。</td>
+</tr>
+<tr>
+<td>-race</td>
+<td align="center">开启竞态条件的检测。不过此标记目前仅在linux/amd64、freebsd/amd64、darwin/amd64和windows/amd64平台下受到支持。</td>
+</tr>
+<tr>
+<td>-v</td>
+<td align="center">打印出那些被编译的代码包的名字。</td>
+</tr>
+<tr>
+<td>-work</td>
+<td align="center">打印出编译时生成的临时工作目录的路径，并在编译结束时保留它。在默认情况下，编译结束时会删除该目录。</td>
+</tr>
+<tr>
+<td>-x</td>
+<td align="center">打印编译期间所用到的其它命令。注意它与-n标记的区别。</td>
+</tr>
+</tbody></table>
+<h3 id="go-get"><a href="#go-get" class="headerlink" title="go get"></a>go get</h3><p>go get可以根据要求和实际情况从互联网上下载或更新指定的代码包及其依赖包，并对它们进行go build和go install。</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">➜  XuSenqi go get github.com/hyper-carrot/go_lib/logging</span><br><span class="line">➜  XuSenqi ls $GOPATH/src/github.com/hyper-carrot/go_lib/logging</span><br><span class="line">base.go           console_logger.go log_manager.go    logger_test.go    tag.go</span><br><span class="line">➜  XuSenqi ls /Users/patrick.xu/go/pkg/darwin_amd64/github.com/hyper-carrot/go_lib/logging.a</span><br><span class="line">/Users/patrick.xu/go/pkg/darwin_amd64/github.com/hyper-carrot/go_lib/logging.a</span><br></pre></td></tr></table></figure>
+<p>表2 go get命令的常用标记说明</p>
+<table>
+<thead>
+<tr>
+<th>标记名称</th>
+<th align="center">标记描述</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>-d</td>
+<td align="center">让命令程序只执行下载动作，而不执行安装动作。</td>
+</tr>
+<tr>
+<td>-u</td>
+<td align="center">让命令利用网络来更新已有代码包及其依赖包。默认情况下，该命令只会从网络上下载本地不存在的代码包，而不会更新已有的代码包。</td>
+</tr>
+</tbody></table>
+<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><p>go build<br><a href="http://wiki.jikexueyuan.com/project/go-command-tutorial/0.1.html">http://wiki.jikexueyuan.com/project/go-command-tutorial/0.1.html</a><br>go get<br><a href="http://wiki.jikexueyuan.com/project/go-command-tutorial/0.3.html">http://wiki.jikexueyuan.com/project/go-command-tutorial/0.3.html</a><br><a href="https://github.com/hyper0x/go_command_tutorial/blob/master/0.3.md">https://github.com/hyper0x/go_command_tutorial/blob/master/0.3.md</a></p>
+]]></content>
+      <categories>
+        <category>Go</category>
+      </categories>
+      <tags>
+        <tag>Go</tag>
       </tags>
   </entry>
   <entry>
@@ -641,6 +641,54 @@
       </tags>
   </entry>
   <entry>
+    <title>golang中的map并发读写问题</title>
+    <url>/2020/03/08/golang%E4%B8%AD%E7%9A%84map%E5%B9%B6%E5%8F%91%E8%AF%BB%E5%86%99%E9%97%AE%E9%A2%98/</url>
+    <content><![CDATA[<h1 id="map不是并发安全的"><a href="#map不是并发安全的" class="headerlink" title="map不是并发安全的"></a>map不是并发安全的</h1><p>官方的<a href="https://golang.org/doc/faq#atomic_maps">faq</a>里有说明，考虑到有性能损失，map没有设计成原子操作，在并发读写时会有问题。</p>
+<blockquote>
+<p>Map access is unsafe only when updates are occurring. As long as all goroutines are only reading—looking up elements in the map, including iterating through it using a for range loop—and not changing the map by assigning to elements or doing deletions, it is safe for them to access the map concurrently without synchronization.</p>
+</blockquote>
+<span id="more"></span>
+
+<p>查看源码，进一步立即实现机制</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">const (</span><br><span class="line">  ...</span><br><span class="line">	hashWriting  = 4 // a goroutine is writing to the map</span><br><span class="line">	...</span><br><span class="line">)</span><br><span class="line"></span><br><span class="line">type hmap struct &#123;</span><br><span class="line">	...</span><br><span class="line">	flags     uint8</span><br><span class="line">	...</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">map是检查是否有另外线程修改h.flag来判断，是否有并发问题。</span><br><span class="line"></span><br><span class="line">// 在更新map的函数里检查并发写</span><br><span class="line">	if h.flags&amp;hashWriting == 0 &#123;</span><br><span class="line">		throw(&quot;concurrent map writes&quot;)</span><br><span class="line">	&#125;</span><br><span class="line">	</span><br><span class="line">// 在读map的函数里检查是否有并发写</span><br><span class="line">	if h.flags&amp;hashWriting != 0 &#123;</span><br><span class="line">		throw(&quot;concurrent map read and map write&quot;)</span><br><span class="line">	&#125;</span><br></pre></td></tr></table></figure>
+
+<p>测试并发问题的例子：一个goroutine不停地写，另一个goroutine不停地读</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">package main</span><br><span class="line"></span><br><span class="line">import (</span><br><span class="line">	&quot;fmt&quot;</span><br><span class="line">	&quot;time&quot;</span><br><span class="line">)</span><br><span class="line"></span><br><span class="line">func main() &#123;</span><br><span class="line">	c := make(map[string]int)</span><br><span class="line">	go func() &#123; //开一个goroutine写map</span><br><span class="line">		for j := 0; j &lt; 1000000; j++ &#123;</span><br><span class="line">			c[fmt.Sprintf(&quot;%d&quot;, j)] = j</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;()</span><br><span class="line">	go func() &#123; //开一个goroutine读map</span><br><span class="line">		for j := 0; j &lt; 1000000; j++ &#123;</span><br><span class="line">			fmt.Println(c[fmt.Sprintf(&quot;%d&quot;, j)])</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;()</span><br><span class="line">	time.Sleep(time.Second * 20)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>立马产生错误</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">0</span><br><span class="line">fatal error: concurrent map read and map write</span><br><span class="line"></span><br><span class="line">goroutine 19 [running]:</span><br><span class="line">runtime.throw(0x10d6ea4, 0x21)</span><br><span class="line">        /usr/local/go/src/runtime/panic.go:774 +0x72 fp=0xc00009aef0 sp=0xc00009aec0 pc=0x10299c2</span><br><span class="line">runtime.mapaccess1_faststr(0x10b41e0, 0xc000066180, 0x116ae71, 0x1, 0x1)</span><br><span class="line">        /usr/local/go/src/runtime/map_faststr.go:21 +0x44f fp=0xc00009af60 sp=0xc00009aef0 pc=0x100ffff</span><br><span class="line">main.main.func2(0xc000066180)</span><br></pre></td></tr></table></figure>
+
+<h1 id="加sync-RWMutex来保护map"><a href="#加sync-RWMutex来保护map" class="headerlink" title="加sync.RWMutex来保护map"></a>加<a href="https://golang.org/pkg/sync/#RWMutex">sync.RWMutex</a>来保护map</h1><p>This statement declares a <code>counter</code> variable that is an anonymous struct containing a map and an embedded <code>sync.RWMutex</code>.</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">var counter = struct&#123;</span><br><span class="line">    sync.RWMutex</span><br><span class="line">    m map[string]int</span><br><span class="line">&#125;&#123;m: make(map[string]int)&#125;</span><br></pre></td></tr></table></figure>
+
+<p>To read from the counter, take the read lock:</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">counter.RLock()</span><br><span class="line">n := counter.m[&quot;some_key&quot;]</span><br><span class="line">counter.RUnlock()</span><br><span class="line">fmt.Println(&quot;some_key:&quot;, n)</span><br></pre></td></tr></table></figure>
+
+<p>To write to the counter, take the write lock:</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">counter.Lock()</span><br><span class="line">counter.m[&quot;some_key&quot;]++</span><br><span class="line">counter.Unlock()</span><br></pre></td></tr></table></figure>
+
+<p>针对上面有并发问题的测试例子，可以修改成以下代码：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">package main</span><br><span class="line"></span><br><span class="line">import (</span><br><span class="line">	&quot;fmt&quot;</span><br><span class="line">	&quot;sync&quot;</span><br><span class="line">	&quot;time&quot;</span><br><span class="line">)</span><br><span class="line"></span><br><span class="line">func main() &#123;</span><br><span class="line">	var c = struct &#123;</span><br><span class="line">		sync.RWMutex</span><br><span class="line">		m map[string]int</span><br><span class="line">	&#125;&#123;m: make(map[string]int)&#125;</span><br><span class="line"></span><br><span class="line">	go func() &#123; //开一个goroutine写map</span><br><span class="line">		for j := 0; j &lt; 1000000; j++ &#123;</span><br><span class="line">			c.Lock()</span><br><span class="line">			c.m[fmt.Sprintf(&quot;%d&quot;, j)] = j</span><br><span class="line">			c.Unlock()</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;()</span><br><span class="line">	go func() &#123; //开一个goroutine读map</span><br><span class="line">		for j := 0; j &lt; 1000000; j++ &#123;</span><br><span class="line">			c.RLock()</span><br><span class="line">			fmt.Println(c.m[fmt.Sprintf(&quot;%d&quot;, j)])</span><br><span class="line">			c.RUnlock()</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;()</span><br><span class="line">	time.Sleep(time.Second * 20)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h1 id="sync-Map"><a href="#sync-Map" class="headerlink" title="sync.Map"></a>sync.Map</h1><p>sync.Map 是官方出品的并发安全的 map，他在内部使用了大量的原子操作来存取键和值，并使用了 read 和 dirty 二个原生 map 作为存储介质，具体实现流程可阅读相关源码。</p>
+<p>参考：</p>
+<p><a href="https://learnku.com/articles/27691">https://learnku.com/articles/27691</a></p>
+<h1 id="参考链接"><a href="#参考链接" class="headerlink" title="参考链接"></a>参考链接</h1><ol>
+<li><p><a href="https://blog.golang.org/go-maps-in-action">The Go Blog - Go maps in action</a></p>
+</li>
+<li><p><a href="https://golang.org/doc/faq#atomic_maps">Why are map operations not defined to be atomic?</a></p>
+</li>
+</ol>
+]]></content>
+      <categories>
+        <category>go</category>
+      </categories>
+      <tags>
+        <tag>map</tag>
+        <tag>并发</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>golang - json操作的注意点</title>
     <url>/2018/10/22/golang-json%E6%93%8D%E4%BD%9C%E7%9A%84%E6%B3%A8%E6%84%8F%E7%82%B9/</url>
     <content><![CDATA[<h2 id="变量的大小写"><a href="#变量的大小写" class="headerlink" title="变量的大小写"></a>变量的大小写</h2><p>go中根据首字母的大小写来确定可以访问的权限。如果首字母大写，则可以被其他的包访问；如果首字母小写，则只能在本包中使用。包括接口、类型、函数和变量等。</p>
@@ -693,52 +741,14 @@
       </tags>
   </entry>
   <entry>
-    <title>golang中的map并发读写问题</title>
-    <url>/2020/03/08/golang%E4%B8%AD%E7%9A%84map%E5%B9%B6%E5%8F%91%E8%AF%BB%E5%86%99%E9%97%AE%E9%A2%98/</url>
-    <content><![CDATA[<h1 id="map不是并发安全的"><a href="#map不是并发安全的" class="headerlink" title="map不是并发安全的"></a>map不是并发安全的</h1><p>官方的<a href="https://golang.org/doc/faq#atomic_maps">faq</a>里有说明，考虑到有性能损失，map没有设计成原子操作，在并发读写时会有问题。</p>
-<blockquote>
-<p>Map access is unsafe only when updates are occurring. As long as all goroutines are only reading—looking up elements in the map, including iterating through it using a for range loop—and not changing the map by assigning to elements or doing deletions, it is safe for them to access the map concurrently without synchronization.</p>
-</blockquote>
-<span id="more"></span>
+    <title>nodejs获取客户端IP Address(转)</title>
+    <url>/2018/12/14/nodejs%E8%8E%B7%E5%8F%96%E5%AE%A2%E6%88%B7%E7%AB%AFIP-Address/</url>
+    <content><![CDATA[<p>在网上看见很多问node.js如何获取客户端IP,所以记录下来，以供大家参考。</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">function getClientIp(req) &#123;</span><br><span class="line">        return req.headers[&#x27;x-forwarded-for&#x27;] ||</span><br><span class="line">        req.connection.remoteAddress ||</span><br><span class="line">        req.socket.remoteAddress ||</span><br><span class="line">        req.connection.socket.remoteAddress;</span><br><span class="line">    &#125;;</span><br></pre></td></tr></table></figure>
 
-<p>查看源码，进一步立即实现机制</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">const (</span><br><span class="line">  ...</span><br><span class="line">	hashWriting  = 4 // a goroutine is writing to the map</span><br><span class="line">	...</span><br><span class="line">)</span><br><span class="line"></span><br><span class="line">type hmap struct &#123;</span><br><span class="line">	...</span><br><span class="line">	flags     uint8</span><br><span class="line">	...</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">map是检查是否有另外线程修改h.flag来判断，是否有并发问题。</span><br><span class="line"></span><br><span class="line">// 在更新map的函数里检查并发写</span><br><span class="line">	if h.flags&amp;hashWriting == 0 &#123;</span><br><span class="line">		throw(&quot;concurrent map writes&quot;)</span><br><span class="line">	&#125;</span><br><span class="line">	</span><br><span class="line">// 在读map的函数里检查是否有并发写</span><br><span class="line">	if h.flags&amp;hashWriting != 0 &#123;</span><br><span class="line">		throw(&quot;concurrent map read and map write&quot;)</span><br><span class="line">	&#125;</span><br></pre></td></tr></table></figure>
-
-<p>测试并发问题的例子：一个goroutine不停地写，另一个goroutine不停地读</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">package main</span><br><span class="line"></span><br><span class="line">import (</span><br><span class="line">	&quot;fmt&quot;</span><br><span class="line">	&quot;time&quot;</span><br><span class="line">)</span><br><span class="line"></span><br><span class="line">func main() &#123;</span><br><span class="line">	c := make(map[string]int)</span><br><span class="line">	go func() &#123; //开一个goroutine写map</span><br><span class="line">		for j := 0; j &lt; 1000000; j++ &#123;</span><br><span class="line">			c[fmt.Sprintf(&quot;%d&quot;, j)] = j</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;()</span><br><span class="line">	go func() &#123; //开一个goroutine读map</span><br><span class="line">		for j := 0; j &lt; 1000000; j++ &#123;</span><br><span class="line">			fmt.Println(c[fmt.Sprintf(&quot;%d&quot;, j)])</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;()</span><br><span class="line">	time.Sleep(time.Second * 20)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>立马产生错误</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">0</span><br><span class="line">fatal error: concurrent map read and map write</span><br><span class="line"></span><br><span class="line">goroutine 19 [running]:</span><br><span class="line">runtime.throw(0x10d6ea4, 0x21)</span><br><span class="line">        /usr/local/go/src/runtime/panic.go:774 +0x72 fp=0xc00009aef0 sp=0xc00009aec0 pc=0x10299c2</span><br><span class="line">runtime.mapaccess1_faststr(0x10b41e0, 0xc000066180, 0x116ae71, 0x1, 0x1)</span><br><span class="line">        /usr/local/go/src/runtime/map_faststr.go:21 +0x44f fp=0xc00009af60 sp=0xc00009aef0 pc=0x100ffff</span><br><span class="line">main.main.func2(0xc000066180)</span><br></pre></td></tr></table></figure>
-
-<h1 id="加sync-RWMutex来保护map"><a href="#加sync-RWMutex来保护map" class="headerlink" title="加sync.RWMutex来保护map"></a>加<a href="https://golang.org/pkg/sync/#RWMutex">sync.RWMutex</a>来保护map</h1><p>This statement declares a <code>counter</code> variable that is an anonymous struct containing a map and an embedded <code>sync.RWMutex</code>.</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">var counter = struct&#123;</span><br><span class="line">    sync.RWMutex</span><br><span class="line">    m map[string]int</span><br><span class="line">&#125;&#123;m: make(map[string]int)&#125;</span><br></pre></td></tr></table></figure>
-
-<p>To read from the counter, take the read lock:</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">counter.RLock()</span><br><span class="line">n := counter.m[&quot;some_key&quot;]</span><br><span class="line">counter.RUnlock()</span><br><span class="line">fmt.Println(&quot;some_key:&quot;, n)</span><br></pre></td></tr></table></figure>
-
-<p>To write to the counter, take the write lock:</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">counter.Lock()</span><br><span class="line">counter.m[&quot;some_key&quot;]++</span><br><span class="line">counter.Unlock()</span><br></pre></td></tr></table></figure>
-
-<p>针对上面有并发问题的测试例子，可以修改成以下代码：</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">package main</span><br><span class="line"></span><br><span class="line">import (</span><br><span class="line">	&quot;fmt&quot;</span><br><span class="line">	&quot;sync&quot;</span><br><span class="line">	&quot;time&quot;</span><br><span class="line">)</span><br><span class="line"></span><br><span class="line">func main() &#123;</span><br><span class="line">	var c = struct &#123;</span><br><span class="line">		sync.RWMutex</span><br><span class="line">		m map[string]int</span><br><span class="line">	&#125;&#123;m: make(map[string]int)&#125;</span><br><span class="line"></span><br><span class="line">	go func() &#123; //开一个goroutine写map</span><br><span class="line">		for j := 0; j &lt; 1000000; j++ &#123;</span><br><span class="line">			c.Lock()</span><br><span class="line">			c.m[fmt.Sprintf(&quot;%d&quot;, j)] = j</span><br><span class="line">			c.Unlock()</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;()</span><br><span class="line">	go func() &#123; //开一个goroutine读map</span><br><span class="line">		for j := 0; j &lt; 1000000; j++ &#123;</span><br><span class="line">			c.RLock()</span><br><span class="line">			fmt.Println(c.m[fmt.Sprintf(&quot;%d&quot;, j)])</span><br><span class="line">			c.RUnlock()</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;()</span><br><span class="line">	time.Sleep(time.Second * 20)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<h1 id="sync-Map"><a href="#sync-Map" class="headerlink" title="sync.Map"></a>sync.Map</h1><p>sync.Map 是官方出品的并发安全的 map，他在内部使用了大量的原子操作来存取键和值，并使用了 read 和 dirty 二个原生 map 作为存储介质，具体实现流程可阅读相关源码。</p>
-<p>参考：</p>
-<p><a href="https://learnku.com/articles/27691">https://learnku.com/articles/27691</a></p>
-<h1 id="参考链接"><a href="#参考链接" class="headerlink" title="参考链接"></a>参考链接</h1><ol>
-<li><p><a href="https://blog.golang.org/go-maps-in-action">The Go Blog - Go maps in action</a></p>
-</li>
-<li><p><a href="https://golang.org/doc/faq#atomic_maps">Why are map operations not defined to be atomic?</a></p>
-</li>
-</ol>
+<p>代码，第一段判断是否有反向代理IP(头信息：x-forwarded-for)，再判断connection的远程IP，以及后端的socket的IP。</p>
+<p><a href="https://www.cnblogs.com/whitewolf/p/3572724.html">nodejs获取客户端IP Address</a></p>
 ]]></content>
-      <categories>
-        <category>go</category>
-      </categories>
-      <tags>
-        <tag>map</tag>
-        <tag>并发</tag>
-      </tags>
   </entry>
   <entry>
     <title>goroutine调度器</title>
@@ -945,16 +955,6 @@
       </tags>
   </entry>
   <entry>
-    <title>nodejs获取客户端IP Address(转)</title>
-    <url>/2018/12/14/nodejs%E8%8E%B7%E5%8F%96%E5%AE%A2%E6%88%B7%E7%AB%AFIP-Address/</url>
-    <content><![CDATA[<p>在网上看见很多问node.js如何获取客户端IP,所以记录下来，以供大家参考。</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">function getClientIp(req) &#123;</span><br><span class="line">        return req.headers[&#x27;x-forwarded-for&#x27;] ||</span><br><span class="line">        req.connection.remoteAddress ||</span><br><span class="line">        req.socket.remoteAddress ||</span><br><span class="line">        req.connection.socket.remoteAddress;</span><br><span class="line">    &#125;;</span><br></pre></td></tr></table></figure>
-
-<p>代码，第一段判断是否有反向代理IP(头信息：x-forwarded-for)，再判断connection的远程IP，以及后端的socket的IP。</p>
-<p><a href="https://www.cnblogs.com/whitewolf/p/3572724.html">nodejs获取客户端IP Address</a></p>
-]]></content>
-  </entry>
-  <entry>
     <title>一次go语言内存泄漏的排查过程</title>
     <url>/2018/12/11/%E4%B8%80%E6%AC%A1go%E5%86%85%E5%AD%98%E6%B3%84%E6%BC%8F%E7%9A%84%E6%8E%92%E6%9F%A5%E8%BF%87%E7%A8%8B/</url>
     <content><![CDATA[<h2 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h2><p>线上一个go语言写的服务，在连续跑了10多天后，占用内存从最开始的20M左右，涨到了1个多G，有内存泄漏的问题，将整个排查过程和相应方法进行整理，做个记录。</p>
@@ -1076,143 +1076,6 @@
       </categories>
       <tags>
         <tag>Go</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>一次mongo慢查询的优化过程</title>
-    <url>/2019/07/24/%E4%B8%80%E6%AC%A1mongo%E6%85%A2%E6%9F%A5%E8%AF%A2%E7%9A%84%E4%BC%98%E5%8C%96%E8%BF%87%E7%A8%8B/</url>
-    <content><![CDATA[<p>今天发现查询mongo时容易慢查询，现在将整个排查及优化过程,总结记录如下。</p>
-<h1 id="Database-Profiler介绍"><a href="#Database-Profiler介绍" class="headerlink" title="Database Profiler介绍"></a>Database Profiler介绍</h1><p>类似于mysql,Profiler可以实现慢查询日志的功能，它把数据收集在system.profile集合里。该集合是一个capped collection（有上限的集合）。Profiler默认是关闭的，可以在一个database或者一个instance上设置开启，设置不同的profiling levels.<br>具体描述见<a href="https://docs.mongodb.com/manual/tutorial/manage-the-database-profiler/">Database Profiler</a>。</p>
-<span id="more"></span>
-
-<h1 id="慢查询分析流程"><a href="#慢查询分析流程" class="headerlink" title="慢查询分析流程"></a>慢查询分析流程</h1><p>慢查询日志一般作为优化步骤里的第一步。通过慢查询日志，定位每一条语句的查询时间。比如超过了200ms，那么查询超过200ms的语句需要优化。然后它通过 .explain() 解析影响行数是不是过大，所以导致查询语句超过200ms。<br>所以优化步骤一般就是：</p>
-<ol>
-<li>用慢查询日志（system.profile）找到超过200ms的语句</li>
-<li>然后再通过.explain()解析影响行数，分析为什么超过200ms </li>
-<li>决定是不是需要添加索引</li>
-</ol>
-<h1 id="开启慢查询"><a href="#开启慢查询" class="headerlink" title="开启慢查询"></a>开启慢查询</h1><h2 id="Profiling-Levels"><a href="#Profiling-Levels" class="headerlink" title="Profiling Levels"></a>Profiling Levels</h2><table>
-<thead>
-<tr>
-<th align="center">Level</th>
-<th align="center">Description</th>
-</tr>
-</thead>
-<tbody><tr>
-<td align="center">0</td>
-<td align="center">The profiler is off and does not collect any data. This is the default profiler level.</td>
-</tr>
-<tr>
-<td align="center">1</td>
-<td align="center">The profiler collects data for operations that take longer than the value of slowms.</td>
-</tr>
-<tr>
-<td align="center">2</td>
-<td align="center">The profiler collects data for all operations.</td>
-</tr>
-</tbody></table>
-<h2 id="Enable-and-Configure-Database-Profiling"><a href="#Enable-and-Configure-Database-Profiling" class="headerlink" title="Enable and Configure Database Profiling"></a>Enable and Configure Database Profiling</h2><h3 id="方式1-from-the-mongo-shell"><a href="#方式1-from-the-mongo-shell" class="headerlink" title="方式1 - from the mongo shell"></a>方式1 - from the mongo shell</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line"># 查看状态：级别和时间</span><br><span class="line">uhost:PRIMARY&gt; db.getProfilingStatus()</span><br><span class="line">&#123; &quot;was&quot; : 0, &quot;slowms&quot; : 100 &#125;</span><br><span class="line"># 设置Profiling Level，返回的是之前设置的Level,返回&quot;ok&quot;:1表示设置成功</span><br><span class="line">uhost:PRIMARY&gt; db.setProfilingLevel(1)</span><br><span class="line">&#123; &quot;was&quot; : 0, &quot;slowms&quot; : 100, &quot;ok&quot; : 1 &#125;</span><br><span class="line">uhost:PRIMARY&gt; db.getProfilingStatus()</span><br><span class="line">&#123; &quot;was&quot; : 1, &quot;slowms&quot; : 100 &#125;</span><br><span class="line"># 设置Profiling Level和slowms</span><br><span class="line">uhost:PRIMARY&gt; db.setProfilingLevel(1,200)</span><br><span class="line">&#123; &quot;was&quot; : 1, &quot;slowms&quot; : 100, &quot;ok&quot; : 1 &#125;</span><br><span class="line">uhost:PRIMARY&gt; db.getProfilingStatus()</span><br><span class="line">&#123; &quot;was&quot; : 1, &quot;slowms&quot; : 200 &#125;</span><br><span class="line"></span><br><span class="line"># New in version 3.6，支持设置sampleRate。</span><br><span class="line"># 默认是1，以下设置0.42，表示采样42%的慢查询</span><br><span class="line">db.setProfilingLevel(1, &#123; sampleRate: 0.42 &#125;)</span><br></pre></td></tr></table></figure>
-
-<p>注意：</p>
-<ol>
-<li><font color=#FF0000>每次设置之后，返回的是之前的状态</font></li>
-<li><font color=#FF0000>每次设置仅对当前所在的database有效</font></li>
-</ol>
-<h3 id="方式2-在mongo启动时设置"><a href="#方式2-在mongo启动时设置" class="headerlink" title="方式2 - 在mongo启动时设置"></a>方式2 - 在mongo启动时设置</h3><p>作为命令行参数传入：</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">mongod --profile 1 --slowms 15 --slowOpSampleRate 0.5</span><br></pre></td></tr></table></figure>
-<p>还可以在配置文件里设置</p>
-<p>具体设置参考<a href="https://docs.mongodb.com/manual/reference/command/profile/#dbcmd.profile">profile</a></p>
-<h3 id="关闭Profiling"><a href="#关闭Profiling" class="headerlink" title="关闭Profiling"></a>关闭Profiling</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">uhost:PRIMARY&gt; db.setProfilingLevel(0)</span><br><span class="line">&#123; &quot;was&quot; : 1, &quot;slowms&quot; : 200, &quot;ok&quot; : 1 &#125;</span><br></pre></td></tr></table></figure>
-
-<h2 id="Profiling的效率问题"><a href="#Profiling的效率问题" class="headerlink" title="Profiling的效率问题"></a>Profiling的效率问题</h2><p>这是我能搜到的说法，但是具体原理和数据我还没找到，官网也没看到介绍。</p>
-<p>从其他地方复制过来的说法，待论证。”Profiling 功能肯定是会影响效率的，但是不太严重，原因是他使用的是system.profile 来记录，而system.profile 是一个capped collection 这种collection 在操作上有一些限制和特点，但是效率更高“</p>
-<h1 id="慢查询结果分析"><a href="#慢查询结果分析" class="headerlink" title="慢查询结果分析"></a>慢查询结果分析</h1><h2 id="各项参数含义"><a href="#各项参数含义" class="headerlink" title="各项参数含义"></a>各项参数含义</h2><p>这里用的MongoDB版本是2.6, 具体可以参考 <a href="https://docs.mongodb.com/v2.6/reference/database-profiler/">https://docs.mongodb.com/v2.6/reference/database-profiler/</a></p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">uhost:PRIMARY&gt; db.system.profile.find(&#123;&quot;ns&quot; : &quot;uhost.DiskAttachInfo&quot;,&quot;ts&quot;:&#123;$gt:new ISODate(&quot;2019-07-23T10:11:00Z&quot;)&#125;&#125;).pretty()</span><br><span class="line"></span><br><span class="line">&#123;</span><br><span class="line">	&quot;op&quot; : &quot;query&quot;, #操作类型，有insert、query、update、remove、getmore、command</span><br><span class="line">	&quot;ns&quot; : &quot;uhost.DiskAttachInfo&quot;, #操作的collection</span><br><span class="line">	&quot;query&quot; : &#123;</span><br><span class="line">		&quot;backend_types&quot; : &#123;</span><br><span class="line">			&quot;$in&quot; : [</span><br><span class="line">				&quot;ssd&quot;</span><br><span class="line">			]</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;,</span><br><span class="line">	&quot;ntoreturn&quot; : 0, #返回的数量</span><br><span class="line">	&quot;ntoskip&quot; : 0, #The number of documents the skip() method specified to skip.</span><br><span class="line">	&quot;nscanned&quot; : 520144, #MongoDB在索引中扫描以执行操作的文档数。 通常，如果nscanned远高于nredurned，则数据库会扫描许多对象以查找目标对象。 考虑创建一个索引来改善这一点。</span><br><span class="line">	&quot;nscannedObjects&quot; : 520144, # The number of documents that MongoDB scans from the collection in order to carry out the operation.</span><br><span class="line">	&quot;keyUpdates&quot; : 0,</span><br><span class="line">	&quot;numYield&quot; : 6,</span><br><span class="line">	&quot;lockStats&quot; : &#123;</span><br><span class="line">		&quot;timeLockedMicros&quot; : &#123;</span><br><span class="line">			&quot;r&quot; : NumberLong(1536711),</span><br><span class="line">			&quot;w&quot; : NumberLong(0)</span><br><span class="line">		&#125;,</span><br><span class="line">		&quot;timeAcquiringMicros&quot; : &#123;</span><br><span class="line">			&quot;r&quot; : NumberLong(913),</span><br><span class="line">			&quot;w&quot; : NumberLong(4)</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;,</span><br><span class="line">	&quot;nreturned&quot; : 0, // 返回的文档数量</span><br><span class="line">	&quot;responseLength&quot; : 20, // 返回字节长度，如果这个数字很大，考虑值返回所需字段</span><br><span class="line">	&quot;millis&quot; : 820, #消耗的时间（毫秒）</span><br><span class="line">	&quot;execStats&quot; : &#123;</span><br><span class="line">		&quot;type&quot; : &quot;COLLSCAN&quot;, #”COLLSCAN“：整个集合扫描，效果最差；”IXSCAN“：索引扫描；&quot;Fetch&quot;: ?</span><br><span class="line">		&quot;works&quot; : 520146,</span><br><span class="line">		&quot;yields&quot; : 4063,</span><br><span class="line">		&quot;unyields&quot; : 4063,</span><br><span class="line">		&quot;invalidates&quot; : 0,</span><br><span class="line">		&quot;advanced&quot; : 0,</span><br><span class="line">		&quot;needTime&quot; : 520145,</span><br><span class="line">		&quot;needFetch&quot; : 0,</span><br><span class="line">		&quot;isEOF&quot; : 1,</span><br><span class="line">		&quot;docsTested&quot; : 520144,</span><br><span class="line">		&quot;children&quot; : [ ]</span><br><span class="line">	&#125;,</span><br><span class="line">	&quot;ts&quot; : ISODate(&quot;2019-07-23T10:11:54.468Z&quot;), #该命令在何时执行</span><br><span class="line">	&quot;client&quot; : &quot;127.0.0.1&quot;, #链接ip或则主机</span><br><span class="line">	&quot;allUsers&quot; : [ ],</span><br><span class="line">	&quot;user&quot; : &quot;&quot;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<h2 id="分析"><a href="#分析" class="headerlink" title="分析"></a>分析</h2><p>如果发现 millis 值比较大，那么就需要作优化。</p>
-<p>1  如果nscanned数很大，或者接近记录总数（文档数），那么可能没有用到索引查询，而是全表扫描。</p>
-<p>2  如果nscanned值高于nreturned的值，说明数据库为了找到目标文档扫描了很多文档。这时可以考虑创建索引来提高效率。</p>
-<h2 id="system-profile补充-这部分待验证"><a href="#system-profile补充-这部分待验证" class="headerlink" title="system.profile补充(这部分待验证)"></a>system.profile补充(<font color=#FF0000>这部分待验证</font>)</h2><p>‘type’的返回参数说明：</p>
-<ul>
-<li>COLLSCAN #全表扫描</li>
-<li>IXSCAN #索引扫描</li>
-<li>FETCH #根据索引去检索指定document</li>
-<li>SHARD_MERGE #将各个分片返回数据进行merge</li>
-<li>SORT #表明在内存中进行了排序（与老版本的scanAndOrder:true一致）</li>
-<li>LIMIT #使用limit限制返回数</li>
-<li>SKIP #使用skip进行跳过</li>
-<li>IDHACK #针对_id进行查询</li>
-<li>SHARDING_FILTER #通过mongos对分片数据进行查询</li>
-<li>COUNT #利用db.coll.explain().count()之类进行count运算</li>
-<li>COUNTSCAN #count不使用Index进行count时的stage返回</li>
-<li>COUNT_SCAN #count使用了Index进行count时的stage返回</li>
-<li>SUBPLA #未使用到索引的$or查询的stage返回</li>
-<li>TEXT #使用全文索引进行查询时候的stage返回</li>
-<li>PROJECTION #限定返回字段时候stage的返回</li>
-</ul>
-<p>对于普通查询，我们最希望看到的组合有这些：</p>
-<ul>
-<li>Fetch+IDHACK</li>
-<li>Fetch+ixscan</li>
-<li>Limit+（Fetch+ixscan）</li>
-<li>PROJECTION+ixscan</li>
-<li>SHARDING_FILTER+ixscan</li>
-</ul>
-<p>不希望看到包含如下的type：</p>
-<ul>
-<li>COLLSCAN（全表扫）</li>
-<li>SORT（使用sort但是无index）</li>
-<li>不合理的SKIP，SUBPLA（未用到index的$or）</li>
-</ul>
-<p>对于count查询，希望看到的有:COUNT_SCAN</p>
-<p>不希望看到的有:COUNTSCAN</p>
-<h1 id="常见的慢日志-system-profile-查询语句"><a href="#常见的慢日志-system-profile-查询语句" class="headerlink" title="常见的慢日志(system.profile)查询语句"></a>常见的慢日志(system.profile)查询语句</h1><p>返回最近的10条记录：</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">db.system.profile.find().limit(10).sort( &#123; ts : -1 &#125; ).pretty()</span><br></pre></td></tr></table></figure>
-
-<p>返回所有的操作，除command类型的</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">db.system.profile.find( &#123; op: &#123; $ne : ‘command‘ &#125; &#125;).pretty()</span><br></pre></td></tr></table></figure>
-
-<p>返回特定集合</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">db.system.profile.find( &#123; ns: &quot;uhost.DiskAttachInfo&quot;&#125; ).pretty()</span><br></pre></td></tr></table></figure>
-
-<p>To return operations slower than 5 milliseconds, run a query similar to the following:</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">db.system.profile.find( &#123; millis : &#123; $gt : 5 &#125; &#125; ).pretty()</span><br></pre></td></tr></table></figure>
-
-<p>To return information from a certain time range, run a query similar to the following:</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">db.system.profile.find(&#123;</span><br><span class="line">  ts : &#123;</span><br><span class="line">    $gt: new ISODate(&quot;2012-12-09T03:00:00Z&quot;),</span><br><span class="line">    $lt: new ISODate(&quot;2012-12-09T03:40:00Z&quot;)</span><br><span class="line">  &#125;</span><br><span class="line">&#125;).pretty()</span><br></pre></td></tr></table></figure>
-
-<p>The following example looks at the time range, suppresses the user field from the output to make it easier to read, and sorts the results by how long each operation took to run:</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">db.system.profile.find(&#123;</span><br><span class="line">  ts : &#123;</span><br><span class="line">    $gt: new ISODate(&quot;2011-07-12T03:00:00Z&quot;),</span><br><span class="line">    $lt: new ISODate(&quot;2011-07-12T03:40:00Z&quot;)</span><br><span class="line">  &#125;</span><br><span class="line">&#125;, &#123; user: 0 &#125;).sort( &#123; millis: -1 &#125; )</span><br></pre></td></tr></table></figure>
-
-<p>Show the Five Most Recent Events</p>
-<p>On a database that has profiling enabled, the show profile helper in the mongo shell displays the 5 most recent operations that took at least 1 millisecond to execute. Issue show profile from the mongo shell, as follows:</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">show profile</span><br></pre></td></tr></table></figure>
-
-<h1 id="explain分析"><a href="#explain分析" class="headerlink" title="explain分析"></a>explain分析</h1><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">uhost:PRIMARY&gt; db.getCollection(&#x27;DiskAttachInfo&#x27;).find(&#123;&quot;backend_types&quot;:&#123;$in:[&quot;ssd&quot;]&#125;&#125;).explain()</span><br><span class="line">&#123;</span><br><span class="line">	&quot;cursor&quot; : &quot;BasicCursor&quot;, #返回游标类型，有BasicCursor和BtreeCursor，后者意味着使用了索引。</span><br><span class="line">    &quot;isMultiKey&quot; : false,</span><br><span class="line">	&quot;isMultiKey&quot; : false,</span><br><span class="line">	&quot;n&quot; : 0,</span><br><span class="line">	&quot;nscannedObjects&quot; : 522072, #the total number of documents scanned.</span><br><span class="line">	&quot;nscanned&quot; : 522072,  #the total number of index entries scanned (or documents for a collection scan).</span><br><span class="line">	&quot;nscannedObjectsAllPlans&quot; : 522072,</span><br><span class="line">	&quot;nscannedAllPlans&quot; : 522072,</span><br><span class="line">	&quot;scanAndOrder&quot; : false, #MongoDB是否在内存中对结果集进行了排序</span><br><span class="line">	&quot;indexOnly&quot; : false, #MongoDB是否只使用索引就能完成此次查询</span><br><span class="line">	&quot;nYields&quot; : 4078,  #为了让写入请求能够顺利执行，本次查询暂停暂停的次数。如果有写入请求需求处理，查询会周期性的释放他们的锁，以便写入能够顺利执行</span><br><span class="line">	&quot;nChunkSkips&quot; : 0,</span><br><span class="line">	&quot;millis&quot; : 918, #数据库执行本次查询所耗费的毫秒数。这个数字越小，说明效率越高</span><br><span class="line">	&quot;server&quot; : &quot;172-18-38-130:27017&quot;,</span><br><span class="line">	&quot;filterSet&quot; : false</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>详细见<a href="https://docs.mongodb.com/v2.6/reference/method/cursor.explain/index.html">cursor.explain()</a></p>
-<h1 id="添加索引"><a href="#添加索引" class="headerlink" title="添加索引"></a>添加索引</h1><p>在以上的分析中，”nscanned” 过大，且”type” : “COLLSCAN”为整个集合扫描，”indexOnly” : false表示没有用到索引。考虑创建一个索引来改善这一点。</p>
-<p>查看当前索引，在backend_type上并没有索引。</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">uhost:PRIMARY&gt; db.getCollection(&#x27;DiskAttachInfo&#x27;).getIndexes()</span><br><span class="line">[</span><br><span class="line">	&#123;</span><br><span class="line">		&quot;v&quot; : 1,</span><br><span class="line">		&quot;key&quot; : &#123;</span><br><span class="line">			&quot;_id&quot; : 1</span><br><span class="line">		&#125;,</span><br><span class="line">		&quot;name&quot; : &quot;_id_&quot;,</span><br><span class="line">		&quot;ns&quot; : &quot;uhost.DiskAttachInfo&quot;</span><br><span class="line">	&#125;,</span><br><span class="line">	&#123;</span><br><span class="line">		&quot;v&quot; : 1,</span><br><span class="line">		&quot;key&quot; : &#123;</span><br><span class="line">			&quot;uhost_id&quot; : 1</span><br><span class="line">		&#125;,</span><br><span class="line">		&quot;name&quot; : &quot;uhost_id_1&quot;,</span><br><span class="line">		&quot;ns&quot; : &quot;uhost.DiskAttachInfo&quot;,</span><br><span class="line">		&quot;background&quot; : true,</span><br><span class="line">		&quot;safe&quot; : null</span><br><span class="line">	&#125;,</span><br><span class="line">	&#123;</span><br><span class="line">		&quot;v&quot; : 1,</span><br><span class="line">		&quot;key&quot; : &#123;</span><br><span class="line">			&quot;attached&quot; : 1</span><br><span class="line">		&#125;,</span><br><span class="line">		&quot;name&quot; : &quot;attached_1&quot;,</span><br><span class="line">		&quot;ns&quot; : &quot;uhost.DiskAttachInfo&quot;,</span><br><span class="line">		&quot;background&quot; : true,</span><br><span class="line">		&quot;safe&quot; : null</span><br><span class="line">	&#125;,</span><br><span class="line">	&#123;</span><br><span class="line">		&quot;v&quot; : 1,</span><br><span class="line">		&quot;key&quot; : &#123;</span><br><span class="line">			&quot;disk_id&quot; : 1</span><br><span class="line">		&#125;,</span><br><span class="line">		&quot;name&quot; : &quot;disk_id_1&quot;,</span><br><span class="line">		&quot;ns&quot; : &quot;uhost.DiskAttachInfo&quot;,</span><br><span class="line">		&quot;background&quot; : true,</span><br><span class="line">		&quot;safe&quot; : null</span><br><span class="line">	&#125;</span><br><span class="line">]</span><br></pre></td></tr></table></figure>
-
-<p>添加index</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">uhost:PRIMARY&gt; db.DiskAttachInfo.createIndex(&#123;&quot;backend_type&quot;:1&#125;,&#123;background: true, safe: null&#125;)</span><br><span class="line">&#123;</span><br><span class="line">	&quot;createdCollectionAutomatically&quot; : false,</span><br><span class="line">	&quot;numIndexesBefore&quot; : 4,</span><br><span class="line">	&quot;numIndexesAfter&quot; : 5,</span><br><span class="line">	&quot;ok&quot; : 1</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<h1 id="添加索引后测试效果"><a href="#添加索引后测试效果" class="headerlink" title="添加索引后测试效果"></a>添加索引后测试效果</h1><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">uhost:PRIMARY&gt; db.getCollection(&#x27;DiskAttachInfo&#x27;).find(&#123;&quot;backend_type&quot;:&#123;$in:[&quot;ssd&quot;]&#125;&#125;).explain()</span><br><span class="line">&#123;</span><br><span class="line">	&quot;cursor&quot; : &quot;BtreeCursor backend_type_1&quot;,</span><br><span class="line">	&quot;isMultiKey&quot; : false,</span><br><span class="line">	&quot;n&quot; : 98023,</span><br><span class="line">	&quot;nscannedObjects&quot; : 98023,</span><br><span class="line">	&quot;nscanned&quot; : 98023,</span><br><span class="line">	&quot;nscannedObjectsAllPlans&quot; : 98023,</span><br><span class="line">	&quot;nscannedAllPlans&quot; : 98023,</span><br><span class="line">	&quot;scanAndOrder&quot; : false,</span><br><span class="line">	&quot;indexOnly&quot; : false,</span><br><span class="line">	&quot;nYields&quot; : 765,</span><br><span class="line">	&quot;nChunkSkips&quot; : 0,</span><br><span class="line">	&quot;millis&quot; : 169,</span><br><span class="line">	&quot;indexBounds&quot; : &#123;</span><br><span class="line">		&quot;backend_type&quot; : [</span><br><span class="line">			[</span><br><span class="line">				&quot;ssd&quot;,</span><br><span class="line">				&quot;ssd&quot;</span><br><span class="line">			]</span><br><span class="line">		]</span><br><span class="line">	&#125;,</span><br><span class="line">	&quot;server&quot; : &quot;172-18-38-130:27017&quot;,</span><br><span class="line">	&quot;filterSet&quot; : false</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>“nscanned” 由原来的52w降低到9w多。<br>时间（”millis” ）由828ms降低到169ms。</p>
-<h1 id="参考链接"><a href="#参考链接" class="headerlink" title="参考链接"></a>参考链接</h1><ol>
-<li><a href="https://docs.mongodb.com/manual/tutorial/manage-the-database-profiler/">Database Profiler</a></li>
-<li><a href="https://docs.mongodb.com/v2.6/reference/method/cursor.explain/index.html">cursor.explain()</a></li>
-<li><a href="https://blog.csdn.net/yisun123456/article/details/78274477">转 mongodb Profiling 通过慢查询日志分析查询慢的原因 相应优化</a></li>
-<li><a href="https://blog.csdn.net/joy0921/article/details/80131186">MongoDB查询优化：从10s到10ms</a>   </li>
-</ol>
-]]></content>
-      <categories>
-        <category>数据库</category>
-      </categories>
-      <tags>
-        <tag>mongo</tag>
-        <tag>MongoDB</tag>
       </tags>
   </entry>
   <entry>
@@ -1350,33 +1213,140 @@
       </tags>
   </entry>
   <entry>
-    <title>分布式系统架构的简介</title>
-    <url>/2019/03/18/%E5%88%86%E5%B8%83%E5%BC%8F%E7%B3%BB%E7%BB%9F%E6%9E%B6%E6%9E%84%E7%9A%84%E7%AE%80%E4%BB%8B/</url>
-    <content><![CDATA[<p>摘自 分布式系统架构的冰与火 左耳听风</p>
-<h2 id="分布式系统架构的优缺点"><a href="#分布式系统架构的优缺点" class="headerlink" title="分布式系统架构的优缺点"></a>分布式系统架构的优缺点</h2><p>需要分布式系统架构，来代替传统的单体架构的原因：</p>
-<ol>
-<li>增大系统容量 –&gt; 提高性能<br>单台机器的性能无法满足要求时，需要垂直或者水平拆分成分布式系统架构，让更多的机器去承担。</li>
-<li>加强系统可用 –&gt; 提高服务可用性<br>避免单点故障。</li>
-</ol>
-<p>分布式系统是一种trade-off</p>
-<img src="/2019/03/18/%E5%88%86%E5%B8%83%E5%BC%8F%E7%B3%BB%E7%BB%9F%E6%9E%B6%E6%9E%84%E7%9A%84%E7%AE%80%E4%BB%8B/%E5%8D%95%E4%BD%93%E5%BA%94%E7%94%A8%E5%92%8C%E5%88%86%E5%B8%83%E5%BC%8F%E6%9E%B6%E6%9E%84%E7%9A%84%E4%BC%98%E7%BC%BA%E7%82%B9.png" class="" title="image">
+    <title>一次mongo慢查询的优化过程</title>
+    <url>/2019/07/24/%E4%B8%80%E6%AC%A1mongo%E6%85%A2%E6%9F%A5%E8%AF%A2%E7%9A%84%E4%BC%98%E5%8C%96%E8%BF%87%E7%A8%8B/</url>
+    <content><![CDATA[<p>今天发现查询mongo时容易慢查询，现在将整个排查及优化过程,总结记录如下。</p>
+<h1 id="Database-Profiler介绍"><a href="#Database-Profiler介绍" class="headerlink" title="Database Profiler介绍"></a>Database Profiler介绍</h1><p>类似于mysql,Profiler可以实现慢查询日志的功能，它把数据收集在system.profile集合里。该集合是一个capped collection（有上限的集合）。Profiler默认是关闭的，可以在一个database或者一个instance上设置开启，设置不同的profiling levels.<br>具体描述见<a href="https://docs.mongodb.com/manual/tutorial/manage-the-database-profiler/">Database Profiler</a>。</p>
+<span id="more"></span>
 
-<h2 id="分布式系统的发展"><a href="#分布式系统的发展" class="headerlink" title="分布式系统的发展"></a>分布式系统的发展</h2><p>SOA——基于服务的架构</p>
-<img src="/2019/03/18/%E5%88%86%E5%B8%83%E5%BC%8F%E7%B3%BB%E7%BB%9F%E6%9E%B6%E6%9E%84%E7%9A%84%E7%AE%80%E4%BB%8B/SOA%E6%9E%B6%E6%9E%84%E7%9A%84%E6%BC%94%E5%8C%96.png" class="" title="image">
-
+<h1 id="慢查询分析流程"><a href="#慢查询分析流程" class="headerlink" title="慢查询分析流程"></a>慢查询分析流程</h1><p>慢查询日志一般作为优化步骤里的第一步。通过慢查询日志，定位每一条语句的查询时间。比如超过了200ms，那么查询超过200ms的语句需要优化。然后它通过 .explain() 解析影响行数是不是过大，所以导致查询语句超过200ms。<br>所以优化步骤一般就是：</p>
 <ol>
-<li>20 世纪 90 年代前，是单体架构，软件模块高度耦合。</li>
-<li>2000 年左右出现了比较松耦合的 SOA 架构，这个架构需要一个标准的协议或是中间件来联动其它相关联的服务.</li>
-<li>而 2010 年后，出现了微服务架构，这个架构更为松耦合。每一个微服务都能独立完整地运行（所谓的自包含），后端单体的数据库也被微服务这样的架构分散到不同的服务中。而它和传统 SOA 的差别在于，服务间的整合需要一个服务编排或是服务整合的引擎。就好像交响乐中需要有一个指挥来把所有乐器编排和组织在一起。</li>
+<li>用慢查询日志（system.profile）找到超过200ms的语句</li>
+<li>然后再通过.explain()解析影响行数，分析为什么超过200ms </li>
+<li>决定是不是需要添加索引</li>
 </ol>
-<p>一般来说，这个编排和组织引擎可以是工作流引擎，也可以是网关。当然，还需要辅助于像容器化调度这样的技术方式，如 Kubernetes.</p>
+<h1 id="开启慢查询"><a href="#开启慢查询" class="headerlink" title="开启慢查询"></a>开启慢查询</h1><h2 id="Profiling-Levels"><a href="#Profiling-Levels" class="headerlink" title="Profiling Levels"></a>Profiling Levels</h2><table>
+<thead>
+<tr>
+<th align="center">Level</th>
+<th align="center">Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">0</td>
+<td align="center">The profiler is off and does not collect any data. This is the default profiler level.</td>
+</tr>
+<tr>
+<td align="center">1</td>
+<td align="center">The profiler collects data for operations that take longer than the value of slowms.</td>
+</tr>
+<tr>
+<td align="center">2</td>
+<td align="center">The profiler collects data for all operations.</td>
+</tr>
+</tbody></table>
+<h2 id="Enable-and-Configure-Database-Profiling"><a href="#Enable-and-Configure-Database-Profiling" class="headerlink" title="Enable and Configure Database Profiling"></a>Enable and Configure Database Profiling</h2><h3 id="方式1-from-the-mongo-shell"><a href="#方式1-from-the-mongo-shell" class="headerlink" title="方式1 - from the mongo shell"></a>方式1 - from the mongo shell</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line"># 查看状态：级别和时间</span><br><span class="line">uhost:PRIMARY&gt; db.getProfilingStatus()</span><br><span class="line">&#123; &quot;was&quot; : 0, &quot;slowms&quot; : 100 &#125;</span><br><span class="line"># 设置Profiling Level，返回的是之前设置的Level,返回&quot;ok&quot;:1表示设置成功</span><br><span class="line">uhost:PRIMARY&gt; db.setProfilingLevel(1)</span><br><span class="line">&#123; &quot;was&quot; : 0, &quot;slowms&quot; : 100, &quot;ok&quot; : 1 &#125;</span><br><span class="line">uhost:PRIMARY&gt; db.getProfilingStatus()</span><br><span class="line">&#123; &quot;was&quot; : 1, &quot;slowms&quot; : 100 &#125;</span><br><span class="line"># 设置Profiling Level和slowms</span><br><span class="line">uhost:PRIMARY&gt; db.setProfilingLevel(1,200)</span><br><span class="line">&#123; &quot;was&quot; : 1, &quot;slowms&quot; : 100, &quot;ok&quot; : 1 &#125;</span><br><span class="line">uhost:PRIMARY&gt; db.getProfilingStatus()</span><br><span class="line">&#123; &quot;was&quot; : 1, &quot;slowms&quot; : 200 &#125;</span><br><span class="line"></span><br><span class="line"># New in version 3.6，支持设置sampleRate。</span><br><span class="line"># 默认是1，以下设置0.42，表示采样42%的慢查询</span><br><span class="line">db.setProfilingLevel(1, &#123; sampleRate: 0.42 &#125;)</span><br></pre></td></tr></table></figure>
+
+<p>注意：</p>
+<ol>
+<li><font color=#FF0000>每次设置之后，返回的是之前的状态</font></li>
+<li><font color=#FF0000>每次设置仅对当前所在的database有效</font></li>
+</ol>
+<h3 id="方式2-在mongo启动时设置"><a href="#方式2-在mongo启动时设置" class="headerlink" title="方式2 - 在mongo启动时设置"></a>方式2 - 在mongo启动时设置</h3><p>作为命令行参数传入：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">mongod --profile 1 --slowms 15 --slowOpSampleRate 0.5</span><br></pre></td></tr></table></figure>
+<p>还可以在配置文件里设置</p>
+<p>具体设置参考<a href="https://docs.mongodb.com/manual/reference/command/profile/#dbcmd.profile">profile</a></p>
+<h3 id="关闭Profiling"><a href="#关闭Profiling" class="headerlink" title="关闭Profiling"></a>关闭Profiling</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">uhost:PRIMARY&gt; db.setProfilingLevel(0)</span><br><span class="line">&#123; &quot;was&quot; : 1, &quot;slowms&quot; : 200, &quot;ok&quot; : 1 &#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="Profiling的效率问题"><a href="#Profiling的效率问题" class="headerlink" title="Profiling的效率问题"></a>Profiling的效率问题</h2><p>这是我能搜到的说法，但是具体原理和数据我还没找到，官网也没看到介绍。</p>
+<p>从其他地方复制过来的说法，待论证。”Profiling 功能肯定是会影响效率的，但是不太严重，原因是他使用的是system.profile 来记录，而system.profile 是一个capped collection 这种collection 在操作上有一些限制和特点，但是效率更高“</p>
+<h1 id="慢查询结果分析"><a href="#慢查询结果分析" class="headerlink" title="慢查询结果分析"></a>慢查询结果分析</h1><h2 id="各项参数含义"><a href="#各项参数含义" class="headerlink" title="各项参数含义"></a>各项参数含义</h2><p>这里用的MongoDB版本是2.6, 具体可以参考 <a href="https://docs.mongodb.com/v2.6/reference/database-profiler/">https://docs.mongodb.com/v2.6/reference/database-profiler/</a></p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">uhost:PRIMARY&gt; db.system.profile.find(&#123;&quot;ns&quot; : &quot;uhost.DiskAttachInfo&quot;,&quot;ts&quot;:&#123;$gt:new ISODate(&quot;2019-07-23T10:11:00Z&quot;)&#125;&#125;).pretty()</span><br><span class="line"></span><br><span class="line">&#123;</span><br><span class="line">	&quot;op&quot; : &quot;query&quot;, #操作类型，有insert、query、update、remove、getmore、command</span><br><span class="line">	&quot;ns&quot; : &quot;uhost.DiskAttachInfo&quot;, #操作的collection</span><br><span class="line">	&quot;query&quot; : &#123;</span><br><span class="line">		&quot;backend_types&quot; : &#123;</span><br><span class="line">			&quot;$in&quot; : [</span><br><span class="line">				&quot;ssd&quot;</span><br><span class="line">			]</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;,</span><br><span class="line">	&quot;ntoreturn&quot; : 0, #返回的数量</span><br><span class="line">	&quot;ntoskip&quot; : 0, #The number of documents the skip() method specified to skip.</span><br><span class="line">	&quot;nscanned&quot; : 520144, #MongoDB在索引中扫描以执行操作的文档数。 通常，如果nscanned远高于nredurned，则数据库会扫描许多对象以查找目标对象。 考虑创建一个索引来改善这一点。</span><br><span class="line">	&quot;nscannedObjects&quot; : 520144, # The number of documents that MongoDB scans from the collection in order to carry out the operation.</span><br><span class="line">	&quot;keyUpdates&quot; : 0,</span><br><span class="line">	&quot;numYield&quot; : 6,</span><br><span class="line">	&quot;lockStats&quot; : &#123;</span><br><span class="line">		&quot;timeLockedMicros&quot; : &#123;</span><br><span class="line">			&quot;r&quot; : NumberLong(1536711),</span><br><span class="line">			&quot;w&quot; : NumberLong(0)</span><br><span class="line">		&#125;,</span><br><span class="line">		&quot;timeAcquiringMicros&quot; : &#123;</span><br><span class="line">			&quot;r&quot; : NumberLong(913),</span><br><span class="line">			&quot;w&quot; : NumberLong(4)</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;,</span><br><span class="line">	&quot;nreturned&quot; : 0, // 返回的文档数量</span><br><span class="line">	&quot;responseLength&quot; : 20, // 返回字节长度，如果这个数字很大，考虑值返回所需字段</span><br><span class="line">	&quot;millis&quot; : 820, #消耗的时间（毫秒）</span><br><span class="line">	&quot;execStats&quot; : &#123;</span><br><span class="line">		&quot;type&quot; : &quot;COLLSCAN&quot;, #”COLLSCAN“：整个集合扫描，效果最差；”IXSCAN“：索引扫描；&quot;Fetch&quot;: ?</span><br><span class="line">		&quot;works&quot; : 520146,</span><br><span class="line">		&quot;yields&quot; : 4063,</span><br><span class="line">		&quot;unyields&quot; : 4063,</span><br><span class="line">		&quot;invalidates&quot; : 0,</span><br><span class="line">		&quot;advanced&quot; : 0,</span><br><span class="line">		&quot;needTime&quot; : 520145,</span><br><span class="line">		&quot;needFetch&quot; : 0,</span><br><span class="line">		&quot;isEOF&quot; : 1,</span><br><span class="line">		&quot;docsTested&quot; : 520144,</span><br><span class="line">		&quot;children&quot; : [ ]</span><br><span class="line">	&#125;,</span><br><span class="line">	&quot;ts&quot; : ISODate(&quot;2019-07-23T10:11:54.468Z&quot;), #该命令在何时执行</span><br><span class="line">	&quot;client&quot; : &quot;127.0.0.1&quot;, #链接ip或则主机</span><br><span class="line">	&quot;allUsers&quot; : [ ],</span><br><span class="line">	&quot;user&quot; : &quot;&quot;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="分析"><a href="#分析" class="headerlink" title="分析"></a>分析</h2><p>如果发现 millis 值比较大，那么就需要作优化。</p>
+<p>1  如果nscanned数很大，或者接近记录总数（文档数），那么可能没有用到索引查询，而是全表扫描。</p>
+<p>2  如果nscanned值高于nreturned的值，说明数据库为了找到目标文档扫描了很多文档。这时可以考虑创建索引来提高效率。</p>
+<h2 id="system-profile补充-这部分待验证"><a href="#system-profile补充-这部分待验证" class="headerlink" title="system.profile补充(这部分待验证)"></a>system.profile补充(<font color=#FF0000>这部分待验证</font>)</h2><p>‘type’的返回参数说明：</p>
+<ul>
+<li>COLLSCAN #全表扫描</li>
+<li>IXSCAN #索引扫描</li>
+<li>FETCH #根据索引去检索指定document</li>
+<li>SHARD_MERGE #将各个分片返回数据进行merge</li>
+<li>SORT #表明在内存中进行了排序（与老版本的scanAndOrder:true一致）</li>
+<li>LIMIT #使用limit限制返回数</li>
+<li>SKIP #使用skip进行跳过</li>
+<li>IDHACK #针对_id进行查询</li>
+<li>SHARDING_FILTER #通过mongos对分片数据进行查询</li>
+<li>COUNT #利用db.coll.explain().count()之类进行count运算</li>
+<li>COUNTSCAN #count不使用Index进行count时的stage返回</li>
+<li>COUNT_SCAN #count使用了Index进行count时的stage返回</li>
+<li>SUBPLA #未使用到索引的$or查询的stage返回</li>
+<li>TEXT #使用全文索引进行查询时候的stage返回</li>
+<li>PROJECTION #限定返回字段时候stage的返回</li>
+</ul>
+<p>对于普通查询，我们最希望看到的组合有这些：</p>
+<ul>
+<li>Fetch+IDHACK</li>
+<li>Fetch+ixscan</li>
+<li>Limit+（Fetch+ixscan）</li>
+<li>PROJECTION+ixscan</li>
+<li>SHARDING_FILTER+ixscan</li>
+</ul>
+<p>不希望看到包含如下的type：</p>
+<ul>
+<li>COLLSCAN（全表扫）</li>
+<li>SORT（使用sort但是无index）</li>
+<li>不合理的SKIP，SUBPLA（未用到index的$or）</li>
+</ul>
+<p>对于count查询，希望看到的有:COUNT_SCAN</p>
+<p>不希望看到的有:COUNTSCAN</p>
+<h1 id="常见的慢日志-system-profile-查询语句"><a href="#常见的慢日志-system-profile-查询语句" class="headerlink" title="常见的慢日志(system.profile)查询语句"></a>常见的慢日志(system.profile)查询语句</h1><p>返回最近的10条记录：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">db.system.profile.find().limit(10).sort( &#123; ts : -1 &#125; ).pretty()</span><br></pre></td></tr></table></figure>
+
+<p>返回所有的操作，除command类型的</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">db.system.profile.find( &#123; op: &#123; $ne : ‘command‘ &#125; &#125;).pretty()</span><br></pre></td></tr></table></figure>
+
+<p>返回特定集合</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">db.system.profile.find( &#123; ns: &quot;uhost.DiskAttachInfo&quot;&#125; ).pretty()</span><br></pre></td></tr></table></figure>
+
+<p>To return operations slower than 5 milliseconds, run a query similar to the following:</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">db.system.profile.find( &#123; millis : &#123; $gt : 5 &#125; &#125; ).pretty()</span><br></pre></td></tr></table></figure>
+
+<p>To return information from a certain time range, run a query similar to the following:</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">db.system.profile.find(&#123;</span><br><span class="line">  ts : &#123;</span><br><span class="line">    $gt: new ISODate(&quot;2012-12-09T03:00:00Z&quot;),</span><br><span class="line">    $lt: new ISODate(&quot;2012-12-09T03:40:00Z&quot;)</span><br><span class="line">  &#125;</span><br><span class="line">&#125;).pretty()</span><br></pre></td></tr></table></figure>
+
+<p>The following example looks at the time range, suppresses the user field from the output to make it easier to read, and sorts the results by how long each operation took to run:</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">db.system.profile.find(&#123;</span><br><span class="line">  ts : &#123;</span><br><span class="line">    $gt: new ISODate(&quot;2011-07-12T03:00:00Z&quot;),</span><br><span class="line">    $lt: new ISODate(&quot;2011-07-12T03:40:00Z&quot;)</span><br><span class="line">  &#125;</span><br><span class="line">&#125;, &#123; user: 0 &#125;).sort( &#123; millis: -1 &#125; )</span><br></pre></td></tr></table></figure>
+
+<p>Show the Five Most Recent Events</p>
+<p>On a database that has profiling enabled, the show profile helper in the mongo shell displays the 5 most recent operations that took at least 1 millisecond to execute. Issue show profile from the mongo shell, as follows:</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">show profile</span><br></pre></td></tr></table></figure>
+
+<h1 id="explain分析"><a href="#explain分析" class="headerlink" title="explain分析"></a>explain分析</h1><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">uhost:PRIMARY&gt; db.getCollection(&#x27;DiskAttachInfo&#x27;).find(&#123;&quot;backend_types&quot;:&#123;$in:[&quot;ssd&quot;]&#125;&#125;).explain()</span><br><span class="line">&#123;</span><br><span class="line">	&quot;cursor&quot; : &quot;BasicCursor&quot;, #返回游标类型，有BasicCursor和BtreeCursor，后者意味着使用了索引。</span><br><span class="line">    &quot;isMultiKey&quot; : false,</span><br><span class="line">	&quot;isMultiKey&quot; : false,</span><br><span class="line">	&quot;n&quot; : 0,</span><br><span class="line">	&quot;nscannedObjects&quot; : 522072, #the total number of documents scanned.</span><br><span class="line">	&quot;nscanned&quot; : 522072,  #the total number of index entries scanned (or documents for a collection scan).</span><br><span class="line">	&quot;nscannedObjectsAllPlans&quot; : 522072,</span><br><span class="line">	&quot;nscannedAllPlans&quot; : 522072,</span><br><span class="line">	&quot;scanAndOrder&quot; : false, #MongoDB是否在内存中对结果集进行了排序</span><br><span class="line">	&quot;indexOnly&quot; : false, #MongoDB是否只使用索引就能完成此次查询</span><br><span class="line">	&quot;nYields&quot; : 4078,  #为了让写入请求能够顺利执行，本次查询暂停暂停的次数。如果有写入请求需求处理，查询会周期性的释放他们的锁，以便写入能够顺利执行</span><br><span class="line">	&quot;nChunkSkips&quot; : 0,</span><br><span class="line">	&quot;millis&quot; : 918, #数据库执行本次查询所耗费的毫秒数。这个数字越小，说明效率越高</span><br><span class="line">	&quot;server&quot; : &quot;172-18-38-130:27017&quot;,</span><br><span class="line">	&quot;filterSet&quot; : false</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>详细见<a href="https://docs.mongodb.com/v2.6/reference/method/cursor.explain/index.html">cursor.explain()</a></p>
+<h1 id="添加索引"><a href="#添加索引" class="headerlink" title="添加索引"></a>添加索引</h1><p>在以上的分析中，”nscanned” 过大，且”type” : “COLLSCAN”为整个集合扫描，”indexOnly” : false表示没有用到索引。考虑创建一个索引来改善这一点。</p>
+<p>查看当前索引，在backend_type上并没有索引。</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">uhost:PRIMARY&gt; db.getCollection(&#x27;DiskAttachInfo&#x27;).getIndexes()</span><br><span class="line">[</span><br><span class="line">	&#123;</span><br><span class="line">		&quot;v&quot; : 1,</span><br><span class="line">		&quot;key&quot; : &#123;</span><br><span class="line">			&quot;_id&quot; : 1</span><br><span class="line">		&#125;,</span><br><span class="line">		&quot;name&quot; : &quot;_id_&quot;,</span><br><span class="line">		&quot;ns&quot; : &quot;uhost.DiskAttachInfo&quot;</span><br><span class="line">	&#125;,</span><br><span class="line">	&#123;</span><br><span class="line">		&quot;v&quot; : 1,</span><br><span class="line">		&quot;key&quot; : &#123;</span><br><span class="line">			&quot;uhost_id&quot; : 1</span><br><span class="line">		&#125;,</span><br><span class="line">		&quot;name&quot; : &quot;uhost_id_1&quot;,</span><br><span class="line">		&quot;ns&quot; : &quot;uhost.DiskAttachInfo&quot;,</span><br><span class="line">		&quot;background&quot; : true,</span><br><span class="line">		&quot;safe&quot; : null</span><br><span class="line">	&#125;,</span><br><span class="line">	&#123;</span><br><span class="line">		&quot;v&quot; : 1,</span><br><span class="line">		&quot;key&quot; : &#123;</span><br><span class="line">			&quot;attached&quot; : 1</span><br><span class="line">		&#125;,</span><br><span class="line">		&quot;name&quot; : &quot;attached_1&quot;,</span><br><span class="line">		&quot;ns&quot; : &quot;uhost.DiskAttachInfo&quot;,</span><br><span class="line">		&quot;background&quot; : true,</span><br><span class="line">		&quot;safe&quot; : null</span><br><span class="line">	&#125;,</span><br><span class="line">	&#123;</span><br><span class="line">		&quot;v&quot; : 1,</span><br><span class="line">		&quot;key&quot; : &#123;</span><br><span class="line">			&quot;disk_id&quot; : 1</span><br><span class="line">		&#125;,</span><br><span class="line">		&quot;name&quot; : &quot;disk_id_1&quot;,</span><br><span class="line">		&quot;ns&quot; : &quot;uhost.DiskAttachInfo&quot;,</span><br><span class="line">		&quot;background&quot; : true,</span><br><span class="line">		&quot;safe&quot; : null</span><br><span class="line">	&#125;</span><br><span class="line">]</span><br></pre></td></tr></table></figure>
+
+<p>添加index</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">uhost:PRIMARY&gt; db.DiskAttachInfo.createIndex(&#123;&quot;backend_type&quot;:1&#125;,&#123;background: true, safe: null&#125;)</span><br><span class="line">&#123;</span><br><span class="line">	&quot;createdCollectionAutomatically&quot; : false,</span><br><span class="line">	&quot;numIndexesBefore&quot; : 4,</span><br><span class="line">	&quot;numIndexesAfter&quot; : 5,</span><br><span class="line">	&quot;ok&quot; : 1</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h1 id="添加索引后测试效果"><a href="#添加索引后测试效果" class="headerlink" title="添加索引后测试效果"></a>添加索引后测试效果</h1><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">uhost:PRIMARY&gt; db.getCollection(&#x27;DiskAttachInfo&#x27;).find(&#123;&quot;backend_type&quot;:&#123;$in:[&quot;ssd&quot;]&#125;&#125;).explain()</span><br><span class="line">&#123;</span><br><span class="line">	&quot;cursor&quot; : &quot;BtreeCursor backend_type_1&quot;,</span><br><span class="line">	&quot;isMultiKey&quot; : false,</span><br><span class="line">	&quot;n&quot; : 98023,</span><br><span class="line">	&quot;nscannedObjects&quot; : 98023,</span><br><span class="line">	&quot;nscanned&quot; : 98023,</span><br><span class="line">	&quot;nscannedObjectsAllPlans&quot; : 98023,</span><br><span class="line">	&quot;nscannedAllPlans&quot; : 98023,</span><br><span class="line">	&quot;scanAndOrder&quot; : false,</span><br><span class="line">	&quot;indexOnly&quot; : false,</span><br><span class="line">	&quot;nYields&quot; : 765,</span><br><span class="line">	&quot;nChunkSkips&quot; : 0,</span><br><span class="line">	&quot;millis&quot; : 169,</span><br><span class="line">	&quot;indexBounds&quot; : &#123;</span><br><span class="line">		&quot;backend_type&quot; : [</span><br><span class="line">			[</span><br><span class="line">				&quot;ssd&quot;,</span><br><span class="line">				&quot;ssd&quot;</span><br><span class="line">			]</span><br><span class="line">		]</span><br><span class="line">	&#125;,</span><br><span class="line">	&quot;server&quot; : &quot;172-18-38-130:27017&quot;,</span><br><span class="line">	&quot;filterSet&quot; : false</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>“nscanned” 由原来的52w降低到9w多。<br>时间（”millis” ）由828ms降低到169ms。</p>
+<h1 id="参考链接"><a href="#参考链接" class="headerlink" title="参考链接"></a>参考链接</h1><ol>
+<li><a href="https://docs.mongodb.com/manual/tutorial/manage-the-database-profiler/">Database Profiler</a></li>
+<li><a href="https://docs.mongodb.com/v2.6/reference/method/cursor.explain/index.html">cursor.explain()</a></li>
+<li><a href="https://blog.csdn.net/yisun123456/article/details/78274477">转 mongodb Profiling 通过慢查询日志分析查询慢的原因 相应优化</a></li>
+<li><a href="https://blog.csdn.net/joy0921/article/details/80131186">MongoDB查询优化：从10s到10ms</a>   </li>
+</ol>
 ]]></content>
       <categories>
-        <category>分布式系统</category>
+        <category>数据库</category>
       </categories>
       <tags>
-        <tag>分布式系统</tag>
-        <tag>架构</tag>
+        <tag>mongo</tag>
+        <tag>MongoDB</tag>
       </tags>
   </entry>
   <entry>
@@ -1558,6 +1528,36 @@
       </tags>
   </entry>
   <entry>
+    <title>分布式系统架构的简介</title>
+    <url>/2019/03/18/%E5%88%86%E5%B8%83%E5%BC%8F%E7%B3%BB%E7%BB%9F%E6%9E%B6%E6%9E%84%E7%9A%84%E7%AE%80%E4%BB%8B/</url>
+    <content><![CDATA[<p>摘自 分布式系统架构的冰与火 左耳听风</p>
+<h2 id="分布式系统架构的优缺点"><a href="#分布式系统架构的优缺点" class="headerlink" title="分布式系统架构的优缺点"></a>分布式系统架构的优缺点</h2><p>需要分布式系统架构，来代替传统的单体架构的原因：</p>
+<ol>
+<li>增大系统容量 –&gt; 提高性能<br>单台机器的性能无法满足要求时，需要垂直或者水平拆分成分布式系统架构，让更多的机器去承担。</li>
+<li>加强系统可用 –&gt; 提高服务可用性<br>避免单点故障。</li>
+</ol>
+<p>分布式系统是一种trade-off</p>
+<img src="/2019/03/18/%E5%88%86%E5%B8%83%E5%BC%8F%E7%B3%BB%E7%BB%9F%E6%9E%B6%E6%9E%84%E7%9A%84%E7%AE%80%E4%BB%8B/%E5%8D%95%E4%BD%93%E5%BA%94%E7%94%A8%E5%92%8C%E5%88%86%E5%B8%83%E5%BC%8F%E6%9E%B6%E6%9E%84%E7%9A%84%E4%BC%98%E7%BC%BA%E7%82%B9.png" class="" title="image">
+
+<h2 id="分布式系统的发展"><a href="#分布式系统的发展" class="headerlink" title="分布式系统的发展"></a>分布式系统的发展</h2><p>SOA——基于服务的架构</p>
+<img src="/2019/03/18/%E5%88%86%E5%B8%83%E5%BC%8F%E7%B3%BB%E7%BB%9F%E6%9E%B6%E6%9E%84%E7%9A%84%E7%AE%80%E4%BB%8B/SOA%E6%9E%B6%E6%9E%84%E7%9A%84%E6%BC%94%E5%8C%96.png" class="" title="image">
+
+<ol>
+<li>20 世纪 90 年代前，是单体架构，软件模块高度耦合。</li>
+<li>2000 年左右出现了比较松耦合的 SOA 架构，这个架构需要一个标准的协议或是中间件来联动其它相关联的服务.</li>
+<li>而 2010 年后，出现了微服务架构，这个架构更为松耦合。每一个微服务都能独立完整地运行（所谓的自包含），后端单体的数据库也被微服务这样的架构分散到不同的服务中。而它和传统 SOA 的差别在于，服务间的整合需要一个服务编排或是服务整合的引擎。就好像交响乐中需要有一个指挥来把所有乐器编排和组织在一起。</li>
+</ol>
+<p>一般来说，这个编排和组织引擎可以是工作流引擎，也可以是网关。当然，还需要辅助于像容器化调度这样的技术方式，如 Kubernetes.</p>
+]]></content>
+      <categories>
+        <category>分布式系统</category>
+      </categories>
+      <tags>
+        <tag>分布式系统</tag>
+        <tag>架构</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>读书笔记-TCP/IP详解 卷1：协议</title>
     <url>/2019/04/24/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0-TCP-IP%E8%AF%A6%E8%A7%A3-%E5%8D%B71%EF%BC%9A%E5%8D%8F%E8%AE%AE/</url>
     <content><![CDATA[<p>不同层的PDU（Protocol Data Unit）</p>
@@ -1714,35 +1714,6 @@
       </tags>
   </entry>
   <entry>
-    <title>这些年读过的那些书&amp;&amp;待读清单列表</title>
-    <url>/2019/08/31/%E8%BF%99%E4%BA%9B%E5%B9%B4%E8%AF%BB%E8%BF%87%E7%9A%84%E9%82%A3%E4%BA%9B%E4%B9%A6-%E5%BE%85%E8%AF%BB%E6%B8%85%E5%8D%95%E5%88%97%E8%A1%A8/</url>
-    <content><![CDATA[<p>每年给自己列个计划，要读哪些书，到年尾看看真正看完的有多少。</p>
-<h1 id="2020年待读清单列表"><a href="#2020年待读清单列表" class="headerlink" title="2020年待读清单列表"></a>2020年待读清单列表</h1><ol>
-<li> 《Designing Data-Intensive Applications》</li>
-</ol>
-<h1 id="2019年待读清单列表"><a href="#2019年待读清单列表" class="headerlink" title="2019年待读清单列表"></a>2019年待读清单列表</h1><ol>
-<li>UNIX环境高级编程（第3版）</li>
-<li>重构网络 SDN架构与实现</li>
-<li>软件定义网络</li>
-<li>全球通史 从史前史到21实际 第7版修订版 上</li>
-<li>全球通史 从史前史到21实际 第7版修订版 下<span id="more"></span></li>
-</ol>
-<h1 id="这些年读过的那些书"><a href="#这些年读过的那些书" class="headerlink" title="这些年读过的那些书"></a>这些年读过的那些书</h1><h2 id="2020年"><a href="#2020年" class="headerlink" title="2020年"></a>2020年</h2><ol>
-<li>《深度思考》 深度思考前的盲目勤奋，注定是吃力不讨好的徒劳。香奈儿前全球CEO从普通职员到职场巅峰的人生进阶之路。大脑中走得越远，现实中走得越稳。</li>
-</ol>
-<h2 id="2019年"><a href="#2019年" class="headerlink" title="2019年"></a>2019年</h2><ol>
-<li>《TCP/IP详解 卷1：协议（原书第2版）》 <a href="https://xusenqi.github.io/2019/04/24/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0-TCP-IP%E8%AF%A6%E8%A7%A3-%E5%8D%B71%EF%BC%9A%E5%8D%8F%E8%AE%AE/">读书笔记-TCP/IP详解 卷1：协议</a></li>
-<li>《软技能 代码之外的生存指南（Soft Skills - The Software Developer’s Life Manual）》对于程序员是很不错的心灵鸡汤，从职业、自我营销、学习、生产力等方面，讲述了作者的方法和心得，很值得借鉴。</li>
-</ol>
-]]></content>
-      <categories>
-        <category>读书笔记</category>
-      </categories>
-      <tags>
-        <tag>清单</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>通过delve(dlv)调试golang程序</title>
     <url>/2019/08/25/%E9%80%9A%E8%BF%87delve-dlv-%E8%B0%83%E8%AF%95golang%E7%A8%8B%E5%BA%8F/</url>
     <content><![CDATA[<h1 id="介绍"><a href="#介绍" class="headerlink" title="介绍"></a>介绍</h1><p>gdb是强大的调试工具。但对于golang程序来说，delve是个更好的选择，它能更好地理解Go runtime, data structures, and expressions，尤其是goroutine。</p>
@@ -1826,6 +1797,35 @@
         <tag>debug</tag>
         <tag>delve</tag>
         <tag>dlv</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>这些年读过的那些书&amp;&amp;待读清单列表</title>
+    <url>/2019/08/31/%E8%BF%99%E4%BA%9B%E5%B9%B4%E8%AF%BB%E8%BF%87%E7%9A%84%E9%82%A3%E4%BA%9B%E4%B9%A6-%E5%BE%85%E8%AF%BB%E6%B8%85%E5%8D%95%E5%88%97%E8%A1%A8/</url>
+    <content><![CDATA[<p>每年给自己列个计划，要读哪些书，到年尾看看真正看完的有多少。</p>
+<h1 id="2020年待读清单列表"><a href="#2020年待读清单列表" class="headerlink" title="2020年待读清单列表"></a>2020年待读清单列表</h1><ol>
+<li> 《Designing Data-Intensive Applications》</li>
+</ol>
+<h1 id="2019年待读清单列表"><a href="#2019年待读清单列表" class="headerlink" title="2019年待读清单列表"></a>2019年待读清单列表</h1><ol>
+<li>UNIX环境高级编程（第3版）</li>
+<li>重构网络 SDN架构与实现</li>
+<li>软件定义网络</li>
+<li>全球通史 从史前史到21实际 第7版修订版 上</li>
+<li>全球通史 从史前史到21实际 第7版修订版 下<span id="more"></span></li>
+</ol>
+<h1 id="这些年读过的那些书"><a href="#这些年读过的那些书" class="headerlink" title="这些年读过的那些书"></a>这些年读过的那些书</h1><h2 id="2020年"><a href="#2020年" class="headerlink" title="2020年"></a>2020年</h2><ol>
+<li>《深度思考》 深度思考前的盲目勤奋，注定是吃力不讨好的徒劳。香奈儿前全球CEO从普通职员到职场巅峰的人生进阶之路。大脑中走得越远，现实中走得越稳。</li>
+</ol>
+<h2 id="2019年"><a href="#2019年" class="headerlink" title="2019年"></a>2019年</h2><ol>
+<li>《TCP/IP详解 卷1：协议（原书第2版）》 <a href="https://xusenqi.github.io/2019/04/24/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0-TCP-IP%E8%AF%A6%E8%A7%A3-%E5%8D%B71%EF%BC%9A%E5%8D%8F%E8%AE%AE/">读书笔记-TCP/IP详解 卷1：协议</a></li>
+<li>《软技能 代码之外的生存指南（Soft Skills - The Software Developer’s Life Manual）》对于程序员是很不错的心灵鸡汤，从职业、自我营销、学习、生产力等方面，讲述了作者的方法和心得，很值得借鉴。</li>
+</ol>
+]]></content>
+      <categories>
+        <category>读书笔记</category>
+      </categories>
+      <tags>
+        <tag>清单</tag>
       </tags>
   </entry>
   <entry>
