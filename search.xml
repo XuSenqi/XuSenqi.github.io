@@ -1,108 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <search>
   <entry>
-    <title>Remote Debugging Go Code with Visual Studio Code</title>
-    <url>/2019/12/23/Remote-Debug-Go-Code-with-Visual-Studio-Code/</url>
-    <content><![CDATA[<p>当了解一些大型项目的代码逻辑时，如kubernetes，跟着调试器跟踪代码学习，是很好的方式。当项目部署在远程环境时，在本机进行开发，很自然对Remote Debug有迫切需求，这也是和调试一般golang程序最主要的诉求区别点，本文将通过两个实际例子，来介绍如何Remote Debug。</p>
-<span id="more"></span>
-
-<h1 id="dlv远程调试的原理"><a href="#dlv远程调试的原理" class="headerlink" title="dlv远程调试的原理"></a>dlv远程调试的原理</h1><p>vscode支持丰富的插件，dlv插件可以帮助我们调试golang代码，基本使用方法详见 <a href="https://github.com/go-delve/delve">delve官网</a>，以及我之前的一篇文档<a href="https://xusenqi.github.io/2019/08/25/%E9%80%9A%E8%BF%87delve-dlv-%E8%B0%83%E8%AF%95golang%E7%A8%8B%E5%BA%8F/#more">通过delve(dlv)调试golang程序</a>。dlv远程调试的基本原理是，在服务端启动dlv server，客户端vscode去连接dlv server</p>
-<img src="/2019/12/23/Remote-Debug-Go-Code-with-Visual-Studio-Code/dlv_server.jpeg" class="" title="image">
-
-<h1 id="远程调试的步骤"><a href="#远程调试的步骤" class="headerlink" title="远程调试的步骤"></a>远程调试的步骤</h1><p>主要参考了<a href="https://github.com/Microsoft/vscode-go/wiki/Debugging-Go-code-using-VS-Code">Debugging Go code using VS Code</a>，现将步骤整理如下：</p>
-<h2 id="环境安装"><a href="#环境安装" class="headerlink" title="环境安装"></a>环境安装</h2><h3 id="Local安装Golang"><a href="#Local安装Golang" class="headerlink" title="Local安装Golang"></a>Local安装Golang</h3><p>参考Golang官网安装步骤<a href="https://golang.org/doc/install">Getting Started</a></p>
-<h3 id="Local和Remote端安装dlv工具"><a href="#Local和Remote端安装dlv工具" class="headerlink" title="Local和Remote端安装dlv工具"></a>Local和Remote端安装dlv工具</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">go get -u github.com/go-delve/delve/cmd/dlv</span><br><span class="line"></span><br><span class="line">验证dlv版本</span><br><span class="line">dlv version</span><br></pre></td></tr></table></figure>
-<h2 id="本地代码版本切换到和目标端一致"><a href="#本地代码版本切换到和目标端一致" class="headerlink" title="本地代码版本切换到和目标端一致"></a>本地代码版本切换到和目标端一致</h2><p>以一个服务uhost-scheduler为例, 线上和本地都保持为1.0.10版本</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">[root@yg-man-uhost-set9-01 bin]# /data/uframework/uhost_server -v</span><br><span class="line">option = a  value =</span><br><span class="line">option = i  value = 0</span><br><span class="line">option = s  value =</span><br><span class="line">option = v  value = true</span><br><span class="line">option = z  value =</span><br><span class="line"></span><br><span class="line">Version: 1.0.10</span><br><span class="line">Git branch: from_pxu_bugfix</span><br><span class="line">Git commit: 3f997fe</span><br><span class="line">Git user.name    patrick</span><br><span class="line">Git user.email     xusen_qi@163.com</span><br><span class="line">Go version: go_version_go1.8.1_darwin/amd64</span><br><span class="line">Build time: 2019-09-02T20:26:58+0800</span><br></pre></td></tr></table></figure>
-
-<p>##在Remote端启动dlv server<br>启动命令如下</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">dlv --listen=&quot;:50000&quot; --headless=true --log --api-version=2 exec /data/uframework/uhost_server \</span><br><span class="line">&gt; -- --z=172.23.0.77:2181,172.23.0.78:2181,172.23.0.79:2181,172.23.0.80:2181,172.23.0.81:2181 \</span><br><span class="line">&gt; --a=uhost-scheduler --s=set9 --i=0</span><br></pre></td></tr></table></figure>
-
-<p>参数说明：</p>
-<ul>
-<li>-l, –listen string        Debugging server listen address. (default “127.0.0.1:0”)</li>
-<li>–headless             Run debug server only, in headless mode.</li>
-<li>–log                  Enable debugging server logging.</li>
-</ul>
-<p>更多参数说明详见<a href="https://github.com/go-delve/delve/blob/master/Documentation/usage/dlv.md">dlv</a></p>
-<h2 id="在Local端的调试"><a href="#在Local端的调试" class="headerlink" title="在Local端的调试"></a>在Local端的调试</h2><h3 id="dlv命令行的调试"><a href="#dlv命令行的调试" class="headerlink" title="dlv命令行的调试"></a>dlv命令行的调试</h3><p>访问dlv server的IP:Port，可以调试，类似于gdb</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">➜  ~ dlv connect 172.23.0.159:50000</span><br><span class="line">Type &#x27;help&#x27; for list of commands.</span><br><span class="line">(dlv) break main.main</span><br><span class="line">Breakpoint 1 set at 0x823deb for main.main() ./go/src/uhost-go/uhost_server.go:31</span><br></pre></td></tr></table></figure>
-
-<h3 id="在VS-Code里的调试"><a href="#在VS-Code里的调试" class="headerlink" title="在VS Code里的调试"></a>在VS Code里的调试</h3><p>但命令行里，没有图形界面直观和方便，所以更推荐在VS Code里的调试</p>
-<ol>
-<li>保持VS Code打开的代码，和Remote端的代码或二进制包一致</li>
-<li>在本地主机中配置远程调试的参数，会在当前项目下的.vscode目录产生一个launch.json文件</li>
-</ol>
-<img src="/2019/12/23/Remote-Debug-Go-Code-with-Visual-Studio-Code/Open_Configurations.jpeg" class="" title="image">
-
-<ol start="3">
-<li>配置Remote端的IP和Port</li>
-</ol>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">&#123;</span><br><span class="line">    &quot;name&quot;: &quot;Remote uhost-scheduler&quot;,</span><br><span class="line">    &quot;type&quot;: &quot;go&quot;,</span><br><span class="line">    &quot;request&quot;: &quot;attach&quot;,</span><br><span class="line">    &quot;mode&quot;: &quot;remote&quot;,</span><br><span class="line">    &quot;remotePath&quot;: &quot;/Users/patrick.xu/go/src/uhost-go&quot;,</span><br><span class="line">    &quot;port&quot;: 50000,</span><br><span class="line">    &quot;host&quot;: &quot;172.23.0.159&quot;,</span><br><span class="line">    &quot;showLog&quot;: true,</span><br><span class="line">    &quot;trace&quot;: &quot;log&quot;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<ol start="4">
-<li>运行Debug，可以像本地一样调试，如加断点、条件断点、单步调试等。</li>
-</ol>
-<p>本地VS Code界面</p>
-<img src="/2019/12/23/Remote-Debug-Go-Code-with-Visual-Studio-Code/VSCode_debug_scheduler%E7%95%8C%E9%9D%A2.jpeg" class="" title="image">
-
-<p>Remote端页面</p>
-<img src="/2019/12/23/Remote-Debug-Go-Code-with-Visual-Studio-Code/dlv_server_scheduler_%E8%B0%83%E8%AF%95.jpeg" class="" title="image">
-
-<p>Remote-Debug-Go-Code-with-Visual-Studio-Code.md</p>
-<p>条件断点</p>
-<img src="/2019/12/23/Remote-Debug-Go-Code-with-Visual-Studio-Code/%E6%9D%A1%E4%BB%B6%E6%96%AD%E7%82%B9.png" class="" title="image">
-
-<h1 id="k8s-scheduler的远程调试"><a href="#k8s-scheduler的远程调试" class="headerlink" title="k8s scheduler的远程调试"></a>k8s scheduler的远程调试</h1><p>k8s里有很多单独的服务，如kube-apiserver、kube-proxy、kube-scheduler等，每个都可以作为单独的调试代码。最近在看kube-scheduler的代码，所以这里以它为例。</p>
-<img src="/2019/12/23/Remote-Debug-Go-Code-with-Visual-Studio-Code/kubernetes_components_architecture.png" class="" title="image">
-<center>High level Kubernetes architecture diagram showing a cluster with a master and two worker nodes</center>
-<center>Source: https://x-team.com/blog/introduction-kubernetes-architecture</center>
-
-<h2 id="k8s环境的搭建"><a href="#k8s环境的搭建" class="headerlink" title="k8s环境的搭建"></a>k8s环境的搭建</h2><p>k8s环境通过kubeadm搭建在远程的4台虚机上，1台master和3台node，具体的搭建步骤见<a href="https://xusenqi.github.io/2019/12/11/kubeadm%E9%83%A8%E7%BD%B2single-control-plane-k8s%E9%9B%86%E7%BE%A4/">kubeadm部署single control-plane k8s集群</a>。</p>
-<h2 id="停止kube-scheduler服务"><a href="#停止kube-scheduler服务" class="headerlink" title="停止kube-scheduler服务"></a>停止kube-scheduler服务</h2><p>我们需要dlv拉起kube-scheduler服务，但是kubeadm部署的kube-scheduler被kill掉后<br>，会自动拉起来，占用10251的端口，影响调试。</p>
-<img src="/2019/12/23/Remote-Debug-Go-Code-with-Visual-Studio-Code/kubeadm_kube_scheduler.jpeg" class="" title="image">
-
-<p>这里对对配置文件改名，防止自动拉起kube-scheduler<br><code>mv /etc/kubernetes/scheduler.conf /etc/kubernetes/scheduler_191223.conf</code></p>
-<h2 id="dlv-server"><a href="#dlv-server" class="headerlink" title="dlv server"></a>dlv server</h2><p>dlv server启动后，监听40000端口</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">dlv --listen=&quot;:40000&quot; --headless=true --log --api-version=2 exec /data/k8s/kube-scheduler \</span><br><span class="line">-- --authentication-kubeconfig=/etc/kubernetes/scheduler_191223.conf \</span><br><span class="line">--authorization-kubeconfig=/etc/kubernetes/scheduler_191223.conf \</span><br><span class="line">--bind-address=127.0.0.1 --kubeconfig=/etc/kubernetes/scheduler_191223.conf \</span><br><span class="line">--leader-elect=true</span><br></pre></td></tr></table></figure>
-
-<p>注意：本地是从公网访问虚机的40000端口，如果防火墙有打开的话，要关掉。</p>
-<h2 id="本地调试kube-scheduler"><a href="#本地调试kube-scheduler" class="headerlink" title="本地调试kube-scheduler"></a>本地调试kube-scheduler</h2><p>与之前步骤一样</p>
-<ol>
-<li>代码与线上一致；如果不一致，重新编译新的版本推到线上，重新拉起服务</li>
-</ol>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">➜  kube-scheduler git:(b3cbbae) ✗ pwd</span><br><span class="line">/Users/patrick.xu/go/src/k8s.io/kubernetes/cmd/kube-scheduler</span><br><span class="line">➜  kube-scheduler git:(b3cbbae) CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build</span><br><span class="line">➜  kube-scheduler git:(b3cbbae) ✗ ll</span><br><span class="line">total 106208</span><br><span class="line">-rw-r--r--  1 patrick.xu  staff   1.1K Dec 11 20:11 BUILD</span><br><span class="line">-rw-r--r--  1 patrick.xu  staff   144B Dec 11 20:11 OWNERS</span><br><span class="line">drwxr-xr-x  7 patrick.xu  staff   224B Dec 11 20:11 app</span><br><span class="line">-rwxr-xr-x  1 patrick.xu  staff    52M Dec 18 01:31 kube-scheduler</span><br><span class="line">-rw-r--r--  1 patrick.xu  staff   1.3K Dec 11 20:11 scheduler.go</span><br></pre></td></tr></table></figure>
-
-<ol start="2">
-<li>配置文件launch.json的内容</li>
-</ol>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">&#123;</span><br><span class="line">    &quot;name&quot;: &quot;Remote k8s server&quot;,</span><br><span class="line">    &quot;type&quot;: &quot;go&quot;,</span><br><span class="line">    &quot;request&quot;: &quot;attach&quot;,</span><br><span class="line">    &quot;showLog&quot;: true,</span><br><span class="line">    &quot;mode&quot;: &quot;remote&quot;,</span><br><span class="line">    &quot;remotePath&quot;: &quot;/Users/patrick.xu/go/src/k8s.io&quot;,</span><br><span class="line">    &quot;port&quot;: 40000,</span><br><span class="line">    &quot;host&quot;: &quot;152.32.173.26&quot;,</span><br><span class="line">    &quot;trace&quot;: &quot;log&quot;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>3.运行Debug，这时可以像可以像本地一样调试，如加断点、单步调试等。</p>
-<p>本地VS Code远程调试kube-scheduler界面</p>
-<img src="/2019/12/23/Remote-Debug-Go-Code-with-Visual-Studio-Code/VSCode_debug_kube_scheduler%E7%95%8C%E9%9D%A2.jpeg" class="" title="image">
-
-<p>Remote端kube-scheduler输出，看到打断点和调试的日志</p>
-<img src="/2019/12/23/Remote-Debug-Go-Code-with-Visual-Studio-Code/dlv_server_kube_scheduler_%E8%B0%83%E8%AF%95.jpeg" class="" title="image">
-
-<p>后面就是结合创建pod，去分析具体的调度逻辑了。</p>
-<h1 id="参考链接"><a href="#参考链接" class="headerlink" title="参考链接"></a>参考链接</h1><ol>
-<li><a href="https://github.com/go-delve/delve">delve官网</a></li>
-<li><a href="https://github.com/Microsoft/vscode-go/wiki/Debugging-Go-code-using-VS-Code">Debugging Go code using VS Code</a></li>
-<li><a href="http://zhongpan.tech/2019/10/21/016.remote-debug-golang-with-vscode/#more">使用vscode远程调试golang</a></li>
-<li><a href="https://xusenqi.github.io/2019/08/25/%E9%80%9A%E8%BF%87delve-dlv-%E8%B0%83%E8%AF%95golang%E7%A8%8B%E5%BA%8F/#more">通过delve(dlv)调试golang程序</a></li>
-</ol>
-]]></content>
-      <categories>
-        <category>vscode</category>
-      </categories>
-      <tags>
-        <tag>vscode</tag>
-        <tag>remote debug</tag>
-        <tag>k8s</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>c++ profile的大杀器-gperftools的使用</title>
     <url>/2020/12/06/C++Profile%E7%9A%84%E5%A4%A7%E6%9D%80%E5%99%A8_gperftools%E7%9A%84%E4%BD%BF%E7%94%A8/</url>
     <content><![CDATA[<p>熟悉golang的同学，一定很熟悉用pprof来作为性能分析和可视化的工具，包括 cpu profile, memery profile等。这么方便且炫的功能，在C++里也一样能实现。所需要的工具就是gperftools。</p>
@@ -364,50 +262,133 @@
 ]]></content>
   </entry>
   <entry>
-    <title>TCP四次挥手</title>
-    <url>/2018/05/15/TCP%E5%9B%9B%E6%AC%A1%E6%8C%A5%E6%89%8B/</url>
-    <content><![CDATA[<h2 id="tcp四次挥手"><a href="#tcp四次挥手" class="headerlink" title="tcp四次挥手"></a>tcp四次挥手</h2><p>TCP四次挥手的过程以及握手两端状态的变化。</p>
-<img src="/2018/05/15/TCP%E5%9B%9B%E6%AC%A1%E6%8C%A5%E6%89%8B/tcp%E5%9B%9B%E6%AC%A1%E6%8C%A5%E6%89%8B.png" class="" title="image">
-
-<p>挥手过程</p>
-<ul>
-<li><p>第一次挥手: 主动关闭方(可以使客户端，也可以是服务器端，这里标记为：A)，将FIN置为1，ACK置为1，Seq(Sequence Number)设置为X为上一次对方传送过来的Ack(Acknowledgment Number)值，Ack(Acknowledgment Number)设置为Y为上一次对方传过来的Seq(Sequence Number)值+1。设置好以上值后，将数据发送至被动关闭方(这里标记为：B)。然后A进入FIN_WAIT_1状态。</p>
-</li>
-<li><p>第二次挥手：B收到了A发送的FIN报文段，向A回复，将ACK置为1，Ack(Acknowledgment Number)设置为X第一次挥手中的Seq(Sequence Number)值+1，Seq(Sequence Number)设置为Y第一次挥手中的Ack(Acknowledgment Number)值。然后B进入CLOSE_WAIT状态，A收到B的回复后，进入FIN_WAIT_2状态。</p>
-</li>
-<li><p>第三次挥手：B再次向A发送报文，将FIN置为1，ACK置为1，Ack(Acknowledgment Number)设置为X+1第二次挥手中的Ack(Acknowledgment Number)值，Seq(Sequence Number)设置为Y第二次挥手中的Seq(Sequence Number)值。然后B进入LAST_ACK状态，A收到B的报文后，进入TIME_WAIT状态。</p>
-</li>
-<li><p>第四次挥手：A收到B发送的FIN报文段，像B回复，将ACK置为1，Ack(Acknowledgment Number)设置为Y第三次挥手中的Seq(Sequence Number)值+1，Seq(Sequence Number)设置为X+1第三次挥手中的Ack(Acknowledgment Number)值。然后A进入TIME_WAIT状态，B在收到报文后进入CLOSED状态，A在发送完报文等待了2MSL时间后进入CLOSED状态。</p>
-</li>
-</ul>
-<h2 id="为什么-TIME-WAIT-状态要等待-2MSL-之后才关闭连接"><a href="#为什么-TIME-WAIT-状态要等待-2MSL-之后才关闭连接" class="headerlink" title="为什么 TIME_WAIT 状态要等待 2MSL 之后才关闭连接"></a>为什么 TIME_WAIT 状态要等待 2MSL 之后才关闭连接</h2><ul>
-<li><p>2MSL表示两个MSL的时长，MSL全称为Maximum Segment Life，表示TCP 对TCP Segment 生存时间的限制。</p>
-</li>
-<li><p>为了保证A发送的最后一个ACK报文段能够到达B。这个ACK报文段有可能丢失，因而使处在LAST_ACK状态的B收不到对自己已发送的FIN+ACK报文段的确认。B会超时重传这个FIN+ACK报文段。而A就能在2MSL时间内收到这个重传的FIN+ACK报文段。接着A重传一次确认，重新启动2MSL计时器。最后A和B都正常进入到CLOSED状态。如果A在TIME_WAIT状态不等待一段时间，而是在发送完ACK报文段后立即释放连接，那么就无法收到B重传的FIN+ACK报文段，因而也不会在发送一次确认报文段。这样，B就无法按照正常步骤进入CLOSED状态。</p>
-</li>
-<li><p>防止已失效的连接请求报文段出现在本连接中。A在发送完最后一个ACK报文段后，在经过2MSL，就可以使本连接持续的时间内所产生的所有报文段都从网络中消失。这样就可以使下一个新的连接中不会出现这种旧的连接请求报文段。</p>
-</li>
-</ul>
-<h2 id="抓包实践"><a href="#抓包实践" class="headerlink" title="抓包实践"></a>抓包实践</h2><img src="/2018/05/15/TCP%E5%9B%9B%E6%AC%A1%E6%8C%A5%E6%89%8B/%E5%9B%9B%E6%AC%A1%E6%8C%A5%E6%89%8B%E6%8A%93%E5%8C%85.jpg" class="" title="image">
-
-<p>抓包看，挥手的过程却只有三次。这是因为数据传输中的延迟确认策略。</p>
-<p>何谓延迟确认策略？</p>
-<p>WIKI:TCP delayed acknowledgment is a technique used by some implementations of the Transmission Control Protocol in an effort to improve network performance. In essence, several ACK responses may be combined together into a single response, reducing protocol overhead. However, in some circumstances, the technique can reduce application performance.即接收方收到包后，如果暂时没有内容回复给发送方，则延迟一段时间再确认，假如在这个时间范围内刚好有数据需要传输，则和确认包一起回复。这种也被称为数据捎带。延迟确认只是减轻网络负担，未必可以提升网络性能，有些情况下反而会影响性能。</p>
-<p>正是这个策略，让图中缺少了一次断开连接的包，仔细看可以发现8和9之间时间也是差了200ms左右，为什么是200ms？根据TCP/IP详解卷一里面的描述是绝不大部分平台的时延是按200ms来实现的，但是不允许超过500ms。</p>
-<p>谈到延迟确认就必须再谈谈Nagle算法，两者的作用都是减轻网络负担，Nagle算法起源于John Nagle在RFC896的提议，所以命名为Nagle算法。Nagle在描述The small-packet problem时提到TCP在传输1字节有用信息时必须传输41字节的数据，其中20字节的TCP头，20字节的IP头，4000%的开销在低负载网络是可以容忍的，但是在重负载网络，这种开销是会导致网络拥塞，进而导致重传和数据丢失。这里暂时先不用关注拥塞、重传等，后面再讨论。重点关注下Nagle算法的实现原理，即在发送的数据在未被确认前，如果有新的小数据生成，那就把小数据收集起来，等凑足一个MSS或者收到确认后再发送。</p>
-<p>说到这，我们就清楚了提到的延迟确认和Nagle算法的作用都是降低网络负担，提高传输效率，但是未必能提升网络性能。</p>
-<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><ul>
-<li><a href="http://www.cnblogs.com/iou123lg/p/8727598.html?utm_source=tuicool&amp;utm_medium=referral">http://www.cnblogs.com/iou123lg/p/8727598.html?utm_source=tuicool&amp;utm_medium=referral</a></li>
-<li><a href="https://www.jianshu.com/p/448f37ed29fe">https://www.jianshu.com/p/448f37ed29fe</a></li>
-<li><a href="https://www.jianshu.com/p/a4beee06220c">https://www.jianshu.com/p/a4beee06220c</a></li>
-<li><a href="http://jm.taobao.org/2017/06/08/20170608/">http://jm.taobao.org/2017/06/08/20170608/</a></li>
-</ul>
+    <title>TCP Keepalive</title>
+    <url>/2018/10/08/TCP-Keepalive/</url>
+    <content><![CDATA[<h2 id="TCP-Keepalive的作用"><a href="#TCP-Keepalive的作用" class="headerlink" title="TCP Keepalive的作用"></a>TCP Keepalive的作用</h2><p>链接建立之后，如果应用程序或者上层协议一直不发送数据，或者隔很长时间才发送一次数据，当链接很久没有数据报文传输时如何去确定对方还在线，到底是掉线了还是确实没有数据传输，链接还需不需要保持，这种情况在TCP协议设计中是需要考虑到的。 </p>
+<p>TCP协议通过一种巧妙的方式去解决这个问题，当超过一段时间之后，TCP自动发送一个数据为空的报文给对方，如果对方回应了这个报文，说明对方还在线，链接可以继续保持，如果对方没有报文返回，并且重试了多次之后则认为链接丢失，没有必要保持链接。 </p>
+<span id="more"></span>
+<h2 id="TCP-Keepalive的具体处理"><a href="#TCP-Keepalive的具体处理" class="headerlink" title="TCP Keepalive的具体处理"></a>TCP Keepalive的具体处理</h2><p>对于面向连接的TCP socket,在实际应用中通常都要检测对端是否处于连接中,连接端口分两种情况:</p>
+<p>1、连接正常关闭,调用close() shutdown()连接优雅关闭,send与recv立马返回错误,select返回SOCK_ERR;</p>
+<p>2、连接的对端异常关闭,比如网络断掉,突然断电.</p>
+<p>对于第二种情况,判断连接是否断开的方法有一下几种:</p>
+<p>1、自己编写心跳包程序,简单的说就是自己的程序加入一条线程,定时向对端发送数据包,查看是否有ACK,根据ACK的返回情况来管理连接。此方法比较通用,一般使用业务层心跳处理,灵活可控,但改变了现有的协议;</p>
+<p>2、使用TCP的keepalive机制,UNIX网络编程不推荐使用SO_KEEPALIVE来做心跳检测(为什么??)。<br>keepalive原理:TCP内嵌有心跳包,以服务端为例,当server检测到超过一定时间(/proc/sys/net/ipv4/tcp_keepalive_time 7200 即2小时)没有数据传输,那么会向client端发送一个keepalive packet,此时client端有三种反应:</p>
+<p>1、client端连接正常,返回一个ACK.server端收到ACK后重置计时器,在2小时后在发送探测.如果2小时内连接上有数据传输,那么在该时间的基础上向后推延2小时发送探测包;</p>
+<p>2、客户端异常关闭,或网络断开。client无响应,server收不到ACK,在一定时间(/proc/sys/net/ipv4/tcp_keepalive_intvl 75 即75秒)后重发keepalive packet, 并且重发一定次数(/proc/sys/net/ipv4/tcp_keepalive_probes 9 即9次);</p>
+<p>3、客户端曾经崩溃,但已经重启.server收到的探测响应是一个复位,server端终止连接。</p>
+<h2 id="注意和-HTTP的Keep-Alive区别"><a href="#注意和-HTTP的Keep-Alive区别" class="headerlink" title="注意和 HTTP的Keep-Alive区别"></a>注意和 HTTP的Keep-Alive区别</h2><p>http keep-alive与tcp keep-alive，不是同一回事，意图不一样。http keep-alive是为了让tcp活得更久一点，以便在同一个连接上传送多个http，提高socket的效率。<br>http-keepalive的具体作用查看这里 <a href="http://www.nowamagic.net/academy/detail/23350305">HTTP Keep-Alive是什么？如何工作？</a></p>
+<p>TCP的keepalive机制意图在于保活、心跳，检测连接错误。</p>
+<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><p><a href="https://blog.csdn.net/callinglove/article/details/38380673">Linux SO_KEEPALIVE属性,心跳</a></p>
+<p><a href="http://www.blogjava.net/yongboy/archive/2015/04/14/424413.html">随手记之TCP Keepalive笔记</a></p>
 ]]></content>
       <categories>
         <category>网络</category>
       </categories>
       <tags>
         <tag>TCP</tag>
+        <tag>Keepalive</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>Remote Debugging Go Code with Visual Studio Code</title>
+    <url>/2019/12/23/Remote-Debug-Go-Code-with-Visual-Studio-Code/</url>
+    <content><![CDATA[<p>当了解一些大型项目的代码逻辑时，如kubernetes，跟着调试器跟踪代码学习，是很好的方式。当项目部署在远程环境时，在本机进行开发，很自然对Remote Debug有迫切需求，这也是和调试一般golang程序最主要的诉求区别点，本文将通过两个实际例子，来介绍如何Remote Debug。</p>
+<span id="more"></span>
+
+<h1 id="dlv远程调试的原理"><a href="#dlv远程调试的原理" class="headerlink" title="dlv远程调试的原理"></a>dlv远程调试的原理</h1><p>vscode支持丰富的插件，dlv插件可以帮助我们调试golang代码，基本使用方法详见 <a href="https://github.com/go-delve/delve">delve官网</a>，以及我之前的一篇文档<a href="https://xusenqi.github.io/2019/08/25/%E9%80%9A%E8%BF%87delve-dlv-%E8%B0%83%E8%AF%95golang%E7%A8%8B%E5%BA%8F/#more">通过delve(dlv)调试golang程序</a>。dlv远程调试的基本原理是，在服务端启动dlv server，客户端vscode去连接dlv server</p>
+<img src="/2019/12/23/Remote-Debug-Go-Code-with-Visual-Studio-Code/dlv_server.jpeg" class="" title="image">
+
+<h1 id="远程调试的步骤"><a href="#远程调试的步骤" class="headerlink" title="远程调试的步骤"></a>远程调试的步骤</h1><p>主要参考了<a href="https://github.com/Microsoft/vscode-go/wiki/Debugging-Go-code-using-VS-Code">Debugging Go code using VS Code</a>，现将步骤整理如下：</p>
+<h2 id="环境安装"><a href="#环境安装" class="headerlink" title="环境安装"></a>环境安装</h2><h3 id="Local安装Golang"><a href="#Local安装Golang" class="headerlink" title="Local安装Golang"></a>Local安装Golang</h3><p>参考Golang官网安装步骤<a href="https://golang.org/doc/install">Getting Started</a></p>
+<h3 id="Local和Remote端安装dlv工具"><a href="#Local和Remote端安装dlv工具" class="headerlink" title="Local和Remote端安装dlv工具"></a>Local和Remote端安装dlv工具</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">go get -u github.com/go-delve/delve/cmd/dlv</span><br><span class="line"></span><br><span class="line">验证dlv版本</span><br><span class="line">dlv version</span><br></pre></td></tr></table></figure>
+<h2 id="本地代码版本切换到和目标端一致"><a href="#本地代码版本切换到和目标端一致" class="headerlink" title="本地代码版本切换到和目标端一致"></a>本地代码版本切换到和目标端一致</h2><p>以一个服务uhost-scheduler为例, 线上和本地都保持为1.0.10版本</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">[root@yg-man-uhost-set9-01 bin]# /data/uframework/uhost_server -v</span><br><span class="line">option = a  value =</span><br><span class="line">option = i  value = 0</span><br><span class="line">option = s  value =</span><br><span class="line">option = v  value = true</span><br><span class="line">option = z  value =</span><br><span class="line"></span><br><span class="line">Version: 1.0.10</span><br><span class="line">Git branch: from_pxu_bugfix</span><br><span class="line">Git commit: 3f997fe</span><br><span class="line">Git user.name    patrick</span><br><span class="line">Git user.email     xusen_qi@163.com</span><br><span class="line">Go version: go_version_go1.8.1_darwin/amd64</span><br><span class="line">Build time: 2019-09-02T20:26:58+0800</span><br></pre></td></tr></table></figure>
+
+<p>##在Remote端启动dlv server<br>启动命令如下</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">dlv --listen=&quot;:50000&quot; --headless=true --log --api-version=2 exec /data/uframework/uhost_server \</span><br><span class="line">&gt; -- --z=172.23.0.77:2181,172.23.0.78:2181,172.23.0.79:2181,172.23.0.80:2181,172.23.0.81:2181 \</span><br><span class="line">&gt; --a=uhost-scheduler --s=set9 --i=0</span><br></pre></td></tr></table></figure>
+
+<p>参数说明：</p>
+<ul>
+<li>-l, –listen string        Debugging server listen address. (default “127.0.0.1:0”)</li>
+<li>–headless             Run debug server only, in headless mode.</li>
+<li>–log                  Enable debugging server logging.</li>
+</ul>
+<p>更多参数说明详见<a href="https://github.com/go-delve/delve/blob/master/Documentation/usage/dlv.md">dlv</a></p>
+<h2 id="在Local端的调试"><a href="#在Local端的调试" class="headerlink" title="在Local端的调试"></a>在Local端的调试</h2><h3 id="dlv命令行的调试"><a href="#dlv命令行的调试" class="headerlink" title="dlv命令行的调试"></a>dlv命令行的调试</h3><p>访问dlv server的IP:Port，可以调试，类似于gdb</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">➜  ~ dlv connect 172.23.0.159:50000</span><br><span class="line">Type &#x27;help&#x27; for list of commands.</span><br><span class="line">(dlv) break main.main</span><br><span class="line">Breakpoint 1 set at 0x823deb for main.main() ./go/src/uhost-go/uhost_server.go:31</span><br></pre></td></tr></table></figure>
+
+<h3 id="在VS-Code里的调试"><a href="#在VS-Code里的调试" class="headerlink" title="在VS Code里的调试"></a>在VS Code里的调试</h3><p>但命令行里，没有图形界面直观和方便，所以更推荐在VS Code里的调试</p>
+<ol>
+<li>保持VS Code打开的代码，和Remote端的代码或二进制包一致</li>
+<li>在本地主机中配置远程调试的参数，会在当前项目下的.vscode目录产生一个launch.json文件</li>
+</ol>
+<img src="/2019/12/23/Remote-Debug-Go-Code-with-Visual-Studio-Code/Open_Configurations.jpeg" class="" title="image">
+
+<ol start="3">
+<li>配置Remote端的IP和Port</li>
+</ol>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">&#123;</span><br><span class="line">    &quot;name&quot;: &quot;Remote uhost-scheduler&quot;,</span><br><span class="line">    &quot;type&quot;: &quot;go&quot;,</span><br><span class="line">    &quot;request&quot;: &quot;attach&quot;,</span><br><span class="line">    &quot;mode&quot;: &quot;remote&quot;,</span><br><span class="line">    &quot;remotePath&quot;: &quot;/Users/patrick.xu/go/src/uhost-go&quot;,</span><br><span class="line">    &quot;port&quot;: 50000,</span><br><span class="line">    &quot;host&quot;: &quot;172.23.0.159&quot;,</span><br><span class="line">    &quot;showLog&quot;: true,</span><br><span class="line">    &quot;trace&quot;: &quot;log&quot;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ol start="4">
+<li>运行Debug，可以像本地一样调试，如加断点、条件断点、单步调试等。</li>
+</ol>
+<p>本地VS Code界面</p>
+<img src="/2019/12/23/Remote-Debug-Go-Code-with-Visual-Studio-Code/VSCode_debug_scheduler%E7%95%8C%E9%9D%A2.jpeg" class="" title="image">
+
+<p>Remote端页面</p>
+<img src="/2019/12/23/Remote-Debug-Go-Code-with-Visual-Studio-Code/dlv_server_scheduler_%E8%B0%83%E8%AF%95.jpeg" class="" title="image">
+
+<p>Remote-Debug-Go-Code-with-Visual-Studio-Code.md</p>
+<p>条件断点</p>
+<img src="/2019/12/23/Remote-Debug-Go-Code-with-Visual-Studio-Code/%E6%9D%A1%E4%BB%B6%E6%96%AD%E7%82%B9.png" class="" title="image">
+
+<h1 id="k8s-scheduler的远程调试"><a href="#k8s-scheduler的远程调试" class="headerlink" title="k8s scheduler的远程调试"></a>k8s scheduler的远程调试</h1><p>k8s里有很多单独的服务，如kube-apiserver、kube-proxy、kube-scheduler等，每个都可以作为单独的调试代码。最近在看kube-scheduler的代码，所以这里以它为例。</p>
+<img src="/2019/12/23/Remote-Debug-Go-Code-with-Visual-Studio-Code/kubernetes_components_architecture.png" class="" title="image">
+<center>High level Kubernetes architecture diagram showing a cluster with a master and two worker nodes</center>
+<center>Source: https://x-team.com/blog/introduction-kubernetes-architecture</center>
+
+<h2 id="k8s环境的搭建"><a href="#k8s环境的搭建" class="headerlink" title="k8s环境的搭建"></a>k8s环境的搭建</h2><p>k8s环境通过kubeadm搭建在远程的4台虚机上，1台master和3台node，具体的搭建步骤见<a href="https://xusenqi.github.io/2019/12/11/kubeadm%E9%83%A8%E7%BD%B2single-control-plane-k8s%E9%9B%86%E7%BE%A4/">kubeadm部署single control-plane k8s集群</a>。</p>
+<h2 id="停止kube-scheduler服务"><a href="#停止kube-scheduler服务" class="headerlink" title="停止kube-scheduler服务"></a>停止kube-scheduler服务</h2><p>我们需要dlv拉起kube-scheduler服务，但是kubeadm部署的kube-scheduler被kill掉后<br>，会自动拉起来，占用10251的端口，影响调试。</p>
+<img src="/2019/12/23/Remote-Debug-Go-Code-with-Visual-Studio-Code/kubeadm_kube_scheduler.jpeg" class="" title="image">
+
+<p>这里对对配置文件改名，防止自动拉起kube-scheduler<br><code>mv /etc/kubernetes/scheduler.conf /etc/kubernetes/scheduler_191223.conf</code></p>
+<h2 id="dlv-server"><a href="#dlv-server" class="headerlink" title="dlv server"></a>dlv server</h2><p>dlv server启动后，监听40000端口</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">dlv --listen=&quot;:40000&quot; --headless=true --log --api-version=2 exec /data/k8s/kube-scheduler \</span><br><span class="line">-- --authentication-kubeconfig=/etc/kubernetes/scheduler_191223.conf \</span><br><span class="line">--authorization-kubeconfig=/etc/kubernetes/scheduler_191223.conf \</span><br><span class="line">--bind-address=127.0.0.1 --kubeconfig=/etc/kubernetes/scheduler_191223.conf \</span><br><span class="line">--leader-elect=true</span><br></pre></td></tr></table></figure>
+
+<p>注意：本地是从公网访问虚机的40000端口，如果防火墙有打开的话，要关掉。</p>
+<h2 id="本地调试kube-scheduler"><a href="#本地调试kube-scheduler" class="headerlink" title="本地调试kube-scheduler"></a>本地调试kube-scheduler</h2><p>与之前步骤一样</p>
+<ol>
+<li>代码与线上一致；如果不一致，重新编译新的版本推到线上，重新拉起服务</li>
+</ol>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">➜  kube-scheduler git:(b3cbbae) ✗ pwd</span><br><span class="line">/Users/patrick.xu/go/src/k8s.io/kubernetes/cmd/kube-scheduler</span><br><span class="line">➜  kube-scheduler git:(b3cbbae) CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build</span><br><span class="line">➜  kube-scheduler git:(b3cbbae) ✗ ll</span><br><span class="line">total 106208</span><br><span class="line">-rw-r--r--  1 patrick.xu  staff   1.1K Dec 11 20:11 BUILD</span><br><span class="line">-rw-r--r--  1 patrick.xu  staff   144B Dec 11 20:11 OWNERS</span><br><span class="line">drwxr-xr-x  7 patrick.xu  staff   224B Dec 11 20:11 app</span><br><span class="line">-rwxr-xr-x  1 patrick.xu  staff    52M Dec 18 01:31 kube-scheduler</span><br><span class="line">-rw-r--r--  1 patrick.xu  staff   1.3K Dec 11 20:11 scheduler.go</span><br></pre></td></tr></table></figure>
+
+<ol start="2">
+<li>配置文件launch.json的内容</li>
+</ol>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">&#123;</span><br><span class="line">    &quot;name&quot;: &quot;Remote k8s server&quot;,</span><br><span class="line">    &quot;type&quot;: &quot;go&quot;,</span><br><span class="line">    &quot;request&quot;: &quot;attach&quot;,</span><br><span class="line">    &quot;showLog&quot;: true,</span><br><span class="line">    &quot;mode&quot;: &quot;remote&quot;,</span><br><span class="line">    &quot;remotePath&quot;: &quot;/Users/patrick.xu/go/src/k8s.io&quot;,</span><br><span class="line">    &quot;port&quot;: 40000,</span><br><span class="line">    &quot;host&quot;: &quot;152.32.173.26&quot;,</span><br><span class="line">    &quot;trace&quot;: &quot;log&quot;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>3.运行Debug，这时可以像可以像本地一样调试，如加断点、单步调试等。</p>
+<p>本地VS Code远程调试kube-scheduler界面</p>
+<img src="/2019/12/23/Remote-Debug-Go-Code-with-Visual-Studio-Code/VSCode_debug_kube_scheduler%E7%95%8C%E9%9D%A2.jpeg" class="" title="image">
+
+<p>Remote端kube-scheduler输出，看到打断点和调试的日志</p>
+<img src="/2019/12/23/Remote-Debug-Go-Code-with-Visual-Studio-Code/dlv_server_kube_scheduler_%E8%B0%83%E8%AF%95.jpeg" class="" title="image">
+
+<p>后面就是结合创建pod，去分析具体的调度逻辑了。</p>
+<h1 id="参考链接"><a href="#参考链接" class="headerlink" title="参考链接"></a>参考链接</h1><ol>
+<li><a href="https://github.com/go-delve/delve">delve官网</a></li>
+<li><a href="https://github.com/Microsoft/vscode-go/wiki/Debugging-Go-code-using-VS-Code">Debugging Go code using VS Code</a></li>
+<li><a href="http://zhongpan.tech/2019/10/21/016.remote-debug-golang-with-vscode/#more">使用vscode远程调试golang</a></li>
+<li><a href="https://xusenqi.github.io/2019/08/25/%E9%80%9A%E8%BF%87delve-dlv-%E8%B0%83%E8%AF%95golang%E7%A8%8B%E5%BA%8F/#more">通过delve(dlv)调试golang程序</a></li>
+</ol>
+]]></content>
+      <categories>
+        <category>vscode</category>
+      </categories>
+      <tags>
+        <tag>vscode</tag>
+        <tag>remote debug</tag>
+        <tag>k8s</tag>
       </tags>
   </entry>
   <entry>
@@ -500,31 +481,163 @@
       </tags>
   </entry>
   <entry>
-    <title>TCP Keepalive</title>
-    <url>/2018/10/08/TCP-Keepalive/</url>
-    <content><![CDATA[<h2 id="TCP-Keepalive的作用"><a href="#TCP-Keepalive的作用" class="headerlink" title="TCP Keepalive的作用"></a>TCP Keepalive的作用</h2><p>链接建立之后，如果应用程序或者上层协议一直不发送数据，或者隔很长时间才发送一次数据，当链接很久没有数据报文传输时如何去确定对方还在线，到底是掉线了还是确实没有数据传输，链接还需不需要保持，这种情况在TCP协议设计中是需要考虑到的。 </p>
-<p>TCP协议通过一种巧妙的方式去解决这个问题，当超过一段时间之后，TCP自动发送一个数据为空的报文给对方，如果对方回应了这个报文，说明对方还在线，链接可以继续保持，如果对方没有报文返回，并且重试了多次之后则认为链接丢失，没有必要保持链接。 </p>
-<span id="more"></span>
-<h2 id="TCP-Keepalive的具体处理"><a href="#TCP-Keepalive的具体处理" class="headerlink" title="TCP Keepalive的具体处理"></a>TCP Keepalive的具体处理</h2><p>对于面向连接的TCP socket,在实际应用中通常都要检测对端是否处于连接中,连接端口分两种情况:</p>
-<p>1、连接正常关闭,调用close() shutdown()连接优雅关闭,send与recv立马返回错误,select返回SOCK_ERR;</p>
-<p>2、连接的对端异常关闭,比如网络断掉,突然断电.</p>
-<p>对于第二种情况,判断连接是否断开的方法有一下几种:</p>
-<p>1、自己编写心跳包程序,简单的说就是自己的程序加入一条线程,定时向对端发送数据包,查看是否有ACK,根据ACK的返回情况来管理连接。此方法比较通用,一般使用业务层心跳处理,灵活可控,但改变了现有的协议;</p>
-<p>2、使用TCP的keepalive机制,UNIX网络编程不推荐使用SO_KEEPALIVE来做心跳检测(为什么??)。<br>keepalive原理:TCP内嵌有心跳包,以服务端为例,当server检测到超过一定时间(/proc/sys/net/ipv4/tcp_keepalive_time 7200 即2小时)没有数据传输,那么会向client端发送一个keepalive packet,此时client端有三种反应:</p>
-<p>1、client端连接正常,返回一个ACK.server端收到ACK后重置计时器,在2小时后在发送探测.如果2小时内连接上有数据传输,那么在该时间的基础上向后推延2小时发送探测包;</p>
-<p>2、客户端异常关闭,或网络断开。client无响应,server收不到ACK,在一定时间(/proc/sys/net/ipv4/tcp_keepalive_intvl 75 即75秒)后重发keepalive packet, 并且重发一定次数(/proc/sys/net/ipv4/tcp_keepalive_probes 9 即9次);</p>
-<p>3、客户端曾经崩溃,但已经重启.server收到的探测响应是一个复位,server端终止连接。</p>
-<h2 id="注意和-HTTP的Keep-Alive区别"><a href="#注意和-HTTP的Keep-Alive区别" class="headerlink" title="注意和 HTTP的Keep-Alive区别"></a>注意和 HTTP的Keep-Alive区别</h2><p>http keep-alive与tcp keep-alive，不是同一回事，意图不一样。http keep-alive是为了让tcp活得更久一点，以便在同一个连接上传送多个http，提高socket的效率。<br>http-keepalive的具体作用查看这里 <a href="http://www.nowamagic.net/academy/detail/23350305">HTTP Keep-Alive是什么？如何工作？</a></p>
-<p>TCP的keepalive机制意图在于保活、心跳，检测连接错误。</p>
-<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><p><a href="https://blog.csdn.net/callinglove/article/details/38380673">Linux SO_KEEPALIVE属性,心跳</a></p>
-<p><a href="http://www.blogjava.net/yongboy/archive/2015/04/14/424413.html">随手记之TCP Keepalive笔记</a></p>
+    <title>TCP四次挥手</title>
+    <url>/2018/05/15/TCP%E5%9B%9B%E6%AC%A1%E6%8C%A5%E6%89%8B/</url>
+    <content><![CDATA[<h2 id="tcp四次挥手"><a href="#tcp四次挥手" class="headerlink" title="tcp四次挥手"></a>tcp四次挥手</h2><p>TCP四次挥手的过程以及握手两端状态的变化。</p>
+<img src="/2018/05/15/TCP%E5%9B%9B%E6%AC%A1%E6%8C%A5%E6%89%8B/tcp%E5%9B%9B%E6%AC%A1%E6%8C%A5%E6%89%8B.png" class="" title="image">
+
+<p>挥手过程</p>
+<ul>
+<li><p>第一次挥手: 主动关闭方(可以使客户端，也可以是服务器端，这里标记为：A)，将FIN置为1，ACK置为1，Seq(Sequence Number)设置为X为上一次对方传送过来的Ack(Acknowledgment Number)值，Ack(Acknowledgment Number)设置为Y为上一次对方传过来的Seq(Sequence Number)值+1。设置好以上值后，将数据发送至被动关闭方(这里标记为：B)。然后A进入FIN_WAIT_1状态。</p>
+</li>
+<li><p>第二次挥手：B收到了A发送的FIN报文段，向A回复，将ACK置为1，Ack(Acknowledgment Number)设置为X第一次挥手中的Seq(Sequence Number)值+1，Seq(Sequence Number)设置为Y第一次挥手中的Ack(Acknowledgment Number)值。然后B进入CLOSE_WAIT状态，A收到B的回复后，进入FIN_WAIT_2状态。</p>
+</li>
+<li><p>第三次挥手：B再次向A发送报文，将FIN置为1，ACK置为1，Ack(Acknowledgment Number)设置为X+1第二次挥手中的Ack(Acknowledgment Number)值，Seq(Sequence Number)设置为Y第二次挥手中的Seq(Sequence Number)值。然后B进入LAST_ACK状态，A收到B的报文后，进入TIME_WAIT状态。</p>
+</li>
+<li><p>第四次挥手：A收到B发送的FIN报文段，像B回复，将ACK置为1，Ack(Acknowledgment Number)设置为Y第三次挥手中的Seq(Sequence Number)值+1，Seq(Sequence Number)设置为X+1第三次挥手中的Ack(Acknowledgment Number)值。然后A进入TIME_WAIT状态，B在收到报文后进入CLOSED状态，A在发送完报文等待了2MSL时间后进入CLOSED状态。</p>
+</li>
+</ul>
+<h2 id="为什么-TIME-WAIT-状态要等待-2MSL-之后才关闭连接"><a href="#为什么-TIME-WAIT-状态要等待-2MSL-之后才关闭连接" class="headerlink" title="为什么 TIME_WAIT 状态要等待 2MSL 之后才关闭连接"></a>为什么 TIME_WAIT 状态要等待 2MSL 之后才关闭连接</h2><ul>
+<li><p>2MSL表示两个MSL的时长，MSL全称为Maximum Segment Life，表示TCP 对TCP Segment 生存时间的限制。</p>
+</li>
+<li><p>为了保证A发送的最后一个ACK报文段能够到达B。这个ACK报文段有可能丢失，因而使处在LAST_ACK状态的B收不到对自己已发送的FIN+ACK报文段的确认。B会超时重传这个FIN+ACK报文段。而A就能在2MSL时间内收到这个重传的FIN+ACK报文段。接着A重传一次确认，重新启动2MSL计时器。最后A和B都正常进入到CLOSED状态。如果A在TIME_WAIT状态不等待一段时间，而是在发送完ACK报文段后立即释放连接，那么就无法收到B重传的FIN+ACK报文段，因而也不会在发送一次确认报文段。这样，B就无法按照正常步骤进入CLOSED状态。</p>
+</li>
+<li><p>防止已失效的连接请求报文段出现在本连接中。A在发送完最后一个ACK报文段后，在经过2MSL，就可以使本连接持续的时间内所产生的所有报文段都从网络中消失。这样就可以使下一个新的连接中不会出现这种旧的连接请求报文段。</p>
+</li>
+</ul>
+<h2 id="抓包实践"><a href="#抓包实践" class="headerlink" title="抓包实践"></a>抓包实践</h2><img src="/2018/05/15/TCP%E5%9B%9B%E6%AC%A1%E6%8C%A5%E6%89%8B/%E5%9B%9B%E6%AC%A1%E6%8C%A5%E6%89%8B%E6%8A%93%E5%8C%85.jpg" class="" title="image">
+
+<p>抓包看，挥手的过程却只有三次。这是因为数据传输中的延迟确认策略。</p>
+<p>何谓延迟确认策略？</p>
+<p>WIKI:TCP delayed acknowledgment is a technique used by some implementations of the Transmission Control Protocol in an effort to improve network performance. In essence, several ACK responses may be combined together into a single response, reducing protocol overhead. However, in some circumstances, the technique can reduce application performance.即接收方收到包后，如果暂时没有内容回复给发送方，则延迟一段时间再确认，假如在这个时间范围内刚好有数据需要传输，则和确认包一起回复。这种也被称为数据捎带。延迟确认只是减轻网络负担，未必可以提升网络性能，有些情况下反而会影响性能。</p>
+<p>正是这个策略，让图中缺少了一次断开连接的包，仔细看可以发现8和9之间时间也是差了200ms左右，为什么是200ms？根据TCP/IP详解卷一里面的描述是绝不大部分平台的时延是按200ms来实现的，但是不允许超过500ms。</p>
+<p>谈到延迟确认就必须再谈谈Nagle算法，两者的作用都是减轻网络负担，Nagle算法起源于John Nagle在RFC896的提议，所以命名为Nagle算法。Nagle在描述The small-packet problem时提到TCP在传输1字节有用信息时必须传输41字节的数据，其中20字节的TCP头，20字节的IP头，4000%的开销在低负载网络是可以容忍的，但是在重负载网络，这种开销是会导致网络拥塞，进而导致重传和数据丢失。这里暂时先不用关注拥塞、重传等，后面再讨论。重点关注下Nagle算法的实现原理，即在发送的数据在未被确认前，如果有新的小数据生成，那就把小数据收集起来，等凑足一个MSS或者收到确认后再发送。</p>
+<p>说到这，我们就清楚了提到的延迟确认和Nagle算法的作用都是降低网络负担，提高传输效率，但是未必能提升网络性能。</p>
+<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><ul>
+<li><a href="http://www.cnblogs.com/iou123lg/p/8727598.html?utm_source=tuicool&amp;utm_medium=referral">http://www.cnblogs.com/iou123lg/p/8727598.html?utm_source=tuicool&amp;utm_medium=referral</a></li>
+<li><a href="https://www.jianshu.com/p/448f37ed29fe">https://www.jianshu.com/p/448f37ed29fe</a></li>
+<li><a href="https://www.jianshu.com/p/a4beee06220c">https://www.jianshu.com/p/a4beee06220c</a></li>
+<li><a href="http://jm.taobao.org/2017/06/08/20170608/">http://jm.taobao.org/2017/06/08/20170608/</a></li>
+</ul>
 ]]></content>
       <categories>
         <category>网络</category>
       </categories>
       <tags>
         <tag>TCP</tag>
-        <tag>Keepalive</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>Visual Studio Code的使用总结</title>
+    <url>/2019/08/23/Visual-Studio-Code%E7%9A%84%E4%BD%BF%E7%94%A8%E6%80%BB%E7%BB%93/</url>
+    <content><![CDATA[<h1 id="Visual-Studio-Code介绍"><a href="#Visual-Studio-Code介绍" class="headerlink" title="Visual Studio Code介绍"></a>Visual Studio Code介绍</h1><p>Visual Studio Code是很轻量但功能强大的代码编辑器，可以在Windows、macOS和 Linux上运行。</p>
+<span id="more"></span>
+
+<h1 id="User-and-Workspace-Settings"><a href="#User-and-Workspace-Settings" class="headerlink" title="User and Workspace Settings"></a>User and Workspace Settings</h1><p>通过settings，可以很容易地配置自己的Visual Studio Code。它提供了<br>two different scopes for settings:</p>
+<ul>
+<li>User Settings - Settings that apply globally to any instance of VS Code you open.</li>
+<li>Workspace Settings - Settings stored inside your workspace and only apply when the workspace is opened.</li>
+</ul>
+<p>Workspace settings override user settings.</p>
+<h2 id="打开方式"><a href="#打开方式" class="headerlink" title="打开方式"></a>打开方式</h2><p>页面打开：Code –&gt; Preferences –&gt; Settings，这种方式可以很直观地配置</p>
+<img src="/2019/08/23/Visual-Studio-Code%E7%9A%84%E4%BD%BF%E7%94%A8%E6%80%BB%E7%BB%93/Settings.jpg" class="" title="image">
+
+<p>也可以在json文件里直接修改：</p>
+<ul>
+<li>User Settings:   </li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">➜  User cat settings.json</span><br><span class="line">&#123;</span><br><span class="line">    window.title: $&#123;activeEditorLong&#125;$&#123;separator&#125;$&#123;rootName&#125;,</span><br><span class="line">    workbench.statusBar.visible: true,</span><br><span class="line">    workbench.colorTheme: Visual Studio Dark,</span><br><span class="line">    workbench.iconTheme: vs-minimal, // panel</span><br><span class="line">    window.zoomLevel: 0,</span><br><span class="line">    editor.tabSize: 4,</span><br><span class="line">    editor.detectIndentation: false,</span><br><span class="line">    editor.renderControlCharacters: true,</span><br><span class="line">    editor.minimap.enabled: false,</span><br><span class="line">    leetcode.endpoint: leetcode,</span><br><span class="line">    leetcode.defaultLanguage: golang,</span><br><span class="line">    breadcrumbs.enabled: false,</span><br><span class="line">    editor.renderWhitespace: none,</span><br><span class="line">    terminal.integrated.shell.osx: zsh,</span><br><span class="line">    terminal.external.osxExec: iTerm.app,  // 默认打开iterm2</span><br><span class="line">    // golang</span><br><span class="line">    go.autocompleteUnimportedPackages: true,</span><br><span class="line">    go.formatTool: goimports, //使用 goimports 工具进行代码格式化，或者使用 goreturns 和 gofmt</span><br><span class="line">    [go]: &#123;</span><br><span class="line">        editor.formatOnSave: true,</span><br><span class="line">    &#125;,</span><br><span class="line">    // vim</span><br><span class="line">    vim.useSystemClipboard: true,</span><br><span class="line">    diffEditor.ignoreTrimWhitespace: false,</span><br><span class="line">    diffEditor.renderSideBySide: true,</span><br><span class="line">    C_Cpp.updateChannel: Insiders,</span><br><span class="line">    editor.suggestSelection: first,</span><br><span class="line">    vsintellicode.modify.editor.suggestSelection: automaticallyOverrodeDefaultValue,</span><br><span class="line">    editor.wordWrap: wordWrapColumn,</span><br><span class="line">    editor.wordWrapColumn: 120,</span><br><span class="line">    // 每行输入字符长度提示线</span><br><span class="line">    editor.rulers: [</span><br><span class="line">        80,</span><br><span class="line">        120</span><br><span class="line">    ],</span><br><span class="line">    editor.renderLineHighlight: all,</span><br><span class="line">    go.useLanguageServer: true,</span><br><span class="line">    &quot;window.openFilesInNewWindow&quot;: &quot;on&quot;, //启用后，将在新窗口中打开文件，而不是重复使用现有实例。</span><br><span class="line">       &quot;workbench.editor.enablePreview&quot;: false,   // 打开的文件显示在多个tab&quot;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<ul>
+<li>Wrokspace: …</li>
+</ul>
+<h1 id="快捷键"><a href="#快捷键" class="headerlink" title="快捷键"></a>快捷键</h1><h2 id="默认常用快捷键"><a href="#默认常用快捷键" class="headerlink" title="默认常用快捷键"></a>默认常用快捷键</h2><ul>
+<li>(Command Palette | Show All Commands)  shift + command + p 或者 F1<img src="/2019/08/23/Visual-Studio-Code%E7%9A%84%E4%BD%BF%E7%94%A8%E6%80%BB%E7%BB%93/CommandPalette.jpg" class="" title="image"></li>
+<li>搜索文件 command + p</li>
+<li>搜索内容(Find in Files) shift + command + f</li>
+<li>回到上一个地方(Go Back) ctrl + -</li>
+<li>跳到侧边栏(Focus into Side Bar) command + 0</li>
+<li>切换侧边栏(Toggle Side Bar Visibility) command + b</li>
+<li>打开原生的console(OpenNativeConsole) shift + command +c</li>
+<li>切换Panel(Toggle Panel) command + j</li>
+<li>调整Panel大小(Resize Panel) ctrl + command + &lt;– | –&gt;</li>
+</ul>
+<h3 id="Code-navigation"><a href="#Code-navigation" class="headerlink" title="Code navigation"></a>Code navigation</h3><p>![image](Visual-Studio-Code的使用总结/Code navigation.jpg)</p>
+<ul>
+<li>跳转到定义(Go to Definition) F12</li>
+<li>(showAllSymbols) command + t</li>
+</ul>
+<h2 id="自定义快捷键"><a href="#自定义快捷键" class="headerlink" title="自定义快捷键"></a>自定义快捷键</h2><h3 id="更改方式"><a href="#更改方式" class="headerlink" title="更改方式"></a>更改方式</h3><p>打开键盘快捷键</p>
+<img src="/2019/08/23/Visual-Studio-Code%E7%9A%84%E4%BD%BF%E7%94%A8%E6%80%BB%E7%BB%93/OpenKeyboardShotcuts.jpg" class="" title="image">
+
+<p>Keyboard Shotcuts里显示当前支持哪些快捷键，包括默认的和自定义的；也可以在里面直接更改</p>
+<img src="/2019/08/23/Visual-Studio-Code%E7%9A%84%E4%BD%BF%E7%94%A8%E6%80%BB%E7%BB%93/KeyboardShotcuts.jpg" class="" title="image">
+
+<p>Keyboard Shotcuts(json)里了自定义的快捷键；前面在Keyboard Shotcuts修改的会展示在这里，也可以在这里直接修改</p>
+<img src="/2019/08/23/Visual-Studio-Code%E7%9A%84%E4%BD%BF%E7%94%A8%E6%80%BB%E7%BB%93/KeyboardShotcuts_json.jpg" class="" title="image">
+
+<h3 id="常用自定义快捷键"><a href="#常用自定义快捷键" class="headerlink" title="常用自定义快捷键"></a>常用自定义快捷键</h3><p>根绝个人喜好，常用的如下：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line"> &#123;</span><br><span class="line">     &quot;key&quot;: &quot;cmd+enter&quot;,</span><br><span class="line">     &quot;command&quot;: &quot;workbench.action.toggleFullScreen&quot;  //切换全屏</span><br><span class="line"> &#125;,</span><br><span class="line"> &#123;</span><br><span class="line">     &quot;key&quot;: &quot;cmd+right&quot;,</span><br><span class="line">     &quot;command&quot;: &quot;workbench.action.nextEditor&quot;   //下个编辑器</span><br><span class="line"> &#125;,</span><br><span class="line"> &#123;</span><br><span class="line">     &quot;key&quot;: &quot;cmd+left&quot;,</span><br><span class="line">     &quot;command&quot;: &quot;workbench.action.previousEditor&quot; //上个编辑器</span><br><span class="line"> &#125;,</span><br><span class="line"> &#123;</span><br><span class="line">    &quot;key&quot;: &quot;alt+cmd+n&quot;,</span><br><span class="line">    &quot;command&quot;: &quot;openInTerminal&quot;  //打开Terminal,并跳到当前文件的目录</span><br><span class="line">&#125;,</span><br><span class="line">&#123;</span><br><span class="line">    &quot;key&quot;: &quot;cmd+s cmd+w&quot;,</span><br><span class="line">    &quot;command&quot;: &quot;workbench.action.quickSwitchWindow&quot; // 切换窗口</span><br><span class="line">&#125;,</span><br><span class="line">&#123;</span><br><span class="line">    &quot;key&quot;: &quot;cmd+2&quot;,</span><br><span class="line">    &quot;command&quot;: &quot;workbench.action.focusPanel&quot;   // 跳到Panel</span><br><span class="line">&#125; </span><br></pre></td></tr></table></figure>
+
+
+<h1 id="常用插件"><a href="#常用插件" class="headerlink" title="常用插件"></a>常用插件</h1><p>在左边Extensions里选择插件install。下面列出几种常用的插件：</p>
+<h2 id="Vim"><a href="#Vim" class="headerlink" title="Vim"></a>Vim</h2><h3 id="遇到的问题"><a href="#遇到的问题" class="headerlink" title="遇到的问题"></a>遇到的问题</h3><ul>
+<li>Vim方向键无法长按</li>
+</ul>
+<p>解决方案：终端下执行命令：</p>
+<p>defaults write com.microsoft.VSCode ApplePressAndHoldEnabled -bool false</p>
+<p>复原:</p>
+<p>defaults write com.microsoft.VSCode ApplePressAndHoldEnabled -bool true</p>
+<ul>
+<li>让 VIM yank 至剪切板的内容通过 ⌘  V 粘贴出来</li>
+</ul>
+<p>配置如下 setting：<br>“vim.useSystemClipboard”: true,</p>
+<h2 id="Go"><a href="#Go" class="headerlink" title="Go"></a>Go</h2><p><a href="https://code.visualstudio.com/docs/languages/go">https://code.visualstudio.com/docs/languages/go</a></p>
+<h3 id="Auto-completions"><a href="#Auto-completions" class="headerlink" title="Auto completions"></a>Auto completions</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">&quot;go.autocompleteUnimportedPackages&quot;: true, // Auto completions</span><br><span class="line">&quot;go.formatTool&quot;: &quot;gofmt&quot;, //代码格式化, 可以用goimports，或者goreturns和gofmt; 必须把vscode的&quot;files.autoSave&quot;: off才能生效</span><br></pre></td></tr></table></figure>
+<h3 id="Code-navigation-1"><a href="#Code-navigation-1" class="headerlink" title="Code navigation"></a>Code navigation</h3><p>Code navigation features are available in the context menu in the editor.</p>
+<ul>
+<li>Go To Definition F12 - Go to the source code of the type definition.</li>
+<li>Peek Definition ⌥F12 - Bring up a Peek window with the type definition.</li>
+<li>Peek References <strong>⇧F12</strong> - Show all references for the type. (显示该类型的所有引用,个人觉得这个功能很强大)<img src="/2019/08/23/Visual-Studio-Code%E7%9A%84%E4%BD%BF%E7%94%A8%E6%80%BB%E7%BB%93/PeekReferences.jpg" class="" title="image"></li>
+</ul>
+<p>You can navigate via symbol search using the Go to Symbol commands from the Command Palette (⇧⌘P).</p>
+<p>Go to Symbol in File - ⇧⌘O<br>显示该文件的symbol,symbol: 指定义的函数，变量，类型等</p>
+<img src="/2019/08/23/Visual-Studio-Code%E7%9A%84%E4%BD%BF%E7%94%A8%E6%80%BB%E7%BB%93/symbols.jpg" class="" title="image">
+
+<p>Go to Symbol in Workspace - ⌘T</p>
+<p>You can also navigate back and forth between a Go file and its test implementation using the Go: Toggle Test File command.</p>
+<h3 id="Debugging-Go-code-using-VS-Code"><a href="#Debugging-Go-code-using-VS-Code" class="headerlink" title="Debugging Go code using VS Code"></a><a href="https://github.com/Microsoft/vscode-go/wiki/Debugging-Go-code-using-VS-Code">Debugging Go code using VS Code</a></h3><p>设置一个或者多个GOPATH</p>
+<img src="/2019/08/23/Visual-Studio-Code%E7%9A%84%E4%BD%BF%E7%94%A8%E6%80%BB%E7%BB%93/GoDebugConfigurations.jpg" class="" title="image">
+
+<h2 id="C-C"><a href="#C-C" class="headerlink" title="C/C++"></a>C/C++</h2><h3 id="Edit-Configurations"><a href="#Edit-Configurations" class="headerlink" title="Edit Configurations"></a>Edit Configurations</h3><p>F1打开Command Palette –&gt; C/C++: Edit configurations (JSON)</p>
+<p>主要设置”includePath”, 便于代码跳转，参考 <a href="https://code.visualstudio.com/docs/cpp/c-cpp-properties-schema-reference">https://code.visualstudio.com/docs/cpp/c-cpp-properties-schema-reference</a></p>
+<h1 id="在终端里直接打开vscode"><a href="#在终端里直接打开vscode" class="headerlink" title="在终端里直接打开vscode"></a>在终端里直接打开vscode</h1><img src="/2019/08/23/Visual-Studio-Code%E7%9A%84%E4%BD%BF%E7%94%A8%E6%80%BB%E7%BB%93/code.jpg" class="" title="image">
+
+<p>在vscode 中快捷键 shift + command + p 输入 code ,选择安装code 命令。<br>本质是做了个软链/usr/local/bin/code</p>
+<img src="/2019/08/23/Visual-Studio-Code%E7%9A%84%E4%BD%BF%E7%94%A8%E6%80%BB%E7%BB%93/CodeLink.jpg" class="" title="image">
+
+<p>用vscode打开当前目录：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">code .</span><br></pre></td></tr></table></figure>
+
+
+]]></content>
+      <categories>
+        <category>vscode</category>
+      </categories>
+      <tags>
+        <tag>快捷键</tag>
+        <tag>插件</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>du、df和ls的区别</title>
+    <url>/2018/11/10/du%E3%80%81df%E5%92%8Cls%E7%9A%84%E5%8C%BA%E5%88%AB/</url>
+    <content><![CDATA[<p>待整理。。。。</p>
+]]></content>
+      <categories>
+        <category>linux</category>
+      </categories>
+      <tags>
+        <tag>linux命令</tag>
       </tags>
   </entry>
   <entry>
@@ -832,119 +945,6 @@
       </tags>
   </entry>
   <entry>
-    <title>Visual Studio Code的使用总结</title>
-    <url>/2019/08/23/Visual-Studio-Code%E7%9A%84%E4%BD%BF%E7%94%A8%E6%80%BB%E7%BB%93/</url>
-    <content><![CDATA[<h1 id="Visual-Studio-Code介绍"><a href="#Visual-Studio-Code介绍" class="headerlink" title="Visual Studio Code介绍"></a>Visual Studio Code介绍</h1><p>Visual Studio Code是很轻量但功能强大的代码编辑器，可以在Windows、macOS和 Linux上运行。</p>
-<span id="more"></span>
-
-<h1 id="User-and-Workspace-Settings"><a href="#User-and-Workspace-Settings" class="headerlink" title="User and Workspace Settings"></a>User and Workspace Settings</h1><p>通过settings，可以很容易地配置自己的Visual Studio Code。它提供了<br>two different scopes for settings:</p>
-<ul>
-<li>User Settings - Settings that apply globally to any instance of VS Code you open.</li>
-<li>Workspace Settings - Settings stored inside your workspace and only apply when the workspace is opened.</li>
-</ul>
-<p>Workspace settings override user settings.</p>
-<h2 id="打开方式"><a href="#打开方式" class="headerlink" title="打开方式"></a>打开方式</h2><p>页面打开：Code –&gt; Preferences –&gt; Settings，这种方式可以很直观地配置</p>
-<img src="/2019/08/23/Visual-Studio-Code%E7%9A%84%E4%BD%BF%E7%94%A8%E6%80%BB%E7%BB%93/Settings.jpg" class="" title="image">
-
-<p>也可以在json文件里直接修改：</p>
-<ul>
-<li>User Settings:   </li>
-</ul>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">➜  User cat settings.json</span><br><span class="line">&#123;</span><br><span class="line">    window.title: $&#123;activeEditorLong&#125;$&#123;separator&#125;$&#123;rootName&#125;,</span><br><span class="line">    workbench.statusBar.visible: true,</span><br><span class="line">    workbench.colorTheme: Visual Studio Dark,</span><br><span class="line">    workbench.iconTheme: vs-minimal, // panel</span><br><span class="line">    window.zoomLevel: 0,</span><br><span class="line">    editor.tabSize: 4,</span><br><span class="line">    editor.detectIndentation: false,</span><br><span class="line">    editor.renderControlCharacters: true,</span><br><span class="line">    editor.minimap.enabled: false,</span><br><span class="line">    leetcode.endpoint: leetcode,</span><br><span class="line">    leetcode.defaultLanguage: golang,</span><br><span class="line">    breadcrumbs.enabled: false,</span><br><span class="line">    editor.renderWhitespace: none,</span><br><span class="line">    terminal.integrated.shell.osx: zsh,</span><br><span class="line">    terminal.external.osxExec: iTerm.app,  // 默认打开iterm2</span><br><span class="line">    // golang</span><br><span class="line">    go.autocompleteUnimportedPackages: true,</span><br><span class="line">    go.formatTool: goimports, //使用 goimports 工具进行代码格式化，或者使用 goreturns 和 gofmt</span><br><span class="line">    [go]: &#123;</span><br><span class="line">        editor.formatOnSave: true,</span><br><span class="line">    &#125;,</span><br><span class="line">    // vim</span><br><span class="line">    vim.useSystemClipboard: true,</span><br><span class="line">    diffEditor.ignoreTrimWhitespace: false,</span><br><span class="line">    diffEditor.renderSideBySide: true,</span><br><span class="line">    C_Cpp.updateChannel: Insiders,</span><br><span class="line">    editor.suggestSelection: first,</span><br><span class="line">    vsintellicode.modify.editor.suggestSelection: automaticallyOverrodeDefaultValue,</span><br><span class="line">    editor.wordWrap: wordWrapColumn,</span><br><span class="line">    editor.wordWrapColumn: 120,</span><br><span class="line">    // 每行输入字符长度提示线</span><br><span class="line">    editor.rulers: [</span><br><span class="line">        80,</span><br><span class="line">        120</span><br><span class="line">    ],</span><br><span class="line">    editor.renderLineHighlight: all,</span><br><span class="line">    go.useLanguageServer: true,</span><br><span class="line">    &quot;window.openFilesInNewWindow&quot;: &quot;on&quot;, //启用后，将在新窗口中打开文件，而不是重复使用现有实例。</span><br><span class="line">       &quot;workbench.editor.enablePreview&quot;: false,   // 打开的文件显示在多个tab&quot;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<ul>
-<li>Wrokspace: …</li>
-</ul>
-<h1 id="快捷键"><a href="#快捷键" class="headerlink" title="快捷键"></a>快捷键</h1><h2 id="默认常用快捷键"><a href="#默认常用快捷键" class="headerlink" title="默认常用快捷键"></a>默认常用快捷键</h2><ul>
-<li>(Command Palette | Show All Commands)  shift + command + p 或者 F1<img src="/2019/08/23/Visual-Studio-Code%E7%9A%84%E4%BD%BF%E7%94%A8%E6%80%BB%E7%BB%93/CommandPalette.jpg" class="" title="image"></li>
-<li>搜索文件 command + p</li>
-<li>搜索内容(Find in Files) shift + command + f</li>
-<li>回到上一个地方(Go Back) ctrl + -</li>
-<li>跳到侧边栏(Focus into Side Bar) command + 0</li>
-<li>切换侧边栏(Toggle Side Bar Visibility) command + b</li>
-<li>打开原生的console(OpenNativeConsole) shift + command +c</li>
-<li>切换Panel(Toggle Panel) command + j</li>
-<li>调整Panel大小(Resize Panel) ctrl + command + &lt;– | –&gt;</li>
-</ul>
-<h3 id="Code-navigation"><a href="#Code-navigation" class="headerlink" title="Code navigation"></a>Code navigation</h3><p>![image](Visual-Studio-Code的使用总结/Code navigation.jpg)</p>
-<ul>
-<li>跳转到定义(Go to Definition) F12</li>
-<li>(showAllSymbols) command + t</li>
-</ul>
-<h2 id="自定义快捷键"><a href="#自定义快捷键" class="headerlink" title="自定义快捷键"></a>自定义快捷键</h2><h3 id="更改方式"><a href="#更改方式" class="headerlink" title="更改方式"></a>更改方式</h3><p>打开键盘快捷键</p>
-<img src="/2019/08/23/Visual-Studio-Code%E7%9A%84%E4%BD%BF%E7%94%A8%E6%80%BB%E7%BB%93/OpenKeyboardShotcuts.jpg" class="" title="image">
-
-<p>Keyboard Shotcuts里显示当前支持哪些快捷键，包括默认的和自定义的；也可以在里面直接更改</p>
-<img src="/2019/08/23/Visual-Studio-Code%E7%9A%84%E4%BD%BF%E7%94%A8%E6%80%BB%E7%BB%93/KeyboardShotcuts.jpg" class="" title="image">
-
-<p>Keyboard Shotcuts(json)里了自定义的快捷键；前面在Keyboard Shotcuts修改的会展示在这里，也可以在这里直接修改</p>
-<img src="/2019/08/23/Visual-Studio-Code%E7%9A%84%E4%BD%BF%E7%94%A8%E6%80%BB%E7%BB%93/KeyboardShotcuts_json.jpg" class="" title="image">
-
-<h3 id="常用自定义快捷键"><a href="#常用自定义快捷键" class="headerlink" title="常用自定义快捷键"></a>常用自定义快捷键</h3><p>根绝个人喜好，常用的如下：</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line"> &#123;</span><br><span class="line">     &quot;key&quot;: &quot;cmd+enter&quot;,</span><br><span class="line">     &quot;command&quot;: &quot;workbench.action.toggleFullScreen&quot;  //切换全屏</span><br><span class="line"> &#125;,</span><br><span class="line"> &#123;</span><br><span class="line">     &quot;key&quot;: &quot;cmd+right&quot;,</span><br><span class="line">     &quot;command&quot;: &quot;workbench.action.nextEditor&quot;   //下个编辑器</span><br><span class="line"> &#125;,</span><br><span class="line"> &#123;</span><br><span class="line">     &quot;key&quot;: &quot;cmd+left&quot;,</span><br><span class="line">     &quot;command&quot;: &quot;workbench.action.previousEditor&quot; //上个编辑器</span><br><span class="line"> &#125;,</span><br><span class="line"> &#123;</span><br><span class="line">    &quot;key&quot;: &quot;alt+cmd+n&quot;,</span><br><span class="line">    &quot;command&quot;: &quot;openInTerminal&quot;  //打开Terminal,并跳到当前文件的目录</span><br><span class="line">&#125;,</span><br><span class="line">&#123;</span><br><span class="line">    &quot;key&quot;: &quot;cmd+s cmd+w&quot;,</span><br><span class="line">    &quot;command&quot;: &quot;workbench.action.quickSwitchWindow&quot; // 切换窗口</span><br><span class="line">&#125;,</span><br><span class="line">&#123;</span><br><span class="line">    &quot;key&quot;: &quot;cmd+2&quot;,</span><br><span class="line">    &quot;command&quot;: &quot;workbench.action.focusPanel&quot;   // 跳到Panel</span><br><span class="line">&#125; </span><br></pre></td></tr></table></figure>
-
-
-<h1 id="常用插件"><a href="#常用插件" class="headerlink" title="常用插件"></a>常用插件</h1><p>在左边Extensions里选择插件install。下面列出几种常用的插件：</p>
-<h2 id="Vim"><a href="#Vim" class="headerlink" title="Vim"></a>Vim</h2><h3 id="遇到的问题"><a href="#遇到的问题" class="headerlink" title="遇到的问题"></a>遇到的问题</h3><ul>
-<li>Vim方向键无法长按</li>
-</ul>
-<p>解决方案：终端下执行命令：</p>
-<p>defaults write com.microsoft.VSCode ApplePressAndHoldEnabled -bool false</p>
-<p>复原:</p>
-<p>defaults write com.microsoft.VSCode ApplePressAndHoldEnabled -bool true</p>
-<ul>
-<li>让 VIM yank 至剪切板的内容通过 ⌘  V 粘贴出来</li>
-</ul>
-<p>配置如下 setting：<br>“vim.useSystemClipboard”: true,</p>
-<h2 id="Go"><a href="#Go" class="headerlink" title="Go"></a>Go</h2><p><a href="https://code.visualstudio.com/docs/languages/go">https://code.visualstudio.com/docs/languages/go</a></p>
-<h3 id="Auto-completions"><a href="#Auto-completions" class="headerlink" title="Auto completions"></a>Auto completions</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">&quot;go.autocompleteUnimportedPackages&quot;: true, // Auto completions</span><br><span class="line">&quot;go.formatTool&quot;: &quot;gofmt&quot;, //代码格式化, 可以用goimports，或者goreturns和gofmt; 必须把vscode的&quot;files.autoSave&quot;: off才能生效</span><br></pre></td></tr></table></figure>
-<h3 id="Code-navigation-1"><a href="#Code-navigation-1" class="headerlink" title="Code navigation"></a>Code navigation</h3><p>Code navigation features are available in the context menu in the editor.</p>
-<ul>
-<li>Go To Definition F12 - Go to the source code of the type definition.</li>
-<li>Peek Definition ⌥F12 - Bring up a Peek window with the type definition.</li>
-<li>Peek References <strong>⇧F12</strong> - Show all references for the type. (显示该类型的所有引用,个人觉得这个功能很强大)<img src="/2019/08/23/Visual-Studio-Code%E7%9A%84%E4%BD%BF%E7%94%A8%E6%80%BB%E7%BB%93/PeekReferences.jpg" class="" title="image"></li>
-</ul>
-<p>You can navigate via symbol search using the Go to Symbol commands from the Command Palette (⇧⌘P).</p>
-<p>Go to Symbol in File - ⇧⌘O<br>显示该文件的symbol,symbol: 指定义的函数，变量，类型等</p>
-<img src="/2019/08/23/Visual-Studio-Code%E7%9A%84%E4%BD%BF%E7%94%A8%E6%80%BB%E7%BB%93/symbols.jpg" class="" title="image">
-
-<p>Go to Symbol in Workspace - ⌘T</p>
-<p>You can also navigate back and forth between a Go file and its test implementation using the Go: Toggle Test File command.</p>
-<h3 id="Debugging-Go-code-using-VS-Code"><a href="#Debugging-Go-code-using-VS-Code" class="headerlink" title="Debugging Go code using VS Code"></a><a href="https://github.com/Microsoft/vscode-go/wiki/Debugging-Go-code-using-VS-Code">Debugging Go code using VS Code</a></h3><p>设置一个或者多个GOPATH</p>
-<img src="/2019/08/23/Visual-Studio-Code%E7%9A%84%E4%BD%BF%E7%94%A8%E6%80%BB%E7%BB%93/GoDebugConfigurations.jpg" class="" title="image">
-
-<h2 id="C-C"><a href="#C-C" class="headerlink" title="C/C++"></a>C/C++</h2><h3 id="Edit-Configurations"><a href="#Edit-Configurations" class="headerlink" title="Edit Configurations"></a>Edit Configurations</h3><p>F1打开Command Palette –&gt; C/C++: Edit configurations (JSON)</p>
-<p>主要设置”includePath”, 便于代码跳转，参考 <a href="https://code.visualstudio.com/docs/cpp/c-cpp-properties-schema-reference">https://code.visualstudio.com/docs/cpp/c-cpp-properties-schema-reference</a></p>
-<h1 id="在终端里直接打开vscode"><a href="#在终端里直接打开vscode" class="headerlink" title="在终端里直接打开vscode"></a>在终端里直接打开vscode</h1><img src="/2019/08/23/Visual-Studio-Code%E7%9A%84%E4%BD%BF%E7%94%A8%E6%80%BB%E7%BB%93/code.jpg" class="" title="image">
-
-<p>在vscode 中快捷键 shift + command + p 输入 code ,选择安装code 命令。<br>本质是做了个软链/usr/local/bin/code</p>
-<img src="/2019/08/23/Visual-Studio-Code%E7%9A%84%E4%BD%BF%E7%94%A8%E6%80%BB%E7%BB%93/CodeLink.jpg" class="" title="image">
-
-<p>用vscode打开当前目录：</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">code .</span><br></pre></td></tr></table></figure>
-
-
-]]></content>
-      <categories>
-        <category>vscode</category>
-      </categories>
-      <tags>
-        <tag>快捷键</tag>
-        <tag>插件</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>du、df和ls的区别</title>
-    <url>/2018/11/10/du%E3%80%81df%E5%92%8Cls%E7%9A%84%E5%8C%BA%E5%88%AB/</url>
-    <content><![CDATA[<p>待整理。。。。</p>
-]]></content>
-      <categories>
-        <category>linux</category>
-      </categories>
-      <tags>
-        <tag>linux命令</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>nodejs获取客户端IP Address(转)</title>
     <url>/2018/12/14/nodejs%E8%8E%B7%E5%8F%96%E5%AE%A2%E6%88%B7%E7%AB%AFIP-Address/</url>
     <content><![CDATA[<p>在网上看见很多问node.js如何获取客户端IP,所以记录下来，以供大家参考。</p>
@@ -1216,134 +1216,6 @@
       </tags>
   </entry>
   <entry>
-    <title>并发控制</title>
-    <url>/2018/08/14/%E5%B9%B6%E5%8F%91%E6%8E%A7%E5%88%B6/</url>
-    <content><![CDATA[<h2 id="并发场景"><a href="#并发场景" class="headerlink" title="并发场景"></a>并发场景</h2><p>秒杀场景，多人并发申请购买同一种商品。<br>下面以2人抢购同一件商品举例，商品数量为1。<br>基本流程如下：</p>
-<img src="/2018/08/14/%E5%B9%B6%E5%8F%91%E6%8E%A7%E5%88%B6/%E8%B4%AD%E4%B9%B0%E8%AE%B0%E5%BD%95.png" class="" title="image">
-<p>这个流程中存在明显的并发问题，当进程A查看有1个商品，但未开始创建购买记录，此时另一个进程B也进行了资源检查，发现有1个商品，顺利通过，并完成购买操作，此时A继续执行，则1个商品会产生两条购买的记录。（这个并发场景很简单，很普遍）</p>
-<h2 id="解决方案"><a href="#解决方案" class="headerlink" title="解决方案"></a>解决方案</h2><p>解决方案通常是2类：<br>1 通过将请求分发到不同set，减少并发的可能性，分而治之。这里暂时不讨论。<br>2 当收到并发请求时，如何处理。</p>
-<h3 id="加锁操作先占有锁资源，再占有资源"><a href="#加锁操作先占有锁资源，再占有资源" class="headerlink" title="加锁操作先占有锁资源，再占有资源"></a>加锁操作先占有锁资源，再占有资源</h3><p>a. 锁库存<br>b. 插入“秒杀”记录<br>c. 更新库存</p>
-<p>“秒杀”系统的设计难点就在这个事务操作上。商品库存在DB中记为一行，大量用户同时“秒杀”同一商品时，第一个到达DB的请求锁住了这行库存记录。在第一个事务完成提交之前这个锁一直被第一个请求占用，其他到达的请求全部失败。</p>
-<p>加锁的方案，效率会比较低。实际应用时，通常要配合排队系统，让没有获取到锁的请求排队。</p>
-<h3 id="单独开发请求排队调度模块"><a href="#单独开发请求排队调度模块" class="headerlink" title="单独开发请求排队调度模块"></a>单独开发请求排队调度模块</h3><p>排队模块接收用户的抢红包请求，以FIFO模式保存下来，调度模块负责FIFO队列的动态调度，一旦有空闲资源，便从队列头部把用户的访问请求取出后交给真正提供服务的模块处理。优点是，具有中心节点的统一资源管理，对系统的可控性强，可深度定制。缺点是，所有请求流量都会有中心节点参与，效率必然会比分布式无中心系统低，并且，中心节点也很容易成为整个系统的性能瓶颈。</p>
-<h3 id="巧用Redis-特性，使其成为分布式序号生成器（我们最终采用的做法）-–-具体还要再看，如何利用redis的特性"><a href="#巧用Redis-特性，使其成为分布式序号生成器（我们最终采用的做法）-–-具体还要再看，如何利用redis的特性" class="headerlink" title="巧用Redis 特性，使其成为分布式序号生成器（我们最终采用的做法） – 具体还要再看，如何利用redis的特性"></a>巧用Redis 特性，使其成为分布式序号生成器（我们最终采用的做法） – 具体还要再看，如何利用redis的特性</h3><p>参考<br><a href="https://www.ibm.com/developerworks/cn/web/wa-design-small-and-good-kill-system/index.html">https://www.ibm.com/developerworks/cn/web/wa-design-small-and-good-kill-system/index.html</a><br><a href="https://blog.csdn.net/zhanjianshinian/article/details/53342730">https://blog.csdn.net/zhanjianshinian/article/details/53342730</a><br>每件商品以一个数字ID来标识，这个ID是全局唯一的，所有围绕商品的操作都使用这个ID作为数据的关联项。</p>
-<p>Redis节点内存储的是这个分组可以分发的商品ID号段，利用Redis特性实现红包分发，各服务节点通过Redis原语获取当前拆到的红包。这种做法的思路是，Redis 本身是单进程工作模型，来自分布式系统各个节点的操作请求天然的被 Redis Server 做了一个同步队列，只要每个请求执行的足够快，这个队列就不会引起阻塞及请求超时。而本例中我们使用了 DECR 原语，性能上是可以满足需求的。Redis 在这里相当于是充当一个分布式序号发生器的功能，分发红包 ID。</p>
-<h3 id="通过memcached来控制并发数-–-具体还要再看"><a href="#通过memcached来控制并发数-–-具体还要再看" class="headerlink" title="通过memcached来控制并发数 – 具体还要再看"></a>通过memcached来控制并发数 – 具体还要再看</h3><p><a href="https://blog.csdn.net/echo3/article/details/17580347">https://blog.csdn.net/echo3/article/details/17580347</a>  使用memcached进行并发控制（写的非常好）<br><a href="http://www.infoq.com/cn/articles/2017hongbao-weixin#">http://www.infoq.com/cn/articles/2017hongbao-weixin#</a>  百亿级微信红包的高并发资金交易系统设计方案<br><a href="https://blog.csdn.net/yanker1990/article/details/78737626">https://blog.csdn.net/yanker1990/article/details/78737626</a>  Memcache的并发问题和利用CAS的解决方案</p>
-<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><p>如何设计一个小而美的秒杀系统？<br><a href="https://www.ibm.com/developerworks/cn/web/wa-design-small-and-good-kill-system/index.html">https://www.ibm.com/developerworks/cn/web/wa-design-small-and-good-kill-system/index.html</a><br>使用memcached进行并发控制（写的非常好）<br><a href="https://blog.csdn.net/echo3/article/details/17580347">https://blog.csdn.net/echo3/article/details/17580347</a><br>电商秒杀系统设计分析<br><a href="https://blog.csdn.net/zhanjianshinian/article/details/53342730">https://blog.csdn.net/zhanjianshinian/article/details/53342730</a></p>
-<p><a href="https://memcached.org/about">https://memcached.org/about</a><br>Redis DECR命令<br><a href="https://www.kancloud.cn/thinkphp/redis-quickstart/36180">https://www.kancloud.cn/thinkphp/redis-quickstart/36180</a></p>
-<p>云主机的问题:<br>申请时要排队，好像没有意义。<br>防止申请到同一台宿主机，前面做的临时添加资源是否有用。跟定时更新是否有冲突？</p>
-]]></content>
-      <categories>
-        <category>架构设计</category>
-      </categories>
-      <tags>
-        <tag>并发控制</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>磁盘IO在文件传输过程中的稳定控制优化</title>
-    <url>/2018/04/18/%E7%A3%81%E7%9B%98IO%E5%9C%A8%E6%96%87%E4%BB%B6%E4%BC%A0%E8%BE%93%E8%BF%87%E7%A8%8B%E4%B8%AD%E7%9A%84%E7%A8%B3%E5%AE%9A%E6%8E%A7%E5%88%B6%E6%96%B9%E6%B3%95/</url>
-    <content><![CDATA[<h2 id="问题的描述"><a href="#问题的描述" class="headerlink" title="问题的描述"></a>问题的描述</h2><p>本地镜像在不同物理机之间的传输，这里是通过自研的工具rsc，包含rsc_client和rsc_server。</p>
-<p>rsc_server对收到的数据的处理不当，对IO可能产生不理想的结果：<br>（1）当Bps或者iops 过高时，可能使dm-0的util过高，甚至100%，影响上面虚机的IO；<br>（2）当传输过程中Bps过低时，会使得传输镜像过慢，影响效率，甚至导致创建虚机失败。</p>
-<p>dm-0是物理机上的数据盘，有通过多快盘做raid。</p>
-<p>以下在rsc_server的IO优化过程中，对不同方案测试结果的比较和分析。</p>
-<h2 id="无限速方案"><a href="#无限速方案" class="headerlink" title="无限速方案"></a>无限速方案</h2><p>测试环境为:</p>
-<p>测试镜像： Windows 2008 64位 EN </p>
-<img src="/2018/04/18/%E7%A3%81%E7%9B%98IO%E5%9C%A8%E6%96%87%E4%BB%B6%E4%BC%A0%E8%BE%93%E8%BF%87%E7%A8%8B%E4%B8%AD%E7%9A%84%E7%A8%B3%E5%AE%9A%E6%8E%A7%E5%88%B6%E6%96%B9%E6%B3%95/2-nolimit-1.png" class="" title="image">
-<p>镜像文件为qcow2格式，总共40G，实际占用空间20G。</p>
-<p>宿主机: </p>
-<p>172.27.162.108 –&gt; 172.27.172.226（V3）</p>
-<p>172.28.160.151–&gt; 172.28.161.86（V4）</p>
-<p>rsc_server端，接收到数据时，write到cache，就立刻返回。当cache满时，由系统一次性flush到磁盘。会使磁盘util=100%，持续10~20s，导致影响到客户虚机的IO性能。</p>
-<img src="/2018/04/18/%E7%A3%81%E7%9B%98IO%E5%9C%A8%E6%96%87%E4%BB%B6%E4%BC%A0%E8%BE%93%E8%BF%87%E7%A8%8B%E4%B8%AD%E7%9A%84%E7%A8%B3%E5%AE%9A%E6%8E%A7%E5%88%B6%E6%96%B9%E6%B3%95/2-nolimit-2.png" class="" title="image">
-
-<img src="/2018/04/18/%E7%A3%81%E7%9B%98IO%E5%9C%A8%E6%96%87%E4%BB%B6%E4%BC%A0%E8%BE%93%E8%BF%87%E7%A8%8B%E4%B8%AD%E7%9A%84%E7%A8%B3%E5%AE%9A%E6%8E%A7%E5%88%B6%E6%96%B9%E6%B3%95/2-nolimit-3.png" class="" title="image">
-<h2 id="限速方案"><a href="#限速方案" class="headerlink" title="限速方案"></a>限速方案</h2><p>不同方案的测试和比较：<br>（1）对rsc_server进程的IO限速；<br>（2）对flush进程的IO限速；<br>（3）每次write时都sync；<br>（4）收到一定数量的包，调用fsync<br>其中对进程的限速是通过cgroup。</p>
-<h3 id="对rsc-server进程的IO限速"><a href="#对rsc-server进程的IO限速" class="headerlink" title="对rsc_server进程的IO限速"></a>对rsc_server进程的IO限速</h3><p>设置写到磁盘的限速参数：Bps=40MB/s，iops=15000。</p>
-<img src="/2018/04/18/%E7%A3%81%E7%9B%98IO%E5%9C%A8%E6%96%87%E4%BB%B6%E4%BC%A0%E8%BE%93%E8%BF%87%E7%A8%8B%E4%B8%AD%E7%9A%84%E7%A8%B3%E5%AE%9A%E6%8E%A7%E5%88%B6%E6%96%B9%E6%B3%95/3-1-limit-1.png" class="" title="image">
-
-<p>把rsc_server进程PID添加到限速的tasks里。</p>
-<img src="/2018/04/18/%E7%A3%81%E7%9B%98IO%E5%9C%A8%E6%96%87%E4%BB%B6%E4%BC%A0%E8%BE%93%E8%BF%87%E7%A8%8B%E4%B8%AD%E7%9A%84%E7%A8%B3%E5%AE%9A%E6%8E%A7%E5%88%B6%E6%96%B9%E6%B3%95/3-1-limit-2.png" class="" title="image">
-
-<p>无法限制住磁盘的IO。</p>
-<img src="/2018/04/18/%E7%A3%81%E7%9B%98IO%E5%9C%A8%E6%96%87%E4%BB%B6%E4%BC%A0%E8%BE%93%E8%BF%87%E7%A8%8B%E4%B8%AD%E7%9A%84%E7%A8%B3%E5%AE%9A%E6%8E%A7%E5%88%B6%E6%96%B9%E6%B3%95/3-1-limit-3.png" class="" title="image">
-
-<p>原因：将cache刷到磁盘时，是由flush进程执行的，并不是rsc_server本身。所以考虑到将flush进程限速。</p>
-<h3 id="对flush-进程的IO限速"><a href="#对flush-进程的IO限速" class="headerlink" title="对flush 进程的IO限速"></a>对flush 进程的IO限速</h3><p>把flush进程的PID加入tasks里，可以限制磁盘到40M/s。</p>
-<img src="/2018/04/18/%E7%A3%81%E7%9B%98IO%E5%9C%A8%E6%96%87%E4%BB%B6%E4%BC%A0%E8%BE%93%E8%BF%87%E7%A8%8B%E4%B8%AD%E7%9A%84%E7%A8%B3%E5%AE%9A%E6%8E%A7%E5%88%B6%E6%96%B9%E6%B3%95/3-2-flushlimit-1.png" class="" title="image">
-
-<img src="/2018/04/18/%E7%A3%81%E7%9B%98IO%E5%9C%A8%E6%96%87%E4%BB%B6%E4%BC%A0%E8%BE%93%E8%BF%87%E7%A8%8B%E4%B8%AD%E7%9A%84%E7%A8%B3%E5%AE%9A%E6%8E%A7%E5%88%B6%E6%96%B9%E6%B3%95/3-2-flushlimit-2.png" class="" title="image">
-
-<img src="/2018/04/18/%E7%A3%81%E7%9B%98IO%E5%9C%A8%E6%96%87%E4%BB%B6%E4%BC%A0%E8%BE%93%E8%BF%87%E7%A8%8B%E4%B8%AD%E7%9A%84%E7%A8%B3%E5%AE%9A%E6%8E%A7%E5%88%B6%E6%96%B9%E6%B3%95/3-2-flushlimit-3.png" class="" title="image">
-
-<p>带来的问题，会影响所有通过flush来刷磁盘的操作：</p>
-<p>1 宿主机的磁盘dm-0上，其他会将数据写到cahe就返回的操作都受到影响，如jbd2服务。jbd2(journaling block device 2)是ext4文件系统的服务，可以完成数据备份和恢复。</p>
-<img src="/2018/04/18/%E7%A3%81%E7%9B%98IO%E5%9C%A8%E6%96%87%E4%BB%B6%E4%BC%A0%E8%BE%93%E8%BF%87%E7%A8%8B%E4%B8%AD%E7%9A%84%E7%A8%B3%E5%AE%9A%E6%8E%A7%E5%88%B6%E6%96%B9%E6%B3%95/3-2-flushlimit-4.png" class="" title="image">
-<p>2 虚机内部</p>
-<img src="/2018/04/18/%E7%A3%81%E7%9B%98IO%E5%9C%A8%E6%96%87%E4%BB%B6%E4%BC%A0%E8%BE%93%E8%BF%87%E7%A8%8B%E4%B8%AD%E7%9A%84%E7%A8%B3%E5%AE%9A%E6%8E%A7%E5%88%B6%E6%96%B9%E6%B3%95/3-2-flushlimit-5.png" class="" title="image">
-
-<img src="/2018/04/18/%E7%A3%81%E7%9B%98IO%E5%9C%A8%E6%96%87%E4%BB%B6%E4%BC%A0%E8%BE%93%E8%BF%87%E7%A8%8B%E4%B8%AD%E7%9A%84%E7%A8%B3%E5%AE%9A%E6%8E%A7%E5%88%B6%E6%96%B9%E6%B3%95/3-2-flushlimit-6.png" class="" title="image">
-<h3 id="每次write时都sync"><a href="#每次write时都sync" class="headerlink" title="每次write时都sync"></a>每次write时都sync</h3><p>每次write都sync到磁盘，可以绕过从cache flush到磁盘的过程,也就不会产生flush过程中产生的IO过大的问题。</p>
-<img src="/2018/04/18/%E7%A3%81%E7%9B%98IO%E5%9C%A8%E6%96%87%E4%BB%B6%E4%BC%A0%E8%BE%93%E8%BF%87%E7%A8%8B%E4%B8%AD%E7%9A%84%E7%A8%B3%E5%AE%9A%E6%8E%A7%E5%88%B6%E6%96%B9%E6%B3%95/3-3-sync-1.png" class="" title="image">
-
-<p>但每次write都sync带来写磁盘性能过低,落盘速度5M/s左右,util为98%~100%。</p>
-<img src="/2018/04/18/%E7%A3%81%E7%9B%98IO%E5%9C%A8%E6%96%87%E4%BB%B6%E4%BC%A0%E8%BE%93%E8%BF%87%E7%A8%8B%E4%B8%AD%E7%9A%84%E7%A8%B3%E5%AE%9A%E6%8E%A7%E5%88%B6%E6%96%B9%E6%B3%95/3-3-sync-2.png" class="" title="image">
-<h3 id="每收到10个64K的包，调用一次fsync"><a href="#每收到10个64K的包，调用一次fsync" class="headerlink" title="每收到10个64K的包，调用一次fsync"></a>每收到10个64K的包，调用一次fsync</h3><p>考虑到每次write都sync，影响磁盘性能，考虑减少sync的次数。改成累积到一定数量的包后，再调用fsync的方案。</p>
-<p>172.27.162.108 –&gt; 172.27.172.226( V3 )</p>
-<img src="/2018/04/18/%E7%A3%81%E7%9B%98IO%E5%9C%A8%E6%96%87%E4%BB%B6%E4%BC%A0%E8%BE%93%E8%BF%87%E7%A8%8B%E4%B8%AD%E7%9A%84%E7%A8%B3%E5%AE%9A%E6%8E%A7%E5%88%B6%E6%96%B9%E6%B3%95/3-4-fsync-1.png" class="" title="image">
-
-<img src="/2018/04/18/%E7%A3%81%E7%9B%98IO%E5%9C%A8%E6%96%87%E4%BB%B6%E4%BC%A0%E8%BE%93%E8%BF%87%E7%A8%8B%E4%B8%AD%E7%9A%84%E7%A8%B3%E5%AE%9A%E6%8E%A7%E5%88%B6%E6%96%B9%E6%B3%95/3-4-fsync-2.png" class="" title="image">
-
-
-<p>172.28.160.151–&gt; 172.28.161.86( V4 )</p>
-<img src="/2018/04/18/%E7%A3%81%E7%9B%98IO%E5%9C%A8%E6%96%87%E4%BB%B6%E4%BC%A0%E8%BE%93%E8%BF%87%E7%A8%8B%E4%B8%AD%E7%9A%84%E7%A8%B3%E5%AE%9A%E6%8E%A7%E5%88%B6%E6%96%B9%E6%B3%95/3-4-fsync-3.png" class="" title="image">
-
-<img src="/2018/04/18/%E7%A3%81%E7%9B%98IO%E5%9C%A8%E6%96%87%E4%BB%B6%E4%BC%A0%E8%BE%93%E8%BF%87%E7%A8%8B%E4%B8%AD%E7%9A%84%E7%A8%B3%E5%AE%9A%E6%8E%A7%E5%88%B6%E6%96%B9%E6%B3%95/3-4-fsync-4.png" class="" title="image">
-
-<p>可以结果：</p>
-<p>（1）写入IO得到很大提高，在30M/s ~ 200M/s之间，受宿主机影响较大；</p>
-<p>（2）传输过程中，IO一直很稳定，util保持在40%或70%，也没有看到flush进程的出现，说明IO落地是由fsync执行；</p>
-<p>  使标准镜像（小于40G）都能在20分钟内传完，扩容过的镜像也不影响虚机的创建。</p>
-<p>小插曲：</p>
-<p>前面由于代码bug， 在每第10个64K包sync了n次。n为该64K的包，在跳过0的空洞后，拆成的小包的个数。sync次数过多导致IO性能过低，测试数据为6M/s左右。</p>
-<p>172.28.160.151–&gt; 172.28.161.86（V4）</p>
-<img src="/2018/04/18/%E7%A3%81%E7%9B%98IO%E5%9C%A8%E6%96%87%E4%BB%B6%E4%BC%A0%E8%BE%93%E8%BF%87%E7%A8%8B%E4%B8%AD%E7%9A%84%E7%A8%B3%E5%AE%9A%E6%8E%A7%E5%88%B6%E6%96%B9%E6%B3%95/3-4-fsync-5.png" class="" title="image">
-
-<p>strace的查看结果：</p>
-<p>strace -T -p 21712( rsc_server进程PID ) -o test_rsc_server.txt</p>
-<img src="/2018/04/18/%E7%A3%81%E7%9B%98IO%E5%9C%A8%E6%96%87%E4%BB%B6%E4%BC%A0%E8%BE%93%E8%BF%87%E7%A8%8B%E4%B8%AD%E7%9A%84%E7%A8%B3%E5%AE%9A%E6%8E%A7%E5%88%B6%E6%96%B9%E6%B3%95/3-4-fsync-6.png" class="" title="image">
-
-
-<p>IO性能过低。</p>
-<img src="/2018/04/18/%E7%A3%81%E7%9B%98IO%E5%9C%A8%E6%96%87%E4%BB%B6%E4%BC%A0%E8%BE%93%E8%BF%87%E7%A8%8B%E4%B8%AD%E7%9A%84%E7%A8%B3%E5%AE%9A%E6%8E%A7%E5%88%B6%E6%96%B9%E6%B3%95/3-4-fsync-7.png" class="" title="image">
-
-<img src="/2018/04/18/%E7%A3%81%E7%9B%98IO%E5%9C%A8%E6%96%87%E4%BB%B6%E4%BC%A0%E8%BE%93%E8%BF%87%E7%A8%8B%E4%B8%AD%E7%9A%84%E7%A8%B3%E5%AE%9A%E6%8E%A7%E5%88%B6%E6%96%B9%E6%B3%95/3-4-fsync-8.png" class="" title="image">
-
-
-<h2 id="最终方案"><a href="#最终方案" class="headerlink" title="最终方案"></a>最终方案</h2><p>“每收到10个64K的包，调用一次fsync”，由于宿主机的磁盘性能不同，不排除依然可能会有IO打满的情况，因为此时cache到磁盘的过程，是由rsc_server自己控制的，所以可以通过cgroup对rsc_server限速。</p>
-<p>172.27.162.108 –&gt; 172.27.172.226( V3 )</p>
-<p>限速： rsc_server写入dm-0的 Bps=60M/s。</p>
-<img src="/2018/04/18/%E7%A3%81%E7%9B%98IO%E5%9C%A8%E6%96%87%E4%BB%B6%E4%BC%A0%E8%BE%93%E8%BF%87%E7%A8%8B%E4%B8%AD%E7%9A%84%E7%A8%B3%E5%AE%9A%E6%8E%A7%E5%88%B6%E6%96%B9%E6%B3%95/4-final-1.png" class="" title="image">
-
-<img src="/2018/04/18/%E7%A3%81%E7%9B%98IO%E5%9C%A8%E6%96%87%E4%BB%B6%E4%BC%A0%E8%BE%93%E8%BF%87%E7%A8%8B%E4%B8%AD%E7%9A%84%E7%A8%B3%E5%AE%9A%E6%8E%A7%E5%88%B6%E6%96%B9%E6%B3%95/4-final-2.png" class="" title="image">
-
-<p>结果：rsc_server的落盘速度稳定在60M/s。</p>
-<img src="/2018/04/18/%E7%A3%81%E7%9B%98IO%E5%9C%A8%E6%96%87%E4%BB%B6%E4%BC%A0%E8%BE%93%E8%BF%87%E7%A8%8B%E4%B8%AD%E7%9A%84%E7%A8%B3%E5%AE%9A%E6%8E%A7%E5%88%B6%E6%96%B9%E6%B3%95/4-final-3.png" class="" title="image">
-
-<img src="/2018/04/18/%E7%A3%81%E7%9B%98IO%E5%9C%A8%E6%96%87%E4%BB%B6%E4%BC%A0%E8%BE%93%E8%BF%87%E7%A8%8B%E4%B8%AD%E7%9A%84%E7%A8%B3%E5%AE%9A%E6%8E%A7%E5%88%B6%E6%96%B9%E6%B3%95/4-final-4.png" class="" title="image">
-
-<p>因此最终的方案是“fsync + cgroup限速”。</p>
-]]></content>
-      <categories>
-        <category>linux性能优化</category>
-      </categories>
-      <tags>
-        <tag>限速</tag>
-        <tag>cgroup</tag>
-        <tag>磁盘IO</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>一次node进程cpu负载高问题的处理</title>
     <url>/2019/07/13/%E4%B8%80%E6%AC%A1node%E8%BF%9B%E7%A8%8Bcpu%E8%B4%9F%E8%BD%BD100-%E9%97%AE%E9%A2%98%E7%9A%84%E5%A4%84%E7%90%86/</url>
     <content><![CDATA[<h1 id="1-node进程负载高的问题"><a href="#1-node进程负载高的问题" class="headerlink" title="1 node进程负载高的问题"></a>1 node进程负载高的问题</h1><ul>
@@ -1478,6 +1350,61 @@
       </tags>
   </entry>
   <entry>
+    <title>分布式系统架构的简介</title>
+    <url>/2019/03/18/%E5%88%86%E5%B8%83%E5%BC%8F%E7%B3%BB%E7%BB%9F%E6%9E%B6%E6%9E%84%E7%9A%84%E7%AE%80%E4%BB%8B/</url>
+    <content><![CDATA[<p>摘自 分布式系统架构的冰与火 左耳听风</p>
+<h2 id="分布式系统架构的优缺点"><a href="#分布式系统架构的优缺点" class="headerlink" title="分布式系统架构的优缺点"></a>分布式系统架构的优缺点</h2><p>需要分布式系统架构，来代替传统的单体架构的原因：</p>
+<ol>
+<li>增大系统容量 –&gt; 提高性能<br>单台机器的性能无法满足要求时，需要垂直或者水平拆分成分布式系统架构，让更多的机器去承担。</li>
+<li>加强系统可用 –&gt; 提高服务可用性<br>避免单点故障。</li>
+</ol>
+<p>分布式系统是一种trade-off</p>
+<img src="/2019/03/18/%E5%88%86%E5%B8%83%E5%BC%8F%E7%B3%BB%E7%BB%9F%E6%9E%B6%E6%9E%84%E7%9A%84%E7%AE%80%E4%BB%8B/%E5%8D%95%E4%BD%93%E5%BA%94%E7%94%A8%E5%92%8C%E5%88%86%E5%B8%83%E5%BC%8F%E6%9E%B6%E6%9E%84%E7%9A%84%E4%BC%98%E7%BC%BA%E7%82%B9.png" class="" title="image">
+
+<h2 id="分布式系统的发展"><a href="#分布式系统的发展" class="headerlink" title="分布式系统的发展"></a>分布式系统的发展</h2><p>SOA——基于服务的架构</p>
+<img src="/2019/03/18/%E5%88%86%E5%B8%83%E5%BC%8F%E7%B3%BB%E7%BB%9F%E6%9E%B6%E6%9E%84%E7%9A%84%E7%AE%80%E4%BB%8B/SOA%E6%9E%B6%E6%9E%84%E7%9A%84%E6%BC%94%E5%8C%96.png" class="" title="image">
+
+<ol>
+<li>20 世纪 90 年代前，是单体架构，软件模块高度耦合。</li>
+<li>2000 年左右出现了比较松耦合的 SOA 架构，这个架构需要一个标准的协议或是中间件来联动其它相关联的服务.</li>
+<li>而 2010 年后，出现了微服务架构，这个架构更为松耦合。每一个微服务都能独立完整地运行（所谓的自包含），后端单体的数据库也被微服务这样的架构分散到不同的服务中。而它和传统 SOA 的差别在于，服务间的整合需要一个服务编排或是服务整合的引擎。就好像交响乐中需要有一个指挥来把所有乐器编排和组织在一起。</li>
+</ol>
+<p>一般来说，这个编排和组织引擎可以是工作流引擎，也可以是网关。当然，还需要辅助于像容器化调度这样的技术方式，如 Kubernetes.</p>
+]]></content>
+      <categories>
+        <category>分布式系统</category>
+      </categories>
+      <tags>
+        <tag>分布式系统</tag>
+        <tag>架构</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>并发控制</title>
+    <url>/2018/08/14/%E5%B9%B6%E5%8F%91%E6%8E%A7%E5%88%B6/</url>
+    <content><![CDATA[<h2 id="并发场景"><a href="#并发场景" class="headerlink" title="并发场景"></a>并发场景</h2><p>秒杀场景，多人并发申请购买同一种商品。<br>下面以2人抢购同一件商品举例，商品数量为1。<br>基本流程如下：</p>
+<img src="/2018/08/14/%E5%B9%B6%E5%8F%91%E6%8E%A7%E5%88%B6/%E8%B4%AD%E4%B9%B0%E8%AE%B0%E5%BD%95.png" class="" title="image">
+<p>这个流程中存在明显的并发问题，当进程A查看有1个商品，但未开始创建购买记录，此时另一个进程B也进行了资源检查，发现有1个商品，顺利通过，并完成购买操作，此时A继续执行，则1个商品会产生两条购买的记录。（这个并发场景很简单，很普遍）</p>
+<h2 id="解决方案"><a href="#解决方案" class="headerlink" title="解决方案"></a>解决方案</h2><p>解决方案通常是2类：<br>1 通过将请求分发到不同set，减少并发的可能性，分而治之。这里暂时不讨论。<br>2 当收到并发请求时，如何处理。</p>
+<h3 id="加锁操作先占有锁资源，再占有资源"><a href="#加锁操作先占有锁资源，再占有资源" class="headerlink" title="加锁操作先占有锁资源，再占有资源"></a>加锁操作先占有锁资源，再占有资源</h3><p>a. 锁库存<br>b. 插入“秒杀”记录<br>c. 更新库存</p>
+<p>“秒杀”系统的设计难点就在这个事务操作上。商品库存在DB中记为一行，大量用户同时“秒杀”同一商品时，第一个到达DB的请求锁住了这行库存记录。在第一个事务完成提交之前这个锁一直被第一个请求占用，其他到达的请求全部失败。</p>
+<p>加锁的方案，效率会比较低。实际应用时，通常要配合排队系统，让没有获取到锁的请求排队。</p>
+<h3 id="单独开发请求排队调度模块"><a href="#单独开发请求排队调度模块" class="headerlink" title="单独开发请求排队调度模块"></a>单独开发请求排队调度模块</h3><p>排队模块接收用户的抢红包请求，以FIFO模式保存下来，调度模块负责FIFO队列的动态调度，一旦有空闲资源，便从队列头部把用户的访问请求取出后交给真正提供服务的模块处理。优点是，具有中心节点的统一资源管理，对系统的可控性强，可深度定制。缺点是，所有请求流量都会有中心节点参与，效率必然会比分布式无中心系统低，并且，中心节点也很容易成为整个系统的性能瓶颈。</p>
+<h3 id="巧用Redis-特性，使其成为分布式序号生成器（我们最终采用的做法）-–-具体还要再看，如何利用redis的特性"><a href="#巧用Redis-特性，使其成为分布式序号生成器（我们最终采用的做法）-–-具体还要再看，如何利用redis的特性" class="headerlink" title="巧用Redis 特性，使其成为分布式序号生成器（我们最终采用的做法） – 具体还要再看，如何利用redis的特性"></a>巧用Redis 特性，使其成为分布式序号生成器（我们最终采用的做法） – 具体还要再看，如何利用redis的特性</h3><p>参考<br><a href="https://www.ibm.com/developerworks/cn/web/wa-design-small-and-good-kill-system/index.html">https://www.ibm.com/developerworks/cn/web/wa-design-small-and-good-kill-system/index.html</a><br><a href="https://blog.csdn.net/zhanjianshinian/article/details/53342730">https://blog.csdn.net/zhanjianshinian/article/details/53342730</a><br>每件商品以一个数字ID来标识，这个ID是全局唯一的，所有围绕商品的操作都使用这个ID作为数据的关联项。</p>
+<p>Redis节点内存储的是这个分组可以分发的商品ID号段，利用Redis特性实现红包分发，各服务节点通过Redis原语获取当前拆到的红包。这种做法的思路是，Redis 本身是单进程工作模型，来自分布式系统各个节点的操作请求天然的被 Redis Server 做了一个同步队列，只要每个请求执行的足够快，这个队列就不会引起阻塞及请求超时。而本例中我们使用了 DECR 原语，性能上是可以满足需求的。Redis 在这里相当于是充当一个分布式序号发生器的功能，分发红包 ID。</p>
+<h3 id="通过memcached来控制并发数-–-具体还要再看"><a href="#通过memcached来控制并发数-–-具体还要再看" class="headerlink" title="通过memcached来控制并发数 – 具体还要再看"></a>通过memcached来控制并发数 – 具体还要再看</h3><p><a href="https://blog.csdn.net/echo3/article/details/17580347">https://blog.csdn.net/echo3/article/details/17580347</a>  使用memcached进行并发控制（写的非常好）<br><a href="http://www.infoq.com/cn/articles/2017hongbao-weixin#">http://www.infoq.com/cn/articles/2017hongbao-weixin#</a>  百亿级微信红包的高并发资金交易系统设计方案<br><a href="https://blog.csdn.net/yanker1990/article/details/78737626">https://blog.csdn.net/yanker1990/article/details/78737626</a>  Memcache的并发问题和利用CAS的解决方案</p>
+<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><p>如何设计一个小而美的秒杀系统？<br><a href="https://www.ibm.com/developerworks/cn/web/wa-design-small-and-good-kill-system/index.html">https://www.ibm.com/developerworks/cn/web/wa-design-small-and-good-kill-system/index.html</a><br>使用memcached进行并发控制（写的非常好）<br><a href="https://blog.csdn.net/echo3/article/details/17580347">https://blog.csdn.net/echo3/article/details/17580347</a><br>电商秒杀系统设计分析<br><a href="https://blog.csdn.net/zhanjianshinian/article/details/53342730">https://blog.csdn.net/zhanjianshinian/article/details/53342730</a></p>
+<p><a href="https://memcached.org/about">https://memcached.org/about</a><br>Redis DECR命令<br><a href="https://www.kancloud.cn/thinkphp/redis-quickstart/36180">https://www.kancloud.cn/thinkphp/redis-quickstart/36180</a></p>
+<p>云主机的问题:<br>申请时要排队，好像没有意义。<br>防止申请到同一台宿主机，前面做的临时添加资源是否有用。跟定时更新是否有冲突？</p>
+]]></content>
+      <categories>
+        <category>架构设计</category>
+      </categories>
+      <tags>
+        <tag>并发控制</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>文件删除空间未释放的例子</title>
     <url>/2018/11/10/%E6%96%87%E4%BB%B6%E5%B7%B2%E5%88%A0%E9%99%A4%E7%A9%BA%E9%97%B4%E6%9C%AA%E9%87%8A%E6%94%BE%E7%9A%84%E4%BE%8B%E5%AD%90/</url>
     <content><![CDATA[<h2 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h2><p>在删除文件后，有时会遇到磁盘空间并未被释放的场景。这里自己尝试复现，并去做相关的说明。</p>
@@ -1525,6 +1452,109 @@
       </categories>
       <tags>
         <tag>文件系统</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>磁盘IO在文件传输过程中的稳定控制优化</title>
+    <url>/2018/04/18/%E7%A3%81%E7%9B%98IO%E5%9C%A8%E6%96%87%E4%BB%B6%E4%BC%A0%E8%BE%93%E8%BF%87%E7%A8%8B%E4%B8%AD%E7%9A%84%E7%A8%B3%E5%AE%9A%E6%8E%A7%E5%88%B6%E6%96%B9%E6%B3%95/</url>
+    <content><![CDATA[<h2 id="问题的描述"><a href="#问题的描述" class="headerlink" title="问题的描述"></a>问题的描述</h2><p>本地镜像在不同物理机之间的传输，这里是通过自研的工具rsc，包含rsc_client和rsc_server。</p>
+<p>rsc_server对收到的数据的处理不当，对IO可能产生不理想的结果：<br>（1）当Bps或者iops 过高时，可能使dm-0的util过高，甚至100%，影响上面虚机的IO；<br>（2）当传输过程中Bps过低时，会使得传输镜像过慢，影响效率，甚至导致创建虚机失败。</p>
+<p>dm-0是物理机上的数据盘，有通过多快盘做raid。</p>
+<p>以下在rsc_server的IO优化过程中，对不同方案测试结果的比较和分析。</p>
+<h2 id="无限速方案"><a href="#无限速方案" class="headerlink" title="无限速方案"></a>无限速方案</h2><p>测试环境为:</p>
+<p>测试镜像： Windows 2008 64位 EN </p>
+<img src="/2018/04/18/%E7%A3%81%E7%9B%98IO%E5%9C%A8%E6%96%87%E4%BB%B6%E4%BC%A0%E8%BE%93%E8%BF%87%E7%A8%8B%E4%B8%AD%E7%9A%84%E7%A8%B3%E5%AE%9A%E6%8E%A7%E5%88%B6%E6%96%B9%E6%B3%95/2-nolimit-1.png" class="" title="image">
+<p>镜像文件为qcow2格式，总共40G，实际占用空间20G。</p>
+<p>宿主机: </p>
+<p>172.27.162.108 –&gt; 172.27.172.226（V3）</p>
+<p>172.28.160.151–&gt; 172.28.161.86（V4）</p>
+<p>rsc_server端，接收到数据时，write到cache，就立刻返回。当cache满时，由系统一次性flush到磁盘。会使磁盘util=100%，持续10~20s，导致影响到客户虚机的IO性能。</p>
+<img src="/2018/04/18/%E7%A3%81%E7%9B%98IO%E5%9C%A8%E6%96%87%E4%BB%B6%E4%BC%A0%E8%BE%93%E8%BF%87%E7%A8%8B%E4%B8%AD%E7%9A%84%E7%A8%B3%E5%AE%9A%E6%8E%A7%E5%88%B6%E6%96%B9%E6%B3%95/2-nolimit-2.png" class="" title="image">
+
+<img src="/2018/04/18/%E7%A3%81%E7%9B%98IO%E5%9C%A8%E6%96%87%E4%BB%B6%E4%BC%A0%E8%BE%93%E8%BF%87%E7%A8%8B%E4%B8%AD%E7%9A%84%E7%A8%B3%E5%AE%9A%E6%8E%A7%E5%88%B6%E6%96%B9%E6%B3%95/2-nolimit-3.png" class="" title="image">
+<h2 id="限速方案"><a href="#限速方案" class="headerlink" title="限速方案"></a>限速方案</h2><p>不同方案的测试和比较：<br>（1）对rsc_server进程的IO限速；<br>（2）对flush进程的IO限速；<br>（3）每次write时都sync；<br>（4）收到一定数量的包，调用fsync<br>其中对进程的限速是通过cgroup。</p>
+<h3 id="对rsc-server进程的IO限速"><a href="#对rsc-server进程的IO限速" class="headerlink" title="对rsc_server进程的IO限速"></a>对rsc_server进程的IO限速</h3><p>设置写到磁盘的限速参数：Bps=40MB/s，iops=15000。</p>
+<img src="/2018/04/18/%E7%A3%81%E7%9B%98IO%E5%9C%A8%E6%96%87%E4%BB%B6%E4%BC%A0%E8%BE%93%E8%BF%87%E7%A8%8B%E4%B8%AD%E7%9A%84%E7%A8%B3%E5%AE%9A%E6%8E%A7%E5%88%B6%E6%96%B9%E6%B3%95/3-1-limit-1.png" class="" title="image">
+
+<p>把rsc_server进程PID添加到限速的tasks里。</p>
+<img src="/2018/04/18/%E7%A3%81%E7%9B%98IO%E5%9C%A8%E6%96%87%E4%BB%B6%E4%BC%A0%E8%BE%93%E8%BF%87%E7%A8%8B%E4%B8%AD%E7%9A%84%E7%A8%B3%E5%AE%9A%E6%8E%A7%E5%88%B6%E6%96%B9%E6%B3%95/3-1-limit-2.png" class="" title="image">
+
+<p>无法限制住磁盘的IO。</p>
+<img src="/2018/04/18/%E7%A3%81%E7%9B%98IO%E5%9C%A8%E6%96%87%E4%BB%B6%E4%BC%A0%E8%BE%93%E8%BF%87%E7%A8%8B%E4%B8%AD%E7%9A%84%E7%A8%B3%E5%AE%9A%E6%8E%A7%E5%88%B6%E6%96%B9%E6%B3%95/3-1-limit-3.png" class="" title="image">
+
+<p>原因：将cache刷到磁盘时，是由flush进程执行的，并不是rsc_server本身。所以考虑到将flush进程限速。</p>
+<h3 id="对flush-进程的IO限速"><a href="#对flush-进程的IO限速" class="headerlink" title="对flush 进程的IO限速"></a>对flush 进程的IO限速</h3><p>把flush进程的PID加入tasks里，可以限制磁盘到40M/s。</p>
+<img src="/2018/04/18/%E7%A3%81%E7%9B%98IO%E5%9C%A8%E6%96%87%E4%BB%B6%E4%BC%A0%E8%BE%93%E8%BF%87%E7%A8%8B%E4%B8%AD%E7%9A%84%E7%A8%B3%E5%AE%9A%E6%8E%A7%E5%88%B6%E6%96%B9%E6%B3%95/3-2-flushlimit-1.png" class="" title="image">
+
+<img src="/2018/04/18/%E7%A3%81%E7%9B%98IO%E5%9C%A8%E6%96%87%E4%BB%B6%E4%BC%A0%E8%BE%93%E8%BF%87%E7%A8%8B%E4%B8%AD%E7%9A%84%E7%A8%B3%E5%AE%9A%E6%8E%A7%E5%88%B6%E6%96%B9%E6%B3%95/3-2-flushlimit-2.png" class="" title="image">
+
+<img src="/2018/04/18/%E7%A3%81%E7%9B%98IO%E5%9C%A8%E6%96%87%E4%BB%B6%E4%BC%A0%E8%BE%93%E8%BF%87%E7%A8%8B%E4%B8%AD%E7%9A%84%E7%A8%B3%E5%AE%9A%E6%8E%A7%E5%88%B6%E6%96%B9%E6%B3%95/3-2-flushlimit-3.png" class="" title="image">
+
+<p>带来的问题，会影响所有通过flush来刷磁盘的操作：</p>
+<p>1 宿主机的磁盘dm-0上，其他会将数据写到cahe就返回的操作都受到影响，如jbd2服务。jbd2(journaling block device 2)是ext4文件系统的服务，可以完成数据备份和恢复。</p>
+<img src="/2018/04/18/%E7%A3%81%E7%9B%98IO%E5%9C%A8%E6%96%87%E4%BB%B6%E4%BC%A0%E8%BE%93%E8%BF%87%E7%A8%8B%E4%B8%AD%E7%9A%84%E7%A8%B3%E5%AE%9A%E6%8E%A7%E5%88%B6%E6%96%B9%E6%B3%95/3-2-flushlimit-4.png" class="" title="image">
+<p>2 虚机内部</p>
+<img src="/2018/04/18/%E7%A3%81%E7%9B%98IO%E5%9C%A8%E6%96%87%E4%BB%B6%E4%BC%A0%E8%BE%93%E8%BF%87%E7%A8%8B%E4%B8%AD%E7%9A%84%E7%A8%B3%E5%AE%9A%E6%8E%A7%E5%88%B6%E6%96%B9%E6%B3%95/3-2-flushlimit-5.png" class="" title="image">
+
+<img src="/2018/04/18/%E7%A3%81%E7%9B%98IO%E5%9C%A8%E6%96%87%E4%BB%B6%E4%BC%A0%E8%BE%93%E8%BF%87%E7%A8%8B%E4%B8%AD%E7%9A%84%E7%A8%B3%E5%AE%9A%E6%8E%A7%E5%88%B6%E6%96%B9%E6%B3%95/3-2-flushlimit-6.png" class="" title="image">
+<h3 id="每次write时都sync"><a href="#每次write时都sync" class="headerlink" title="每次write时都sync"></a>每次write时都sync</h3><p>每次write都sync到磁盘，可以绕过从cache flush到磁盘的过程,也就不会产生flush过程中产生的IO过大的问题。</p>
+<img src="/2018/04/18/%E7%A3%81%E7%9B%98IO%E5%9C%A8%E6%96%87%E4%BB%B6%E4%BC%A0%E8%BE%93%E8%BF%87%E7%A8%8B%E4%B8%AD%E7%9A%84%E7%A8%B3%E5%AE%9A%E6%8E%A7%E5%88%B6%E6%96%B9%E6%B3%95/3-3-sync-1.png" class="" title="image">
+
+<p>但每次write都sync带来写磁盘性能过低,落盘速度5M/s左右,util为98%~100%。</p>
+<img src="/2018/04/18/%E7%A3%81%E7%9B%98IO%E5%9C%A8%E6%96%87%E4%BB%B6%E4%BC%A0%E8%BE%93%E8%BF%87%E7%A8%8B%E4%B8%AD%E7%9A%84%E7%A8%B3%E5%AE%9A%E6%8E%A7%E5%88%B6%E6%96%B9%E6%B3%95/3-3-sync-2.png" class="" title="image">
+<h3 id="每收到10个64K的包，调用一次fsync"><a href="#每收到10个64K的包，调用一次fsync" class="headerlink" title="每收到10个64K的包，调用一次fsync"></a>每收到10个64K的包，调用一次fsync</h3><p>考虑到每次write都sync，影响磁盘性能，考虑减少sync的次数。改成累积到一定数量的包后，再调用fsync的方案。</p>
+<p>172.27.162.108 –&gt; 172.27.172.226( V3 )</p>
+<img src="/2018/04/18/%E7%A3%81%E7%9B%98IO%E5%9C%A8%E6%96%87%E4%BB%B6%E4%BC%A0%E8%BE%93%E8%BF%87%E7%A8%8B%E4%B8%AD%E7%9A%84%E7%A8%B3%E5%AE%9A%E6%8E%A7%E5%88%B6%E6%96%B9%E6%B3%95/3-4-fsync-1.png" class="" title="image">
+
+<img src="/2018/04/18/%E7%A3%81%E7%9B%98IO%E5%9C%A8%E6%96%87%E4%BB%B6%E4%BC%A0%E8%BE%93%E8%BF%87%E7%A8%8B%E4%B8%AD%E7%9A%84%E7%A8%B3%E5%AE%9A%E6%8E%A7%E5%88%B6%E6%96%B9%E6%B3%95/3-4-fsync-2.png" class="" title="image">
+
+
+<p>172.28.160.151–&gt; 172.28.161.86( V4 )</p>
+<img src="/2018/04/18/%E7%A3%81%E7%9B%98IO%E5%9C%A8%E6%96%87%E4%BB%B6%E4%BC%A0%E8%BE%93%E8%BF%87%E7%A8%8B%E4%B8%AD%E7%9A%84%E7%A8%B3%E5%AE%9A%E6%8E%A7%E5%88%B6%E6%96%B9%E6%B3%95/3-4-fsync-3.png" class="" title="image">
+
+<img src="/2018/04/18/%E7%A3%81%E7%9B%98IO%E5%9C%A8%E6%96%87%E4%BB%B6%E4%BC%A0%E8%BE%93%E8%BF%87%E7%A8%8B%E4%B8%AD%E7%9A%84%E7%A8%B3%E5%AE%9A%E6%8E%A7%E5%88%B6%E6%96%B9%E6%B3%95/3-4-fsync-4.png" class="" title="image">
+
+<p>可以结果：</p>
+<p>（1）写入IO得到很大提高，在30M/s ~ 200M/s之间，受宿主机影响较大；</p>
+<p>（2）传输过程中，IO一直很稳定，util保持在40%或70%，也没有看到flush进程的出现，说明IO落地是由fsync执行；</p>
+<p>  使标准镜像（小于40G）都能在20分钟内传完，扩容过的镜像也不影响虚机的创建。</p>
+<p>小插曲：</p>
+<p>前面由于代码bug， 在每第10个64K包sync了n次。n为该64K的包，在跳过0的空洞后，拆成的小包的个数。sync次数过多导致IO性能过低，测试数据为6M/s左右。</p>
+<p>172.28.160.151–&gt; 172.28.161.86（V4）</p>
+<img src="/2018/04/18/%E7%A3%81%E7%9B%98IO%E5%9C%A8%E6%96%87%E4%BB%B6%E4%BC%A0%E8%BE%93%E8%BF%87%E7%A8%8B%E4%B8%AD%E7%9A%84%E7%A8%B3%E5%AE%9A%E6%8E%A7%E5%88%B6%E6%96%B9%E6%B3%95/3-4-fsync-5.png" class="" title="image">
+
+<p>strace的查看结果：</p>
+<p>strace -T -p 21712( rsc_server进程PID ) -o test_rsc_server.txt</p>
+<img src="/2018/04/18/%E7%A3%81%E7%9B%98IO%E5%9C%A8%E6%96%87%E4%BB%B6%E4%BC%A0%E8%BE%93%E8%BF%87%E7%A8%8B%E4%B8%AD%E7%9A%84%E7%A8%B3%E5%AE%9A%E6%8E%A7%E5%88%B6%E6%96%B9%E6%B3%95/3-4-fsync-6.png" class="" title="image">
+
+
+<p>IO性能过低。</p>
+<img src="/2018/04/18/%E7%A3%81%E7%9B%98IO%E5%9C%A8%E6%96%87%E4%BB%B6%E4%BC%A0%E8%BE%93%E8%BF%87%E7%A8%8B%E4%B8%AD%E7%9A%84%E7%A8%B3%E5%AE%9A%E6%8E%A7%E5%88%B6%E6%96%B9%E6%B3%95/3-4-fsync-7.png" class="" title="image">
+
+<img src="/2018/04/18/%E7%A3%81%E7%9B%98IO%E5%9C%A8%E6%96%87%E4%BB%B6%E4%BC%A0%E8%BE%93%E8%BF%87%E7%A8%8B%E4%B8%AD%E7%9A%84%E7%A8%B3%E5%AE%9A%E6%8E%A7%E5%88%B6%E6%96%B9%E6%B3%95/3-4-fsync-8.png" class="" title="image">
+
+
+<h2 id="最终方案"><a href="#最终方案" class="headerlink" title="最终方案"></a>最终方案</h2><p>“每收到10个64K的包，调用一次fsync”，由于宿主机的磁盘性能不同，不排除依然可能会有IO打满的情况，因为此时cache到磁盘的过程，是由rsc_server自己控制的，所以可以通过cgroup对rsc_server限速。</p>
+<p>172.27.162.108 –&gt; 172.27.172.226( V3 )</p>
+<p>限速： rsc_server写入dm-0的 Bps=60M/s。</p>
+<img src="/2018/04/18/%E7%A3%81%E7%9B%98IO%E5%9C%A8%E6%96%87%E4%BB%B6%E4%BC%A0%E8%BE%93%E8%BF%87%E7%A8%8B%E4%B8%AD%E7%9A%84%E7%A8%B3%E5%AE%9A%E6%8E%A7%E5%88%B6%E6%96%B9%E6%B3%95/4-final-1.png" class="" title="image">
+
+<img src="/2018/04/18/%E7%A3%81%E7%9B%98IO%E5%9C%A8%E6%96%87%E4%BB%B6%E4%BC%A0%E8%BE%93%E8%BF%87%E7%A8%8B%E4%B8%AD%E7%9A%84%E7%A8%B3%E5%AE%9A%E6%8E%A7%E5%88%B6%E6%96%B9%E6%B3%95/4-final-2.png" class="" title="image">
+
+<p>结果：rsc_server的落盘速度稳定在60M/s。</p>
+<img src="/2018/04/18/%E7%A3%81%E7%9B%98IO%E5%9C%A8%E6%96%87%E4%BB%B6%E4%BC%A0%E8%BE%93%E8%BF%87%E7%A8%8B%E4%B8%AD%E7%9A%84%E7%A8%B3%E5%AE%9A%E6%8E%A7%E5%88%B6%E6%96%B9%E6%B3%95/4-final-3.png" class="" title="image">
+
+<img src="/2018/04/18/%E7%A3%81%E7%9B%98IO%E5%9C%A8%E6%96%87%E4%BB%B6%E4%BC%A0%E8%BE%93%E8%BF%87%E7%A8%8B%E4%B8%AD%E7%9A%84%E7%A8%B3%E5%AE%9A%E6%8E%A7%E5%88%B6%E6%96%B9%E6%B3%95/4-final-4.png" class="" title="image">
+
+<p>因此最终的方案是“fsync + cgroup限速”。</p>
+]]></content>
+      <categories>
+        <category>linux性能优化</category>
+      </categories>
+      <tags>
+        <tag>限速</tag>
+        <tag>cgroup</tag>
+        <tag>磁盘IO</tag>
       </tags>
   </entry>
   <entry>
@@ -1684,33 +1714,32 @@
       </tags>
   </entry>
   <entry>
-    <title>分布式系统架构的简介</title>
-    <url>/2019/03/18/%E5%88%86%E5%B8%83%E5%BC%8F%E7%B3%BB%E7%BB%9F%E6%9E%B6%E6%9E%84%E7%9A%84%E7%AE%80%E4%BB%8B/</url>
-    <content><![CDATA[<p>摘自 分布式系统架构的冰与火 左耳听风</p>
-<h2 id="分布式系统架构的优缺点"><a href="#分布式系统架构的优缺点" class="headerlink" title="分布式系统架构的优缺点"></a>分布式系统架构的优缺点</h2><p>需要分布式系统架构，来代替传统的单体架构的原因：</p>
-<ol>
-<li>增大系统容量 –&gt; 提高性能<br>单台机器的性能无法满足要求时，需要垂直或者水平拆分成分布式系统架构，让更多的机器去承担。</li>
-<li>加强系统可用 –&gt; 提高服务可用性<br>避免单点故障。</li>
+    <title>这些年读过的那些书&amp;&amp;待读清单列表</title>
+    <url>/2019/08/31/%E8%BF%99%E4%BA%9B%E5%B9%B4%E8%AF%BB%E8%BF%87%E7%9A%84%E9%82%A3%E4%BA%9B%E4%B9%A6-%E5%BE%85%E8%AF%BB%E6%B8%85%E5%8D%95%E5%88%97%E8%A1%A8/</url>
+    <content><![CDATA[<p>每年给自己列个计划，要读哪些书，到年尾看看真正看完的有多少。</p>
+<h1 id="2020年待读清单列表"><a href="#2020年待读清单列表" class="headerlink" title="2020年待读清单列表"></a>2020年待读清单列表</h1><ol>
+<li> 《Designing Data-Intensive Applications》</li>
 </ol>
-<p>分布式系统是一种trade-off</p>
-<img src="/2019/03/18/%E5%88%86%E5%B8%83%E5%BC%8F%E7%B3%BB%E7%BB%9F%E6%9E%B6%E6%9E%84%E7%9A%84%E7%AE%80%E4%BB%8B/%E5%8D%95%E4%BD%93%E5%BA%94%E7%94%A8%E5%92%8C%E5%88%86%E5%B8%83%E5%BC%8F%E6%9E%B6%E6%9E%84%E7%9A%84%E4%BC%98%E7%BC%BA%E7%82%B9.png" class="" title="image">
-
-<h2 id="分布式系统的发展"><a href="#分布式系统的发展" class="headerlink" title="分布式系统的发展"></a>分布式系统的发展</h2><p>SOA——基于服务的架构</p>
-<img src="/2019/03/18/%E5%88%86%E5%B8%83%E5%BC%8F%E7%B3%BB%E7%BB%9F%E6%9E%B6%E6%9E%84%E7%9A%84%E7%AE%80%E4%BB%8B/SOA%E6%9E%B6%E6%9E%84%E7%9A%84%E6%BC%94%E5%8C%96.png" class="" title="image">
-
-<ol>
-<li>20 世纪 90 年代前，是单体架构，软件模块高度耦合。</li>
-<li>2000 年左右出现了比较松耦合的 SOA 架构，这个架构需要一个标准的协议或是中间件来联动其它相关联的服务.</li>
-<li>而 2010 年后，出现了微服务架构，这个架构更为松耦合。每一个微服务都能独立完整地运行（所谓的自包含），后端单体的数据库也被微服务这样的架构分散到不同的服务中。而它和传统 SOA 的差别在于，服务间的整合需要一个服务编排或是服务整合的引擎。就好像交响乐中需要有一个指挥来把所有乐器编排和组织在一起。</li>
+<h1 id="2019年待读清单列表"><a href="#2019年待读清单列表" class="headerlink" title="2019年待读清单列表"></a>2019年待读清单列表</h1><ol>
+<li>UNIX环境高级编程（第3版）</li>
+<li>重构网络 SDN架构与实现</li>
+<li>软件定义网络</li>
+<li>全球通史 从史前史到21实际 第7版修订版 上</li>
+<li>全球通史 从史前史到21实际 第7版修订版 下<span id="more"></span></li>
 </ol>
-<p>一般来说，这个编排和组织引擎可以是工作流引擎，也可以是网关。当然，还需要辅助于像容器化调度这样的技术方式，如 Kubernetes.</p>
+<h1 id="这些年读过的那些书"><a href="#这些年读过的那些书" class="headerlink" title="这些年读过的那些书"></a>这些年读过的那些书</h1><h2 id="2020年"><a href="#2020年" class="headerlink" title="2020年"></a>2020年</h2><ol>
+<li>《深度思考》 深度思考前的盲目勤奋，注定是吃力不讨好的徒劳。香奈儿前全球CEO从普通职员到职场巅峰的人生进阶之路。大脑中走得越远，现实中走得越稳。</li>
+</ol>
+<h2 id="2019年"><a href="#2019年" class="headerlink" title="2019年"></a>2019年</h2><ol>
+<li>《TCP/IP详解 卷1：协议（原书第2版）》 <a href="https://xusenqi.github.io/2019/04/24/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0-TCP-IP%E8%AF%A6%E8%A7%A3-%E5%8D%B71%EF%BC%9A%E5%8D%8F%E8%AE%AE/">读书笔记-TCP/IP详解 卷1：协议</a></li>
+<li>《软技能 代码之外的生存指南（Soft Skills - The Software Developer’s Life Manual）》对于程序员是很不错的心灵鸡汤，从职业、自我营销、学习、生产力等方面，讲述了作者的方法和心得，很值得借鉴。</li>
+</ol>
 ]]></content>
       <categories>
-        <category>分布式系统</category>
+        <category>读书笔记</category>
       </categories>
       <tags>
-        <tag>分布式系统</tag>
-        <tag>架构</tag>
+        <tag>清单</tag>
       </tags>
   </entry>
   <entry>
@@ -1797,35 +1826,6 @@
         <tag>debug</tag>
         <tag>delve</tag>
         <tag>dlv</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>这些年读过的那些书&amp;&amp;待读清单列表</title>
-    <url>/2019/08/31/%E8%BF%99%E4%BA%9B%E5%B9%B4%E8%AF%BB%E8%BF%87%E7%9A%84%E9%82%A3%E4%BA%9B%E4%B9%A6-%E5%BE%85%E8%AF%BB%E6%B8%85%E5%8D%95%E5%88%97%E8%A1%A8/</url>
-    <content><![CDATA[<p>每年给自己列个计划，要读哪些书，到年尾看看真正看完的有多少。</p>
-<h1 id="2020年待读清单列表"><a href="#2020年待读清单列表" class="headerlink" title="2020年待读清单列表"></a>2020年待读清单列表</h1><ol>
-<li> 《Designing Data-Intensive Applications》</li>
-</ol>
-<h1 id="2019年待读清单列表"><a href="#2019年待读清单列表" class="headerlink" title="2019年待读清单列表"></a>2019年待读清单列表</h1><ol>
-<li>UNIX环境高级编程（第3版）</li>
-<li>重构网络 SDN架构与实现</li>
-<li>软件定义网络</li>
-<li>全球通史 从史前史到21实际 第7版修订版 上</li>
-<li>全球通史 从史前史到21实际 第7版修订版 下<span id="more"></span></li>
-</ol>
-<h1 id="这些年读过的那些书"><a href="#这些年读过的那些书" class="headerlink" title="这些年读过的那些书"></a>这些年读过的那些书</h1><h2 id="2020年"><a href="#2020年" class="headerlink" title="2020年"></a>2020年</h2><ol>
-<li>《深度思考》 深度思考前的盲目勤奋，注定是吃力不讨好的徒劳。香奈儿前全球CEO从普通职员到职场巅峰的人生进阶之路。大脑中走得越远，现实中走得越稳。</li>
-</ol>
-<h2 id="2019年"><a href="#2019年" class="headerlink" title="2019年"></a>2019年</h2><ol>
-<li>《TCP/IP详解 卷1：协议（原书第2版）》 <a href="https://xusenqi.github.io/2019/04/24/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0-TCP-IP%E8%AF%A6%E8%A7%A3-%E5%8D%B71%EF%BC%9A%E5%8D%8F%E8%AE%AE/">读书笔记-TCP/IP详解 卷1：协议</a></li>
-<li>《软技能 代码之外的生存指南（Soft Skills - The Software Developer’s Life Manual）》对于程序员是很不错的心灵鸡汤，从职业、自我营销、学习、生产力等方面，讲述了作者的方法和心得，很值得借鉴。</li>
-</ol>
-]]></content>
-      <categories>
-        <category>读书笔记</category>
-      </categories>
-      <tags>
-        <tag>清单</tag>
       </tags>
   </entry>
   <entry>

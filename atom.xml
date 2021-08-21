@@ -6,7 +6,7 @@
   <link href="https://xusenqi.github.io/atom.xml" rel="self"/>
   
   <link href="https://xusenqi.github.io/"/>
-  <updated>2021-08-19T09:54:38.644Z</updated>
+  <updated>2020-12-07T14:37:10.000Z</updated>
   <id>https://xusenqi.github.io/</id>
   
   <author>
@@ -21,7 +21,7 @@
     <link href="https://xusenqi.github.io/2020/12/07/c++%E6%9C%8D%E5%8A%A1%E5%86%85%E5%AD%98%E6%8C%81%E7%BB%AD%E5%A2%9E%E9%95%BF%E9%97%AE%E9%A2%98%E7%9A%84%E8%A7%A3%E5%86%B3/"/>
     <id>https://xusenqi.github.io/2020/12/07/c++%E6%9C%8D%E5%8A%A1%E5%86%85%E5%AD%98%E6%8C%81%E7%BB%AD%E5%A2%9E%E9%95%BF%E9%97%AE%E9%A2%98%E7%9A%84%E8%A7%A3%E5%86%B3/</id>
     <published>2020-12-07T14:37:10.000Z</published>
-    <updated>2021-08-19T09:54:38.644Z</updated>
+    <updated>2020-12-07T14:37:10.000Z</updated>
     
     
     <summary type="html">&lt;h1 id=&quot;问题&quot;&gt;&lt;a href=&quot;#问题&quot; class=&quot;headerlink&quot; title=&quot;问题&quot;&gt;&lt;/a&gt;问题&lt;/h1&gt;&lt;p&gt;线上有个用C++写的b服务，随着运行时间的增减，占用内存也会不断增加，最终kernel会触发OOM，导致服务不可用。&lt;/p&gt;
