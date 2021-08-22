@@ -149,17 +149,17 @@
   </li>
         <li class="menu-item menu-item-tags">
 
-    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>标签</a>
+    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>标签<span class="badge">37</span></a>
 
   </li>
         <li class="menu-item menu-item-categories">
 
-    <a href="/categories/" rel="section"><i class="fa fa-fw fa-th"></i>分类</a>
+    <a href="/categories/" rel="section"><i class="fa fa-fw fa-th"></i>分类<span class="badge">12</span></a>
 
   </li>
         <li class="menu-item menu-item-archives">
 
-    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档</a>
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档<span class="badge">27</span></a>
 
   </li>
       <li class="menu-item menu-item-search">
@@ -293,7 +293,7 @@
 
       
         <p>在网上看见很多问node.js如何获取客户端IP,所以记录下来，以供大家参考。</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">function getClientIp(req) &#123;</span><br><span class="line">        return req.headers[&#x27;x-forwarded-for&#x27;] ||</span><br><span class="line">        req.connection.remoteAddress ||</span><br><span class="line">        req.socket.remoteAddress ||</span><br><span class="line">        req.connection.socket.remoteAddress;</span><br><span class="line">    &#125;;</span><br></pre></td></tr></table></figure>
+<figure class="highlight ada"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">function</span> <span class="title">getClientIp</span>(req) &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="type">req.headers[&#x27;x-forwarded-for&#x27;]</span> ||</span><br><span class="line">        req.connection.remoteAddress ||</span><br><span class="line">        req.socket.remoteAddress ||</span><br><span class="line">        req.connection.socket.remoteAddress;</span><br><span class="line">    &#125;;</span><br></pre></td></tr></table></figure>
 
 <p>代码，第一段判断是否有反向代理IP(头信息：x-forwarded-for)，再判断connection的远程IP，以及后端的socket的IP。</p>
 <p><a target="_blank" rel="noopener" href="https://www.cnblogs.com/whitewolf/p/3572724.html">nodejs获取客户端IP Address</a></p>
