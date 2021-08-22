@@ -262,34 +262,6 @@
 ]]></content>
   </entry>
   <entry>
-    <title>TCP Keepalive</title>
-    <url>/2018/10/08/TCP-Keepalive/</url>
-    <content><![CDATA[<h2 id="TCP-Keepalive的作用"><a href="#TCP-Keepalive的作用" class="headerlink" title="TCP Keepalive的作用"></a>TCP Keepalive的作用</h2><p>链接建立之后，如果应用程序或者上层协议一直不发送数据，或者隔很长时间才发送一次数据，当链接很久没有数据报文传输时如何去确定对方还在线，到底是掉线了还是确实没有数据传输，链接还需不需要保持，这种情况在TCP协议设计中是需要考虑到的。 </p>
-<p>TCP协议通过一种巧妙的方式去解决这个问题，当超过一段时间之后，TCP自动发送一个数据为空的报文给对方，如果对方回应了这个报文，说明对方还在线，链接可以继续保持，如果对方没有报文返回，并且重试了多次之后则认为链接丢失，没有必要保持链接。 </p>
-<span id="more"></span>
-<h2 id="TCP-Keepalive的具体处理"><a href="#TCP-Keepalive的具体处理" class="headerlink" title="TCP Keepalive的具体处理"></a>TCP Keepalive的具体处理</h2><p>对于面向连接的TCP socket,在实际应用中通常都要检测对端是否处于连接中,连接端口分两种情况:</p>
-<p>1、连接正常关闭,调用close() shutdown()连接优雅关闭,send与recv立马返回错误,select返回SOCK_ERR;</p>
-<p>2、连接的对端异常关闭,比如网络断掉,突然断电.</p>
-<p>对于第二种情况,判断连接是否断开的方法有一下几种:</p>
-<p>1、自己编写心跳包程序,简单的说就是自己的程序加入一条线程,定时向对端发送数据包,查看是否有ACK,根据ACK的返回情况来管理连接。此方法比较通用,一般使用业务层心跳处理,灵活可控,但改变了现有的协议;</p>
-<p>2、使用TCP的keepalive机制,UNIX网络编程不推荐使用SO_KEEPALIVE来做心跳检测(为什么??)。<br>keepalive原理:TCP内嵌有心跳包,以服务端为例,当server检测到超过一定时间(/proc/sys/net/ipv4/tcp_keepalive_time 7200 即2小时)没有数据传输,那么会向client端发送一个keepalive packet,此时client端有三种反应:</p>
-<p>1、client端连接正常,返回一个ACK.server端收到ACK后重置计时器,在2小时后在发送探测.如果2小时内连接上有数据传输,那么在该时间的基础上向后推延2小时发送探测包;</p>
-<p>2、客户端异常关闭,或网络断开。client无响应,server收不到ACK,在一定时间(/proc/sys/net/ipv4/tcp_keepalive_intvl 75 即75秒)后重发keepalive packet, 并且重发一定次数(/proc/sys/net/ipv4/tcp_keepalive_probes 9 即9次);</p>
-<p>3、客户端曾经崩溃,但已经重启.server收到的探测响应是一个复位,server端终止连接。</p>
-<h2 id="注意和-HTTP的Keep-Alive区别"><a href="#注意和-HTTP的Keep-Alive区别" class="headerlink" title="注意和 HTTP的Keep-Alive区别"></a>注意和 HTTP的Keep-Alive区别</h2><p>http keep-alive与tcp keep-alive，不是同一回事，意图不一样。http keep-alive是为了让tcp活得更久一点，以便在同一个连接上传送多个http，提高socket的效率。<br>http-keepalive的具体作用查看这里 <a href="http://www.nowamagic.net/academy/detail/23350305">HTTP Keep-Alive是什么？如何工作？</a></p>
-<p>TCP的keepalive机制意图在于保活、心跳，检测连接错误。</p>
-<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><p><a href="https://blog.csdn.net/callinglove/article/details/38380673">Linux SO_KEEPALIVE属性,心跳</a></p>
-<p><a href="http://www.blogjava.net/yongboy/archive/2015/04/14/424413.html">随手记之TCP Keepalive笔记</a></p>
-]]></content>
-      <categories>
-        <category>网络</category>
-      </categories>
-      <tags>
-        <tag>TCP</tag>
-        <tag>Keepalive</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>Remote Debugging Go Code with Visual Studio Code</title>
     <url>/2019/12/23/Remote-Debug-Go-Code-with-Visual-Studio-Code/</url>
     <content><![CDATA[<p>当了解一些大型项目的代码逻辑时，如kubernetes，跟着调试器跟踪代码学习，是很好的方式。当项目部署在远程环境时，在本机进行开发，很自然对Remote Debug有迫切需求，这也是和调试一般golang程序最主要的诉求区别点，本文将通过两个实际例子，来介绍如何Remote Debug。</p>
@@ -389,6 +361,34 @@
         <tag>vscode</tag>
         <tag>remote debug</tag>
         <tag>k8s</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>TCP Keepalive</title>
+    <url>/2018/10/08/TCP-Keepalive/</url>
+    <content><![CDATA[<h2 id="TCP-Keepalive的作用"><a href="#TCP-Keepalive的作用" class="headerlink" title="TCP Keepalive的作用"></a>TCP Keepalive的作用</h2><p>链接建立之后，如果应用程序或者上层协议一直不发送数据，或者隔很长时间才发送一次数据，当链接很久没有数据报文传输时如何去确定对方还在线，到底是掉线了还是确实没有数据传输，链接还需不需要保持，这种情况在TCP协议设计中是需要考虑到的。 </p>
+<p>TCP协议通过一种巧妙的方式去解决这个问题，当超过一段时间之后，TCP自动发送一个数据为空的报文给对方，如果对方回应了这个报文，说明对方还在线，链接可以继续保持，如果对方没有报文返回，并且重试了多次之后则认为链接丢失，没有必要保持链接。 </p>
+<span id="more"></span>
+<h2 id="TCP-Keepalive的具体处理"><a href="#TCP-Keepalive的具体处理" class="headerlink" title="TCP Keepalive的具体处理"></a>TCP Keepalive的具体处理</h2><p>对于面向连接的TCP socket,在实际应用中通常都要检测对端是否处于连接中,连接端口分两种情况:</p>
+<p>1、连接正常关闭,调用close() shutdown()连接优雅关闭,send与recv立马返回错误,select返回SOCK_ERR;</p>
+<p>2、连接的对端异常关闭,比如网络断掉,突然断电.</p>
+<p>对于第二种情况,判断连接是否断开的方法有一下几种:</p>
+<p>1、自己编写心跳包程序,简单的说就是自己的程序加入一条线程,定时向对端发送数据包,查看是否有ACK,根据ACK的返回情况来管理连接。此方法比较通用,一般使用业务层心跳处理,灵活可控,但改变了现有的协议;</p>
+<p>2、使用TCP的keepalive机制,UNIX网络编程不推荐使用SO_KEEPALIVE来做心跳检测(为什么??)。<br>keepalive原理:TCP内嵌有心跳包,以服务端为例,当server检测到超过一定时间(/proc/sys/net/ipv4/tcp_keepalive_time 7200 即2小时)没有数据传输,那么会向client端发送一个keepalive packet,此时client端有三种反应:</p>
+<p>1、client端连接正常,返回一个ACK.server端收到ACK后重置计时器,在2小时后在发送探测.如果2小时内连接上有数据传输,那么在该时间的基础上向后推延2小时发送探测包;</p>
+<p>2、客户端异常关闭,或网络断开。client无响应,server收不到ACK,在一定时间(/proc/sys/net/ipv4/tcp_keepalive_intvl 75 即75秒)后重发keepalive packet, 并且重发一定次数(/proc/sys/net/ipv4/tcp_keepalive_probes 9 即9次);</p>
+<p>3、客户端曾经崩溃,但已经重启.server收到的探测响应是一个复位,server端终止连接。</p>
+<h2 id="注意和-HTTP的Keep-Alive区别"><a href="#注意和-HTTP的Keep-Alive区别" class="headerlink" title="注意和 HTTP的Keep-Alive区别"></a>注意和 HTTP的Keep-Alive区别</h2><p>http keep-alive与tcp keep-alive，不是同一回事，意图不一样。http keep-alive是为了让tcp活得更久一点，以便在同一个连接上传送多个http，提高socket的效率。<br>http-keepalive的具体作用查看这里 <a href="http://www.nowamagic.net/academy/detail/23350305">HTTP Keep-Alive是什么？如何工作？</a></p>
+<p>TCP的keepalive机制意图在于保活、心跳，检测连接错误。</p>
+<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><p><a href="https://blog.csdn.net/callinglove/article/details/38380673">Linux SO_KEEPALIVE属性,心跳</a></p>
+<p><a href="http://www.blogjava.net/yongboy/archive/2015/04/14/424413.html">随手记之TCP Keepalive笔记</a></p>
+]]></content>
+      <categories>
+        <category>网络</category>
+      </categories>
+      <tags>
+        <tag>TCP</tag>
+        <tag>Keepalive</tag>
       </tags>
   </entry>
   <entry>
@@ -1079,6 +1079,140 @@
       </tags>
   </entry>
   <entry>
+    <title>一次node进程cpu负载高问题的处理</title>
+    <url>/2019/07/13/%E4%B8%80%E6%AC%A1node%E8%BF%9B%E7%A8%8Bcpu%E8%B4%9F%E8%BD%BD100-%E9%97%AE%E9%A2%98%E7%9A%84%E5%A4%84%E7%90%86/</url>
+    <content><![CDATA[<h1 id="1-node进程负载高的问题"><a href="#1-node进程负载高的问题" class="headerlink" title="1 node进程负载高的问题"></a>1 node进程负载高的问题</h1><ul>
+<li>线上有个用node开发的uhost-manager的服务。每个set内会有多台物理机，每台物理机（宿主机）上存在着1台或者多台虚拟机。uhost-manager里有个定时逻辑：每隔30s,从MongoDB里拉取所有的虚拟机的记录，数量为2000多台；将位于同一台宿主机上的虚拟机资源，包括cpu、内存、磁盘容量等，做个sum，将sum再填入对应宿主机（共200多台）的记录里，表示已经被占用的资源。</li>
+<li>由于计算量大，和代码写得差，导致在该定时的计算任务执行时，会把占用的cpu单核打满；如果uhost-manager此时又有其他接口被调用时，就会出现响应慢的问题，导致调用方的服务也响应慢，甚至会因超时导致服务接口不可用。</li>
+</ul>
+<img src="/2019/07/13/%E4%B8%80%E6%AC%A1node%E8%BF%9B%E7%A8%8Bcpu%E8%B4%9F%E8%BD%BD100-%E9%97%AE%E9%A2%98%E7%9A%84%E5%A4%84%E7%90%86/uhost-manager-cpu-100.png" class="" title="image">
+<p>这个单核打满持续的时间短，在1s左右。</p>
+<span id="more"></span>
+
+<h1 id="2-问题的解决"><a href="#2-问题的解决" class="headerlink" title="2 问题的解决"></a>2 问题的解决</h1><p>为了解决这个问题，带来两个要思考的问题：</p>
+<ul>
+<li>解决方法 –&gt; 怎么改进代码</li>
+<li>怎么衡量改进的效果 –&gt;<br>因为负载高的时间短，统计实时cpu负载，想到的命令只有top，但top命令本身无法做到统计，加入单核打满时间从1秒降到0.9秒，是无法凭肉眼感知的；像ps、vmstat等，也都不满足统计某个进程的实时负载</li>
+</ul>
+<h2 id="2-1-统计进程占用的cpu运行时间"><a href="#2-1-统计进程占用的cpu运行时间" class="headerlink" title="2.1 统计进程占用的cpu运行时间"></a>2.1 统计进程占用的cpu运行时间</h2><p>/proc/<pid>/stat该文件包含了某一进程所有的活动的信息，该文件中的所有值都是从系统启动开始累计到当前时刻。</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line"># cat /proc/17273/stat</span><br><span class="line">17273 (node) R 1369 17273 17273 0 -1 4218880 12446677 0 2 0 380634 40519 0 0 20 0 6 0 3525562392 964878336 38584 18446744073709551615 4194304 5593643 140724209068064 140400647923040 140400819234755 0 0 4096 16898 0 0 0 17 1 0 0 3 0 0 7692288 7703720 35180544 140724209071315 140724209071434 140724209071434 140724209074154 0</span><br></pre></td></tr></table></figure>
+<p>这样看非常不直观，通过网上找的一段小代码procstat[1]，以人类可读的方式显示。</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">[root@172-30-38-65 uhost-manager.logs]# procstat 17273</span><br><span class="line">                 pid: 17273</span><br><span class="line">               tcomm: (node)</span><br><span class="line">                ...</span><br><span class="line">               utime: 3818.830000</span><br><span class="line">               stime: 406.260000</span><br><span class="line">              cutime: 0.000000</span><br><span class="line">              cstime: 0.000000</span><br><span class="line">                 ...</span><br><span class="line">              start_time: 07.13 03:00 (77599.65s)</span><br><span class="line">                 ...</span><br></pre></td></tr></table></figure>
+<p>进程的总Cpu时间processCpuTime = utime + stime + cutime + cstime，该值包括其所有线程的cpu时间[2]。注：这里统计出来的单位不是s，是相对于clock ticks来说的[3]。</p>
+<p>我们的衡量手段为统计一段时间内新增的该进程的cpu时间；该值越小，表示运行时间越短。</p>
+<p>具体步骤如下：</p>
+<ul>
+<li>以其他端口，再起一个uhost-manager服务，防止被其他服务调用；</li>
+<li>另外，定时任务里只保留定时更新宿主机占用资源的接口（ smi_update_host_resource ）。</li>
+<li>为了使统计的cpu占用时间长一点，smi改成每5秒执行一次；总共统计60s。查看新增的cpu时间，processCpuTime_60s - processCpuTime_0s。</li>
+</ul>
+<h2 id="2-2-解决方法"><a href="#2-2-解决方法" class="headerlink" title="2.2 解决方法"></a>2.2 解决方法</h2><p>为了解决，需要知道消耗cpu性能的环节在哪些步骤上，好进一步优化。</p>
+<h3 id="2-2-1-perf"><a href="#2-2-1-perf" class="headerlink" title="2.2.1 perf"></a>2.2.1 perf</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">perf top -g -p 26642 -d 1  #此时uhost-manager pid为26642</span><br></pre></td></tr></table></figure>
+<img src="/2019/07/13/%E4%B8%80%E6%AC%A1node%E8%BF%9B%E7%A8%8Bcpu%E8%B4%9F%E8%BD%BD100-%E9%97%AE%E9%A2%98%E7%9A%84%E5%A4%84%E7%90%86/perf_top.png" class="" title="image">
+<p>这里看起来不直观，并不能看清楚是哪个操作引起的。</p>
+<h3 id="2-2-2-FlameGraph"><a href="#2-2-2-FlameGraph" class="headerlink" title="2.2.2 FlameGraph"></a>2.2.2 FlameGraph</h3><p>火焰图的方式比较直观，这里测试下效果。</p>
+<ul>
+<li>采集脚本： perf record -F 99 -p 26642 -g – sleep 60</li>
+</ul>
+<p>参数说明如下：</p>
+<table>
+<thead>
+<tr>
+<th align="center">采集频率(ms)</th>
+<th align="center">进程pid</th>
+<th align="center">调用记录</th>
+<th align="center">记录时长</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">-F 99</td>
+<td align="center">-p 26642</td>
+<td align="center">-g</td>
+<td align="center">–sleep 60</td>
+</tr>
+</tbody></table>
+<ul>
+<li>进程对应的符号表perf-pid.map权限设置：$chown root /tmp/perf-pid.map。</li>
+</ul>
+<p>踩过的坑！！！是为了消除下面这个问题的</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">File /tmp/perf-PID.map not owned by current user or root, ignoring it (use -f to override).</span><br><span class="line">Failed to open /tmp/perf-PID.map, continuing without symbols</span><br></pre></td></tr></table></figure>
+<ul>
+<li>FlameGraph使用方式如下：</li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">git clone https://github.com/brendangregg/FlameGraph.git</span><br><span class="line">cd FlameGraph</span><br><span class="line">perf script -i perf.data &amp;&gt; perf.unfold  # 以下几个命令都是在FlameGraph目录下执行的</span><br><span class="line">perl stackcollapse-perf.pl perf.unfold &amp;&gt; perf.folded</span><br><span class="line">perl flamegraph.pl perf.folded &gt; perf.svg</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>火焰图效果</li>
+</ul>
+<img src="/2019/07/13/%E4%B8%80%E6%AC%A1node%E8%BF%9B%E7%A8%8Bcpu%E8%B4%9F%E8%BD%BD100-%E9%97%AE%E9%A2%98%E7%9A%84%E5%A4%84%E7%90%86/perf_flamegraph.png" class="" title="image">
+
+<p>火焰图中看到libv8.so.3.14.5是消耗cpu最多的，但底下的方块（父函数）是unknown，所以还是无法知晓是哪里调用的。</p>
+<p>火焰图形状对应关系</p>
+<table>
+<thead>
+<tr>
+<th align="left">形状</th>
+<th align="left">含义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left">每一个平面方块</td>
+<td align="left">一个函数在栈中的位置（也称一个栈帧）</td>
+</tr>
+<tr>
+<td align="left">Y轴</td>
+<td align="left">栈的深度(也叫栈的帧数)</td>
+</tr>
+<tr>
+<td align="left">X轴</td>
+<td align="left">表示总的样例，不过它们左右顺序没有特殊含义</td>
+</tr>
+<tr>
+<td align="left">每个平面方块的宽度</td>
+<td align="left">方块的宽度标示CPU使用时间或者说相对父函数而言使用CPU的比率，越宽代表占用CPU的时间越长，或者使用CPU很频繁</td>
+</tr>
+</tbody></table>
+<h3 id="2-2-3-原始的分析代码方式（肉眼看）"><a href="#2-2-3-原始的分析代码方式（肉眼看）" class="headerlink" title="2.2.3 原始的分析代码方式（肉眼看）"></a>2.2.3 原始的分析代码方式（肉眼看）</h3><p>以上手段不起作用后，只能逐行分析代码，看哪里可能消耗的cpu多，然后优化掉。</p>
+<h4 id="原始的消耗时间"><a href="#原始的消耗时间" class="headerlink" title="原始的消耗时间"></a>原始的消耗时间</h4><p>先按照2.1中的采集uhost-manager进程在60s内消耗的cpu时间，为10.65。这里的时间采集是5次测量，然后取平均值。</p>
+<h4 id="lean"><a href="#lean" class="headerlink" title="lean"></a>lean</h4><p>从MongoDB里读取数据时，用到mongoose的模块。使用lean可以加快查询速度。</p>
+<img src="/2019/07/13/%E4%B8%80%E6%AC%A1node%E8%BF%9B%E7%A8%8Bcpu%E8%B4%9F%E8%BD%BD100-%E9%97%AE%E9%A2%98%E7%9A%84%E5%A4%84%E7%90%86/query%E6%97%B6lean%E7%9A%84%E4%BD%BF%E7%94%A8.png" class="" title="image">
+
+<blockquote>
+<p>The lean option tells Mongoose to skip hydrating the result documents. This makes queries faster and less memory intensive, <strong>but the result documents are plain old JavaScript objects (POJOs), not Mongoose documents</strong>.</p>
+</blockquote>
+<blockquote>
+<p>If you’re executing a query and sending the results without modification to, say, an Express response, you should use lean. <font color=#FF0000 >In general, if you do not modify the query results and do not use custom getters, you should use lean(). If you modify the query results or rely on features like getters or transforms, you should not use lean()</font>.</p>
+</blockquote>
+<p>测试下来结果为6.5，降低了40%左右，效果明显。</p>
+<h4 id="减少无用的重复执行的语句"><a href="#减少无用的重复执行的语句" class="headerlink" title="减少无用的重复执行的语句"></a>减少无用的重复执行的语句</h4><p>修改之后，测试下来结果为5.3。</p>
+<img src="/2019/07/13/%E4%B8%80%E6%AC%A1node%E8%BF%9B%E7%A8%8Bcpu%E8%B4%9F%E8%BD%BD100-%E9%97%AE%E9%A2%98%E7%9A%84%E5%A4%84%E7%90%86/%E9%87%8D%E5%A4%8D%E5%88%A4%E6%96%AD%E8%AE%BE%E7%BD%AE%E5%88%9D%E5%A7%8B%E5%80%BC%E7%9A%84%E4%BB%A3%E7%A0%81.png" class="" title="image">
+
+<h4 id="减少日志打印"><a href="#减少日志打印" class="headerlink" title="减少日志打印"></a>减少日志打印</h4><p>减少量大的无用的日志打印后，测试下来结果为1.9。所以日志打印的cpu消耗在原始基础上占了32%，即（5.3-1.9)/10.65。</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">// 每台虚机打印下vcpu的个数，&gt;2000</span><br><span class="line">GLOBAL.logger.info(_vcpus);</span><br><span class="line"></span><br><span class="line">// 每台宿主机打印下host_id, &gt;200</span><br><span class="line">GLOBAL.logger.info(&quot;[SMI]check:&quot;, host_ids[i]);</span><br></pre></td></tr></table></figure>
+
+<h1 id="3-优化效果"><a href="#3-优化效果" class="headerlink" title="3 优化效果"></a>3 优化效果</h1><p>经过优化后，消耗时间是1.9 clock ticks，相对于原来的10.65 clock ticks，减少了82.16%。</p>
+<img src="/2019/07/13/%E4%B8%80%E6%AC%A1node%E8%BF%9B%E7%A8%8Bcpu%E8%B4%9F%E8%BD%BD100-%E9%97%AE%E9%A2%98%E7%9A%84%E5%A4%84%E7%90%86/%E8%BF%9B%E7%A8%8B%E7%9A%84cpu%E6%97%B6%E9%97%B4.png" class="" title="image">
+<p>单核峰值CPU消耗为70%左右，且持续时间很短，为100ms左右。</p>
+<h1 id="参考链接"><a href="#参考链接" class="headerlink" title="参考链接"></a>参考链接</h1><ol>
+<li><a href="http://brokestream.com/procstat.html">procstat - displays linux proc stat (/proc/pid/stat) in human-readable format
+</a></li>
+<li><a href="http://www.samirchen.com/linux-cpu-performance/">Linux环境下进程的CPU占用率</a></li>
+<li><a href="http://man7.org/linux/man-pages/man5/proc.5.html">Linux Programmer’s Manual PROC(5)</a></li>
+<li><a href="https://cloud.tencent.com/developer/article/1005867">NodeJS 性能优化之 CPU 看图篇</a></li>
+<li><a href="http://www.cpper.cn/2017/06/04/linux/perf/">Linux性能调优工具perf的使用</a></li>
+<li><a href="https://www.yangcs.net/posts/how-to-deal-with-increasing-of-cpu-usage/">某个应用的 CPU 使用率居然达到 100%，我该怎么办？</a></li>
+<li><a href="https://mongoosejs.com/docs/tutorials/lean.html#lean-and-populate">Faster Mongoose Queries With Lean</a></li>
+</ol>
+]]></content>
+      <categories>
+        <category>linux性能优化</category>
+      </categories>
+      <tags>
+        <tag>cpu</tag>
+        <tag>node</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>一次mongo慢查询的优化过程</title>
     <url>/2019/07/24/%E4%B8%80%E6%AC%A1mongo%E6%85%A2%E6%9F%A5%E8%AF%A2%E7%9A%84%E4%BC%98%E5%8C%96%E8%BF%87%E7%A8%8B/</url>
     <content><![CDATA[<p>今天发现查询mongo时容易慢查询，现在将整个排查及优化过程,总结记录如下。</p>
@@ -1213,140 +1347,6 @@
       <tags>
         <tag>mongo</tag>
         <tag>MongoDB</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>一次node进程cpu负载高问题的处理</title>
-    <url>/2019/07/13/%E4%B8%80%E6%AC%A1node%E8%BF%9B%E7%A8%8Bcpu%E8%B4%9F%E8%BD%BD100-%E9%97%AE%E9%A2%98%E7%9A%84%E5%A4%84%E7%90%86/</url>
-    <content><![CDATA[<h1 id="1-node进程负载高的问题"><a href="#1-node进程负载高的问题" class="headerlink" title="1 node进程负载高的问题"></a>1 node进程负载高的问题</h1><ul>
-<li>线上有个用node开发的uhost-manager的服务。每个set内会有多台物理机，每台物理机（宿主机）上存在着1台或者多台虚拟机。uhost-manager里有个定时逻辑：每隔30s,从MongoDB里拉取所有的虚拟机的记录，数量为2000多台；将位于同一台宿主机上的虚拟机资源，包括cpu、内存、磁盘容量等，做个sum，将sum再填入对应宿主机（共200多台）的记录里，表示已经被占用的资源。</li>
-<li>由于计算量大，和代码写得差，导致在该定时的计算任务执行时，会把占用的cpu单核打满；如果uhost-manager此时又有其他接口被调用时，就会出现响应慢的问题，导致调用方的服务也响应慢，甚至会因超时导致服务接口不可用。</li>
-</ul>
-<img src="/2019/07/13/%E4%B8%80%E6%AC%A1node%E8%BF%9B%E7%A8%8Bcpu%E8%B4%9F%E8%BD%BD100-%E9%97%AE%E9%A2%98%E7%9A%84%E5%A4%84%E7%90%86/uhost-manager-cpu-100.png" class="" title="image">
-<p>这个单核打满持续的时间短，在1s左右。</p>
-<span id="more"></span>
-
-<h1 id="2-问题的解决"><a href="#2-问题的解决" class="headerlink" title="2 问题的解决"></a>2 问题的解决</h1><p>为了解决这个问题，带来两个要思考的问题：</p>
-<ul>
-<li>解决方法 –&gt; 怎么改进代码</li>
-<li>怎么衡量改进的效果 –&gt;<br>因为负载高的时间短，统计实时cpu负载，想到的命令只有top，但top命令本身无法做到统计，加入单核打满时间从1秒降到0.9秒，是无法凭肉眼感知的；像ps、vmstat等，也都不满足统计某个进程的实时负载</li>
-</ul>
-<h2 id="2-1-统计进程占用的cpu运行时间"><a href="#2-1-统计进程占用的cpu运行时间" class="headerlink" title="2.1 统计进程占用的cpu运行时间"></a>2.1 统计进程占用的cpu运行时间</h2><p>/proc/<pid>/stat该文件包含了某一进程所有的活动的信息，该文件中的所有值都是从系统启动开始累计到当前时刻。</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line"># cat /proc/17273/stat</span><br><span class="line">17273 (node) R 1369 17273 17273 0 -1 4218880 12446677 0 2 0 380634 40519 0 0 20 0 6 0 3525562392 964878336 38584 18446744073709551615 4194304 5593643 140724209068064 140400647923040 140400819234755 0 0 4096 16898 0 0 0 17 1 0 0 3 0 0 7692288 7703720 35180544 140724209071315 140724209071434 140724209071434 140724209074154 0</span><br></pre></td></tr></table></figure>
-<p>这样看非常不直观，通过网上找的一段小代码procstat[1]，以人类可读的方式显示。</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">[root@172-30-38-65 uhost-manager.logs]# procstat 17273</span><br><span class="line">                 pid: 17273</span><br><span class="line">               tcomm: (node)</span><br><span class="line">                ...</span><br><span class="line">               utime: 3818.830000</span><br><span class="line">               stime: 406.260000</span><br><span class="line">              cutime: 0.000000</span><br><span class="line">              cstime: 0.000000</span><br><span class="line">                 ...</span><br><span class="line">              start_time: 07.13 03:00 (77599.65s)</span><br><span class="line">                 ...</span><br></pre></td></tr></table></figure>
-<p>进程的总Cpu时间processCpuTime = utime + stime + cutime + cstime，该值包括其所有线程的cpu时间[2]。注：这里统计出来的单位不是s，是相对于clock ticks来说的[3]。</p>
-<p>我们的衡量手段为统计一段时间内新增的该进程的cpu时间；该值越小，表示运行时间越短。</p>
-<p>具体步骤如下：</p>
-<ul>
-<li>以其他端口，再起一个uhost-manager服务，防止被其他服务调用；</li>
-<li>另外，定时任务里只保留定时更新宿主机占用资源的接口（ smi_update_host_resource ）。</li>
-<li>为了使统计的cpu占用时间长一点，smi改成每5秒执行一次；总共统计60s。查看新增的cpu时间，processCpuTime_60s - processCpuTime_0s。</li>
-</ul>
-<h2 id="2-2-解决方法"><a href="#2-2-解决方法" class="headerlink" title="2.2 解决方法"></a>2.2 解决方法</h2><p>为了解决，需要知道消耗cpu性能的环节在哪些步骤上，好进一步优化。</p>
-<h3 id="2-2-1-perf"><a href="#2-2-1-perf" class="headerlink" title="2.2.1 perf"></a>2.2.1 perf</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">perf top -g -p 26642 -d 1  #此时uhost-manager pid为26642</span><br></pre></td></tr></table></figure>
-<img src="/2019/07/13/%E4%B8%80%E6%AC%A1node%E8%BF%9B%E7%A8%8Bcpu%E8%B4%9F%E8%BD%BD100-%E9%97%AE%E9%A2%98%E7%9A%84%E5%A4%84%E7%90%86/perf_top.png" class="" title="image">
-<p>这里看起来不直观，并不能看清楚是哪个操作引起的。</p>
-<h3 id="2-2-2-FlameGraph"><a href="#2-2-2-FlameGraph" class="headerlink" title="2.2.2 FlameGraph"></a>2.2.2 FlameGraph</h3><p>火焰图的方式比较直观，这里测试下效果。</p>
-<ul>
-<li>采集脚本： perf record -F 99 -p 26642 -g – sleep 60</li>
-</ul>
-<p>参数说明如下：</p>
-<table>
-<thead>
-<tr>
-<th align="center">采集频率(ms)</th>
-<th align="center">进程pid</th>
-<th align="center">调用记录</th>
-<th align="center">记录时长</th>
-</tr>
-</thead>
-<tbody><tr>
-<td align="center">-F 99</td>
-<td align="center">-p 26642</td>
-<td align="center">-g</td>
-<td align="center">–sleep 60</td>
-</tr>
-</tbody></table>
-<ul>
-<li>进程对应的符号表perf-pid.map权限设置：$chown root /tmp/perf-pid.map。</li>
-</ul>
-<p>踩过的坑！！！是为了消除下面这个问题的</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">File /tmp/perf-PID.map not owned by current user or root, ignoring it (use -f to override).</span><br><span class="line">Failed to open /tmp/perf-PID.map, continuing without symbols</span><br></pre></td></tr></table></figure>
-<ul>
-<li>FlameGraph使用方式如下：</li>
-</ul>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">git clone https://github.com/brendangregg/FlameGraph.git</span><br><span class="line">cd FlameGraph</span><br><span class="line">perf script -i perf.data &amp;&gt; perf.unfold  # 以下几个命令都是在FlameGraph目录下执行的</span><br><span class="line">perl stackcollapse-perf.pl perf.unfold &amp;&gt; perf.folded</span><br><span class="line">perl flamegraph.pl perf.folded &gt; perf.svg</span><br></pre></td></tr></table></figure>
-
-<ul>
-<li>火焰图效果</li>
-</ul>
-<img src="/2019/07/13/%E4%B8%80%E6%AC%A1node%E8%BF%9B%E7%A8%8Bcpu%E8%B4%9F%E8%BD%BD100-%E9%97%AE%E9%A2%98%E7%9A%84%E5%A4%84%E7%90%86/perf_flamegraph.png" class="" title="image">
-
-<p>火焰图中看到libv8.so.3.14.5是消耗cpu最多的，但底下的方块（父函数）是unknown，所以还是无法知晓是哪里调用的。</p>
-<p>火焰图形状对应关系</p>
-<table>
-<thead>
-<tr>
-<th align="left">形状</th>
-<th align="left">含义</th>
-</tr>
-</thead>
-<tbody><tr>
-<td align="left">每一个平面方块</td>
-<td align="left">一个函数在栈中的位置（也称一个栈帧）</td>
-</tr>
-<tr>
-<td align="left">Y轴</td>
-<td align="left">栈的深度(也叫栈的帧数)</td>
-</tr>
-<tr>
-<td align="left">X轴</td>
-<td align="left">表示总的样例，不过它们左右顺序没有特殊含义</td>
-</tr>
-<tr>
-<td align="left">每个平面方块的宽度</td>
-<td align="left">方块的宽度标示CPU使用时间或者说相对父函数而言使用CPU的比率，越宽代表占用CPU的时间越长，或者使用CPU很频繁</td>
-</tr>
-</tbody></table>
-<h3 id="2-2-3-原始的分析代码方式（肉眼看）"><a href="#2-2-3-原始的分析代码方式（肉眼看）" class="headerlink" title="2.2.3 原始的分析代码方式（肉眼看）"></a>2.2.3 原始的分析代码方式（肉眼看）</h3><p>以上手段不起作用后，只能逐行分析代码，看哪里可能消耗的cpu多，然后优化掉。</p>
-<h4 id="原始的消耗时间"><a href="#原始的消耗时间" class="headerlink" title="原始的消耗时间"></a>原始的消耗时间</h4><p>先按照2.1中的采集uhost-manager进程在60s内消耗的cpu时间，为10.65。这里的时间采集是5次测量，然后取平均值。</p>
-<h4 id="lean"><a href="#lean" class="headerlink" title="lean"></a>lean</h4><p>从MongoDB里读取数据时，用到mongoose的模块。使用lean可以加快查询速度。</p>
-<img src="/2019/07/13/%E4%B8%80%E6%AC%A1node%E8%BF%9B%E7%A8%8Bcpu%E8%B4%9F%E8%BD%BD100-%E9%97%AE%E9%A2%98%E7%9A%84%E5%A4%84%E7%90%86/query%E6%97%B6lean%E7%9A%84%E4%BD%BF%E7%94%A8.png" class="" title="image">
-
-<blockquote>
-<p>The lean option tells Mongoose to skip hydrating the result documents. This makes queries faster and less memory intensive, <strong>but the result documents are plain old JavaScript objects (POJOs), not Mongoose documents</strong>.</p>
-</blockquote>
-<blockquote>
-<p>If you’re executing a query and sending the results without modification to, say, an Express response, you should use lean. <font color=#FF0000 >In general, if you do not modify the query results and do not use custom getters, you should use lean(). If you modify the query results or rely on features like getters or transforms, you should not use lean()</font>.</p>
-</blockquote>
-<p>测试下来结果为6.5，降低了40%左右，效果明显。</p>
-<h4 id="减少无用的重复执行的语句"><a href="#减少无用的重复执行的语句" class="headerlink" title="减少无用的重复执行的语句"></a>减少无用的重复执行的语句</h4><p>修改之后，测试下来结果为5.3。</p>
-<img src="/2019/07/13/%E4%B8%80%E6%AC%A1node%E8%BF%9B%E7%A8%8Bcpu%E8%B4%9F%E8%BD%BD100-%E9%97%AE%E9%A2%98%E7%9A%84%E5%A4%84%E7%90%86/%E9%87%8D%E5%A4%8D%E5%88%A4%E6%96%AD%E8%AE%BE%E7%BD%AE%E5%88%9D%E5%A7%8B%E5%80%BC%E7%9A%84%E4%BB%A3%E7%A0%81.png" class="" title="image">
-
-<h4 id="减少日志打印"><a href="#减少日志打印" class="headerlink" title="减少日志打印"></a>减少日志打印</h4><p>减少量大的无用的日志打印后，测试下来结果为1.9。所以日志打印的cpu消耗在原始基础上占了32%，即（5.3-1.9)/10.65。</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">// 每台虚机打印下vcpu的个数，&gt;2000</span><br><span class="line">GLOBAL.logger.info(_vcpus);</span><br><span class="line"></span><br><span class="line">// 每台宿主机打印下host_id, &gt;200</span><br><span class="line">GLOBAL.logger.info(&quot;[SMI]check:&quot;, host_ids[i]);</span><br></pre></td></tr></table></figure>
-
-<h1 id="3-优化效果"><a href="#3-优化效果" class="headerlink" title="3 优化效果"></a>3 优化效果</h1><p>经过优化后，消耗时间是1.9 clock ticks，相对于原来的10.65 clock ticks，减少了82.16%。</p>
-<img src="/2019/07/13/%E4%B8%80%E6%AC%A1node%E8%BF%9B%E7%A8%8Bcpu%E8%B4%9F%E8%BD%BD100-%E9%97%AE%E9%A2%98%E7%9A%84%E5%A4%84%E7%90%86/%E8%BF%9B%E7%A8%8B%E7%9A%84cpu%E6%97%B6%E9%97%B4.png" class="" title="image">
-<p>单核峰值CPU消耗为70%左右，且持续时间很短，为100ms左右。</p>
-<h1 id="参考链接"><a href="#参考链接" class="headerlink" title="参考链接"></a>参考链接</h1><ol>
-<li><a href="http://brokestream.com/procstat.html">procstat - displays linux proc stat (/proc/pid/stat) in human-readable format
-</a></li>
-<li><a href="http://www.samirchen.com/linux-cpu-performance/">Linux环境下进程的CPU占用率</a></li>
-<li><a href="http://man7.org/linux/man-pages/man5/proc.5.html">Linux Programmer’s Manual PROC(5)</a></li>
-<li><a href="https://cloud.tencent.com/developer/article/1005867">NodeJS 性能优化之 CPU 看图篇</a></li>
-<li><a href="http://www.cpper.cn/2017/06/04/linux/perf/">Linux性能调优工具perf的使用</a></li>
-<li><a href="https://www.yangcs.net/posts/how-to-deal-with-increasing-of-cpu-usage/">某个应用的 CPU 使用率居然达到 100%，我该怎么办？</a></li>
-<li><a href="https://mongoosejs.com/docs/tutorials/lean.html#lean-and-populate">Faster Mongoose Queries With Lean</a></li>
-</ol>
-]]></content>
-      <categories>
-        <category>linux性能优化</category>
-      </categories>
-      <tags>
-        <tag>cpu</tag>
-        <tag>node</tag>
       </tags>
   </entry>
   <entry>
