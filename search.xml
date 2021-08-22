@@ -1,104 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <search>
   <entry>
-    <title>Go语言 - 01 工作区和GOPATH</title>
-    <url>/2018/08/12/Go%E8%AF%AD%E8%A8%80-01-%E5%B7%A5%E4%BD%9C%E5%8C%BA%E5%92%8CGOPATH/</url>
-    <content><![CDATA[<h2 id="Go语言的安装"><a href="#Go语言的安装" class="headerlink" title="Go语言的安装"></a>Go语言的安装</h2><p>参照官网文档 <a href="https://golang.org/doc/install">https://golang.org/doc/install</a><br>可以在命令行中输入命令来验证是否安装成功：</p>
-<ul>
-<li>go version：查看安装的版本</li>
-<li>go env：当前go的配置环境</li>
-</ul>
-<p>2个环境变量，即 GOROOT、GOPATH和GOBIN:</p>
-<ul>
-<li>GOROOT：go的安装路径</li>
-<li>GOPATH：go的工作路径<span id="more"></span></li>
-</ul>
-<h2 id="问题-：设置-GOPATH-有什么意义？"><a href="#问题-：设置-GOPATH-有什么意义？" class="headerlink" title="问题 ：设置 GOPATH 有什么意义？"></a>问题 ：设置 GOPATH 有什么意义？</h2><p>典型回答<br>环境变量 GOPATH 的值可以是一个目录的路径，也可以包含多个目录路径，每个目录都代表 Go 语言的一个工作区（workspace）。<br>这些工作区用于放置 Go 语言的源码文件，以及安装（install）后的归档文件和可执行文件。<br>一个典型的workspace如下：</p>
-<figure class="highlight awk"><table><tr><td class="code"><pre><span class="line">bin/</span><br><span class="line">    hello                 <span class="comment"># command executable </span></span><br><span class="line">pkg/</span><br><span class="line">    linux_amd64/          <span class="comment"># this will reflect your OS and architecture</span></span><br><span class="line">        github.com<span class="regexp">/user/</span></span><br><span class="line">            stringutil.a  <span class="comment"># package object</span></span><br><span class="line">src/</span><br><span class="line">    github.com<span class="regexp">/user/</span></span><br><span class="line">        hello/</span><br><span class="line">            hello.go      <span class="comment"># command source</span></span><br><span class="line">        stringutil/</span><br><span class="line">            reverse.go    <span class="comment"># package source</span></span><br></pre></td></tr></table></figure>
-
-<h2 id="知识扩展"><a href="#知识扩展" class="headerlink" title="知识扩展"></a>知识扩展</h2><h3 id="Go-语言源码的组织方式"><a href="#Go-语言源码的组织方式" class="headerlink" title="Go 语言源码的组织方式"></a>Go 语言源码的组织方式</h3><p>以代码包(package)为基本组织单位的。代码包其实是与目录一一对应的。目录可以有子目录，所以代码包也可以有子包。</p>
-<p>一个代码包中可以包含任意个以.go 为扩展名的源码文件，这些源码文件都需要被声明为属于同一个代码包。代码包的名称一般会与这些源码文件所在的目录同名。如果不同名，那么在构建、安装的过程中会以代码包名称为准。</p>
-<p>代码包的导入：</p>
-<figure class="highlight arduino"><table><tr><td class="code"><pre><span class="line"><span class="keyword">import</span> <span class="string">&quot;github.com/labstack/echo&quot;</span></span><br></pre></td></tr></table></figure>
-
-<p>在工作区中，一个代码包的导入路径实际上就是从 src 子目录，到该包的实际存储位置的相对路径。下面我马上就会谈到 src子目录。<br>插播：Go语言的源码文件有三大类，即：命令源码文件、库源码文件和测试源码文件。</p>
-<h3 id="构建-go-build-和安装-go-install"><a href="#构建-go-build-和安装-go-install" class="headerlink" title="构建(go build)和安装(go install)"></a>构建(go build)和安装(go install)</h3><p>go build: 用于编译我们指定的源码文件或代码包以及它们的依赖包。<br>对于只包含库源码文件的代码包, go build命令在编译时，只会做检查性的编译，操作的结果文件只会存在于临时目录中，立刻自动删除，而不会输出任何结果文件。<br>如果想保留在临时工作目录，不删除掉：</p>
-<figure class="highlight awk"><table><tr><td class="code"><pre><span class="line">➜  stringutil go build -work</span><br><span class="line">WORK=<span class="regexp">/var/</span>folders<span class="regexp">/5s/</span><span class="number">25</span>ck5pv16rg55hr2kfdvtszc0000gp<span class="regexp">/T/g</span>o-build412712988</span><br></pre></td></tr></table></figure>
-<p>如果构建的是命令源码文件，那么操作的结果文件会被搬运到那个源码文件所在的目录中。</p>
-<figure class="highlight vim"><table><tr><td class="code"><pre><span class="line">➜  hello gi<span class="variable">t:</span>(master) ✗ <span class="keyword">ls</span></span><br><span class="line">hello.<span class="keyword">go</span></span><br><span class="line">➜  hello gi<span class="variable">t:</span>(master) ✗ <span class="keyword">go</span> build</span><br><span class="line">➜  hello gi<span class="variable">t:</span>(master) ✗ <span class="keyword">ls</span></span><br><span class="line">hello    hello.<span class="keyword">go</span></span><br></pre></td></tr></table></figure>
-<p>go install: 安装操作会先执行构建(go build)，然后还会进行链接操作，并且把结果文件搬运到指定目录。<br>进一步说，如果安装的是库源码文件，那么结果文件会被搬运到它所在工作区的 pkg 目录下的某个子目录中。</p>
-<figure class="highlight awk"><table><tr><td class="code"><pre><span class="line">➜  XuSenqi ls <span class="regexp">/Users/</span>patrick.xu<span class="regexp">/go/</span>pkg<span class="regexp">/darwin_amd64/gi</span>thub.com/XuSenqi</span><br><span class="line">➜  XuSenqi go install github.com<span class="regexp">/XuSenqi/</span>stringutil</span><br><span class="line">➜  XuSenqi ls <span class="regexp">/Users/</span>patrick.xu<span class="regexp">/go/</span>pkg<span class="regexp">/darwin_amd64/gi</span>thub.com/XuSenqi</span><br><span class="line">stringutil.a</span><br></pre></td></tr></table></figure>
-
-<p>如果安装的是命令源码文件，那么结果文件会被搬运到它所在工作区的 bin 目录中，或者环境变量GOBIN指向的目录中。同时，依赖的代码包也会安装到pgk下对应的目录中。</p>
-<figure class="highlight gradle"><table><tr><td class="code"><pre><span class="line">➜  XuSenqi ls <span class="regexp">/Users/</span>patrick.xu<span class="regexp">/go/</span>pkg<span class="regexp">/darwin_amd64/gi</span>thub.com/XuSenqi</span><br><span class="line">➜  XuSenqi ls <span class="regexp">/Users/</span>patrick.xu<span class="regexp">/go/</span>bin/hello</span><br><span class="line">ls: <span class="regexp">/Users/</span>patrick.xu<span class="regexp">/go/</span>bin/hello: No such <span class="keyword">file</span> or directory</span><br><span class="line">➜  XuSenqi go install github.com<span class="regexp">/XuSenqi/</span>hello/</span><br><span class="line">➜  XuSenqi ls <span class="regexp">/Users/</span>patrick.xu<span class="regexp">/go/</span>pkg<span class="regexp">/darwin_amd64/gi</span>thub.com/XuSenqi</span><br><span class="line">stringutil.a</span><br><span class="line">➜  XuSenqi ls <span class="regexp">/Users/</span>patrick.xu<span class="regexp">/go/</span>bin/hello</span><br><span class="line"><span class="regexp">/Users/</span>patrick.xu<span class="regexp">/go/</span>bin/hello</span><br></pre></td></tr></table></figure>
-<h3 id="go-build-命令一些可选项的用途和用法"><a href="#go-build-命令一些可选项的用途和用法" class="headerlink" title="go build 命令一些可选项的用途和用法"></a>go build 命令一些可选项的用途和用法</h3><p>在运行go build命令的时候，默认不会编译目标代码包所依赖的那些代码包。当然，如果被依赖的代码包的归档文件不存在，或者源码文件有了变化，那它还是会被编译。</p>
-<p>如果要强制编译它们，可以在执行命令的时候加入标记-a。此时，不但目标代码包总是会被编译，它依赖的代码包也总会被编译，即使依赖的是标准库中的代码包也是如此。</p>
-<p>表1 go build命令的常用标记说明</p>
-<table>
-<thead>
-<tr>
-<th>标记名称</th>
-<th align="center">标记描述</th>
-</tr>
-</thead>
-<tbody><tr>
-<td>-a</td>
-<td align="center">强行对所有涉及到的代码包（包含标准库中的代码包）进行重新构建，即使它们已经是最新的了。</td>
-</tr>
-<tr>
-<td>-n</td>
-<td align="center">打印编译期间所用到的其它命令，但是并不真正执行它们。</td>
-</tr>
-<tr>
-<td>-p n</td>
-<td align="center">指定编译过程中执行各任务的并行数量（确切地说应该是并发数量）。在默认情况下，该数量等于CPU的逻辑核数。但是在darwin/arm平台（即iPhone和iPad所用的平台）下，该数量默认是1。</td>
-</tr>
-<tr>
-<td>-race</td>
-<td align="center">开启竞态条件的检测。不过此标记目前仅在linux/amd64、freebsd/amd64、darwin/amd64和windows/amd64平台下受到支持。</td>
-</tr>
-<tr>
-<td>-v</td>
-<td align="center">打印出那些被编译的代码包的名字。</td>
-</tr>
-<tr>
-<td>-work</td>
-<td align="center">打印出编译时生成的临时工作目录的路径，并在编译结束时保留它。在默认情况下，编译结束时会删除该目录。</td>
-</tr>
-<tr>
-<td>-x</td>
-<td align="center">打印编译期间所用到的其它命令。注意它与-n标记的区别。</td>
-</tr>
-</tbody></table>
-<h3 id="go-get"><a href="#go-get" class="headerlink" title="go get"></a>go get</h3><p>go get可以根据要求和实际情况从互联网上下载或更新指定的代码包及其依赖包，并对它们进行go build和go install。</p>
-<figure class="highlight awk"><table><tr><td class="code"><pre><span class="line">➜  XuSenqi go get github.com<span class="regexp">/hyper-carrot/g</span>o_lib/logging</span><br><span class="line">➜  XuSenqi ls <span class="variable">$GOPATH</span><span class="regexp">/src/gi</span>thub.com<span class="regexp">/hyper-carrot/g</span>o_lib/logging</span><br><span class="line">base.go           console_logger.go log_manager.go    logger_test.go    tag.go</span><br><span class="line">➜  XuSenqi ls <span class="regexp">/Users/</span>patrick.xu<span class="regexp">/go/</span>pkg<span class="regexp">/darwin_amd64/gi</span>thub.com<span class="regexp">/hyper-carrot/g</span>o_lib/logging.a</span><br><span class="line"><span class="regexp">/Users/</span>patrick.xu<span class="regexp">/go/</span>pkg<span class="regexp">/darwin_amd64/gi</span>thub.com<span class="regexp">/hyper-carrot/g</span>o_lib/logging.a</span><br></pre></td></tr></table></figure>
-<p>表2 go get命令的常用标记说明</p>
-<table>
-<thead>
-<tr>
-<th>标记名称</th>
-<th align="center">标记描述</th>
-</tr>
-</thead>
-<tbody><tr>
-<td>-d</td>
-<td align="center">让命令程序只执行下载动作，而不执行安装动作。</td>
-</tr>
-<tr>
-<td>-u</td>
-<td align="center">让命令利用网络来更新已有代码包及其依赖包。默认情况下，该命令只会从网络上下载本地不存在的代码包，而不会更新已有的代码包。</td>
-</tr>
-</tbody></table>
-<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><p>go build<br><a href="http://wiki.jikexueyuan.com/project/go-command-tutorial/0.1.html">http://wiki.jikexueyuan.com/project/go-command-tutorial/0.1.html</a><br>go get<br><a href="http://wiki.jikexueyuan.com/project/go-command-tutorial/0.3.html">http://wiki.jikexueyuan.com/project/go-command-tutorial/0.3.html</a><br><a href="https://github.com/hyper0x/go_command_tutorial/blob/master/0.3.md">https://github.com/hyper0x/go_command_tutorial/blob/master/0.3.md</a></p>
-]]></content>
-      <categories>
-        <category>Go</category>
-      </categories>
-      <tags>
-        <tag>Go</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>c++ profile的大杀器-gperftools的使用</title>
     <url>/2020/12/06/C++Profile%E7%9A%84%E5%A4%A7%E6%9D%80%E5%99%A8_gperftools%E7%9A%84%E4%BD%BF%E7%94%A8/</url>
     <content><![CDATA[<p>熟悉golang的同学，一定很熟悉用pprof来作为性能分析和可视化的工具，包括 cpu profile, memery profile等。这么方便且炫的功能，在C++里也一样能实现。所需要的工具就是gperftools。</p>
@@ -256,10 +158,210 @@
       </tags>
   </entry>
   <entry>
+    <title>Go语言 - 01 工作区和GOPATH</title>
+    <url>/2018/08/12/Go%E8%AF%AD%E8%A8%80-01-%E5%B7%A5%E4%BD%9C%E5%8C%BA%E5%92%8CGOPATH/</url>
+    <content><![CDATA[<h2 id="Go语言的安装"><a href="#Go语言的安装" class="headerlink" title="Go语言的安装"></a>Go语言的安装</h2><p>参照官网文档 <a href="https://golang.org/doc/install">https://golang.org/doc/install</a><br>可以在命令行中输入命令来验证是否安装成功：</p>
+<ul>
+<li>go version：查看安装的版本</li>
+<li>go env：当前go的配置环境</li>
+</ul>
+<p>2个环境变量，即 GOROOT、GOPATH和GOBIN:</p>
+<ul>
+<li>GOROOT：go的安装路径</li>
+<li>GOPATH：go的工作路径<span id="more"></span></li>
+</ul>
+<h2 id="问题-：设置-GOPATH-有什么意义？"><a href="#问题-：设置-GOPATH-有什么意义？" class="headerlink" title="问题 ：设置 GOPATH 有什么意义？"></a>问题 ：设置 GOPATH 有什么意义？</h2><p>典型回答<br>环境变量 GOPATH 的值可以是一个目录的路径，也可以包含多个目录路径，每个目录都代表 Go 语言的一个工作区（workspace）。<br>这些工作区用于放置 Go 语言的源码文件，以及安装（install）后的归档文件和可执行文件。<br>一个典型的workspace如下：</p>
+<figure class="highlight awk"><table><tr><td class="code"><pre><span class="line">bin/</span><br><span class="line">    hello                 <span class="comment"># command executable </span></span><br><span class="line">pkg/</span><br><span class="line">    linux_amd64/          <span class="comment"># this will reflect your OS and architecture</span></span><br><span class="line">        github.com<span class="regexp">/user/</span></span><br><span class="line">            stringutil.a  <span class="comment"># package object</span></span><br><span class="line">src/</span><br><span class="line">    github.com<span class="regexp">/user/</span></span><br><span class="line">        hello/</span><br><span class="line">            hello.go      <span class="comment"># command source</span></span><br><span class="line">        stringutil/</span><br><span class="line">            reverse.go    <span class="comment"># package source</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="知识扩展"><a href="#知识扩展" class="headerlink" title="知识扩展"></a>知识扩展</h2><h3 id="Go-语言源码的组织方式"><a href="#Go-语言源码的组织方式" class="headerlink" title="Go 语言源码的组织方式"></a>Go 语言源码的组织方式</h3><p>以代码包(package)为基本组织单位的。代码包其实是与目录一一对应的。目录可以有子目录，所以代码包也可以有子包。</p>
+<p>一个代码包中可以包含任意个以.go 为扩展名的源码文件，这些源码文件都需要被声明为属于同一个代码包。代码包的名称一般会与这些源码文件所在的目录同名。如果不同名，那么在构建、安装的过程中会以代码包名称为准。</p>
+<p>代码包的导入：</p>
+<figure class="highlight arduino"><table><tr><td class="code"><pre><span class="line"><span class="keyword">import</span> <span class="string">&quot;github.com/labstack/echo&quot;</span></span><br></pre></td></tr></table></figure>
+
+<p>在工作区中，一个代码包的导入路径实际上就是从 src 子目录，到该包的实际存储位置的相对路径。下面我马上就会谈到 src子目录。<br>插播：Go语言的源码文件有三大类，即：命令源码文件、库源码文件和测试源码文件。</p>
+<h3 id="构建-go-build-和安装-go-install"><a href="#构建-go-build-和安装-go-install" class="headerlink" title="构建(go build)和安装(go install)"></a>构建(go build)和安装(go install)</h3><p>go build: 用于编译我们指定的源码文件或代码包以及它们的依赖包。<br>对于只包含库源码文件的代码包, go build命令在编译时，只会做检查性的编译，操作的结果文件只会存在于临时目录中，立刻自动删除，而不会输出任何结果文件。<br>如果想保留在临时工作目录，不删除掉：</p>
+<figure class="highlight awk"><table><tr><td class="code"><pre><span class="line">➜  stringutil go build -work</span><br><span class="line">WORK=<span class="regexp">/var/</span>folders<span class="regexp">/5s/</span><span class="number">25</span>ck5pv16rg55hr2kfdvtszc0000gp<span class="regexp">/T/g</span>o-build412712988</span><br></pre></td></tr></table></figure>
+<p>如果构建的是命令源码文件，那么操作的结果文件会被搬运到那个源码文件所在的目录中。</p>
+<figure class="highlight vim"><table><tr><td class="code"><pre><span class="line">➜  hello gi<span class="variable">t:</span>(master) ✗ <span class="keyword">ls</span></span><br><span class="line">hello.<span class="keyword">go</span></span><br><span class="line">➜  hello gi<span class="variable">t:</span>(master) ✗ <span class="keyword">go</span> build</span><br><span class="line">➜  hello gi<span class="variable">t:</span>(master) ✗ <span class="keyword">ls</span></span><br><span class="line">hello    hello.<span class="keyword">go</span></span><br></pre></td></tr></table></figure>
+<p>go install: 安装操作会先执行构建(go build)，然后还会进行链接操作，并且把结果文件搬运到指定目录。<br>进一步说，如果安装的是库源码文件，那么结果文件会被搬运到它所在工作区的 pkg 目录下的某个子目录中。</p>
+<figure class="highlight awk"><table><tr><td class="code"><pre><span class="line">➜  XuSenqi ls <span class="regexp">/Users/</span>patrick.xu<span class="regexp">/go/</span>pkg<span class="regexp">/darwin_amd64/gi</span>thub.com/XuSenqi</span><br><span class="line">➜  XuSenqi go install github.com<span class="regexp">/XuSenqi/</span>stringutil</span><br><span class="line">➜  XuSenqi ls <span class="regexp">/Users/</span>patrick.xu<span class="regexp">/go/</span>pkg<span class="regexp">/darwin_amd64/gi</span>thub.com/XuSenqi</span><br><span class="line">stringutil.a</span><br></pre></td></tr></table></figure>
+
+<p>如果安装的是命令源码文件，那么结果文件会被搬运到它所在工作区的 bin 目录中，或者环境变量GOBIN指向的目录中。同时，依赖的代码包也会安装到pgk下对应的目录中。</p>
+<figure class="highlight gradle"><table><tr><td class="code"><pre><span class="line">➜  XuSenqi ls <span class="regexp">/Users/</span>patrick.xu<span class="regexp">/go/</span>pkg<span class="regexp">/darwin_amd64/gi</span>thub.com/XuSenqi</span><br><span class="line">➜  XuSenqi ls <span class="regexp">/Users/</span>patrick.xu<span class="regexp">/go/</span>bin/hello</span><br><span class="line">ls: <span class="regexp">/Users/</span>patrick.xu<span class="regexp">/go/</span>bin/hello: No such <span class="keyword">file</span> or directory</span><br><span class="line">➜  XuSenqi go install github.com<span class="regexp">/XuSenqi/</span>hello/</span><br><span class="line">➜  XuSenqi ls <span class="regexp">/Users/</span>patrick.xu<span class="regexp">/go/</span>pkg<span class="regexp">/darwin_amd64/gi</span>thub.com/XuSenqi</span><br><span class="line">stringutil.a</span><br><span class="line">➜  XuSenqi ls <span class="regexp">/Users/</span>patrick.xu<span class="regexp">/go/</span>bin/hello</span><br><span class="line"><span class="regexp">/Users/</span>patrick.xu<span class="regexp">/go/</span>bin/hello</span><br></pre></td></tr></table></figure>
+<h3 id="go-build-命令一些可选项的用途和用法"><a href="#go-build-命令一些可选项的用途和用法" class="headerlink" title="go build 命令一些可选项的用途和用法"></a>go build 命令一些可选项的用途和用法</h3><p>在运行go build命令的时候，默认不会编译目标代码包所依赖的那些代码包。当然，如果被依赖的代码包的归档文件不存在，或者源码文件有了变化，那它还是会被编译。</p>
+<p>如果要强制编译它们，可以在执行命令的时候加入标记-a。此时，不但目标代码包总是会被编译，它依赖的代码包也总会被编译，即使依赖的是标准库中的代码包也是如此。</p>
+<p>表1 go build命令的常用标记说明</p>
+<table>
+<thead>
+<tr>
+<th>标记名称</th>
+<th align="center">标记描述</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>-a</td>
+<td align="center">强行对所有涉及到的代码包（包含标准库中的代码包）进行重新构建，即使它们已经是最新的了。</td>
+</tr>
+<tr>
+<td>-n</td>
+<td align="center">打印编译期间所用到的其它命令，但是并不真正执行它们。</td>
+</tr>
+<tr>
+<td>-p n</td>
+<td align="center">指定编译过程中执行各任务的并行数量（确切地说应该是并发数量）。在默认情况下，该数量等于CPU的逻辑核数。但是在darwin/arm平台（即iPhone和iPad所用的平台）下，该数量默认是1。</td>
+</tr>
+<tr>
+<td>-race</td>
+<td align="center">开启竞态条件的检测。不过此标记目前仅在linux/amd64、freebsd/amd64、darwin/amd64和windows/amd64平台下受到支持。</td>
+</tr>
+<tr>
+<td>-v</td>
+<td align="center">打印出那些被编译的代码包的名字。</td>
+</tr>
+<tr>
+<td>-work</td>
+<td align="center">打印出编译时生成的临时工作目录的路径，并在编译结束时保留它。在默认情况下，编译结束时会删除该目录。</td>
+</tr>
+<tr>
+<td>-x</td>
+<td align="center">打印编译期间所用到的其它命令。注意它与-n标记的区别。</td>
+</tr>
+</tbody></table>
+<h3 id="go-get"><a href="#go-get" class="headerlink" title="go get"></a>go get</h3><p>go get可以根据要求和实际情况从互联网上下载或更新指定的代码包及其依赖包，并对它们进行go build和go install。</p>
+<figure class="highlight awk"><table><tr><td class="code"><pre><span class="line">➜  XuSenqi go get github.com<span class="regexp">/hyper-carrot/g</span>o_lib/logging</span><br><span class="line">➜  XuSenqi ls <span class="variable">$GOPATH</span><span class="regexp">/src/gi</span>thub.com<span class="regexp">/hyper-carrot/g</span>o_lib/logging</span><br><span class="line">base.go           console_logger.go log_manager.go    logger_test.go    tag.go</span><br><span class="line">➜  XuSenqi ls <span class="regexp">/Users/</span>patrick.xu<span class="regexp">/go/</span>pkg<span class="regexp">/darwin_amd64/gi</span>thub.com<span class="regexp">/hyper-carrot/g</span>o_lib/logging.a</span><br><span class="line"><span class="regexp">/Users/</span>patrick.xu<span class="regexp">/go/</span>pkg<span class="regexp">/darwin_amd64/gi</span>thub.com<span class="regexp">/hyper-carrot/g</span>o_lib/logging.a</span><br></pre></td></tr></table></figure>
+<p>表2 go get命令的常用标记说明</p>
+<table>
+<thead>
+<tr>
+<th>标记名称</th>
+<th align="center">标记描述</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>-d</td>
+<td align="center">让命令程序只执行下载动作，而不执行安装动作。</td>
+</tr>
+<tr>
+<td>-u</td>
+<td align="center">让命令利用网络来更新已有代码包及其依赖包。默认情况下，该命令只会从网络上下载本地不存在的代码包，而不会更新已有的代码包。</td>
+</tr>
+</tbody></table>
+<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><p>go build<br><a href="http://wiki.jikexueyuan.com/project/go-command-tutorial/0.1.html">http://wiki.jikexueyuan.com/project/go-command-tutorial/0.1.html</a><br>go get<br><a href="http://wiki.jikexueyuan.com/project/go-command-tutorial/0.3.html">http://wiki.jikexueyuan.com/project/go-command-tutorial/0.3.html</a><br><a href="https://github.com/hyper0x/go_command_tutorial/blob/master/0.3.md">https://github.com/hyper0x/go_command_tutorial/blob/master/0.3.md</a></p>
+]]></content>
+      <categories>
+        <category>Go</category>
+      </categories>
+      <tags>
+        <tag>Go</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>HTTP Keepalive</title>
     <url>/2018/10/08/HTTP-Keepalive/</url>
     <content><![CDATA[<p>参考这里，已经很详细了 <a href="http://www.nowamagic.net/academy/detail/23350305">HTTP Keep-Alive是什么？如何工作？</a></p>
 ]]></content>
+  </entry>
+  <entry>
+    <title>Remote Debugging Go Code with Visual Studio Code</title>
+    <url>/2019/12/23/Remote-Debug-Go-Code-with-Visual-Studio-Code/</url>
+    <content><![CDATA[<p>当了解一些大型项目的代码逻辑时，如kubernetes，跟着调试器跟踪代码学习，是很好的方式。当项目部署在远程环境时，在本机进行开发，很自然对Remote Debug有迫切需求，这也是和调试一般golang程序最主要的诉求区别点，本文将通过两个实际例子，来介绍如何Remote Debug。</p>
+<span id="more"></span>
+
+<h1 id="dlv远程调试的原理"><a href="#dlv远程调试的原理" class="headerlink" title="dlv远程调试的原理"></a>dlv远程调试的原理</h1><p>vscode支持丰富的插件，dlv插件可以帮助我们调试golang代码，基本使用方法详见 <a href="https://github.com/go-delve/delve">delve官网</a>，以及我之前的一篇文档<a href="https://xusenqi.github.io/2019/08/25/%E9%80%9A%E8%BF%87delve-dlv-%E8%B0%83%E8%AF%95golang%E7%A8%8B%E5%BA%8F/#more">通过delve(dlv)调试golang程序</a>。dlv远程调试的基本原理是，在服务端启动dlv server，客户端vscode去连接dlv server</p>
+<img src="/2019/12/23/Remote-Debug-Go-Code-with-Visual-Studio-Code/dlv_server.jpeg" class="" title="image">
+
+<h1 id="远程调试的步骤"><a href="#远程调试的步骤" class="headerlink" title="远程调试的步骤"></a>远程调试的步骤</h1><p>主要参考了<a href="https://github.com/Microsoft/vscode-go/wiki/Debugging-Go-code-using-VS-Code">Debugging Go code using VS Code</a>，现将步骤整理如下：</p>
+<h2 id="环境安装"><a href="#环境安装" class="headerlink" title="环境安装"></a>环境安装</h2><h3 id="Local安装Golang"><a href="#Local安装Golang" class="headerlink" title="Local安装Golang"></a>Local安装Golang</h3><p>参考Golang官网安装步骤<a href="https://golang.org/doc/install">Getting Started</a></p>
+<h3 id="Local和Remote端安装dlv工具"><a href="#Local和Remote端安装dlv工具" class="headerlink" title="Local和Remote端安装dlv工具"></a>Local和Remote端安装dlv工具</h3><figure class="highlight vim"><table><tr><td class="code"><pre><span class="line"><span class="keyword">go</span> <span class="built_in">get</span> -<span class="keyword">u</span> github.<span class="keyword">com</span>/<span class="keyword">go</span>-delve/delve/cmd/dlv</span><br><span class="line"></span><br><span class="line">验证dlv版本</span><br><span class="line">dlv <span class="keyword">version</span></span><br></pre></td></tr></table></figure>
+<h2 id="本地代码版本切换到和目标端一致"><a href="#本地代码版本切换到和目标端一致" class="headerlink" title="本地代码版本切换到和目标端一致"></a>本地代码版本切换到和目标端一致</h2><p>以一个服务uhost-scheduler为例, 线上和本地都保持为1.0.10版本</p>
+<figure class="highlight pgsql"><table><tr><td class="code"><pre><span class="line">[root@yg-man-uhost-set9<span class="number">-01</span> bin]# /data/uframework/uhost_server -v</span><br><span class="line"><span class="keyword">option</span> = a  <span class="keyword">value</span> =</span><br><span class="line"><span class="keyword">option</span> = i  <span class="keyword">value</span> = <span class="number">0</span></span><br><span class="line"><span class="keyword">option</span> = s  <span class="keyword">value</span> =</span><br><span class="line"><span class="keyword">option</span> = v  <span class="keyword">value</span> = <span class="keyword">true</span></span><br><span class="line"><span class="keyword">option</span> = z  <span class="keyword">value</span> =</span><br><span class="line"></span><br><span class="line"><span class="keyword">Version</span>: <span class="number">1.0</span><span class="number">.10</span></span><br><span class="line">Git branch: from_pxu_bugfix</span><br><span class="line">Git <span class="keyword">commit</span>: <span class="number">3</span>f997fe</span><br><span class="line">Git <span class="keyword">user</span>.name    patrick</span><br><span class="line">Git <span class="keyword">user</span>.email     xusen_qi@<span class="number">163.</span>com</span><br><span class="line">Go <span class="keyword">version</span>: go_version_go1<span class="number">.8</span><span class="number">.1</span>_darwin/amd64</span><br><span class="line">Build <span class="type">time</span>: <span class="number">2019</span><span class="number">-09</span><span class="number">-02</span>T20:<span class="number">26</span>:<span class="number">58</span>+<span class="number">0800</span></span><br></pre></td></tr></table></figure>
+
+<p>##在Remote端启动dlv server<br>启动命令如下</p>
+<figure class="highlight routeros"><table><tr><td class="code"><pre><span class="line">dlv <span class="attribute">--listen</span>=<span class="string">&quot;:50000&quot;</span> <span class="attribute">--headless</span>=<span class="literal">true</span> --log <span class="attribute">--api-version</span>=2 exec /data/uframework/uhost_server \</span><br><span class="line">&gt; -- <span class="attribute">--z</span>=172.23.0.77:2181,172.23.0.78:2181,172.23.0.79:2181,172.23.0.80:2181,172.23.0.81:2181 \</span><br><span class="line">&gt; <span class="attribute">--a</span>=uhost-scheduler <span class="attribute">--s</span>=set9 <span class="attribute">--i</span>=0</span><br></pre></td></tr></table></figure>
+
+<p>参数说明：</p>
+<ul>
+<li>-l, –listen string        Debugging server listen address. (default “127.0.0.1:0”)</li>
+<li>–headless             Run debug server only, in headless mode.</li>
+<li>–log                  Enable debugging server logging.</li>
+</ul>
+<p>更多参数说明详见<a href="https://github.com/go-delve/delve/blob/master/Documentation/usage/dlv.md">dlv</a></p>
+<h2 id="在Local端的调试"><a href="#在Local端的调试" class="headerlink" title="在Local端的调试"></a>在Local端的调试</h2><h3 id="dlv命令行的调试"><a href="#dlv命令行的调试" class="headerlink" title="dlv命令行的调试"></a>dlv命令行的调试</h3><p>访问dlv server的IP:Port，可以调试，类似于gdb</p>
+<figure class="highlight awk"><table><tr><td class="code"><pre><span class="line">➜  ~ dlv connect <span class="number">172.23</span>.<span class="number">0.159</span>:<span class="number">50000</span></span><br><span class="line">Type <span class="string">&#x27;help&#x27;</span> <span class="keyword">for</span> list of commands.</span><br><span class="line">(dlv) <span class="keyword">break</span> main.main</span><br><span class="line">Breakpoint <span class="number">1</span> set at <span class="number">0</span>x823deb <span class="keyword">for</span> main.main() .<span class="regexp">/go/</span>src<span class="regexp">/uhost-go/u</span>host_server.go:<span class="number">31</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="在VS-Code里的调试"><a href="#在VS-Code里的调试" class="headerlink" title="在VS Code里的调试"></a>在VS Code里的调试</h3><p>但命令行里，没有图形界面直观和方便，所以更推荐在VS Code里的调试</p>
+<ol>
+<li>保持VS Code打开的代码，和Remote端的代码或二进制包一致</li>
+<li>在本地主机中配置远程调试的参数，会在当前项目下的.vscode目录产生一个launch.json文件</li>
+</ol>
+<img src="/2019/12/23/Remote-Debug-Go-Code-with-Visual-Studio-Code/Open_Configurations.jpeg" class="" title="image">
+
+<ol start="3">
+<li>配置Remote端的IP和Port</li>
+</ol>
+<figure class="highlight json"><table><tr><td class="code"><pre><span class="line">&#123;</span><br><span class="line">    <span class="attr">&quot;name&quot;</span>: <span class="string">&quot;Remote uhost-scheduler&quot;</span>,</span><br><span class="line">    <span class="attr">&quot;type&quot;</span>: <span class="string">&quot;go&quot;</span>,</span><br><span class="line">    <span class="attr">&quot;request&quot;</span>: <span class="string">&quot;attach&quot;</span>,</span><br><span class="line">    <span class="attr">&quot;mode&quot;</span>: <span class="string">&quot;remote&quot;</span>,</span><br><span class="line">    <span class="attr">&quot;remotePath&quot;</span>: <span class="string">&quot;/Users/patrick.xu/go/src/uhost-go&quot;</span>,</span><br><span class="line">    <span class="attr">&quot;port&quot;</span>: <span class="number">50000</span>,</span><br><span class="line">    <span class="attr">&quot;host&quot;</span>: <span class="string">&quot;172.23.0.159&quot;</span>,</span><br><span class="line">    <span class="attr">&quot;showLog&quot;</span>: <span class="literal">true</span>,</span><br><span class="line">    <span class="attr">&quot;trace&quot;</span>: <span class="string">&quot;log&quot;</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ol start="4">
+<li>运行Debug，可以像本地一样调试，如加断点、条件断点、单步调试等。</li>
+</ol>
+<p>本地VS Code界面</p>
+<img src="/2019/12/23/Remote-Debug-Go-Code-with-Visual-Studio-Code/VSCode_debug_scheduler%E7%95%8C%E9%9D%A2.jpeg" class="" title="image">
+
+<p>Remote端页面</p>
+<img src="/2019/12/23/Remote-Debug-Go-Code-with-Visual-Studio-Code/dlv_server_scheduler_%E8%B0%83%E8%AF%95.jpeg" class="" title="image">
+
+<p>Remote-Debug-Go-Code-with-Visual-Studio-Code.md</p>
+<p>条件断点</p>
+<img src="/2019/12/23/Remote-Debug-Go-Code-with-Visual-Studio-Code/%E6%9D%A1%E4%BB%B6%E6%96%AD%E7%82%B9.png" class="" title="image">
+
+<h1 id="k8s-scheduler的远程调试"><a href="#k8s-scheduler的远程调试" class="headerlink" title="k8s scheduler的远程调试"></a>k8s scheduler的远程调试</h1><p>k8s里有很多单独的服务，如kube-apiserver、kube-proxy、kube-scheduler等，每个都可以作为单独的调试代码。最近在看kube-scheduler的代码，所以这里以它为例。</p>
+<img src="/2019/12/23/Remote-Debug-Go-Code-with-Visual-Studio-Code/kubernetes_components_architecture.png" class="" title="image">
+<center>High level Kubernetes architecture diagram showing a cluster with a master and two worker nodes</center>
+<center>Source: https://x-team.com/blog/introduction-kubernetes-architecture</center>
+
+<h2 id="k8s环境的搭建"><a href="#k8s环境的搭建" class="headerlink" title="k8s环境的搭建"></a>k8s环境的搭建</h2><p>k8s环境通过kubeadm搭建在远程的4台虚机上，1台master和3台node，具体的搭建步骤见<a href="https://xusenqi.github.io/2019/12/11/kubeadm%E9%83%A8%E7%BD%B2single-control-plane-k8s%E9%9B%86%E7%BE%A4/">kubeadm部署single control-plane k8s集群</a>。</p>
+<h2 id="停止kube-scheduler服务"><a href="#停止kube-scheduler服务" class="headerlink" title="停止kube-scheduler服务"></a>停止kube-scheduler服务</h2><p>我们需要dlv拉起kube-scheduler服务，但是kubeadm部署的kube-scheduler被kill掉后<br>，会自动拉起来，占用10251的端口，影响调试。</p>
+<img src="/2019/12/23/Remote-Debug-Go-Code-with-Visual-Studio-Code/kubeadm_kube_scheduler.jpeg" class="" title="image">
+
+<p>这里对对配置文件改名，防止自动拉起kube-scheduler<br><code>mv /etc/kubernetes/scheduler.conf /etc/kubernetes/scheduler_191223.conf</code></p>
+<h2 id="dlv-server"><a href="#dlv-server" class="headerlink" title="dlv server"></a>dlv server</h2><p>dlv server启动后，监听40000端口</p>
+<figure class="highlight routeros"><table><tr><td class="code"><pre><span class="line">dlv <span class="attribute">--listen</span>=<span class="string">&quot;:40000&quot;</span> <span class="attribute">--headless</span>=<span class="literal">true</span> --log <span class="attribute">--api-version</span>=2 exec /data/k8s/kube-scheduler \</span><br><span class="line">-- <span class="attribute">--authentication-kubeconfig</span>=/etc/kubernetes/scheduler_191223.conf \</span><br><span class="line"><span class="attribute">--authorization-kubeconfig</span>=/etc/kubernetes/scheduler_191223.conf \</span><br><span class="line"><span class="attribute">--bind-address</span>=127.0.0.1 <span class="attribute">--kubeconfig</span>=/etc/kubernetes/scheduler_191223.conf \</span><br><span class="line"><span class="attribute">--leader-elect</span>=<span class="literal">true</span></span><br></pre></td></tr></table></figure>
+
+<p>注意：本地是从公网访问虚机的40000端口，如果防火墙有打开的话，要关掉。</p>
+<h2 id="本地调试kube-scheduler"><a href="#本地调试kube-scheduler" class="headerlink" title="本地调试kube-scheduler"></a>本地调试kube-scheduler</h2><p>与之前步骤一样</p>
+<ol>
+<li>代码与线上一致；如果不一致，重新编译新的版本推到线上，重新拉起服务</li>
+</ol>
+<figure class="highlight vim"><table><tr><td class="code"><pre><span class="line">➜  kube-scheduler gi<span class="variable">t:</span>(b3cbbae) ✗ <span class="keyword">pwd</span></span><br><span class="line">/Users/patrick.<span class="keyword">xu</span>/<span class="keyword">go</span>/src/k8s.io/kubernetes/cmd/kube-scheduler</span><br><span class="line">➜  kube-scheduler gi<span class="variable">t:</span>(b3cbbae) CGO_ENABLED=<span class="number">0</span> GOOS=linux GOARCH=amd64 <span class="keyword">go</span> build</span><br><span class="line">➜  kube-scheduler gi<span class="variable">t:</span>(b3cbbae) ✗ <span class="keyword">ll</span></span><br><span class="line">total <span class="number">106208</span></span><br><span class="line">-rw-r--r--  <span class="number">1</span> patrick.<span class="keyword">xu</span>  staff   <span class="number">1.1</span>K Dec <span class="number">11</span> <span class="number">20</span>:<span class="number">11</span> BUILD</span><br><span class="line">-rw-r--r--  <span class="number">1</span> patrick.<span class="keyword">xu</span>  staff   <span class="number">144</span>B Dec <span class="number">11</span> <span class="number">20</span>:<span class="number">11</span> OWNERS</span><br><span class="line">drwxr-xr-<span class="keyword">x</span>  <span class="number">7</span> patrick.<span class="keyword">xu</span>  staff   <span class="number">224</span>B Dec <span class="number">11</span> <span class="number">20</span>:<span class="number">11</span> app</span><br><span class="line">-rwxr-xr-<span class="keyword">x</span>  <span class="number">1</span> patrick.<span class="keyword">xu</span>  staff    <span class="number">52</span>M Dec <span class="number">18</span> <span class="number">01</span>:<span class="number">31</span> kube-scheduler</span><br><span class="line">-rw-r--r--  <span class="number">1</span> patrick.<span class="keyword">xu</span>  staff   <span class="number">1.3</span>K Dec <span class="number">11</span> <span class="number">20</span>:<span class="number">11</span> scheduler.<span class="keyword">go</span></span><br></pre></td></tr></table></figure>
+
+<ol start="2">
+<li>配置文件launch.json的内容</li>
+</ol>
+<figure class="highlight json"><table><tr><td class="code"><pre><span class="line">&#123;</span><br><span class="line">    <span class="attr">&quot;name&quot;</span>: <span class="string">&quot;Remote k8s server&quot;</span>,</span><br><span class="line">    <span class="attr">&quot;type&quot;</span>: <span class="string">&quot;go&quot;</span>,</span><br><span class="line">    <span class="attr">&quot;request&quot;</span>: <span class="string">&quot;attach&quot;</span>,</span><br><span class="line">    <span class="attr">&quot;showLog&quot;</span>: <span class="literal">true</span>,</span><br><span class="line">    <span class="attr">&quot;mode&quot;</span>: <span class="string">&quot;remote&quot;</span>,</span><br><span class="line">    <span class="attr">&quot;remotePath&quot;</span>: <span class="string">&quot;/Users/patrick.xu/go/src/k8s.io&quot;</span>,</span><br><span class="line">    <span class="attr">&quot;port&quot;</span>: <span class="number">40000</span>,</span><br><span class="line">    <span class="attr">&quot;host&quot;</span>: <span class="string">&quot;152.32.173.26&quot;</span>,</span><br><span class="line">    <span class="attr">&quot;trace&quot;</span>: <span class="string">&quot;log&quot;</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>3.运行Debug，这时可以像可以像本地一样调试，如加断点、单步调试等。</p>
+<p>本地VS Code远程调试kube-scheduler界面</p>
+<img src="/2019/12/23/Remote-Debug-Go-Code-with-Visual-Studio-Code/VSCode_debug_kube_scheduler%E7%95%8C%E9%9D%A2.jpeg" class="" title="image">
+
+<p>Remote端kube-scheduler输出，看到打断点和调试的日志</p>
+<img src="/2019/12/23/Remote-Debug-Go-Code-with-Visual-Studio-Code/dlv_server_kube_scheduler_%E8%B0%83%E8%AF%95.jpeg" class="" title="image">
+
+<p>后面就是结合创建pod，去分析具体的调度逻辑了。</p>
+<h1 id="参考链接"><a href="#参考链接" class="headerlink" title="参考链接"></a>参考链接</h1><ol>
+<li><a href="https://github.com/go-delve/delve">delve官网</a></li>
+<li><a href="https://github.com/Microsoft/vscode-go/wiki/Debugging-Go-code-using-VS-Code">Debugging Go code using VS Code</a></li>
+<li><a href="http://zhongpan.tech/2019/10/21/016.remote-debug-golang-with-vscode/#more">使用vscode远程调试golang</a></li>
+<li><a href="https://xusenqi.github.io/2019/08/25/%E9%80%9A%E8%BF%87delve-dlv-%E8%B0%83%E8%AF%95golang%E7%A8%8B%E5%BA%8F/#more">通过delve(dlv)调试golang程序</a></li>
+</ol>
+]]></content>
+      <categories>
+        <category>vscode</category>
+      </categories>
+      <tags>
+        <tag>vscode</tag>
+        <tag>remote debug</tag>
+        <tag>k8s</tag>
+      </tags>
   </entry>
   <entry>
     <title>TCP Keepalive</title>
@@ -287,6 +389,95 @@
       <tags>
         <tag>TCP</tag>
         <tag>Keepalive</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>TCP三次握手</title>
+    <url>/2018/05/15/TCP%E4%B8%89%E6%AC%A1%E6%8F%A1%E6%89%8B/</url>
+    <content><![CDATA[<p>TCP三次握手/四次挥手的文章看过太多，但有些不太正确。还是决定自己写一篇，也算是对自己知识和碰到的问题的总结。</p>
+<h2 id="tcp的主要特点"><a href="#tcp的主要特点" class="headerlink" title="tcp的主要特点"></a>tcp的主要特点</h2><ul>
+<li>面向连接</li>
+<li>点到点</li>
+<li>可靠交付</li>
+<li>全双工通信</li>
+<li>面向字节流</li>
+</ul>
+<p>其中核心的特点：tcp是可以可靠传输协议，它的其他所有特点都为这个可靠传输服务。</p>
+<h2 id="如何保证可靠传输"><a href="#如何保证可靠传输" class="headerlink" title="如何保证可靠传输"></a>如何保证可靠传输</h2><p>tcp在传输过程中都有一个ack，接收方通过ack告诉发送方收到那些包了。这样发送方能知道有没有丢包，进而确定重传。</p>
+<h2 id="tcp三次握手"><a href="#tcp三次握手" class="headerlink" title="tcp三次握手"></a>tcp三次握手</h2><img src="/2018/05/15/TCP%E4%B8%89%E6%AC%A1%E6%8F%A1%E6%89%8B/%E4%B8%89%E6%AC%A1%E6%8F%A1%E6%89%8B.png" class="" title="image">
+
+<ul>
+<li><p>第一步：client发送连接请求报文段，将SYN位置为1，Seq(Sequence Number)为X(由操作系统动态随机选取一个32位长的序列号)。然后，客户端进入SYN_SEND状态，等待服务器的确认。</p>
+</li>
+<li><p>第二步：server收到client的SYN报文段。需要对这个SYN报文段进行确认，设置Ack(Acknowledgment Number)设置为X(第一次握手中的Seq的值)+1。同时，自己还要发送SYN请求信息，将SYN位置为1，Seq(Sequence Number)为Y(由操作系统动态随机选取一个32位长的序列号)。服务器端将上述所有信息一并发送给客户端，此时服务器进入SYN_RECV状态。</p>
+</li>
+<li><p>第三步：client收到sever的SYN+ACK后，回复server一个ACK。将Ack(Acknowledgment Number)设置为Y(第二次握手中的Seq的值)+1，Seq(Sequence Number)设置为X+1(第二次握手中的Ack(Acknowledgment Number)值)，向服务器发送ACK报文段，这个报文段发送完毕以后，客户端和服务器端都进入ESTABLISHED状态，完成TCP三次握手。</p>
+</li>
+</ul>
+<h2 id="tcp首部简介"><a href="#tcp首部简介" class="headerlink" title="tcp首部简介"></a>tcp首部简介</h2><p>这里先介绍下TCP首部的相关知识。三次握手相关的是主要是ACK和SYN这两个标志比特位。</p>
+<img src="/2018/05/15/TCP%E4%B8%89%E6%AC%A1%E6%8F%A1%E6%89%8B/TCP%E9%A6%96%E9%83%A8.png" class="" title="image">
+
+<p>（1）源端口和目的端口：各占2字节。</p>
+<p>（2）序号(Seq, Sequence Number)：占4个字节。用来标识从TCP发端向TCP收端发送的数据字节流，它表示在这个报文段中的的第一个数据字节在数据流中的序号。主要用来解决网络报乱序的问题。序号范围是[0, 2^32 - 1],共2^32个序号。</p>
+<p>（3）确认号(Ack, Acknowledgment Number): 占4个字节。期望收到对方下一个报文段的第一个数据字节的序号，因此，确认序号应当是上次已成功收到数据字节序号加1。不过，只有当标志位中的ACK标志（下面介绍）为1时该确认序列号的字段才有效。主要用来解决不丢包的问题。</p>
+<p>（4）数据偏移(Offset): 占4位。TCP报文段的数据起始处距离TCP报文段的起始处有多远。实际上指出TCP报文段的首部长度。但注意，“数据偏移”的单位是32位字（即以4字节长度为单位）。最多能表示15个32bit的的字，即4*15=60个字节的首部长度。因此TCP最多有60字节的首部。然而，没有选项字段，正常的长度是20字节。</p>
+<p>（5）保留: 占6位。保留为今后使用，目前置为0。</p>
+<p>（6）标志比特(TCP Flags): TCP首部中有6个标志比特，它们中的多个可同时被设置为1，主要是用于操控TCP的状态机的，依次为URG，ACK，PSH，RST，SYN，FIN。每个标志位的意思如下:</p>
+<ul>
+<li>URG（URGent）: 此标志表示TCP包的紧急指针域（后面马上就要说到）有效，用来保证TCP连接不被中断，并且督促中间层设备要尽快处理这些数据。</li>
+<li>ACK(ACKnowlegment): 仅当ACK=1时Ack字段有效。在连接建立后所有传送的报文段都必须把ACK置1。</li>
+<li>PSH(PuSH): 这个标志位表示Push操作。所谓Push操作就是指在数据包到达接收端以后，立即传送给应用程序，而不是在缓冲区中排队。</li>
+<li>RST(ReSeT): 这个标志表示连接复位请求。用来复位那些产生错误的连接，也被用来拒绝错误和非法的数据包。</li>
+<li>SYN(SYNchoronization): 表示同步序号，用来建立连接。SYN标志位和ACK标志位搭配使用，当连接请求的时候，SYN=1，ACK=0。连接被响应的时候，SYN=1，ACK=1。</li>
+<li>FIN(FINis): 表示发送端已经达到数据末尾，也就是说双方的数据传送完成，没有数据可以传送了，发送FIN标志位的TCP数据包后，连接将被断开。</li>
+</ul>
+<p>（7）窗口: 占2个字节，[0, 2^16 - 1]。指的是发送本报文段的一方的接收窗口。明确指出了现在允许对方发送的数据量。窗口值是经常动态变化的。</p>
+<p>（8）校验和: 占2字节。该字段检验的范围包括首部和数据这两部分。由发端计算和存储，并由收端进行验证。</p>
+<p>（9）紧急指针: 占2个字节，紧急指针仅在URG=1时才有意义，它指出本报文段中的紧急数据的字节数。当所有紧急数据处理完毕时，TCP就告诉应用程序恢复到正常操作。值得注意的是，即使窗口为0时也可发送紧急数据。</p>
+<p>（10）选项: 长度可变，最长可达40字节，当没有选项时，TCP的首部长度是20字节。最初只规定了一种选项，即最大报文段长度MSS(Maximum Segment Size)，MSS是指每一个TCP报文段中的数据字段的最大长度。</p>
+<h2 id="抓包实践"><a href="#抓包实践" class="headerlink" title="抓包实践"></a>抓包实践</h2><p>来看一个pb请求的三次握手过程</p>
+<img src="/2018/05/15/TCP%E4%B8%89%E6%AC%A1%E6%8F%A1%E6%89%8B/%E4%B8%89%E6%AC%A1%E6%8F%A1%E6%89%8B%E6%8A%93%E5%8C%85.jpg" class="" title="image">
+
+<p>client: 172.17.1.217  server: 172.27.247.168</p>
+<p>握手的核心目的是告知对方seq（client的初始seq，server的初始seq），对方回复ack（收到的seq+包的大小），这样发送端就知道有没有丢包了。</p>
+<p>握手的次要目的是告知和协商一些信息。</p>
+<ul>
+<li>MSS–最大传输包</li>
+<li>SACK_PERM–是否支持Selective ack(用户优化重传效率）</li>
+<li>WS–窗口计算指数（有点复杂的话先不用管）</li>
+</ul>
+<p><strong>这就是tcp为什么要握手建立连接，就是为了解决tcp的可靠传输。</strong></p>
+<h3 id="查看第一次握手的详情"><a href="#查看第一次握手的详情" class="headerlink" title="查看第一次握手的详情"></a>查看第一次握手的详情</h3><img src="/2018/05/15/TCP%E4%B8%89%E6%AC%A1%E6%8F%A1%E6%89%8B/%E7%AC%AC%E4%B8%80%E6%AC%A1%E6%8F%A1%E6%89%8B%E6%8A%93%E5%8C%85.jpg" class="" title="image">
+<h3 id="查看第二次握手的详情"><a href="#查看第二次握手的详情" class="headerlink" title="查看第二次握手的详情"></a>查看第二次握手的详情</h3><img src="/2018/05/15/TCP%E4%B8%89%E6%AC%A1%E6%8F%A1%E6%89%8B/%E7%AC%AC%E4%B8%80%E6%AC%A1%E6%8F%A1%E6%89%8B%E6%8A%93%E5%8C%85.jpg" class="" title="image">
+<h3 id="查看第三次握手的详情"><a href="#查看第三次握手的详情" class="headerlink" title="查看第三次握手的详情"></a>查看第三次握手的详情</h3><img src="/2018/05/15/TCP%E4%B8%89%E6%AC%A1%E6%8F%A1%E6%89%8B/%E7%AC%AC%E4%B8%89%E6%AC%A1%E6%8F%A1%E6%89%8B%E6%8A%93%E5%8C%85.jpg" class="" title="image">
+
+
+<h3 id="为什么要三次握手？"><a href="#为什么要三次握手？" class="headerlink" title="为什么要三次握手？"></a>为什么要三次握手？</h3><ul>
+<li><p>如果只有一次握手，Client不能确定与Server的单向连接，更加不能确定Server与Client的单向连接；</p>
+</li>
+<li><p>如果只有两次握手，Client确定与Server的单向连接，但是Server不能确定与Client的单向连接；</p>
+</li>
+<li><p>只有三次握手，Client与Server才能相互确认双向连接，实现双工数据传输。</p>
+</li>
+<li><p>谢希仁版《计算机网络》中的例子是这样的，“已失效的连接请求报文段”的产生在这样一种情况下：client发出的第一个连接请求报文段并没有丢失，而是在某个网络结点长时间的滞留了，以致延误到连接释放以后的某个时间才到达server。本来这是一个早已失效的报文段。但server收到此失效的连接请求报文段后，就误认为是client再次发出的一个新的连接请求。于是就向client发出确认报文段，同意建立连接。假设不采用“三次握手”，那么只要server发出确认，新的连接就建立了。由于现在client并没有发出建立连接的请求，因此不会理睬server的确认，也不会向server发送数据。但server却以为新的运输连接已经建立，并一直等待client发来数据。这样，server的很多资源就白白浪费掉了。采用“三次握手”的办法可以防止上述现象发生。例如刚才那种情况，client不会向server的确认发出确认。server由于收不到确认，就知道client并没有要求建立连接。</p>
+</li>
+</ul>
+<h3 id="握手中断"><a href="#握手中断" class="headerlink" title="握手中断"></a>握手中断</h3><ul>
+<li>第一次握手中断: A发送给B的SYN中断，A会周期性超时重传，直到A收到B的确认响应。</li>
+<li>第二次握手中断: B发送给A的SYN、ACK中断，B会周期性超时重传，直到B收到A的确认响应。</li>
+<li>第三次握手中断: A发送给B的ACK中断，A不会重传。超时后，B会重传SYN信号(即回到第二次握手)，直到B收到A的确认响应。</li>
+</ul>
+<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><ul>
+<li><a href="https://www.jianshu.com/p/448f37ed29fe">https://www.jianshu.com/p/448f37ed29fe</a></li>
+<li><a href="https://www.jianshu.com/p/a4beee06220c">https://www.jianshu.com/p/a4beee06220c</a></li>
+<li><a href="http://jm.taobao.org/2017/06/08/20170608/">http://jm.taobao.org/2017/06/08/20170608/</a></li>
+</ul>
+]]></content>
+      <categories>
+        <category>网络</category>
+      </categories>
+      <tags>
+        <tag>TCP</tag>
       </tags>
   </entry>
   <entry>
@@ -334,18 +525,6 @@
       </categories>
       <tags>
         <tag>TCP</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>du、df和ls的区别</title>
-    <url>/2018/11/10/du%E3%80%81df%E5%92%8Cls%E7%9A%84%E5%8C%BA%E5%88%AB/</url>
-    <content><![CDATA[<p>待整理。。。。</p>
-]]></content>
-      <categories>
-        <category>linux</category>
-      </categories>
-      <tags>
-        <tag>linux命令</tag>
       </tags>
   </entry>
   <entry>
@@ -450,105 +629,15 @@
       </tags>
   </entry>
   <entry>
-    <title>Remote Debugging Go Code with Visual Studio Code</title>
-    <url>/2019/12/23/Remote-Debug-Go-Code-with-Visual-Studio-Code/</url>
-    <content><![CDATA[<p>当了解一些大型项目的代码逻辑时，如kubernetes，跟着调试器跟踪代码学习，是很好的方式。当项目部署在远程环境时，在本机进行开发，很自然对Remote Debug有迫切需求，这也是和调试一般golang程序最主要的诉求区别点，本文将通过两个实际例子，来介绍如何Remote Debug。</p>
-<span id="more"></span>
-
-<h1 id="dlv远程调试的原理"><a href="#dlv远程调试的原理" class="headerlink" title="dlv远程调试的原理"></a>dlv远程调试的原理</h1><p>vscode支持丰富的插件，dlv插件可以帮助我们调试golang代码，基本使用方法详见 <a href="https://github.com/go-delve/delve">delve官网</a>，以及我之前的一篇文档<a href="https://xusenqi.github.io/2019/08/25/%E9%80%9A%E8%BF%87delve-dlv-%E8%B0%83%E8%AF%95golang%E7%A8%8B%E5%BA%8F/#more">通过delve(dlv)调试golang程序</a>。dlv远程调试的基本原理是，在服务端启动dlv server，客户端vscode去连接dlv server</p>
-<img src="/2019/12/23/Remote-Debug-Go-Code-with-Visual-Studio-Code/dlv_server.jpeg" class="" title="image">
-
-<h1 id="远程调试的步骤"><a href="#远程调试的步骤" class="headerlink" title="远程调试的步骤"></a>远程调试的步骤</h1><p>主要参考了<a href="https://github.com/Microsoft/vscode-go/wiki/Debugging-Go-code-using-VS-Code">Debugging Go code using VS Code</a>，现将步骤整理如下：</p>
-<h2 id="环境安装"><a href="#环境安装" class="headerlink" title="环境安装"></a>环境安装</h2><h3 id="Local安装Golang"><a href="#Local安装Golang" class="headerlink" title="Local安装Golang"></a>Local安装Golang</h3><p>参考Golang官网安装步骤<a href="https://golang.org/doc/install">Getting Started</a></p>
-<h3 id="Local和Remote端安装dlv工具"><a href="#Local和Remote端安装dlv工具" class="headerlink" title="Local和Remote端安装dlv工具"></a>Local和Remote端安装dlv工具</h3><figure class="highlight vim"><table><tr><td class="code"><pre><span class="line"><span class="keyword">go</span> <span class="built_in">get</span> -<span class="keyword">u</span> github.<span class="keyword">com</span>/<span class="keyword">go</span>-delve/delve/cmd/dlv</span><br><span class="line"></span><br><span class="line">验证dlv版本</span><br><span class="line">dlv <span class="keyword">version</span></span><br></pre></td></tr></table></figure>
-<h2 id="本地代码版本切换到和目标端一致"><a href="#本地代码版本切换到和目标端一致" class="headerlink" title="本地代码版本切换到和目标端一致"></a>本地代码版本切换到和目标端一致</h2><p>以一个服务uhost-scheduler为例, 线上和本地都保持为1.0.10版本</p>
-<figure class="highlight pgsql"><table><tr><td class="code"><pre><span class="line">[root@yg-man-uhost-set9<span class="number">-01</span> bin]# /data/uframework/uhost_server -v</span><br><span class="line"><span class="keyword">option</span> = a  <span class="keyword">value</span> =</span><br><span class="line"><span class="keyword">option</span> = i  <span class="keyword">value</span> = <span class="number">0</span></span><br><span class="line"><span class="keyword">option</span> = s  <span class="keyword">value</span> =</span><br><span class="line"><span class="keyword">option</span> = v  <span class="keyword">value</span> = <span class="keyword">true</span></span><br><span class="line"><span class="keyword">option</span> = z  <span class="keyword">value</span> =</span><br><span class="line"></span><br><span class="line"><span class="keyword">Version</span>: <span class="number">1.0</span><span class="number">.10</span></span><br><span class="line">Git branch: from_pxu_bugfix</span><br><span class="line">Git <span class="keyword">commit</span>: <span class="number">3</span>f997fe</span><br><span class="line">Git <span class="keyword">user</span>.name    patrick</span><br><span class="line">Git <span class="keyword">user</span>.email     xusen_qi@<span class="number">163.</span>com</span><br><span class="line">Go <span class="keyword">version</span>: go_version_go1<span class="number">.8</span><span class="number">.1</span>_darwin/amd64</span><br><span class="line">Build <span class="type">time</span>: <span class="number">2019</span><span class="number">-09</span><span class="number">-02</span>T20:<span class="number">26</span>:<span class="number">58</span>+<span class="number">0800</span></span><br></pre></td></tr></table></figure>
-
-<p>##在Remote端启动dlv server<br>启动命令如下</p>
-<figure class="highlight routeros"><table><tr><td class="code"><pre><span class="line">dlv <span class="attribute">--listen</span>=<span class="string">&quot;:50000&quot;</span> <span class="attribute">--headless</span>=<span class="literal">true</span> --log <span class="attribute">--api-version</span>=2 exec /data/uframework/uhost_server \</span><br><span class="line">&gt; -- <span class="attribute">--z</span>=172.23.0.77:2181,172.23.0.78:2181,172.23.0.79:2181,172.23.0.80:2181,172.23.0.81:2181 \</span><br><span class="line">&gt; <span class="attribute">--a</span>=uhost-scheduler <span class="attribute">--s</span>=set9 <span class="attribute">--i</span>=0</span><br></pre></td></tr></table></figure>
-
-<p>参数说明：</p>
-<ul>
-<li>-l, –listen string        Debugging server listen address. (default “127.0.0.1:0”)</li>
-<li>–headless             Run debug server only, in headless mode.</li>
-<li>–log                  Enable debugging server logging.</li>
-</ul>
-<p>更多参数说明详见<a href="https://github.com/go-delve/delve/blob/master/Documentation/usage/dlv.md">dlv</a></p>
-<h2 id="在Local端的调试"><a href="#在Local端的调试" class="headerlink" title="在Local端的调试"></a>在Local端的调试</h2><h3 id="dlv命令行的调试"><a href="#dlv命令行的调试" class="headerlink" title="dlv命令行的调试"></a>dlv命令行的调试</h3><p>访问dlv server的IP:Port，可以调试，类似于gdb</p>
-<figure class="highlight awk"><table><tr><td class="code"><pre><span class="line">➜  ~ dlv connect <span class="number">172.23</span>.<span class="number">0.159</span>:<span class="number">50000</span></span><br><span class="line">Type <span class="string">&#x27;help&#x27;</span> <span class="keyword">for</span> list of commands.</span><br><span class="line">(dlv) <span class="keyword">break</span> main.main</span><br><span class="line">Breakpoint <span class="number">1</span> set at <span class="number">0</span>x823deb <span class="keyword">for</span> main.main() .<span class="regexp">/go/</span>src<span class="regexp">/uhost-go/u</span>host_server.go:<span class="number">31</span></span><br></pre></td></tr></table></figure>
-
-<h3 id="在VS-Code里的调试"><a href="#在VS-Code里的调试" class="headerlink" title="在VS Code里的调试"></a>在VS Code里的调试</h3><p>但命令行里，没有图形界面直观和方便，所以更推荐在VS Code里的调试</p>
-<ol>
-<li>保持VS Code打开的代码，和Remote端的代码或二进制包一致</li>
-<li>在本地主机中配置远程调试的参数，会在当前项目下的.vscode目录产生一个launch.json文件</li>
-</ol>
-<img src="/2019/12/23/Remote-Debug-Go-Code-with-Visual-Studio-Code/Open_Configurations.jpeg" class="" title="image">
-
-<ol start="3">
-<li>配置Remote端的IP和Port</li>
-</ol>
-<figure class="highlight json"><table><tr><td class="code"><pre><span class="line">&#123;</span><br><span class="line">    <span class="attr">&quot;name&quot;</span>: <span class="string">&quot;Remote uhost-scheduler&quot;</span>,</span><br><span class="line">    <span class="attr">&quot;type&quot;</span>: <span class="string">&quot;go&quot;</span>,</span><br><span class="line">    <span class="attr">&quot;request&quot;</span>: <span class="string">&quot;attach&quot;</span>,</span><br><span class="line">    <span class="attr">&quot;mode&quot;</span>: <span class="string">&quot;remote&quot;</span>,</span><br><span class="line">    <span class="attr">&quot;remotePath&quot;</span>: <span class="string">&quot;/Users/patrick.xu/go/src/uhost-go&quot;</span>,</span><br><span class="line">    <span class="attr">&quot;port&quot;</span>: <span class="number">50000</span>,</span><br><span class="line">    <span class="attr">&quot;host&quot;</span>: <span class="string">&quot;172.23.0.159&quot;</span>,</span><br><span class="line">    <span class="attr">&quot;showLog&quot;</span>: <span class="literal">true</span>,</span><br><span class="line">    <span class="attr">&quot;trace&quot;</span>: <span class="string">&quot;log&quot;</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<ol start="4">
-<li>运行Debug，可以像本地一样调试，如加断点、条件断点、单步调试等。</li>
-</ol>
-<p>本地VS Code界面</p>
-<img src="/2019/12/23/Remote-Debug-Go-Code-with-Visual-Studio-Code/VSCode_debug_scheduler%E7%95%8C%E9%9D%A2.jpeg" class="" title="image">
-
-<p>Remote端页面</p>
-<img src="/2019/12/23/Remote-Debug-Go-Code-with-Visual-Studio-Code/dlv_server_scheduler_%E8%B0%83%E8%AF%95.jpeg" class="" title="image">
-
-<p>Remote-Debug-Go-Code-with-Visual-Studio-Code.md</p>
-<p>条件断点</p>
-<img src="/2019/12/23/Remote-Debug-Go-Code-with-Visual-Studio-Code/%E6%9D%A1%E4%BB%B6%E6%96%AD%E7%82%B9.png" class="" title="image">
-
-<h1 id="k8s-scheduler的远程调试"><a href="#k8s-scheduler的远程调试" class="headerlink" title="k8s scheduler的远程调试"></a>k8s scheduler的远程调试</h1><p>k8s里有很多单独的服务，如kube-apiserver、kube-proxy、kube-scheduler等，每个都可以作为单独的调试代码。最近在看kube-scheduler的代码，所以这里以它为例。</p>
-<img src="/2019/12/23/Remote-Debug-Go-Code-with-Visual-Studio-Code/kubernetes_components_architecture.png" class="" title="image">
-<center>High level Kubernetes architecture diagram showing a cluster with a master and two worker nodes</center>
-<center>Source: https://x-team.com/blog/introduction-kubernetes-architecture</center>
-
-<h2 id="k8s环境的搭建"><a href="#k8s环境的搭建" class="headerlink" title="k8s环境的搭建"></a>k8s环境的搭建</h2><p>k8s环境通过kubeadm搭建在远程的4台虚机上，1台master和3台node，具体的搭建步骤见<a href="https://xusenqi.github.io/2019/12/11/kubeadm%E9%83%A8%E7%BD%B2single-control-plane-k8s%E9%9B%86%E7%BE%A4/">kubeadm部署single control-plane k8s集群</a>。</p>
-<h2 id="停止kube-scheduler服务"><a href="#停止kube-scheduler服务" class="headerlink" title="停止kube-scheduler服务"></a>停止kube-scheduler服务</h2><p>我们需要dlv拉起kube-scheduler服务，但是kubeadm部署的kube-scheduler被kill掉后<br>，会自动拉起来，占用10251的端口，影响调试。</p>
-<img src="/2019/12/23/Remote-Debug-Go-Code-with-Visual-Studio-Code/kubeadm_kube_scheduler.jpeg" class="" title="image">
-
-<p>这里对对配置文件改名，防止自动拉起kube-scheduler<br><code>mv /etc/kubernetes/scheduler.conf /etc/kubernetes/scheduler_191223.conf</code></p>
-<h2 id="dlv-server"><a href="#dlv-server" class="headerlink" title="dlv server"></a>dlv server</h2><p>dlv server启动后，监听40000端口</p>
-<figure class="highlight routeros"><table><tr><td class="code"><pre><span class="line">dlv <span class="attribute">--listen</span>=<span class="string">&quot;:40000&quot;</span> <span class="attribute">--headless</span>=<span class="literal">true</span> --log <span class="attribute">--api-version</span>=2 exec /data/k8s/kube-scheduler \</span><br><span class="line">-- <span class="attribute">--authentication-kubeconfig</span>=/etc/kubernetes/scheduler_191223.conf \</span><br><span class="line"><span class="attribute">--authorization-kubeconfig</span>=/etc/kubernetes/scheduler_191223.conf \</span><br><span class="line"><span class="attribute">--bind-address</span>=127.0.0.1 <span class="attribute">--kubeconfig</span>=/etc/kubernetes/scheduler_191223.conf \</span><br><span class="line"><span class="attribute">--leader-elect</span>=<span class="literal">true</span></span><br></pre></td></tr></table></figure>
-
-<p>注意：本地是从公网访问虚机的40000端口，如果防火墙有打开的话，要关掉。</p>
-<h2 id="本地调试kube-scheduler"><a href="#本地调试kube-scheduler" class="headerlink" title="本地调试kube-scheduler"></a>本地调试kube-scheduler</h2><p>与之前步骤一样</p>
-<ol>
-<li>代码与线上一致；如果不一致，重新编译新的版本推到线上，重新拉起服务</li>
-</ol>
-<figure class="highlight vim"><table><tr><td class="code"><pre><span class="line">➜  kube-scheduler gi<span class="variable">t:</span>(b3cbbae) ✗ <span class="keyword">pwd</span></span><br><span class="line">/Users/patrick.<span class="keyword">xu</span>/<span class="keyword">go</span>/src/k8s.io/kubernetes/cmd/kube-scheduler</span><br><span class="line">➜  kube-scheduler gi<span class="variable">t:</span>(b3cbbae) CGO_ENABLED=<span class="number">0</span> GOOS=linux GOARCH=amd64 <span class="keyword">go</span> build</span><br><span class="line">➜  kube-scheduler gi<span class="variable">t:</span>(b3cbbae) ✗ <span class="keyword">ll</span></span><br><span class="line">total <span class="number">106208</span></span><br><span class="line">-rw-r--r--  <span class="number">1</span> patrick.<span class="keyword">xu</span>  staff   <span class="number">1.1</span>K Dec <span class="number">11</span> <span class="number">20</span>:<span class="number">11</span> BUILD</span><br><span class="line">-rw-r--r--  <span class="number">1</span> patrick.<span class="keyword">xu</span>  staff   <span class="number">144</span>B Dec <span class="number">11</span> <span class="number">20</span>:<span class="number">11</span> OWNERS</span><br><span class="line">drwxr-xr-<span class="keyword">x</span>  <span class="number">7</span> patrick.<span class="keyword">xu</span>  staff   <span class="number">224</span>B Dec <span class="number">11</span> <span class="number">20</span>:<span class="number">11</span> app</span><br><span class="line">-rwxr-xr-<span class="keyword">x</span>  <span class="number">1</span> patrick.<span class="keyword">xu</span>  staff    <span class="number">52</span>M Dec <span class="number">18</span> <span class="number">01</span>:<span class="number">31</span> kube-scheduler</span><br><span class="line">-rw-r--r--  <span class="number">1</span> patrick.<span class="keyword">xu</span>  staff   <span class="number">1.3</span>K Dec <span class="number">11</span> <span class="number">20</span>:<span class="number">11</span> scheduler.<span class="keyword">go</span></span><br></pre></td></tr></table></figure>
-
-<ol start="2">
-<li>配置文件launch.json的内容</li>
-</ol>
-<figure class="highlight json"><table><tr><td class="code"><pre><span class="line">&#123;</span><br><span class="line">    <span class="attr">&quot;name&quot;</span>: <span class="string">&quot;Remote k8s server&quot;</span>,</span><br><span class="line">    <span class="attr">&quot;type&quot;</span>: <span class="string">&quot;go&quot;</span>,</span><br><span class="line">    <span class="attr">&quot;request&quot;</span>: <span class="string">&quot;attach&quot;</span>,</span><br><span class="line">    <span class="attr">&quot;showLog&quot;</span>: <span class="literal">true</span>,</span><br><span class="line">    <span class="attr">&quot;mode&quot;</span>: <span class="string">&quot;remote&quot;</span>,</span><br><span class="line">    <span class="attr">&quot;remotePath&quot;</span>: <span class="string">&quot;/Users/patrick.xu/go/src/k8s.io&quot;</span>,</span><br><span class="line">    <span class="attr">&quot;port&quot;</span>: <span class="number">40000</span>,</span><br><span class="line">    <span class="attr">&quot;host&quot;</span>: <span class="string">&quot;152.32.173.26&quot;</span>,</span><br><span class="line">    <span class="attr">&quot;trace&quot;</span>: <span class="string">&quot;log&quot;</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>3.运行Debug，这时可以像可以像本地一样调试，如加断点、单步调试等。</p>
-<p>本地VS Code远程调试kube-scheduler界面</p>
-<img src="/2019/12/23/Remote-Debug-Go-Code-with-Visual-Studio-Code/VSCode_debug_kube_scheduler%E7%95%8C%E9%9D%A2.jpeg" class="" title="image">
-
-<p>Remote端kube-scheduler输出，看到打断点和调试的日志</p>
-<img src="/2019/12/23/Remote-Debug-Go-Code-with-Visual-Studio-Code/dlv_server_kube_scheduler_%E8%B0%83%E8%AF%95.jpeg" class="" title="image">
-
-<p>后面就是结合创建pod，去分析具体的调度逻辑了。</p>
-<h1 id="参考链接"><a href="#参考链接" class="headerlink" title="参考链接"></a>参考链接</h1><ol>
-<li><a href="https://github.com/go-delve/delve">delve官网</a></li>
-<li><a href="https://github.com/Microsoft/vscode-go/wiki/Debugging-Go-code-using-VS-Code">Debugging Go code using VS Code</a></li>
-<li><a href="http://zhongpan.tech/2019/10/21/016.remote-debug-golang-with-vscode/#more">使用vscode远程调试golang</a></li>
-<li><a href="https://xusenqi.github.io/2019/08/25/%E9%80%9A%E8%BF%87delve-dlv-%E8%B0%83%E8%AF%95golang%E7%A8%8B%E5%BA%8F/#more">通过delve(dlv)调试golang程序</a></li>
-</ol>
+    <title>du、df和ls的区别</title>
+    <url>/2018/11/10/du%E3%80%81df%E5%92%8Cls%E7%9A%84%E5%8C%BA%E5%88%AB/</url>
+    <content><![CDATA[<p>待整理。。。。</p>
 ]]></content>
       <categories>
-        <category>vscode</category>
+        <category>linux</category>
       </categories>
       <tags>
-        <tag>vscode</tag>
-        <tag>remote debug</tag>
-        <tag>k8s</tag>
+        <tag>linux命令</tag>
       </tags>
   </entry>
   <entry>
@@ -685,16 +774,6 @@
         <tag>goroutine</tag>
         <tag>调度</tag>
       </tags>
-  </entry>
-  <entry>
-    <title>nodejs获取客户端IP Address(转)</title>
-    <url>/2018/12/14/nodejs%E8%8E%B7%E5%8F%96%E5%AE%A2%E6%88%B7%E7%AB%AFIP-Address/</url>
-    <content><![CDATA[<p>在网上看见很多问node.js如何获取客户端IP,所以记录下来，以供大家参考。</p>
-<figure class="highlight ada"><table><tr><td class="code"><pre><span class="line"><span class="keyword">function</span> <span class="title">getClientIp</span>(req) &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="type">req.headers[&#x27;x-forwarded-for&#x27;]</span> ||</span><br><span class="line">        req.connection.remoteAddress ||</span><br><span class="line">        req.socket.remoteAddress ||</span><br><span class="line">        req.connection.socket.remoteAddress;</span><br><span class="line">    &#125;;</span><br></pre></td></tr></table></figure>
-
-<p>代码，第一段判断是否有反向代理IP(头信息：x-forwarded-for)，再判断connection的远程IP，以及后端的socket的IP。</p>
-<p><a href="https://www.cnblogs.com/whitewolf/p/3572724.html">nodejs获取客户端IP Address</a></p>
-]]></content>
   </entry>
   <entry>
     <title>kubeadm部署single control-plane k8s集群</title>
@@ -864,6 +943,16 @@
         <tag>k8s</tag>
         <tag>kubeadm</tag>
       </tags>
+  </entry>
+  <entry>
+    <title>nodejs获取客户端IP Address(转)</title>
+    <url>/2018/12/14/nodejs%E8%8E%B7%E5%8F%96%E5%AE%A2%E6%88%B7%E7%AB%AFIP-Address/</url>
+    <content><![CDATA[<p>在网上看见很多问node.js如何获取客户端IP,所以记录下来，以供大家参考。</p>
+<figure class="highlight ada"><table><tr><td class="code"><pre><span class="line"><span class="keyword">function</span> <span class="title">getClientIp</span>(req) &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="type">req.headers[&#x27;x-forwarded-for&#x27;]</span> ||</span><br><span class="line">        req.connection.remoteAddress ||</span><br><span class="line">        req.socket.remoteAddress ||</span><br><span class="line">        req.connection.socket.remoteAddress;</span><br><span class="line">    &#125;;</span><br></pre></td></tr></table></figure>
+
+<p>代码，第一段判断是否有反向代理IP(头信息：x-forwarded-for)，再判断connection的远程IP，以及后端的socket的IP。</p>
+<p><a href="https://www.cnblogs.com/whitewolf/p/3572724.html">nodejs获取客户端IP Address</a></p>
+]]></content>
   </entry>
   <entry>
     <title>一次go语言内存泄漏的排查过程</title>
@@ -1258,6 +1347,36 @@
       <tags>
         <tag>cpu</tag>
         <tag>node</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>分布式系统架构的简介</title>
+    <url>/2019/03/18/%E5%88%86%E5%B8%83%E5%BC%8F%E7%B3%BB%E7%BB%9F%E6%9E%B6%E6%9E%84%E7%9A%84%E7%AE%80%E4%BB%8B/</url>
+    <content><![CDATA[<p>摘自 分布式系统架构的冰与火 左耳听风</p>
+<h2 id="分布式系统架构的优缺点"><a href="#分布式系统架构的优缺点" class="headerlink" title="分布式系统架构的优缺点"></a>分布式系统架构的优缺点</h2><p>需要分布式系统架构，来代替传统的单体架构的原因：</p>
+<ol>
+<li>增大系统容量 –&gt; 提高性能<br>单台机器的性能无法满足要求时，需要垂直或者水平拆分成分布式系统架构，让更多的机器去承担。</li>
+<li>加强系统可用 –&gt; 提高服务可用性<br>避免单点故障。</li>
+</ol>
+<p>分布式系统是一种trade-off</p>
+<img src="/2019/03/18/%E5%88%86%E5%B8%83%E5%BC%8F%E7%B3%BB%E7%BB%9F%E6%9E%B6%E6%9E%84%E7%9A%84%E7%AE%80%E4%BB%8B/%E5%8D%95%E4%BD%93%E5%BA%94%E7%94%A8%E5%92%8C%E5%88%86%E5%B8%83%E5%BC%8F%E6%9E%B6%E6%9E%84%E7%9A%84%E4%BC%98%E7%BC%BA%E7%82%B9.png" class="" title="image">
+
+<h2 id="分布式系统的发展"><a href="#分布式系统的发展" class="headerlink" title="分布式系统的发展"></a>分布式系统的发展</h2><p>SOA——基于服务的架构</p>
+<img src="/2019/03/18/%E5%88%86%E5%B8%83%E5%BC%8F%E7%B3%BB%E7%BB%9F%E6%9E%B6%E6%9E%84%E7%9A%84%E7%AE%80%E4%BB%8B/SOA%E6%9E%B6%E6%9E%84%E7%9A%84%E6%BC%94%E5%8C%96.png" class="" title="image">
+
+<ol>
+<li>20 世纪 90 年代前，是单体架构，软件模块高度耦合。</li>
+<li>2000 年左右出现了比较松耦合的 SOA 架构，这个架构需要一个标准的协议或是中间件来联动其它相关联的服务.</li>
+<li>而 2010 年后，出现了微服务架构，这个架构更为松耦合。每一个微服务都能独立完整地运行（所谓的自包含），后端单体的数据库也被微服务这样的架构分散到不同的服务中。而它和传统 SOA 的差别在于，服务间的整合需要一个服务编排或是服务整合的引擎。就好像交响乐中需要有一个指挥来把所有乐器编排和组织在一起。</li>
+</ol>
+<p>一般来说，这个编排和组织引擎可以是工作流引擎，也可以是网关。当然，还需要辅助于像容器化调度这样的技术方式，如 Kubernetes.</p>
+]]></content>
+      <categories>
+        <category>分布式系统</category>
+      </categories>
+      <tags>
+        <tag>分布式系统</tag>
+        <tag>架构</tag>
       </tags>
   </entry>
   <entry>
@@ -1707,125 +1826,6 @@
         <tag>debug</tag>
         <tag>delve</tag>
         <tag>dlv</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>分布式系统架构的简介</title>
-    <url>/2019/03/18/%E5%88%86%E5%B8%83%E5%BC%8F%E7%B3%BB%E7%BB%9F%E6%9E%B6%E6%9E%84%E7%9A%84%E7%AE%80%E4%BB%8B/</url>
-    <content><![CDATA[<p>摘自 分布式系统架构的冰与火 左耳听风</p>
-<h2 id="分布式系统架构的优缺点"><a href="#分布式系统架构的优缺点" class="headerlink" title="分布式系统架构的优缺点"></a>分布式系统架构的优缺点</h2><p>需要分布式系统架构，来代替传统的单体架构的原因：</p>
-<ol>
-<li>增大系统容量 –&gt; 提高性能<br>单台机器的性能无法满足要求时，需要垂直或者水平拆分成分布式系统架构，让更多的机器去承担。</li>
-<li>加强系统可用 –&gt; 提高服务可用性<br>避免单点故障。</li>
-</ol>
-<p>分布式系统是一种trade-off</p>
-<img src="/2019/03/18/%E5%88%86%E5%B8%83%E5%BC%8F%E7%B3%BB%E7%BB%9F%E6%9E%B6%E6%9E%84%E7%9A%84%E7%AE%80%E4%BB%8B/%E5%8D%95%E4%BD%93%E5%BA%94%E7%94%A8%E5%92%8C%E5%88%86%E5%B8%83%E5%BC%8F%E6%9E%B6%E6%9E%84%E7%9A%84%E4%BC%98%E7%BC%BA%E7%82%B9.png" class="" title="image">
-
-<h2 id="分布式系统的发展"><a href="#分布式系统的发展" class="headerlink" title="分布式系统的发展"></a>分布式系统的发展</h2><p>SOA——基于服务的架构</p>
-<img src="/2019/03/18/%E5%88%86%E5%B8%83%E5%BC%8F%E7%B3%BB%E7%BB%9F%E6%9E%B6%E6%9E%84%E7%9A%84%E7%AE%80%E4%BB%8B/SOA%E6%9E%B6%E6%9E%84%E7%9A%84%E6%BC%94%E5%8C%96.png" class="" title="image">
-
-<ol>
-<li>20 世纪 90 年代前，是单体架构，软件模块高度耦合。</li>
-<li>2000 年左右出现了比较松耦合的 SOA 架构，这个架构需要一个标准的协议或是中间件来联动其它相关联的服务.</li>
-<li>而 2010 年后，出现了微服务架构，这个架构更为松耦合。每一个微服务都能独立完整地运行（所谓的自包含），后端单体的数据库也被微服务这样的架构分散到不同的服务中。而它和传统 SOA 的差别在于，服务间的整合需要一个服务编排或是服务整合的引擎。就好像交响乐中需要有一个指挥来把所有乐器编排和组织在一起。</li>
-</ol>
-<p>一般来说，这个编排和组织引擎可以是工作流引擎，也可以是网关。当然，还需要辅助于像容器化调度这样的技术方式，如 Kubernetes.</p>
-]]></content>
-      <categories>
-        <category>分布式系统</category>
-      </categories>
-      <tags>
-        <tag>分布式系统</tag>
-        <tag>架构</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>TCP三次握手</title>
-    <url>/2018/05/15/TCP%E4%B8%89%E6%AC%A1%E6%8F%A1%E6%89%8B/</url>
-    <content><![CDATA[<p>TCP三次握手/四次挥手的文章看过太多，但有些不太正确。还是决定自己写一篇，也算是对自己知识和碰到的问题的总结。</p>
-<h2 id="tcp的主要特点"><a href="#tcp的主要特点" class="headerlink" title="tcp的主要特点"></a>tcp的主要特点</h2><ul>
-<li>面向连接</li>
-<li>点到点</li>
-<li>可靠交付</li>
-<li>全双工通信</li>
-<li>面向字节流</li>
-</ul>
-<p>其中核心的特点：tcp是可以可靠传输协议，它的其他所有特点都为这个可靠传输服务。</p>
-<h2 id="如何保证可靠传输"><a href="#如何保证可靠传输" class="headerlink" title="如何保证可靠传输"></a>如何保证可靠传输</h2><p>tcp在传输过程中都有一个ack，接收方通过ack告诉发送方收到那些包了。这样发送方能知道有没有丢包，进而确定重传。</p>
-<h2 id="tcp三次握手"><a href="#tcp三次握手" class="headerlink" title="tcp三次握手"></a>tcp三次握手</h2><img src="/2018/05/15/TCP%E4%B8%89%E6%AC%A1%E6%8F%A1%E6%89%8B/%E4%B8%89%E6%AC%A1%E6%8F%A1%E6%89%8B.png" class="" title="image">
-
-<ul>
-<li><p>第一步：client发送连接请求报文段，将SYN位置为1，Seq(Sequence Number)为X(由操作系统动态随机选取一个32位长的序列号)。然后，客户端进入SYN_SEND状态，等待服务器的确认。</p>
-</li>
-<li><p>第二步：server收到client的SYN报文段。需要对这个SYN报文段进行确认，设置Ack(Acknowledgment Number)设置为X(第一次握手中的Seq的值)+1。同时，自己还要发送SYN请求信息，将SYN位置为1，Seq(Sequence Number)为Y(由操作系统动态随机选取一个32位长的序列号)。服务器端将上述所有信息一并发送给客户端，此时服务器进入SYN_RECV状态。</p>
-</li>
-<li><p>第三步：client收到sever的SYN+ACK后，回复server一个ACK。将Ack(Acknowledgment Number)设置为Y(第二次握手中的Seq的值)+1，Seq(Sequence Number)设置为X+1(第二次握手中的Ack(Acknowledgment Number)值)，向服务器发送ACK报文段，这个报文段发送完毕以后，客户端和服务器端都进入ESTABLISHED状态，完成TCP三次握手。</p>
-</li>
-</ul>
-<h2 id="tcp首部简介"><a href="#tcp首部简介" class="headerlink" title="tcp首部简介"></a>tcp首部简介</h2><p>这里先介绍下TCP首部的相关知识。三次握手相关的是主要是ACK和SYN这两个标志比特位。</p>
-<img src="/2018/05/15/TCP%E4%B8%89%E6%AC%A1%E6%8F%A1%E6%89%8B/TCP%E9%A6%96%E9%83%A8.png" class="" title="image">
-
-<p>（1）源端口和目的端口：各占2字节。</p>
-<p>（2）序号(Seq, Sequence Number)：占4个字节。用来标识从TCP发端向TCP收端发送的数据字节流，它表示在这个报文段中的的第一个数据字节在数据流中的序号。主要用来解决网络报乱序的问题。序号范围是[0, 2^32 - 1],共2^32个序号。</p>
-<p>（3）确认号(Ack, Acknowledgment Number): 占4个字节。期望收到对方下一个报文段的第一个数据字节的序号，因此，确认序号应当是上次已成功收到数据字节序号加1。不过，只有当标志位中的ACK标志（下面介绍）为1时该确认序列号的字段才有效。主要用来解决不丢包的问题。</p>
-<p>（4）数据偏移(Offset): 占4位。TCP报文段的数据起始处距离TCP报文段的起始处有多远。实际上指出TCP报文段的首部长度。但注意，“数据偏移”的单位是32位字（即以4字节长度为单位）。最多能表示15个32bit的的字，即4*15=60个字节的首部长度。因此TCP最多有60字节的首部。然而，没有选项字段，正常的长度是20字节。</p>
-<p>（5）保留: 占6位。保留为今后使用，目前置为0。</p>
-<p>（6）标志比特(TCP Flags): TCP首部中有6个标志比特，它们中的多个可同时被设置为1，主要是用于操控TCP的状态机的，依次为URG，ACK，PSH，RST，SYN，FIN。每个标志位的意思如下:</p>
-<ul>
-<li>URG（URGent）: 此标志表示TCP包的紧急指针域（后面马上就要说到）有效，用来保证TCP连接不被中断，并且督促中间层设备要尽快处理这些数据。</li>
-<li>ACK(ACKnowlegment): 仅当ACK=1时Ack字段有效。在连接建立后所有传送的报文段都必须把ACK置1。</li>
-<li>PSH(PuSH): 这个标志位表示Push操作。所谓Push操作就是指在数据包到达接收端以后，立即传送给应用程序，而不是在缓冲区中排队。</li>
-<li>RST(ReSeT): 这个标志表示连接复位请求。用来复位那些产生错误的连接，也被用来拒绝错误和非法的数据包。</li>
-<li>SYN(SYNchoronization): 表示同步序号，用来建立连接。SYN标志位和ACK标志位搭配使用，当连接请求的时候，SYN=1，ACK=0。连接被响应的时候，SYN=1，ACK=1。</li>
-<li>FIN(FINis): 表示发送端已经达到数据末尾，也就是说双方的数据传送完成，没有数据可以传送了，发送FIN标志位的TCP数据包后，连接将被断开。</li>
-</ul>
-<p>（7）窗口: 占2个字节，[0, 2^16 - 1]。指的是发送本报文段的一方的接收窗口。明确指出了现在允许对方发送的数据量。窗口值是经常动态变化的。</p>
-<p>（8）校验和: 占2字节。该字段检验的范围包括首部和数据这两部分。由发端计算和存储，并由收端进行验证。</p>
-<p>（9）紧急指针: 占2个字节，紧急指针仅在URG=1时才有意义，它指出本报文段中的紧急数据的字节数。当所有紧急数据处理完毕时，TCP就告诉应用程序恢复到正常操作。值得注意的是，即使窗口为0时也可发送紧急数据。</p>
-<p>（10）选项: 长度可变，最长可达40字节，当没有选项时，TCP的首部长度是20字节。最初只规定了一种选项，即最大报文段长度MSS(Maximum Segment Size)，MSS是指每一个TCP报文段中的数据字段的最大长度。</p>
-<h2 id="抓包实践"><a href="#抓包实践" class="headerlink" title="抓包实践"></a>抓包实践</h2><p>来看一个pb请求的三次握手过程</p>
-<img src="/2018/05/15/TCP%E4%B8%89%E6%AC%A1%E6%8F%A1%E6%89%8B/%E4%B8%89%E6%AC%A1%E6%8F%A1%E6%89%8B%E6%8A%93%E5%8C%85.jpg" class="" title="image">
-
-<p>client: 172.17.1.217  server: 172.27.247.168</p>
-<p>握手的核心目的是告知对方seq（client的初始seq，server的初始seq），对方回复ack（收到的seq+包的大小），这样发送端就知道有没有丢包了。</p>
-<p>握手的次要目的是告知和协商一些信息。</p>
-<ul>
-<li>MSS–最大传输包</li>
-<li>SACK_PERM–是否支持Selective ack(用户优化重传效率）</li>
-<li>WS–窗口计算指数（有点复杂的话先不用管）</li>
-</ul>
-<p><strong>这就是tcp为什么要握手建立连接，就是为了解决tcp的可靠传输。</strong></p>
-<h3 id="查看第一次握手的详情"><a href="#查看第一次握手的详情" class="headerlink" title="查看第一次握手的详情"></a>查看第一次握手的详情</h3><img src="/2018/05/15/TCP%E4%B8%89%E6%AC%A1%E6%8F%A1%E6%89%8B/%E7%AC%AC%E4%B8%80%E6%AC%A1%E6%8F%A1%E6%89%8B%E6%8A%93%E5%8C%85.jpg" class="" title="image">
-<h3 id="查看第二次握手的详情"><a href="#查看第二次握手的详情" class="headerlink" title="查看第二次握手的详情"></a>查看第二次握手的详情</h3><img src="/2018/05/15/TCP%E4%B8%89%E6%AC%A1%E6%8F%A1%E6%89%8B/%E7%AC%AC%E4%B8%80%E6%AC%A1%E6%8F%A1%E6%89%8B%E6%8A%93%E5%8C%85.jpg" class="" title="image">
-<h3 id="查看第三次握手的详情"><a href="#查看第三次握手的详情" class="headerlink" title="查看第三次握手的详情"></a>查看第三次握手的详情</h3><img src="/2018/05/15/TCP%E4%B8%89%E6%AC%A1%E6%8F%A1%E6%89%8B/%E7%AC%AC%E4%B8%89%E6%AC%A1%E6%8F%A1%E6%89%8B%E6%8A%93%E5%8C%85.jpg" class="" title="image">
-
-
-<h3 id="为什么要三次握手？"><a href="#为什么要三次握手？" class="headerlink" title="为什么要三次握手？"></a>为什么要三次握手？</h3><ul>
-<li><p>如果只有一次握手，Client不能确定与Server的单向连接，更加不能确定Server与Client的单向连接；</p>
-</li>
-<li><p>如果只有两次握手，Client确定与Server的单向连接，但是Server不能确定与Client的单向连接；</p>
-</li>
-<li><p>只有三次握手，Client与Server才能相互确认双向连接，实现双工数据传输。</p>
-</li>
-<li><p>谢希仁版《计算机网络》中的例子是这样的，“已失效的连接请求报文段”的产生在这样一种情况下：client发出的第一个连接请求报文段并没有丢失，而是在某个网络结点长时间的滞留了，以致延误到连接释放以后的某个时间才到达server。本来这是一个早已失效的报文段。但server收到此失效的连接请求报文段后，就误认为是client再次发出的一个新的连接请求。于是就向client发出确认报文段，同意建立连接。假设不采用“三次握手”，那么只要server发出确认，新的连接就建立了。由于现在client并没有发出建立连接的请求，因此不会理睬server的确认，也不会向server发送数据。但server却以为新的运输连接已经建立，并一直等待client发来数据。这样，server的很多资源就白白浪费掉了。采用“三次握手”的办法可以防止上述现象发生。例如刚才那种情况，client不会向server的确认发出确认。server由于收不到确认，就知道client并没有要求建立连接。</p>
-</li>
-</ul>
-<h3 id="握手中断"><a href="#握手中断" class="headerlink" title="握手中断"></a>握手中断</h3><ul>
-<li>第一次握手中断: A发送给B的SYN中断，A会周期性超时重传，直到A收到B的确认响应。</li>
-<li>第二次握手中断: B发送给A的SYN、ACK中断，B会周期性超时重传，直到B收到A的确认响应。</li>
-<li>第三次握手中断: A发送给B的ACK中断，A不会重传。超时后，B会重传SYN信号(即回到第二次握手)，直到B收到A的确认响应。</li>
-</ul>
-<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><ul>
-<li><a href="https://www.jianshu.com/p/448f37ed29fe">https://www.jianshu.com/p/448f37ed29fe</a></li>
-<li><a href="https://www.jianshu.com/p/a4beee06220c">https://www.jianshu.com/p/a4beee06220c</a></li>
-<li><a href="http://jm.taobao.org/2017/06/08/20170608/">http://jm.taobao.org/2017/06/08/20170608/</a></li>
-</ul>
-]]></content>
-      <categories>
-        <category>网络</category>
-      </categories>
-      <tags>
-        <tag>TCP</tag>
       </tags>
   </entry>
   <entry>
