@@ -1,6 +1,104 @@
 <?xml version="1.0" encoding="utf-8"?>
 <search>
   <entry>
+    <title>Go语言 - 01 工作区和GOPATH</title>
+    <url>/2018/08/12/Go%E8%AF%AD%E8%A8%80-01-%E5%B7%A5%E4%BD%9C%E5%8C%BA%E5%92%8CGOPATH/</url>
+    <content><![CDATA[<h2 id="Go语言的安装"><a href="#Go语言的安装" class="headerlink" title="Go语言的安装"></a>Go语言的安装</h2><p>参照官网文档 <a href="https://golang.org/doc/install">https://golang.org/doc/install</a><br>可以在命令行中输入命令来验证是否安装成功：</p>
+<ul>
+<li>go version：查看安装的版本</li>
+<li>go env：当前go的配置环境</li>
+</ul>
+<p>2个环境变量，即 GOROOT、GOPATH和GOBIN:</p>
+<ul>
+<li>GOROOT：go的安装路径</li>
+<li>GOPATH：go的工作路径<span id="more"></span></li>
+</ul>
+<h2 id="问题-：设置-GOPATH-有什么意义？"><a href="#问题-：设置-GOPATH-有什么意义？" class="headerlink" title="问题 ：设置 GOPATH 有什么意义？"></a>问题 ：设置 GOPATH 有什么意义？</h2><p>典型回答<br>环境变量 GOPATH 的值可以是一个目录的路径，也可以包含多个目录路径，每个目录都代表 Go 语言的一个工作区（workspace）。<br>这些工作区用于放置 Go 语言的源码文件，以及安装（install）后的归档文件和可执行文件。<br>一个典型的workspace如下：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">bin/</span><br><span class="line">    hello                 # command executable </span><br><span class="line">pkg/</span><br><span class="line">    linux_amd64/          # this will reflect your OS and architecture</span><br><span class="line">        github.com/user/</span><br><span class="line">            stringutil.a  # package object</span><br><span class="line">src/</span><br><span class="line">    github.com/user/</span><br><span class="line">        hello/</span><br><span class="line">            hello.go      # command source</span><br><span class="line">        stringutil/</span><br><span class="line">            reverse.go    # package source</span><br></pre></td></tr></table></figure>
+
+<h2 id="知识扩展"><a href="#知识扩展" class="headerlink" title="知识扩展"></a>知识扩展</h2><h3 id="Go-语言源码的组织方式"><a href="#Go-语言源码的组织方式" class="headerlink" title="Go 语言源码的组织方式"></a>Go 语言源码的组织方式</h3><p>以代码包(package)为基本组织单位的。代码包其实是与目录一一对应的。目录可以有子目录，所以代码包也可以有子包。</p>
+<p>一个代码包中可以包含任意个以.go 为扩展名的源码文件，这些源码文件都需要被声明为属于同一个代码包。代码包的名称一般会与这些源码文件所在的目录同名。如果不同名，那么在构建、安装的过程中会以代码包名称为准。</p>
+<p>代码包的导入：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">import &quot;github.com/labstack/echo&quot;</span><br></pre></td></tr></table></figure>
+
+<p>在工作区中，一个代码包的导入路径实际上就是从 src 子目录，到该包的实际存储位置的相对路径。下面我马上就会谈到 src子目录。<br>插播：Go语言的源码文件有三大类，即：命令源码文件、库源码文件和测试源码文件。</p>
+<h3 id="构建-go-build-和安装-go-install"><a href="#构建-go-build-和安装-go-install" class="headerlink" title="构建(go build)和安装(go install)"></a>构建(go build)和安装(go install)</h3><p>go build: 用于编译我们指定的源码文件或代码包以及它们的依赖包。<br>对于只包含库源码文件的代码包, go build命令在编译时，只会做检查性的编译，操作的结果文件只会存在于临时目录中，立刻自动删除，而不会输出任何结果文件。<br>如果想保留在临时工作目录，不删除掉：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">➜  stringutil go build -work</span><br><span class="line">WORK=/var/folders/5s/25ck5pv16rg55hr2kfdvtszc0000gp/T/go-build412712988</span><br></pre></td></tr></table></figure>
+<p>如果构建的是命令源码文件，那么操作的结果文件会被搬运到那个源码文件所在的目录中。</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">➜  hello git:(master) ✗ ls</span><br><span class="line">hello.go</span><br><span class="line">➜  hello git:(master) ✗ go build</span><br><span class="line">➜  hello git:(master) ✗ ls</span><br><span class="line">hello    hello.go</span><br></pre></td></tr></table></figure>
+<p>go install: 安装操作会先执行构建(go build)，然后还会进行链接操作，并且把结果文件搬运到指定目录。<br>进一步说，如果安装的是库源码文件，那么结果文件会被搬运到它所在工作区的 pkg 目录下的某个子目录中。</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">➜  XuSenqi ls /Users/patrick.xu/go/pkg/darwin_amd64/github.com/XuSenqi</span><br><span class="line">➜  XuSenqi go install github.com/XuSenqi/stringutil</span><br><span class="line">➜  XuSenqi ls /Users/patrick.xu/go/pkg/darwin_amd64/github.com/XuSenqi</span><br><span class="line">stringutil.a</span><br></pre></td></tr></table></figure>
+
+<p>如果安装的是命令源码文件，那么结果文件会被搬运到它所在工作区的 bin 目录中，或者环境变量GOBIN指向的目录中。同时，依赖的代码包也会安装到pgk下对应的目录中。</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">➜  XuSenqi ls /Users/patrick.xu/go/pkg/darwin_amd64/github.com/XuSenqi</span><br><span class="line">➜  XuSenqi ls /Users/patrick.xu/go/bin/hello</span><br><span class="line">ls: /Users/patrick.xu/go/bin/hello: No such file or directory</span><br><span class="line">➜  XuSenqi go install github.com/XuSenqi/hello/</span><br><span class="line">➜  XuSenqi ls /Users/patrick.xu/go/pkg/darwin_amd64/github.com/XuSenqi</span><br><span class="line">stringutil.a</span><br><span class="line">➜  XuSenqi ls /Users/patrick.xu/go/bin/hello</span><br><span class="line">/Users/patrick.xu/go/bin/hello</span><br></pre></td></tr></table></figure>
+<h3 id="go-build-命令一些可选项的用途和用法"><a href="#go-build-命令一些可选项的用途和用法" class="headerlink" title="go build 命令一些可选项的用途和用法"></a>go build 命令一些可选项的用途和用法</h3><p>在运行go build命令的时候，默认不会编译目标代码包所依赖的那些代码包。当然，如果被依赖的代码包的归档文件不存在，或者源码文件有了变化，那它还是会被编译。</p>
+<p>如果要强制编译它们，可以在执行命令的时候加入标记-a。此时，不但目标代码包总是会被编译，它依赖的代码包也总会被编译，即使依赖的是标准库中的代码包也是如此。</p>
+<p>表1 go build命令的常用标记说明</p>
+<table>
+<thead>
+<tr>
+<th>标记名称</th>
+<th align="center">标记描述</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>-a</td>
+<td align="center">强行对所有涉及到的代码包（包含标准库中的代码包）进行重新构建，即使它们已经是最新的了。</td>
+</tr>
+<tr>
+<td>-n</td>
+<td align="center">打印编译期间所用到的其它命令，但是并不真正执行它们。</td>
+</tr>
+<tr>
+<td>-p n</td>
+<td align="center">指定编译过程中执行各任务的并行数量（确切地说应该是并发数量）。在默认情况下，该数量等于CPU的逻辑核数。但是在darwin/arm平台（即iPhone和iPad所用的平台）下，该数量默认是1。</td>
+</tr>
+<tr>
+<td>-race</td>
+<td align="center">开启竞态条件的检测。不过此标记目前仅在linux/amd64、freebsd/amd64、darwin/amd64和windows/amd64平台下受到支持。</td>
+</tr>
+<tr>
+<td>-v</td>
+<td align="center">打印出那些被编译的代码包的名字。</td>
+</tr>
+<tr>
+<td>-work</td>
+<td align="center">打印出编译时生成的临时工作目录的路径，并在编译结束时保留它。在默认情况下，编译结束时会删除该目录。</td>
+</tr>
+<tr>
+<td>-x</td>
+<td align="center">打印编译期间所用到的其它命令。注意它与-n标记的区别。</td>
+</tr>
+</tbody></table>
+<h3 id="go-get"><a href="#go-get" class="headerlink" title="go get"></a>go get</h3><p>go get可以根据要求和实际情况从互联网上下载或更新指定的代码包及其依赖包，并对它们进行go build和go install。</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">➜  XuSenqi go get github.com/hyper-carrot/go_lib/logging</span><br><span class="line">➜  XuSenqi ls $GOPATH/src/github.com/hyper-carrot/go_lib/logging</span><br><span class="line">base.go           console_logger.go log_manager.go    logger_test.go    tag.go</span><br><span class="line">➜  XuSenqi ls /Users/patrick.xu/go/pkg/darwin_amd64/github.com/hyper-carrot/go_lib/logging.a</span><br><span class="line">/Users/patrick.xu/go/pkg/darwin_amd64/github.com/hyper-carrot/go_lib/logging.a</span><br></pre></td></tr></table></figure>
+<p>表2 go get命令的常用标记说明</p>
+<table>
+<thead>
+<tr>
+<th>标记名称</th>
+<th align="center">标记描述</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>-d</td>
+<td align="center">让命令程序只执行下载动作，而不执行安装动作。</td>
+</tr>
+<tr>
+<td>-u</td>
+<td align="center">让命令利用网络来更新已有代码包及其依赖包。默认情况下，该命令只会从网络上下载本地不存在的代码包，而不会更新已有的代码包。</td>
+</tr>
+</tbody></table>
+<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><p>go build<br><a href="http://wiki.jikexueyuan.com/project/go-command-tutorial/0.1.html">http://wiki.jikexueyuan.com/project/go-command-tutorial/0.1.html</a><br>go get<br><a href="http://wiki.jikexueyuan.com/project/go-command-tutorial/0.3.html">http://wiki.jikexueyuan.com/project/go-command-tutorial/0.3.html</a><br><a href="https://github.com/hyper0x/go_command_tutorial/blob/master/0.3.md">https://github.com/hyper0x/go_command_tutorial/blob/master/0.3.md</a></p>
+]]></content>
+      <categories>
+        <category>Go</category>
+      </categories>
+      <tags>
+        <tag>Go</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>c++ profile的大杀器-gperftools的使用</title>
     <url>/2020/12/06/C++Profile%E7%9A%84%E5%A4%A7%E6%9D%80%E5%99%A8_gperftools%E7%9A%84%E4%BD%BF%E7%94%A8/</url>
     <content><![CDATA[<p>熟悉golang的同学，一定很熟悉用pprof来作为性能分析和可视化的工具，包括 cpu profile, memery profile等。这么方便且炫的功能，在C++里也一样能实现。所需要的工具就是gperftools。</p>
@@ -155,104 +253,6 @@
         <tag>c++</tag>
         <tag>profile</tag>
         <tag>gperftools</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>Go语言 - 01 工作区和GOPATH</title>
-    <url>/2018/08/12/Go%E8%AF%AD%E8%A8%80-01-%E5%B7%A5%E4%BD%9C%E5%8C%BA%E5%92%8CGOPATH/</url>
-    <content><![CDATA[<h2 id="Go语言的安装"><a href="#Go语言的安装" class="headerlink" title="Go语言的安装"></a>Go语言的安装</h2><p>参照官网文档 <a href="https://golang.org/doc/install">https://golang.org/doc/install</a><br>可以在命令行中输入命令来验证是否安装成功：</p>
-<ul>
-<li>go version：查看安装的版本</li>
-<li>go env：当前go的配置环境</li>
-</ul>
-<p>2个环境变量，即 GOROOT、GOPATH和GOBIN:</p>
-<ul>
-<li>GOROOT：go的安装路径</li>
-<li>GOPATH：go的工作路径<span id="more"></span></li>
-</ul>
-<h2 id="问题-：设置-GOPATH-有什么意义？"><a href="#问题-：设置-GOPATH-有什么意义？" class="headerlink" title="问题 ：设置 GOPATH 有什么意义？"></a>问题 ：设置 GOPATH 有什么意义？</h2><p>典型回答<br>环境变量 GOPATH 的值可以是一个目录的路径，也可以包含多个目录路径，每个目录都代表 Go 语言的一个工作区（workspace）。<br>这些工作区用于放置 Go 语言的源码文件，以及安装（install）后的归档文件和可执行文件。<br>一个典型的workspace如下：</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">bin/</span><br><span class="line">    hello                 # command executable </span><br><span class="line">pkg/</span><br><span class="line">    linux_amd64/          # this will reflect your OS and architecture</span><br><span class="line">        github.com/user/</span><br><span class="line">            stringutil.a  # package object</span><br><span class="line">src/</span><br><span class="line">    github.com/user/</span><br><span class="line">        hello/</span><br><span class="line">            hello.go      # command source</span><br><span class="line">        stringutil/</span><br><span class="line">            reverse.go    # package source</span><br></pre></td></tr></table></figure>
-
-<h2 id="知识扩展"><a href="#知识扩展" class="headerlink" title="知识扩展"></a>知识扩展</h2><h3 id="Go-语言源码的组织方式"><a href="#Go-语言源码的组织方式" class="headerlink" title="Go 语言源码的组织方式"></a>Go 语言源码的组织方式</h3><p>以代码包(package)为基本组织单位的。代码包其实是与目录一一对应的。目录可以有子目录，所以代码包也可以有子包。</p>
-<p>一个代码包中可以包含任意个以.go 为扩展名的源码文件，这些源码文件都需要被声明为属于同一个代码包。代码包的名称一般会与这些源码文件所在的目录同名。如果不同名，那么在构建、安装的过程中会以代码包名称为准。</p>
-<p>代码包的导入：</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">import &quot;github.com/labstack/echo&quot;</span><br></pre></td></tr></table></figure>
-
-<p>在工作区中，一个代码包的导入路径实际上就是从 src 子目录，到该包的实际存储位置的相对路径。下面我马上就会谈到 src子目录。<br>插播：Go语言的源码文件有三大类，即：命令源码文件、库源码文件和测试源码文件。</p>
-<h3 id="构建-go-build-和安装-go-install"><a href="#构建-go-build-和安装-go-install" class="headerlink" title="构建(go build)和安装(go install)"></a>构建(go build)和安装(go install)</h3><p>go build: 用于编译我们指定的源码文件或代码包以及它们的依赖包。<br>对于只包含库源码文件的代码包, go build命令在编译时，只会做检查性的编译，操作的结果文件只会存在于临时目录中，立刻自动删除，而不会输出任何结果文件。<br>如果想保留在临时工作目录，不删除掉：</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">➜  stringutil go build -work</span><br><span class="line">WORK=/var/folders/5s/25ck5pv16rg55hr2kfdvtszc0000gp/T/go-build412712988</span><br></pre></td></tr></table></figure>
-<p>如果构建的是命令源码文件，那么操作的结果文件会被搬运到那个源码文件所在的目录中。</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">➜  hello git:(master) ✗ ls</span><br><span class="line">hello.go</span><br><span class="line">➜  hello git:(master) ✗ go build</span><br><span class="line">➜  hello git:(master) ✗ ls</span><br><span class="line">hello    hello.go</span><br></pre></td></tr></table></figure>
-<p>go install: 安装操作会先执行构建(go build)，然后还会进行链接操作，并且把结果文件搬运到指定目录。<br>进一步说，如果安装的是库源码文件，那么结果文件会被搬运到它所在工作区的 pkg 目录下的某个子目录中。</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">➜  XuSenqi ls /Users/patrick.xu/go/pkg/darwin_amd64/github.com/XuSenqi</span><br><span class="line">➜  XuSenqi go install github.com/XuSenqi/stringutil</span><br><span class="line">➜  XuSenqi ls /Users/patrick.xu/go/pkg/darwin_amd64/github.com/XuSenqi</span><br><span class="line">stringutil.a</span><br></pre></td></tr></table></figure>
-
-<p>如果安装的是命令源码文件，那么结果文件会被搬运到它所在工作区的 bin 目录中，或者环境变量GOBIN指向的目录中。同时，依赖的代码包也会安装到pgk下对应的目录中。</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">➜  XuSenqi ls /Users/patrick.xu/go/pkg/darwin_amd64/github.com/XuSenqi</span><br><span class="line">➜  XuSenqi ls /Users/patrick.xu/go/bin/hello</span><br><span class="line">ls: /Users/patrick.xu/go/bin/hello: No such file or directory</span><br><span class="line">➜  XuSenqi go install github.com/XuSenqi/hello/</span><br><span class="line">➜  XuSenqi ls /Users/patrick.xu/go/pkg/darwin_amd64/github.com/XuSenqi</span><br><span class="line">stringutil.a</span><br><span class="line">➜  XuSenqi ls /Users/patrick.xu/go/bin/hello</span><br><span class="line">/Users/patrick.xu/go/bin/hello</span><br></pre></td></tr></table></figure>
-<h3 id="go-build-命令一些可选项的用途和用法"><a href="#go-build-命令一些可选项的用途和用法" class="headerlink" title="go build 命令一些可选项的用途和用法"></a>go build 命令一些可选项的用途和用法</h3><p>在运行go build命令的时候，默认不会编译目标代码包所依赖的那些代码包。当然，如果被依赖的代码包的归档文件不存在，或者源码文件有了变化，那它还是会被编译。</p>
-<p>如果要强制编译它们，可以在执行命令的时候加入标记-a。此时，不但目标代码包总是会被编译，它依赖的代码包也总会被编译，即使依赖的是标准库中的代码包也是如此。</p>
-<p>表1 go build命令的常用标记说明</p>
-<table>
-<thead>
-<tr>
-<th>标记名称</th>
-<th align="center">标记描述</th>
-</tr>
-</thead>
-<tbody><tr>
-<td>-a</td>
-<td align="center">强行对所有涉及到的代码包（包含标准库中的代码包）进行重新构建，即使它们已经是最新的了。</td>
-</tr>
-<tr>
-<td>-n</td>
-<td align="center">打印编译期间所用到的其它命令，但是并不真正执行它们。</td>
-</tr>
-<tr>
-<td>-p n</td>
-<td align="center">指定编译过程中执行各任务的并行数量（确切地说应该是并发数量）。在默认情况下，该数量等于CPU的逻辑核数。但是在darwin/arm平台（即iPhone和iPad所用的平台）下，该数量默认是1。</td>
-</tr>
-<tr>
-<td>-race</td>
-<td align="center">开启竞态条件的检测。不过此标记目前仅在linux/amd64、freebsd/amd64、darwin/amd64和windows/amd64平台下受到支持。</td>
-</tr>
-<tr>
-<td>-v</td>
-<td align="center">打印出那些被编译的代码包的名字。</td>
-</tr>
-<tr>
-<td>-work</td>
-<td align="center">打印出编译时生成的临时工作目录的路径，并在编译结束时保留它。在默认情况下，编译结束时会删除该目录。</td>
-</tr>
-<tr>
-<td>-x</td>
-<td align="center">打印编译期间所用到的其它命令。注意它与-n标记的区别。</td>
-</tr>
-</tbody></table>
-<h3 id="go-get"><a href="#go-get" class="headerlink" title="go get"></a>go get</h3><p>go get可以根据要求和实际情况从互联网上下载或更新指定的代码包及其依赖包，并对它们进行go build和go install。</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">➜  XuSenqi go get github.com/hyper-carrot/go_lib/logging</span><br><span class="line">➜  XuSenqi ls $GOPATH/src/github.com/hyper-carrot/go_lib/logging</span><br><span class="line">base.go           console_logger.go log_manager.go    logger_test.go    tag.go</span><br><span class="line">➜  XuSenqi ls /Users/patrick.xu/go/pkg/darwin_amd64/github.com/hyper-carrot/go_lib/logging.a</span><br><span class="line">/Users/patrick.xu/go/pkg/darwin_amd64/github.com/hyper-carrot/go_lib/logging.a</span><br></pre></td></tr></table></figure>
-<p>表2 go get命令的常用标记说明</p>
-<table>
-<thead>
-<tr>
-<th>标记名称</th>
-<th align="center">标记描述</th>
-</tr>
-</thead>
-<tbody><tr>
-<td>-d</td>
-<td align="center">让命令程序只执行下载动作，而不执行安装动作。</td>
-</tr>
-<tr>
-<td>-u</td>
-<td align="center">让命令利用网络来更新已有代码包及其依赖包。默认情况下，该命令只会从网络上下载本地不存在的代码包，而不会更新已有的代码包。</td>
-</tr>
-</tbody></table>
-<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><p>go build<br><a href="http://wiki.jikexueyuan.com/project/go-command-tutorial/0.1.html">http://wiki.jikexueyuan.com/project/go-command-tutorial/0.1.html</a><br>go get<br><a href="http://wiki.jikexueyuan.com/project/go-command-tutorial/0.3.html">http://wiki.jikexueyuan.com/project/go-command-tutorial/0.3.html</a><br><a href="https://github.com/hyper0x/go_command_tutorial/blob/master/0.3.md">https://github.com/hyper0x/go_command_tutorial/blob/master/0.3.md</a></p>
-]]></content>
-      <categories>
-        <category>Go</category>
-      </categories>
-      <tags>
-        <tag>Go</tag>
       </tags>
   </entry>
   <entry>
@@ -776,6 +776,16 @@
       </tags>
   </entry>
   <entry>
+    <title>nodejs获取客户端IP Address(转)</title>
+    <url>/2018/12/14/nodejs%E8%8E%B7%E5%8F%96%E5%AE%A2%E6%88%B7%E7%AB%AFIP-Address/</url>
+    <content><![CDATA[<p>在网上看见很多问node.js如何获取客户端IP,所以记录下来，以供大家参考。</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">function getClientIp(req) &#123;</span><br><span class="line">        return req.headers[&#x27;x-forwarded-for&#x27;] ||</span><br><span class="line">        req.connection.remoteAddress ||</span><br><span class="line">        req.socket.remoteAddress ||</span><br><span class="line">        req.connection.socket.remoteAddress;</span><br><span class="line">    &#125;;</span><br></pre></td></tr></table></figure>
+
+<p>代码，第一段判断是否有反向代理IP(头信息：x-forwarded-for)，再判断connection的远程IP，以及后端的socket的IP。</p>
+<p><a href="https://www.cnblogs.com/whitewolf/p/3572724.html">nodejs获取客户端IP Address</a></p>
+]]></content>
+  </entry>
+  <entry>
     <title>kubeadm部署single control-plane k8s集群</title>
     <url>/2019/12/11/kubeadm%E9%83%A8%E7%BD%B2single-control-plane-k8s%E9%9B%86%E7%BE%A4/</url>
     <content><![CDATA[<h1 id="kubeadm介绍"><a href="#kubeadm介绍" class="headerlink" title="kubeadm介绍"></a>kubeadm介绍</h1><blockquote>
@@ -945,16 +955,6 @@
       </tags>
   </entry>
   <entry>
-    <title>nodejs获取客户端IP Address(转)</title>
-    <url>/2018/12/14/nodejs%E8%8E%B7%E5%8F%96%E5%AE%A2%E6%88%B7%E7%AB%AFIP-Address/</url>
-    <content><![CDATA[<p>在网上看见很多问node.js如何获取客户端IP,所以记录下来，以供大家参考。</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">function getClientIp(req) &#123;</span><br><span class="line">        return req.headers[&#x27;x-forwarded-for&#x27;] ||</span><br><span class="line">        req.connection.remoteAddress ||</span><br><span class="line">        req.socket.remoteAddress ||</span><br><span class="line">        req.connection.socket.remoteAddress;</span><br><span class="line">    &#125;;</span><br></pre></td></tr></table></figure>
-
-<p>代码，第一段判断是否有反向代理IP(头信息：x-forwarded-for)，再判断connection的远程IP，以及后端的socket的IP。</p>
-<p><a href="https://www.cnblogs.com/whitewolf/p/3572724.html">nodejs获取客户端IP Address</a></p>
-]]></content>
-  </entry>
-  <entry>
     <title>一次go语言内存泄漏的排查过程</title>
     <url>/2018/12/11/%E4%B8%80%E6%AC%A1go%E5%86%85%E5%AD%98%E6%B3%84%E6%BC%8F%E7%9A%84%E6%8E%92%E6%9F%A5%E8%BF%87%E7%A8%8B/</url>
     <content><![CDATA[<h2 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h2><p>线上一个go语言写的服务，在连续跑了10多天后，占用内存从最开始的20M左右，涨到了1个多G，有内存泄漏的问题，将整个排查过程和相应方法进行整理，做个记录。</p>
@@ -1076,140 +1076,6 @@
       </categories>
       <tags>
         <tag>Go</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>一次node进程cpu负载高问题的处理</title>
-    <url>/2019/07/13/%E4%B8%80%E6%AC%A1node%E8%BF%9B%E7%A8%8Bcpu%E8%B4%9F%E8%BD%BD100-%E9%97%AE%E9%A2%98%E7%9A%84%E5%A4%84%E7%90%86/</url>
-    <content><![CDATA[<h1 id="1-node进程负载高的问题"><a href="#1-node进程负载高的问题" class="headerlink" title="1 node进程负载高的问题"></a>1 node进程负载高的问题</h1><ul>
-<li>线上有个用node开发的uhost-manager的服务。每个set内会有多台物理机，每台物理机（宿主机）上存在着1台或者多台虚拟机。uhost-manager里有个定时逻辑：每隔30s,从MongoDB里拉取所有的虚拟机的记录，数量为2000多台；将位于同一台宿主机上的虚拟机资源，包括cpu、内存、磁盘容量等，做个sum，将sum再填入对应宿主机（共200多台）的记录里，表示已经被占用的资源。</li>
-<li>由于计算量大，和代码写得差，导致在该定时的计算任务执行时，会把占用的cpu单核打满；如果uhost-manager此时又有其他接口被调用时，就会出现响应慢的问题，导致调用方的服务也响应慢，甚至会因超时导致服务接口不可用。</li>
-</ul>
-<img src="/2019/07/13/%E4%B8%80%E6%AC%A1node%E8%BF%9B%E7%A8%8Bcpu%E8%B4%9F%E8%BD%BD100-%E9%97%AE%E9%A2%98%E7%9A%84%E5%A4%84%E7%90%86/uhost-manager-cpu-100.png" class="" title="image">
-<p>这个单核打满持续的时间短，在1s左右。</p>
-<span id="more"></span>
-
-<h1 id="2-问题的解决"><a href="#2-问题的解决" class="headerlink" title="2 问题的解决"></a>2 问题的解决</h1><p>为了解决这个问题，带来两个要思考的问题：</p>
-<ul>
-<li>解决方法 –&gt; 怎么改进代码</li>
-<li>怎么衡量改进的效果 –&gt;<br>因为负载高的时间短，统计实时cpu负载，想到的命令只有top，但top命令本身无法做到统计，加入单核打满时间从1秒降到0.9秒，是无法凭肉眼感知的；像ps、vmstat等，也都不满足统计某个进程的实时负载</li>
-</ul>
-<h2 id="2-1-统计进程占用的cpu运行时间"><a href="#2-1-统计进程占用的cpu运行时间" class="headerlink" title="2.1 统计进程占用的cpu运行时间"></a>2.1 统计进程占用的cpu运行时间</h2><p>/proc/<pid>/stat该文件包含了某一进程所有的活动的信息，该文件中的所有值都是从系统启动开始累计到当前时刻。</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line"># cat /proc/17273/stat</span><br><span class="line">17273 (node) R 1369 17273 17273 0 -1 4218880 12446677 0 2 0 380634 40519 0 0 20 0 6 0 3525562392 964878336 38584 18446744073709551615 4194304 5593643 140724209068064 140400647923040 140400819234755 0 0 4096 16898 0 0 0 17 1 0 0 3 0 0 7692288 7703720 35180544 140724209071315 140724209071434 140724209071434 140724209074154 0</span><br></pre></td></tr></table></figure>
-<p>这样看非常不直观，通过网上找的一段小代码procstat[1]，以人类可读的方式显示。</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">[root@172-30-38-65 uhost-manager.logs]# procstat 17273</span><br><span class="line">                 pid: 17273</span><br><span class="line">               tcomm: (node)</span><br><span class="line">                ...</span><br><span class="line">               utime: 3818.830000</span><br><span class="line">               stime: 406.260000</span><br><span class="line">              cutime: 0.000000</span><br><span class="line">              cstime: 0.000000</span><br><span class="line">                 ...</span><br><span class="line">              start_time: 07.13 03:00 (77599.65s)</span><br><span class="line">                 ...</span><br></pre></td></tr></table></figure>
-<p>进程的总Cpu时间processCpuTime = utime + stime + cutime + cstime，该值包括其所有线程的cpu时间[2]。注：这里统计出来的单位不是s，是相对于clock ticks来说的[3]。</p>
-<p>我们的衡量手段为统计一段时间内新增的该进程的cpu时间；该值越小，表示运行时间越短。</p>
-<p>具体步骤如下：</p>
-<ul>
-<li>以其他端口，再起一个uhost-manager服务，防止被其他服务调用；</li>
-<li>另外，定时任务里只保留定时更新宿主机占用资源的接口（ smi_update_host_resource ）。</li>
-<li>为了使统计的cpu占用时间长一点，smi改成每5秒执行一次；总共统计60s。查看新增的cpu时间，processCpuTime_60s - processCpuTime_0s。</li>
-</ul>
-<h2 id="2-2-解决方法"><a href="#2-2-解决方法" class="headerlink" title="2.2 解决方法"></a>2.2 解决方法</h2><p>为了解决，需要知道消耗cpu性能的环节在哪些步骤上，好进一步优化。</p>
-<h3 id="2-2-1-perf"><a href="#2-2-1-perf" class="headerlink" title="2.2.1 perf"></a>2.2.1 perf</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">perf top -g -p 26642 -d 1  #此时uhost-manager pid为26642</span><br></pre></td></tr></table></figure>
-<img src="/2019/07/13/%E4%B8%80%E6%AC%A1node%E8%BF%9B%E7%A8%8Bcpu%E8%B4%9F%E8%BD%BD100-%E9%97%AE%E9%A2%98%E7%9A%84%E5%A4%84%E7%90%86/perf_top.png" class="" title="image">
-<p>这里看起来不直观，并不能看清楚是哪个操作引起的。</p>
-<h3 id="2-2-2-FlameGraph"><a href="#2-2-2-FlameGraph" class="headerlink" title="2.2.2 FlameGraph"></a>2.2.2 FlameGraph</h3><p>火焰图的方式比较直观，这里测试下效果。</p>
-<ul>
-<li>采集脚本： perf record -F 99 -p 26642 -g – sleep 60</li>
-</ul>
-<p>参数说明如下：</p>
-<table>
-<thead>
-<tr>
-<th align="center">采集频率(ms)</th>
-<th align="center">进程pid</th>
-<th align="center">调用记录</th>
-<th align="center">记录时长</th>
-</tr>
-</thead>
-<tbody><tr>
-<td align="center">-F 99</td>
-<td align="center">-p 26642</td>
-<td align="center">-g</td>
-<td align="center">–sleep 60</td>
-</tr>
-</tbody></table>
-<ul>
-<li>进程对应的符号表perf-pid.map权限设置：$chown root /tmp/perf-pid.map。</li>
-</ul>
-<p>踩过的坑！！！是为了消除下面这个问题的</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">File /tmp/perf-PID.map not owned by current user or root, ignoring it (use -f to override).</span><br><span class="line">Failed to open /tmp/perf-PID.map, continuing without symbols</span><br></pre></td></tr></table></figure>
-<ul>
-<li>FlameGraph使用方式如下：</li>
-</ul>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">git clone https://github.com/brendangregg/FlameGraph.git</span><br><span class="line">cd FlameGraph</span><br><span class="line">perf script -i perf.data &amp;&gt; perf.unfold  # 以下几个命令都是在FlameGraph目录下执行的</span><br><span class="line">perl stackcollapse-perf.pl perf.unfold &amp;&gt; perf.folded</span><br><span class="line">perl flamegraph.pl perf.folded &gt; perf.svg</span><br></pre></td></tr></table></figure>
-
-<ul>
-<li>火焰图效果</li>
-</ul>
-<img src="/2019/07/13/%E4%B8%80%E6%AC%A1node%E8%BF%9B%E7%A8%8Bcpu%E8%B4%9F%E8%BD%BD100-%E9%97%AE%E9%A2%98%E7%9A%84%E5%A4%84%E7%90%86/perf_flamegraph.png" class="" title="image">
-
-<p>火焰图中看到libv8.so.3.14.5是消耗cpu最多的，但底下的方块（父函数）是unknown，所以还是无法知晓是哪里调用的。</p>
-<p>火焰图形状对应关系</p>
-<table>
-<thead>
-<tr>
-<th align="left">形状</th>
-<th align="left">含义</th>
-</tr>
-</thead>
-<tbody><tr>
-<td align="left">每一个平面方块</td>
-<td align="left">一个函数在栈中的位置（也称一个栈帧）</td>
-</tr>
-<tr>
-<td align="left">Y轴</td>
-<td align="left">栈的深度(也叫栈的帧数)</td>
-</tr>
-<tr>
-<td align="left">X轴</td>
-<td align="left">表示总的样例，不过它们左右顺序没有特殊含义</td>
-</tr>
-<tr>
-<td align="left">每个平面方块的宽度</td>
-<td align="left">方块的宽度标示CPU使用时间或者说相对父函数而言使用CPU的比率，越宽代表占用CPU的时间越长，或者使用CPU很频繁</td>
-</tr>
-</tbody></table>
-<h3 id="2-2-3-原始的分析代码方式（肉眼看）"><a href="#2-2-3-原始的分析代码方式（肉眼看）" class="headerlink" title="2.2.3 原始的分析代码方式（肉眼看）"></a>2.2.3 原始的分析代码方式（肉眼看）</h3><p>以上手段不起作用后，只能逐行分析代码，看哪里可能消耗的cpu多，然后优化掉。</p>
-<h4 id="原始的消耗时间"><a href="#原始的消耗时间" class="headerlink" title="原始的消耗时间"></a>原始的消耗时间</h4><p>先按照2.1中的采集uhost-manager进程在60s内消耗的cpu时间，为10.65。这里的时间采集是5次测量，然后取平均值。</p>
-<h4 id="lean"><a href="#lean" class="headerlink" title="lean"></a>lean</h4><p>从MongoDB里读取数据时，用到mongoose的模块。使用lean可以加快查询速度。</p>
-<img src="/2019/07/13/%E4%B8%80%E6%AC%A1node%E8%BF%9B%E7%A8%8Bcpu%E8%B4%9F%E8%BD%BD100-%E9%97%AE%E9%A2%98%E7%9A%84%E5%A4%84%E7%90%86/query%E6%97%B6lean%E7%9A%84%E4%BD%BF%E7%94%A8.png" class="" title="image">
-
-<blockquote>
-<p>The lean option tells Mongoose to skip hydrating the result documents. This makes queries faster and less memory intensive, <strong>but the result documents are plain old JavaScript objects (POJOs), not Mongoose documents</strong>.</p>
-</blockquote>
-<blockquote>
-<p>If you’re executing a query and sending the results without modification to, say, an Express response, you should use lean. <font color=#FF0000 >In general, if you do not modify the query results and do not use custom getters, you should use lean(). If you modify the query results or rely on features like getters or transforms, you should not use lean()</font>.</p>
-</blockquote>
-<p>测试下来结果为6.5，降低了40%左右，效果明显。</p>
-<h4 id="减少无用的重复执行的语句"><a href="#减少无用的重复执行的语句" class="headerlink" title="减少无用的重复执行的语句"></a>减少无用的重复执行的语句</h4><p>修改之后，测试下来结果为5.3。</p>
-<img src="/2019/07/13/%E4%B8%80%E6%AC%A1node%E8%BF%9B%E7%A8%8Bcpu%E8%B4%9F%E8%BD%BD100-%E9%97%AE%E9%A2%98%E7%9A%84%E5%A4%84%E7%90%86/%E9%87%8D%E5%A4%8D%E5%88%A4%E6%96%AD%E8%AE%BE%E7%BD%AE%E5%88%9D%E5%A7%8B%E5%80%BC%E7%9A%84%E4%BB%A3%E7%A0%81.png" class="" title="image">
-
-<h4 id="减少日志打印"><a href="#减少日志打印" class="headerlink" title="减少日志打印"></a>减少日志打印</h4><p>减少量大的无用的日志打印后，测试下来结果为1.9。所以日志打印的cpu消耗在原始基础上占了32%，即（5.3-1.9)/10.65。</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">// 每台虚机打印下vcpu的个数，&gt;2000</span><br><span class="line">GLOBAL.logger.info(_vcpus);</span><br><span class="line"></span><br><span class="line">// 每台宿主机打印下host_id, &gt;200</span><br><span class="line">GLOBAL.logger.info(&quot;[SMI]check:&quot;, host_ids[i]);</span><br></pre></td></tr></table></figure>
-
-<h1 id="3-优化效果"><a href="#3-优化效果" class="headerlink" title="3 优化效果"></a>3 优化效果</h1><p>经过优化后，消耗时间是1.9 clock ticks，相对于原来的10.65 clock ticks，减少了82.16%。</p>
-<img src="/2019/07/13/%E4%B8%80%E6%AC%A1node%E8%BF%9B%E7%A8%8Bcpu%E8%B4%9F%E8%BD%BD100-%E9%97%AE%E9%A2%98%E7%9A%84%E5%A4%84%E7%90%86/%E8%BF%9B%E7%A8%8B%E7%9A%84cpu%E6%97%B6%E9%97%B4.png" class="" title="image">
-<p>单核峰值CPU消耗为70%左右，且持续时间很短，为100ms左右。</p>
-<h1 id="参考链接"><a href="#参考链接" class="headerlink" title="参考链接"></a>参考链接</h1><ol>
-<li><a href="http://brokestream.com/procstat.html">procstat - displays linux proc stat (/proc/pid/stat) in human-readable format
-</a></li>
-<li><a href="http://www.samirchen.com/linux-cpu-performance/">Linux环境下进程的CPU占用率</a></li>
-<li><a href="http://man7.org/linux/man-pages/man5/proc.5.html">Linux Programmer’s Manual PROC(5)</a></li>
-<li><a href="https://cloud.tencent.com/developer/article/1005867">NodeJS 性能优化之 CPU 看图篇</a></li>
-<li><a href="http://www.cpper.cn/2017/06/04/linux/perf/">Linux性能调优工具perf的使用</a></li>
-<li><a href="https://www.yangcs.net/posts/how-to-deal-with-increasing-of-cpu-usage/">某个应用的 CPU 使用率居然达到 100%，我该怎么办？</a></li>
-<li><a href="https://mongoosejs.com/docs/tutorials/lean.html#lean-and-populate">Faster Mongoose Queries With Lean</a></li>
-</ol>
-]]></content>
-      <categories>
-        <category>linux性能优化</category>
-      </categories>
-      <tags>
-        <tag>cpu</tag>
-        <tag>node</tag>
       </tags>
   </entry>
   <entry>
@@ -1350,6 +1216,165 @@
       </tags>
   </entry>
   <entry>
+    <title>一次node进程cpu负载高问题的处理</title>
+    <url>/2019/07/13/%E4%B8%80%E6%AC%A1node%E8%BF%9B%E7%A8%8Bcpu%E8%B4%9F%E8%BD%BD100-%E9%97%AE%E9%A2%98%E7%9A%84%E5%A4%84%E7%90%86/</url>
+    <content><![CDATA[<h1 id="1-node进程负载高的问题"><a href="#1-node进程负载高的问题" class="headerlink" title="1 node进程负载高的问题"></a>1 node进程负载高的问题</h1><ul>
+<li>线上有个用node开发的uhost-manager的服务。每个set内会有多台物理机，每台物理机（宿主机）上存在着1台或者多台虚拟机。uhost-manager里有个定时逻辑：每隔30s,从MongoDB里拉取所有的虚拟机的记录，数量为2000多台；将位于同一台宿主机上的虚拟机资源，包括cpu、内存、磁盘容量等，做个sum，将sum再填入对应宿主机（共200多台）的记录里，表示已经被占用的资源。</li>
+<li>由于计算量大，和代码写得差，导致在该定时的计算任务执行时，会把占用的cpu单核打满；如果uhost-manager此时又有其他接口被调用时，就会出现响应慢的问题，导致调用方的服务也响应慢，甚至会因超时导致服务接口不可用。</li>
+</ul>
+<img src="/2019/07/13/%E4%B8%80%E6%AC%A1node%E8%BF%9B%E7%A8%8Bcpu%E8%B4%9F%E8%BD%BD100-%E9%97%AE%E9%A2%98%E7%9A%84%E5%A4%84%E7%90%86/uhost-manager-cpu-100.png" class="" title="image">
+<p>这个单核打满持续的时间短，在1s左右。</p>
+<span id="more"></span>
+
+<h1 id="2-问题的解决"><a href="#2-问题的解决" class="headerlink" title="2 问题的解决"></a>2 问题的解决</h1><p>为了解决这个问题，带来两个要思考的问题：</p>
+<ul>
+<li>解决方法 –&gt; 怎么改进代码</li>
+<li>怎么衡量改进的效果 –&gt;<br>因为负载高的时间短，统计实时cpu负载，想到的命令只有top，但top命令本身无法做到统计，加入单核打满时间从1秒降到0.9秒，是无法凭肉眼感知的；像ps、vmstat等，也都不满足统计某个进程的实时负载</li>
+</ul>
+<h2 id="2-1-统计进程占用的cpu运行时间"><a href="#2-1-统计进程占用的cpu运行时间" class="headerlink" title="2.1 统计进程占用的cpu运行时间"></a>2.1 统计进程占用的cpu运行时间</h2><p>/proc/<pid>/stat该文件包含了某一进程所有的活动的信息，该文件中的所有值都是从系统启动开始累计到当前时刻。</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line"># cat /proc/17273/stat</span><br><span class="line">17273 (node) R 1369 17273 17273 0 -1 4218880 12446677 0 2 0 380634 40519 0 0 20 0 6 0 3525562392 964878336 38584 18446744073709551615 4194304 5593643 140724209068064 140400647923040 140400819234755 0 0 4096 16898 0 0 0 17 1 0 0 3 0 0 7692288 7703720 35180544 140724209071315 140724209071434 140724209071434 140724209074154 0</span><br></pre></td></tr></table></figure>
+<p>这样看非常不直观，通过网上找的一段小代码procstat[1]，以人类可读的方式显示。</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">[root@172-30-38-65 uhost-manager.logs]# procstat 17273</span><br><span class="line">                 pid: 17273</span><br><span class="line">               tcomm: (node)</span><br><span class="line">                ...</span><br><span class="line">               utime: 3818.830000</span><br><span class="line">               stime: 406.260000</span><br><span class="line">              cutime: 0.000000</span><br><span class="line">              cstime: 0.000000</span><br><span class="line">                 ...</span><br><span class="line">              start_time: 07.13 03:00 (77599.65s)</span><br><span class="line">                 ...</span><br></pre></td></tr></table></figure>
+<p>进程的总Cpu时间processCpuTime = utime + stime + cutime + cstime，该值包括其所有线程的cpu时间[2]。注：这里统计出来的单位不是s，是相对于clock ticks来说的[3]。</p>
+<p>我们的衡量手段为统计一段时间内新增的该进程的cpu时间；该值越小，表示运行时间越短。</p>
+<p>具体步骤如下：</p>
+<ul>
+<li>以其他端口，再起一个uhost-manager服务，防止被其他服务调用；</li>
+<li>另外，定时任务里只保留定时更新宿主机占用资源的接口（ smi_update_host_resource ）。</li>
+<li>为了使统计的cpu占用时间长一点，smi改成每5秒执行一次；总共统计60s。查看新增的cpu时间，processCpuTime_60s - processCpuTime_0s。</li>
+</ul>
+<h2 id="2-2-解决方法"><a href="#2-2-解决方法" class="headerlink" title="2.2 解决方法"></a>2.2 解决方法</h2><p>为了解决，需要知道消耗cpu性能的环节在哪些步骤上，好进一步优化。</p>
+<h3 id="2-2-1-perf"><a href="#2-2-1-perf" class="headerlink" title="2.2.1 perf"></a>2.2.1 perf</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">perf top -g -p 26642 -d 1  #此时uhost-manager pid为26642</span><br></pre></td></tr></table></figure>
+<img src="/2019/07/13/%E4%B8%80%E6%AC%A1node%E8%BF%9B%E7%A8%8Bcpu%E8%B4%9F%E8%BD%BD100-%E9%97%AE%E9%A2%98%E7%9A%84%E5%A4%84%E7%90%86/perf_top.png" class="" title="image">
+<p>这里看起来不直观，并不能看清楚是哪个操作引起的。</p>
+<h3 id="2-2-2-FlameGraph"><a href="#2-2-2-FlameGraph" class="headerlink" title="2.2.2 FlameGraph"></a>2.2.2 FlameGraph</h3><p>火焰图的方式比较直观，这里测试下效果。</p>
+<ul>
+<li>采集脚本： perf record -F 99 -p 26642 -g – sleep 60</li>
+</ul>
+<p>参数说明如下：</p>
+<table>
+<thead>
+<tr>
+<th align="center">采集频率(ms)</th>
+<th align="center">进程pid</th>
+<th align="center">调用记录</th>
+<th align="center">记录时长</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">-F 99</td>
+<td align="center">-p 26642</td>
+<td align="center">-g</td>
+<td align="center">–sleep 60</td>
+</tr>
+</tbody></table>
+<ul>
+<li>进程对应的符号表perf-pid.map权限设置：$chown root /tmp/perf-pid.map。</li>
+</ul>
+<p>踩过的坑！！！是为了消除下面这个问题的</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">File /tmp/perf-PID.map not owned by current user or root, ignoring it (use -f to override).</span><br><span class="line">Failed to open /tmp/perf-PID.map, continuing without symbols</span><br></pre></td></tr></table></figure>
+<ul>
+<li>FlameGraph使用方式如下：</li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">git clone https://github.com/brendangregg/FlameGraph.git</span><br><span class="line">cd FlameGraph</span><br><span class="line">perf script -i perf.data &amp;&gt; perf.unfold  # 以下几个命令都是在FlameGraph目录下执行的</span><br><span class="line">perl stackcollapse-perf.pl perf.unfold &amp;&gt; perf.folded</span><br><span class="line">perl flamegraph.pl perf.folded &gt; perf.svg</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>火焰图效果</li>
+</ul>
+<img src="/2019/07/13/%E4%B8%80%E6%AC%A1node%E8%BF%9B%E7%A8%8Bcpu%E8%B4%9F%E8%BD%BD100-%E9%97%AE%E9%A2%98%E7%9A%84%E5%A4%84%E7%90%86/perf_flamegraph.png" class="" title="image">
+
+<p>火焰图中看到libv8.so.3.14.5是消耗cpu最多的，但底下的方块（父函数）是unknown，所以还是无法知晓是哪里调用的。</p>
+<p>火焰图形状对应关系</p>
+<table>
+<thead>
+<tr>
+<th align="left">形状</th>
+<th align="left">含义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left">每一个平面方块</td>
+<td align="left">一个函数在栈中的位置（也称一个栈帧）</td>
+</tr>
+<tr>
+<td align="left">Y轴</td>
+<td align="left">栈的深度(也叫栈的帧数)</td>
+</tr>
+<tr>
+<td align="left">X轴</td>
+<td align="left">表示总的样例，不过它们左右顺序没有特殊含义</td>
+</tr>
+<tr>
+<td align="left">每个平面方块的宽度</td>
+<td align="left">方块的宽度标示CPU使用时间或者说相对父函数而言使用CPU的比率，越宽代表占用CPU的时间越长，或者使用CPU很频繁</td>
+</tr>
+</tbody></table>
+<h3 id="2-2-3-原始的分析代码方式（肉眼看）"><a href="#2-2-3-原始的分析代码方式（肉眼看）" class="headerlink" title="2.2.3 原始的分析代码方式（肉眼看）"></a>2.2.3 原始的分析代码方式（肉眼看）</h3><p>以上手段不起作用后，只能逐行分析代码，看哪里可能消耗的cpu多，然后优化掉。</p>
+<h4 id="原始的消耗时间"><a href="#原始的消耗时间" class="headerlink" title="原始的消耗时间"></a>原始的消耗时间</h4><p>先按照2.1中的采集uhost-manager进程在60s内消耗的cpu时间，为10.65。这里的时间采集是5次测量，然后取平均值。</p>
+<h4 id="lean"><a href="#lean" class="headerlink" title="lean"></a>lean</h4><p>从MongoDB里读取数据时，用到mongoose的模块。使用lean可以加快查询速度。</p>
+<img src="/2019/07/13/%E4%B8%80%E6%AC%A1node%E8%BF%9B%E7%A8%8Bcpu%E8%B4%9F%E8%BD%BD100-%E9%97%AE%E9%A2%98%E7%9A%84%E5%A4%84%E7%90%86/query%E6%97%B6lean%E7%9A%84%E4%BD%BF%E7%94%A8.png" class="" title="image">
+
+<blockquote>
+<p>The lean option tells Mongoose to skip hydrating the result documents. This makes queries faster and less memory intensive, <strong>but the result documents are plain old JavaScript objects (POJOs), not Mongoose documents</strong>.</p>
+</blockquote>
+<blockquote>
+<p>If you’re executing a query and sending the results without modification to, say, an Express response, you should use lean. <font color=#FF0000 >In general, if you do not modify the query results and do not use custom getters, you should use lean(). If you modify the query results or rely on features like getters or transforms, you should not use lean()</font>.</p>
+</blockquote>
+<p>测试下来结果为6.5，降低了40%左右，效果明显。</p>
+<h4 id="减少无用的重复执行的语句"><a href="#减少无用的重复执行的语句" class="headerlink" title="减少无用的重复执行的语句"></a>减少无用的重复执行的语句</h4><p>修改之后，测试下来结果为5.3。</p>
+<img src="/2019/07/13/%E4%B8%80%E6%AC%A1node%E8%BF%9B%E7%A8%8Bcpu%E8%B4%9F%E8%BD%BD100-%E9%97%AE%E9%A2%98%E7%9A%84%E5%A4%84%E7%90%86/%E9%87%8D%E5%A4%8D%E5%88%A4%E6%96%AD%E8%AE%BE%E7%BD%AE%E5%88%9D%E5%A7%8B%E5%80%BC%E7%9A%84%E4%BB%A3%E7%A0%81.png" class="" title="image">
+
+<h4 id="减少日志打印"><a href="#减少日志打印" class="headerlink" title="减少日志打印"></a>减少日志打印</h4><p>减少量大的无用的日志打印后，测试下来结果为1.9。所以日志打印的cpu消耗在原始基础上占了32%，即（5.3-1.9)/10.65。</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">// 每台虚机打印下vcpu的个数，&gt;2000</span><br><span class="line">GLOBAL.logger.info(_vcpus);</span><br><span class="line"></span><br><span class="line">// 每台宿主机打印下host_id, &gt;200</span><br><span class="line">GLOBAL.logger.info(&quot;[SMI]check:&quot;, host_ids[i]);</span><br></pre></td></tr></table></figure>
+
+<h1 id="3-优化效果"><a href="#3-优化效果" class="headerlink" title="3 优化效果"></a>3 优化效果</h1><p>经过优化后，消耗时间是1.9 clock ticks，相对于原来的10.65 clock ticks，减少了82.16%。</p>
+<img src="/2019/07/13/%E4%B8%80%E6%AC%A1node%E8%BF%9B%E7%A8%8Bcpu%E8%B4%9F%E8%BD%BD100-%E9%97%AE%E9%A2%98%E7%9A%84%E5%A4%84%E7%90%86/%E8%BF%9B%E7%A8%8B%E7%9A%84cpu%E6%97%B6%E9%97%B4.png" class="" title="image">
+<p>单核峰值CPU消耗为70%左右，且持续时间很短，为100ms左右。</p>
+<h1 id="参考链接"><a href="#参考链接" class="headerlink" title="参考链接"></a>参考链接</h1><ol>
+<li><a href="http://brokestream.com/procstat.html">procstat - displays linux proc stat (/proc/pid/stat) in human-readable format
+</a></li>
+<li><a href="http://www.samirchen.com/linux-cpu-performance/">Linux环境下进程的CPU占用率</a></li>
+<li><a href="http://man7.org/linux/man-pages/man5/proc.5.html">Linux Programmer’s Manual PROC(5)</a></li>
+<li><a href="https://cloud.tencent.com/developer/article/1005867">NodeJS 性能优化之 CPU 看图篇</a></li>
+<li><a href="http://www.cpper.cn/2017/06/04/linux/perf/">Linux性能调优工具perf的使用</a></li>
+<li><a href="https://www.yangcs.net/posts/how-to-deal-with-increasing-of-cpu-usage/">某个应用的 CPU 使用率居然达到 100%，我该怎么办？</a></li>
+<li><a href="https://mongoosejs.com/docs/tutorials/lean.html#lean-and-populate">Faster Mongoose Queries With Lean</a></li>
+</ol>
+]]></content>
+      <categories>
+        <category>linux性能优化</category>
+      </categories>
+      <tags>
+        <tag>cpu</tag>
+        <tag>node</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>并发控制</title>
+    <url>/2018/08/14/%E5%B9%B6%E5%8F%91%E6%8E%A7%E5%88%B6/</url>
+    <content><![CDATA[<h2 id="并发场景"><a href="#并发场景" class="headerlink" title="并发场景"></a>并发场景</h2><p>秒杀场景，多人并发申请购买同一种商品。<br>下面以2人抢购同一件商品举例，商品数量为1。<br>基本流程如下：</p>
+<img src="/2018/08/14/%E5%B9%B6%E5%8F%91%E6%8E%A7%E5%88%B6/%E8%B4%AD%E4%B9%B0%E8%AE%B0%E5%BD%95.png" class="" title="image">
+<p>这个流程中存在明显的并发问题，当进程A查看有1个商品，但未开始创建购买记录，此时另一个进程B也进行了资源检查，发现有1个商品，顺利通过，并完成购买操作，此时A继续执行，则1个商品会产生两条购买的记录。（这个并发场景很简单，很普遍）</p>
+<h2 id="解决方案"><a href="#解决方案" class="headerlink" title="解决方案"></a>解决方案</h2><p>解决方案通常是2类：<br>1 通过将请求分发到不同set，减少并发的可能性，分而治之。这里暂时不讨论。<br>2 当收到并发请求时，如何处理。</p>
+<h3 id="加锁操作先占有锁资源，再占有资源"><a href="#加锁操作先占有锁资源，再占有资源" class="headerlink" title="加锁操作先占有锁资源，再占有资源"></a>加锁操作先占有锁资源，再占有资源</h3><p>a. 锁库存<br>b. 插入“秒杀”记录<br>c. 更新库存</p>
+<p>“秒杀”系统的设计难点就在这个事务操作上。商品库存在DB中记为一行，大量用户同时“秒杀”同一商品时，第一个到达DB的请求锁住了这行库存记录。在第一个事务完成提交之前这个锁一直被第一个请求占用，其他到达的请求全部失败。</p>
+<p>加锁的方案，效率会比较低。实际应用时，通常要配合排队系统，让没有获取到锁的请求排队。</p>
+<h3 id="单独开发请求排队调度模块"><a href="#单独开发请求排队调度模块" class="headerlink" title="单独开发请求排队调度模块"></a>单独开发请求排队调度模块</h3><p>排队模块接收用户的抢红包请求，以FIFO模式保存下来，调度模块负责FIFO队列的动态调度，一旦有空闲资源，便从队列头部把用户的访问请求取出后交给真正提供服务的模块处理。优点是，具有中心节点的统一资源管理，对系统的可控性强，可深度定制。缺点是，所有请求流量都会有中心节点参与，效率必然会比分布式无中心系统低，并且，中心节点也很容易成为整个系统的性能瓶颈。</p>
+<h3 id="巧用Redis-特性，使其成为分布式序号生成器（我们最终采用的做法）-–-具体还要再看，如何利用redis的特性"><a href="#巧用Redis-特性，使其成为分布式序号生成器（我们最终采用的做法）-–-具体还要再看，如何利用redis的特性" class="headerlink" title="巧用Redis 特性，使其成为分布式序号生成器（我们最终采用的做法） – 具体还要再看，如何利用redis的特性"></a>巧用Redis 特性，使其成为分布式序号生成器（我们最终采用的做法） – 具体还要再看，如何利用redis的特性</h3><p>参考<br><a href="https://www.ibm.com/developerworks/cn/web/wa-design-small-and-good-kill-system/index.html">https://www.ibm.com/developerworks/cn/web/wa-design-small-and-good-kill-system/index.html</a><br><a href="https://blog.csdn.net/zhanjianshinian/article/details/53342730">https://blog.csdn.net/zhanjianshinian/article/details/53342730</a><br>每件商品以一个数字ID来标识，这个ID是全局唯一的，所有围绕商品的操作都使用这个ID作为数据的关联项。</p>
+<p>Redis节点内存储的是这个分组可以分发的商品ID号段，利用Redis特性实现红包分发，各服务节点通过Redis原语获取当前拆到的红包。这种做法的思路是，Redis 本身是单进程工作模型，来自分布式系统各个节点的操作请求天然的被 Redis Server 做了一个同步队列，只要每个请求执行的足够快，这个队列就不会引起阻塞及请求超时。而本例中我们使用了 DECR 原语，性能上是可以满足需求的。Redis 在这里相当于是充当一个分布式序号发生器的功能，分发红包 ID。</p>
+<h3 id="通过memcached来控制并发数-–-具体还要再看"><a href="#通过memcached来控制并发数-–-具体还要再看" class="headerlink" title="通过memcached来控制并发数 – 具体还要再看"></a>通过memcached来控制并发数 – 具体还要再看</h3><p><a href="https://blog.csdn.net/echo3/article/details/17580347">https://blog.csdn.net/echo3/article/details/17580347</a>  使用memcached进行并发控制（写的非常好）<br><a href="http://www.infoq.com/cn/articles/2017hongbao-weixin#">http://www.infoq.com/cn/articles/2017hongbao-weixin#</a>  百亿级微信红包的高并发资金交易系统设计方案<br><a href="https://blog.csdn.net/yanker1990/article/details/78737626">https://blog.csdn.net/yanker1990/article/details/78737626</a>  Memcache的并发问题和利用CAS的解决方案</p>
+<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><p>如何设计一个小而美的秒杀系统？<br><a href="https://www.ibm.com/developerworks/cn/web/wa-design-small-and-good-kill-system/index.html">https://www.ibm.com/developerworks/cn/web/wa-design-small-and-good-kill-system/index.html</a><br>使用memcached进行并发控制（写的非常好）<br><a href="https://blog.csdn.net/echo3/article/details/17580347">https://blog.csdn.net/echo3/article/details/17580347</a><br>电商秒杀系统设计分析<br><a href="https://blog.csdn.net/zhanjianshinian/article/details/53342730">https://blog.csdn.net/zhanjianshinian/article/details/53342730</a></p>
+<p><a href="https://memcached.org/about">https://memcached.org/about</a><br>Redis DECR命令<br><a href="https://www.kancloud.cn/thinkphp/redis-quickstart/36180">https://www.kancloud.cn/thinkphp/redis-quickstart/36180</a></p>
+<p>云主机的问题:<br>申请时要排队，好像没有意义。<br>防止申请到同一台宿主机，前面做的临时添加资源是否有用。跟定时更新是否有冲突？</p>
+]]></content>
+      <categories>
+        <category>架构设计</category>
+      </categories>
+      <tags>
+        <tag>并发控制</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>分布式系统架构的简介</title>
     <url>/2019/03/18/%E5%88%86%E5%B8%83%E5%BC%8F%E7%B3%BB%E7%BB%9F%E6%9E%B6%E6%9E%84%E7%9A%84%E7%AE%80%E4%BB%8B/</url>
     <content><![CDATA[<p>摘自 分布式系统架构的冰与火 左耳听风</p>
@@ -1377,31 +1402,6 @@
       <tags>
         <tag>分布式系统</tag>
         <tag>架构</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>并发控制</title>
-    <url>/2018/08/14/%E5%B9%B6%E5%8F%91%E6%8E%A7%E5%88%B6/</url>
-    <content><![CDATA[<h2 id="并发场景"><a href="#并发场景" class="headerlink" title="并发场景"></a>并发场景</h2><p>秒杀场景，多人并发申请购买同一种商品。<br>下面以2人抢购同一件商品举例，商品数量为1。<br>基本流程如下：</p>
-<img src="/2018/08/14/%E5%B9%B6%E5%8F%91%E6%8E%A7%E5%88%B6/%E8%B4%AD%E4%B9%B0%E8%AE%B0%E5%BD%95.png" class="" title="image">
-<p>这个流程中存在明显的并发问题，当进程A查看有1个商品，但未开始创建购买记录，此时另一个进程B也进行了资源检查，发现有1个商品，顺利通过，并完成购买操作，此时A继续执行，则1个商品会产生两条购买的记录。（这个并发场景很简单，很普遍）</p>
-<h2 id="解决方案"><a href="#解决方案" class="headerlink" title="解决方案"></a>解决方案</h2><p>解决方案通常是2类：<br>1 通过将请求分发到不同set，减少并发的可能性，分而治之。这里暂时不讨论。<br>2 当收到并发请求时，如何处理。</p>
-<h3 id="加锁操作先占有锁资源，再占有资源"><a href="#加锁操作先占有锁资源，再占有资源" class="headerlink" title="加锁操作先占有锁资源，再占有资源"></a>加锁操作先占有锁资源，再占有资源</h3><p>a. 锁库存<br>b. 插入“秒杀”记录<br>c. 更新库存</p>
-<p>“秒杀”系统的设计难点就在这个事务操作上。商品库存在DB中记为一行，大量用户同时“秒杀”同一商品时，第一个到达DB的请求锁住了这行库存记录。在第一个事务完成提交之前这个锁一直被第一个请求占用，其他到达的请求全部失败。</p>
-<p>加锁的方案，效率会比较低。实际应用时，通常要配合排队系统，让没有获取到锁的请求排队。</p>
-<h3 id="单独开发请求排队调度模块"><a href="#单独开发请求排队调度模块" class="headerlink" title="单独开发请求排队调度模块"></a>单独开发请求排队调度模块</h3><p>排队模块接收用户的抢红包请求，以FIFO模式保存下来，调度模块负责FIFO队列的动态调度，一旦有空闲资源，便从队列头部把用户的访问请求取出后交给真正提供服务的模块处理。优点是，具有中心节点的统一资源管理，对系统的可控性强，可深度定制。缺点是，所有请求流量都会有中心节点参与，效率必然会比分布式无中心系统低，并且，中心节点也很容易成为整个系统的性能瓶颈。</p>
-<h3 id="巧用Redis-特性，使其成为分布式序号生成器（我们最终采用的做法）-–-具体还要再看，如何利用redis的特性"><a href="#巧用Redis-特性，使其成为分布式序号生成器（我们最终采用的做法）-–-具体还要再看，如何利用redis的特性" class="headerlink" title="巧用Redis 特性，使其成为分布式序号生成器（我们最终采用的做法） – 具体还要再看，如何利用redis的特性"></a>巧用Redis 特性，使其成为分布式序号生成器（我们最终采用的做法） – 具体还要再看，如何利用redis的特性</h3><p>参考<br><a href="https://www.ibm.com/developerworks/cn/web/wa-design-small-and-good-kill-system/index.html">https://www.ibm.com/developerworks/cn/web/wa-design-small-and-good-kill-system/index.html</a><br><a href="https://blog.csdn.net/zhanjianshinian/article/details/53342730">https://blog.csdn.net/zhanjianshinian/article/details/53342730</a><br>每件商品以一个数字ID来标识，这个ID是全局唯一的，所有围绕商品的操作都使用这个ID作为数据的关联项。</p>
-<p>Redis节点内存储的是这个分组可以分发的商品ID号段，利用Redis特性实现红包分发，各服务节点通过Redis原语获取当前拆到的红包。这种做法的思路是，Redis 本身是单进程工作模型，来自分布式系统各个节点的操作请求天然的被 Redis Server 做了一个同步队列，只要每个请求执行的足够快，这个队列就不会引起阻塞及请求超时。而本例中我们使用了 DECR 原语，性能上是可以满足需求的。Redis 在这里相当于是充当一个分布式序号发生器的功能，分发红包 ID。</p>
-<h3 id="通过memcached来控制并发数-–-具体还要再看"><a href="#通过memcached来控制并发数-–-具体还要再看" class="headerlink" title="通过memcached来控制并发数 – 具体还要再看"></a>通过memcached来控制并发数 – 具体还要再看</h3><p><a href="https://blog.csdn.net/echo3/article/details/17580347">https://blog.csdn.net/echo3/article/details/17580347</a>  使用memcached进行并发控制（写的非常好）<br><a href="http://www.infoq.com/cn/articles/2017hongbao-weixin#">http://www.infoq.com/cn/articles/2017hongbao-weixin#</a>  百亿级微信红包的高并发资金交易系统设计方案<br><a href="https://blog.csdn.net/yanker1990/article/details/78737626">https://blog.csdn.net/yanker1990/article/details/78737626</a>  Memcache的并发问题和利用CAS的解决方案</p>
-<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><p>如何设计一个小而美的秒杀系统？<br><a href="https://www.ibm.com/developerworks/cn/web/wa-design-small-and-good-kill-system/index.html">https://www.ibm.com/developerworks/cn/web/wa-design-small-and-good-kill-system/index.html</a><br>使用memcached进行并发控制（写的非常好）<br><a href="https://blog.csdn.net/echo3/article/details/17580347">https://blog.csdn.net/echo3/article/details/17580347</a><br>电商秒杀系统设计分析<br><a href="https://blog.csdn.net/zhanjianshinian/article/details/53342730">https://blog.csdn.net/zhanjianshinian/article/details/53342730</a></p>
-<p><a href="https://memcached.org/about">https://memcached.org/about</a><br>Redis DECR命令<br><a href="https://www.kancloud.cn/thinkphp/redis-quickstart/36180">https://www.kancloud.cn/thinkphp/redis-quickstart/36180</a></p>
-<p>云主机的问题:<br>申请时要排队，好像没有意义。<br>防止申请到同一台宿主机，前面做的临时添加资源是否有用。跟定时更新是否有冲突？</p>
-]]></content>
-      <categories>
-        <category>架构设计</category>
-      </categories>
-      <tags>
-        <tag>并发控制</tag>
       </tags>
   </entry>
   <entry>
@@ -1714,35 +1714,6 @@
       </tags>
   </entry>
   <entry>
-    <title>这些年读过的那些书&amp;&amp;待读清单列表</title>
-    <url>/2019/08/31/%E8%BF%99%E4%BA%9B%E5%B9%B4%E8%AF%BB%E8%BF%87%E7%9A%84%E9%82%A3%E4%BA%9B%E4%B9%A6-%E5%BE%85%E8%AF%BB%E6%B8%85%E5%8D%95%E5%88%97%E8%A1%A8/</url>
-    <content><![CDATA[<p>每年给自己列个计划，要读哪些书，到年尾看看真正看完的有多少。</p>
-<h1 id="2020年待读清单列表"><a href="#2020年待读清单列表" class="headerlink" title="2020年待读清单列表"></a>2020年待读清单列表</h1><ol>
-<li> 《Designing Data-Intensive Applications》</li>
-</ol>
-<h1 id="2019年待读清单列表"><a href="#2019年待读清单列表" class="headerlink" title="2019年待读清单列表"></a>2019年待读清单列表</h1><ol>
-<li>UNIX环境高级编程（第3版）</li>
-<li>重构网络 SDN架构与实现</li>
-<li>软件定义网络</li>
-<li>全球通史 从史前史到21实际 第7版修订版 上</li>
-<li>全球通史 从史前史到21实际 第7版修订版 下<span id="more"></span></li>
-</ol>
-<h1 id="这些年读过的那些书"><a href="#这些年读过的那些书" class="headerlink" title="这些年读过的那些书"></a>这些年读过的那些书</h1><h2 id="2020年"><a href="#2020年" class="headerlink" title="2020年"></a>2020年</h2><ol>
-<li>《深度思考》 深度思考前的盲目勤奋，注定是吃力不讨好的徒劳。香奈儿前全球CEO从普通职员到职场巅峰的人生进阶之路。大脑中走得越远，现实中走得越稳。</li>
-</ol>
-<h2 id="2019年"><a href="#2019年" class="headerlink" title="2019年"></a>2019年</h2><ol>
-<li>《TCP/IP详解 卷1：协议（原书第2版）》 <a href="https://xusenqi.github.io/2019/04/24/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0-TCP-IP%E8%AF%A6%E8%A7%A3-%E5%8D%B71%EF%BC%9A%E5%8D%8F%E8%AE%AE/">读书笔记-TCP/IP详解 卷1：协议</a></li>
-<li>《软技能 代码之外的生存指南（Soft Skills - The Software Developer’s Life Manual）》对于程序员是很不错的心灵鸡汤，从职业、自我营销、学习、生产力等方面，讲述了作者的方法和心得，很值得借鉴。</li>
-</ol>
-]]></content>
-      <categories>
-        <category>读书笔记</category>
-      </categories>
-      <tags>
-        <tag>清单</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>通过delve(dlv)调试golang程序</title>
     <url>/2019/08/25/%E9%80%9A%E8%BF%87delve-dlv-%E8%B0%83%E8%AF%95golang%E7%A8%8B%E5%BA%8F/</url>
     <content><![CDATA[<h1 id="介绍"><a href="#介绍" class="headerlink" title="介绍"></a>介绍</h1><p>gdb是强大的调试工具。但对于golang程序来说，delve是个更好的选择，它能更好地理解Go runtime, data structures, and expressions，尤其是goroutine。</p>
@@ -1826,6 +1797,35 @@
         <tag>debug</tag>
         <tag>delve</tag>
         <tag>dlv</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>这些年读过的那些书&amp;&amp;待读清单列表</title>
+    <url>/2019/08/31/%E8%BF%99%E4%BA%9B%E5%B9%B4%E8%AF%BB%E8%BF%87%E7%9A%84%E9%82%A3%E4%BA%9B%E4%B9%A6-%E5%BE%85%E8%AF%BB%E6%B8%85%E5%8D%95%E5%88%97%E8%A1%A8/</url>
+    <content><![CDATA[<p>每年给自己列个计划，要读哪些书，到年尾看看真正看完的有多少。</p>
+<h1 id="2020年待读清单列表"><a href="#2020年待读清单列表" class="headerlink" title="2020年待读清单列表"></a>2020年待读清单列表</h1><ol>
+<li> 《Designing Data-Intensive Applications》</li>
+</ol>
+<h1 id="2019年待读清单列表"><a href="#2019年待读清单列表" class="headerlink" title="2019年待读清单列表"></a>2019年待读清单列表</h1><ol>
+<li>UNIX环境高级编程（第3版）</li>
+<li>重构网络 SDN架构与实现</li>
+<li>软件定义网络</li>
+<li>全球通史 从史前史到21实际 第7版修订版 上</li>
+<li>全球通史 从史前史到21实际 第7版修订版 下<span id="more"></span></li>
+</ol>
+<h1 id="这些年读过的那些书"><a href="#这些年读过的那些书" class="headerlink" title="这些年读过的那些书"></a>这些年读过的那些书</h1><h2 id="2020年"><a href="#2020年" class="headerlink" title="2020年"></a>2020年</h2><ol>
+<li>《深度思考》 深度思考前的盲目勤奋，注定是吃力不讨好的徒劳。香奈儿前全球CEO从普通职员到职场巅峰的人生进阶之路。大脑中走得越远，现实中走得越稳。</li>
+</ol>
+<h2 id="2019年"><a href="#2019年" class="headerlink" title="2019年"></a>2019年</h2><ol>
+<li>《TCP/IP详解 卷1：协议（原书第2版）》 <a href="https://xusenqi.github.io/2019/04/24/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0-TCP-IP%E8%AF%A6%E8%A7%A3-%E5%8D%B71%EF%BC%9A%E5%8D%8F%E8%AE%AE/">读书笔记-TCP/IP详解 卷1：协议</a></li>
+<li>《软技能 代码之外的生存指南（Soft Skills - The Software Developer’s Life Manual）》对于程序员是很不错的心灵鸡汤，从职业、自我营销、学习、生产力等方面，讲述了作者的方法和心得，很值得借鉴。</li>
+</ol>
+]]></content>
+      <categories>
+        <category>读书笔记</category>
+      </categories>
+      <tags>
+        <tag>清单</tag>
       </tags>
   </entry>
   <entry>
