@@ -1350,6 +1350,91 @@
       </tags>
   </entry>
   <entry>
+    <title>不同IO模型的比较</title>
+    <url>/2021/09/05/%E4%B8%8D%E5%90%8CIO%E6%A8%A1%E5%9E%8B%E7%9A%84%E6%AF%94%E8%BE%83/</url>
+    <content><![CDATA[<h1 id="IO模型"><a href="#IO模型" class="headerlink" title="IO模型"></a>IO模型</h1><p>一个IO输入操作通常包括2个阶段：</p>
+<ol>
+<li>等待数据准备好；</li>
+<li>从内核向进程复制数据。</li>
+</ol>
+<p>对于网络IO模型，这2步分别是：</p>
+<ol>
+<li>等待数据从网络到达。当所等待分组到达时，它被复制到内核中的某个缓冲区；</li>
+<li>把数据从内核缓冲区复制到应用进程缓冲区。</li>
+</ol>
+<span id="more"></span>
+
+<p>不同的IO模型就是对2个阶段的不同处理，linux下有5种io模型：</p>
+<ul>
+<li>阻塞式I/O（blocking I/O）</li>
+<li>非阻塞式I/O （nonblocking I/O）</li>
+<li>I/O多路复用 （I/O multiplexing）</li>
+<li>信号驱动I/O （signal driven I/O (SIGIO)）</li>
+<li>异步I/O （asynchronous I/O (the POSIX aio_functions)）</li>
+</ul>
+<h1 id="不同的IO模型"><a href="#不同的IO模型" class="headerlink" title="不同的IO模型"></a>不同的IO模型</h1><h2 id="阻塞式I-O模型"><a href="#阻塞式I-O模型" class="headerlink" title="阻塞式I/O模型"></a>阻塞式I/O模型</h2><p>最常用的模型就是阻塞式I/O模型。以recvfrom这个系统调用为例，当被应用进程调用以后，直到数据报到达且被复制到应用进程缓冲区中或发生错误才返回。这期间都是阻塞的。</p>
+<img src="/2021/09/05/%E4%B8%8D%E5%90%8CIO%E6%A8%A1%E5%9E%8B%E7%9A%84%E6%AF%94%E8%BE%83/%E9%98%BB%E5%A1%9E%E5%BC%8FIO%E6%A8%A1%E5%9E%8B.png" class="" title="image-20210905171931687">
+
+<p>blocking IO的特点就是在IO执行的两个阶段（等待数据和拷贝数据两个阶段）都被block了。对网络编程来说，线程将被阻塞，无法执行任何运算或响应任何的网络请求。</p>
+<p>当构建client/server模型时，是简单的“一问一答”的服务器。这种服务器，使用blocking IO，在处理一个client的请求时，无法响应其他client的请求。</p>
+
+
+<p>通常的改进方式是使用多进程/多线程；一般采用消耗资源较轻的多线程。进一步提升性能，可以采用线程池。使用多线程或线程池时，client/server模型为</p>
+
+
+<p>“线程池”旨在减少创建和销毁线程的频率，其维持一定合理数量的线程，并让空闲的线程重新承担新的执行任务。“连接池”维持连接的缓存池，尽量重用已有的连接、减少创建和关闭连接的频率。</p>
+<p>但依然存在2个问题：</p>
+<ul>
+<li>当同时响应过多的连接请求时，则无论多线程还是多进程都会严重占据系统资源，降低系统对外界响应效率，而线程与进程本身也更容易进入假死状态。</li>
+<li>“线程池”和“连接池”技术也只是在一定程度上缓解了频繁调用IO接口带来的资源占用。而且，所谓“池”始终有其上限，当请求大大超过上限时，“池”构成的系统对外界的响应并不比没有池的时候效果好多少。所以使用“池”必须考虑其面临的响应规模，并根据响应规模调整“池”的大小。</li>
+</ul>
+<h2 id="非阻塞I-O"><a href="#非阻塞I-O" class="headerlink" title="非阻塞I/O"></a>非阻塞I/O</h2><p>从图中可以看出，当用户进程发出read操作时，如果kernel中的数据还没有准备好，那么它并不会block用户进程，而是立刻返回一个error。从用户进程角度讲 ，它发起一个read操作后，并不需要等待，而是马上就得到了一个结果。用户进程判断结果是一个error时，它就知道数据还没有准备好，于是它可以再次发送read操作。一旦kernel中的数据准备好了，并且又再次收到了用户进程的system call，那么它马上就将数据拷贝到了用户内存，然后返回。</p>
+<p><strong>所以，在非阻塞式IO中，用户进程其实是需要不断的主动询问kernel数据准备好了没有。</strong></p>
+<p>非阻塞的接口相比于阻塞型接口的显著差异在于，在被调用之后立即返回。</p>
+<img src="/2021/09/05/%E4%B8%8D%E5%90%8CIO%E6%A8%A1%E5%9E%8B%E7%9A%84%E6%AF%94%E8%BE%83/%E9%9D%9E%E9%98%BB%E5%A1%9EIO%E6%A8%A1%E5%9E%8B.png" class="" title="image-20210905173145424">
+
+<p>上述模型绝不被推荐。因为，<strong>循环调用recv()将大幅度推高CPU 占用率；此外，在这个方案中recv()更多的是起到检测“操作是否完成”的作用，实际操作系统提供了更为高效的检测“操作是否完成“作用的接口，例如select()多路复用模式，可以一次检测多个连接是否活跃。</strong></p>
+<h2 id="I-O多路复用模型"><a href="#I-O多路复用模型" class="headerlink" title="I/O多路复用模型"></a>I/O多路复用模型</h2><p>为了让用户进程减少系统调用，就出现了IO多路复用。IO多路复用是指内核一旦发现进程指定的一个或者多个IO条件准备读取，它就通知该进程，目前支持I/O多路复用的系统调用有<code>select</code>、<code>poll</code>、<code>epoll</code>。I/O多路复用就是通过一种机制，一个进程可以监视多个描述符（socket），一旦某个描述符就绪（一般是读就绪或者写就绪），能够通知程序进行相应的读写操作。</p>
+<h3 id="select-poll"><a href="#select-poll" class="headerlink" title="select/poll"></a>select/poll</h3><img src="/2021/09/05/%E4%B8%8D%E5%90%8CIO%E6%A8%A1%E5%9E%8B%E7%9A%84%E6%AF%94%E8%BE%83/IO%E5%A4%9A%E8%B7%AF%E5%A4%8D%E7%94%A8.png" class="" title="image-20210905173524378">
+
+<p>为了让内核帮助用户进程完成文件描述符的遍历，内核增加了系统调用select/poll(select与poll本质上没有什么不同，就是poll减少了文件描述符的个数限制)。</p>
+<p>select/poll的步骤大致为：</p>
+<ul>
+<li>用户进程只需要<strong>调用select系统调用函数，并且将文件描述符全部传递给select就可以让内核帮助用户进程完成所有的查询。此时，整个</strong>process被select这个函数block住。</li>
+<li>等数据准备好后， 内核将对应的文件描述符返回给用户进程。</li>
+<li>用户进程依次调用其他系统调用函数完成IO的执行过程。</li>
+</ul>
+<h3 id="epoll"><a href="#epoll" class="headerlink" title="epoll"></a>epoll</h3><p>在select实现的多路复用中依然存在一些问题。</p>
+<ol>
+<li>用户进程需要传递所有的文件描述符，然后内核将数据准备好的文件描述符再次传递回去，这种数据的拷贝降低了IO的速度。</li>
+<li>内核依然会执行复杂度为O(n)的主动遍历操作。</li>
+</ol>
+<p>当内核初始化epoll时，会开辟一块内核高速cache区，用于安置我们监听的socket，这些socket会以红黑树的形式保存在内核的cache里，以支持快速的查找，插入，删除．同时，建立了一个list链表，用于存储准备就绪的事件．所以调用epoll_wait时，在timeout时间内，只是简单的观察这个list链表是否有数据，如果没有，则睡眠至超时时间到返回；如果有数据，则在超时时间到，拷贝至用户态events数组中．</p>
+<p>注意：没有用到mmap</p>
+<p>那么，这个准备就绪list链表是怎么维护的呢？当我们执行epoll_ctl时，除了把socket放到epoll文件系统里file对象对应的红黑树上之外，还会给内核中断处理程序注册一个回调函数，告诉内核，如果这个句柄的中断到了，就把它放到准备就绪list链表里。所以，当一个socket上有数据到了，内核在把网卡上的数据copy到内核中后就来把socket插入到准备就绪链表里了。</p>
+<h2 id="信号驱动式IO模型"><a href="#信号驱动式IO模型" class="headerlink" title="信号驱动式IO模型"></a>信号驱动式IO模型</h2><p>在IO执行的数据准备阶段，不会阻塞用户进程。当用户进程需要等待数据的时候，会向内核发送一个信号，告诉内核需要数据，然后用户进程就继续做别的事情去了，而当内核中的数据准备好之后，内核立马发给用户进程一个信号，用户进程收到信号之后，立马调用recvfrom，去查收数据。</p>
+<img src="/2021/09/05/%E4%B8%8D%E5%90%8CIO%E6%A8%A1%E5%9E%8B%E7%9A%84%E6%AF%94%E8%BE%83/%E4%BF%A1%E5%8F%B7%E9%A9%B1%E5%8A%A8%E5%BC%8FIO%E6%A8%A1%E5%9E%8B.png" class="" title="image-20210905174040690">
+
+<h1 id="异步IO模型"><a href="#异步IO模型" class="headerlink" title="异步IO模型"></a>异步IO模型</h1><p>用户进程发起read操作之后，立刻就可以开始去做其它的事。而另一方面，从kernel的角度，当它受到一个asynchronous read之后，首先它会立刻返回，所以不会对用户进程产生任何block。然后，kernel会等待数据准备完成，然后将数据拷贝到用户内存，当这一切都完成之后，kernel会给用户进程发送一个signal，告诉它read操作完成了。</p>
+<img src="/2021/09/05/%E4%B8%8D%E5%90%8CIO%E6%A8%A1%E5%9E%8B%E7%9A%84%E6%AF%94%E8%BE%83/%E5%BC%82%E6%AD%A5IO%E6%A8%A1%E5%9E%8B.png" class="" title="image-20210905174321963">
+
+<h1 id="各个IO模型的比较"><a href="#各个IO模型的比较" class="headerlink" title="各个IO模型的比较"></a>各个IO模型的比较</h1><img src="/2021/09/05/%E4%B8%8D%E5%90%8CIO%E6%A8%A1%E5%9E%8B%E7%9A%84%E6%AF%94%E8%BE%83/%E6%A8%A1%E5%9E%8B%E6%AF%94%E8%BE%83.png" class="" title="image-20210905174434370">
+
+
+
+<h1 id="参考链接"><a href="#参考链接" class="headerlink" title="参考链接"></a>参考链接</h1><p><a href="https://www.huaweicloud.com/articles/26b1b9fda29be3fb03a51370d373ff49.html">https://www.huaweicloud.com/articles/26b1b9fda29be3fb03a51370d373ff49.html</a></p>
+<p><a href="https://segmentfault.com/a/1190000037596024">https://segmentfault.com/a/1190000037596024</a></p>
+<p>UNIX网络编程</p>
+]]></content>
+      <categories>
+        <category>linux</category>
+      </categories>
+      <tags>
+        <tag>io</tag>
+        <tag>linux</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>分布式系统架构的简介</title>
     <url>/2019/03/18/%E5%88%86%E5%B8%83%E5%BC%8F%E7%B3%BB%E7%BB%9F%E6%9E%B6%E6%9E%84%E7%9A%84%E7%AE%80%E4%BB%8B/</url>
     <content><![CDATA[<p>摘自 分布式系统架构的冰与火 左耳听风</p>
@@ -1558,6 +1643,35 @@
       </tags>
   </entry>
   <entry>
+    <title>这些年读过的那些书&amp;&amp;待读清单列表</title>
+    <url>/2019/08/31/%E8%BF%99%E4%BA%9B%E5%B9%B4%E8%AF%BB%E8%BF%87%E7%9A%84%E9%82%A3%E4%BA%9B%E4%B9%A6-%E5%BE%85%E8%AF%BB%E6%B8%85%E5%8D%95%E5%88%97%E8%A1%A8/</url>
+    <content><![CDATA[<p>每年给自己列个计划，要读哪些书，到年尾看看真正看完的有多少。</p>
+<h1 id="2020年待读清单列表"><a href="#2020年待读清单列表" class="headerlink" title="2020年待读清单列表"></a>2020年待读清单列表</h1><ol>
+<li> 《Designing Data-Intensive Applications》</li>
+</ol>
+<h1 id="2019年待读清单列表"><a href="#2019年待读清单列表" class="headerlink" title="2019年待读清单列表"></a>2019年待读清单列表</h1><ol>
+<li>UNIX环境高级编程（第3版）</li>
+<li>重构网络 SDN架构与实现</li>
+<li>软件定义网络</li>
+<li>全球通史 从史前史到21实际 第7版修订版 上</li>
+<li>全球通史 从史前史到21实际 第7版修订版 下<span id="more"></span></li>
+</ol>
+<h1 id="这些年读过的那些书"><a href="#这些年读过的那些书" class="headerlink" title="这些年读过的那些书"></a>这些年读过的那些书</h1><h2 id="2020年"><a href="#2020年" class="headerlink" title="2020年"></a>2020年</h2><ol>
+<li>《深度思考》 深度思考前的盲目勤奋，注定是吃力不讨好的徒劳。香奈儿前全球CEO从普通职员到职场巅峰的人生进阶之路。大脑中走得越远，现实中走得越稳。</li>
+</ol>
+<h2 id="2019年"><a href="#2019年" class="headerlink" title="2019年"></a>2019年</h2><ol>
+<li>《TCP/IP详解 卷1：协议（原书第2版）》 <a href="https://xusenqi.github.io/2019/04/24/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0-TCP-IP%E8%AF%A6%E8%A7%A3-%E5%8D%B71%EF%BC%9A%E5%8D%8F%E8%AE%AE/">读书笔记-TCP/IP详解 卷1：协议</a></li>
+<li>《软技能 代码之外的生存指南（Soft Skills - The Software Developer’s Life Manual）》对于程序员是很不错的心灵鸡汤，从职业、自我营销、学习、生产力等方面，讲述了作者的方法和心得，很值得借鉴。</li>
+</ol>
+]]></content>
+      <categories>
+        <category>读书笔记</category>
+      </categories>
+      <tags>
+        <tag>清单</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>读书笔记-TCP/IP详解 卷1：协议</title>
     <url>/2019/04/24/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0-TCP-IP%E8%AF%A6%E8%A7%A3-%E5%8D%B71%EF%BC%9A%E5%8D%8F%E8%AE%AE/</url>
     <content><![CDATA[<p>不同层的PDU（Protocol Data Unit）</p>
@@ -1711,35 +1825,6 @@
       </categories>
       <tags>
         <tag>网络</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>这些年读过的那些书&amp;&amp;待读清单列表</title>
-    <url>/2019/08/31/%E8%BF%99%E4%BA%9B%E5%B9%B4%E8%AF%BB%E8%BF%87%E7%9A%84%E9%82%A3%E4%BA%9B%E4%B9%A6-%E5%BE%85%E8%AF%BB%E6%B8%85%E5%8D%95%E5%88%97%E8%A1%A8/</url>
-    <content><![CDATA[<p>每年给自己列个计划，要读哪些书，到年尾看看真正看完的有多少。</p>
-<h1 id="2020年待读清单列表"><a href="#2020年待读清单列表" class="headerlink" title="2020年待读清单列表"></a>2020年待读清单列表</h1><ol>
-<li> 《Designing Data-Intensive Applications》</li>
-</ol>
-<h1 id="2019年待读清单列表"><a href="#2019年待读清单列表" class="headerlink" title="2019年待读清单列表"></a>2019年待读清单列表</h1><ol>
-<li>UNIX环境高级编程（第3版）</li>
-<li>重构网络 SDN架构与实现</li>
-<li>软件定义网络</li>
-<li>全球通史 从史前史到21实际 第7版修订版 上</li>
-<li>全球通史 从史前史到21实际 第7版修订版 下<span id="more"></span></li>
-</ol>
-<h1 id="这些年读过的那些书"><a href="#这些年读过的那些书" class="headerlink" title="这些年读过的那些书"></a>这些年读过的那些书</h1><h2 id="2020年"><a href="#2020年" class="headerlink" title="2020年"></a>2020年</h2><ol>
-<li>《深度思考》 深度思考前的盲目勤奋，注定是吃力不讨好的徒劳。香奈儿前全球CEO从普通职员到职场巅峰的人生进阶之路。大脑中走得越远，现实中走得越稳。</li>
-</ol>
-<h2 id="2019年"><a href="#2019年" class="headerlink" title="2019年"></a>2019年</h2><ol>
-<li>《TCP/IP详解 卷1：协议（原书第2版）》 <a href="https://xusenqi.github.io/2019/04/24/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0-TCP-IP%E8%AF%A6%E8%A7%A3-%E5%8D%B71%EF%BC%9A%E5%8D%8F%E8%AE%AE/">读书笔记-TCP/IP详解 卷1：协议</a></li>
-<li>《软技能 代码之外的生存指南（Soft Skills - The Software Developer’s Life Manual）》对于程序员是很不错的心灵鸡汤，从职业、自我营销、学习、生产力等方面，讲述了作者的方法和心得，很值得借鉴。</li>
-</ol>
-]]></content>
-      <categories>
-        <category>读书笔记</category>
-      </categories>
-      <tags>
-        <tag>清单</tag>
       </tags>
   </entry>
   <entry>

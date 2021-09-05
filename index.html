@@ -147,7 +147,7 @@
   </li>
         <li class="menu-item menu-item-tags">
 
-    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>标签<span class="badge">37</span></a>
+    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>标签<span class="badge">39</span></a>
 
   </li>
         <li class="menu-item menu-item-categories">
@@ -157,7 +157,7 @@
   </li>
         <li class="menu-item menu-item-archives">
 
-    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档<span class="badge">27</span></a>
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档<span class="badge">28</span></a>
 
   </li>
       <li class="menu-item menu-item-search">
@@ -207,6 +207,127 @@
             
 
   <div class="posts-expand">
+        
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block home" lang="zh-Hans">
+    <link itemprop="mainEntityOfPage" href="https://xusenqi.github.io/2021/09/05/%E4%B8%8D%E5%90%8CIO%E6%A8%A1%E5%9E%8B%E7%9A%84%E6%AF%94%E8%BE%83/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/ppwqgtl.png">
+      <meta itemprop="name" content="patrick.xu">
+      <meta itemprop="description" content="完成比完美更重要">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="许森琪的博客">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          
+            <a href="/2021/09/05/%E4%B8%8D%E5%90%8CIO%E6%A8%A1%E5%9E%8B%E7%9A%84%E6%AF%94%E8%BE%83/" class="post-title-link" itemprop="url">不同IO模型的比较</a>
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2021-09-05 16:50:02 / 修改时间：17:48:27" itemprop="dateCreated datePublished" datetime="2021-09-05T16:50:02+08:00">2021-09-05</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/linux/" itemprop="url" rel="index">
+                    <span itemprop="name">linux</span>
+                  </a>
+                </span>
+            </span>
+
+          
+            <span id="/2021/09/05/%E4%B8%8D%E5%90%8CIO%E6%A8%A1%E5%9E%8B%E7%9A%84%E6%AF%94%E8%BE%83/" class="post-meta-item leancloud_visitors" data-flag-title="不同IO模型的比较" title="阅读次数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span class="leancloud-visitors-count"></span>
+            </span>
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="fa fa-comment-o"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/2021/09/05/%E4%B8%8D%E5%90%8CIO%E6%A8%A1%E5%9E%8B%E7%9A%84%E6%AF%94%E8%BE%83/#comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2021/09/05/%E4%B8%8D%E5%90%8CIO%E6%A8%A1%E5%9E%8B%E7%9A%84%E6%AF%94%E8%BE%83/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-file-word-o"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>2.8k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-clock-o"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>5 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h1 id="IO模型"><a href="#IO模型" class="headerlink" title="IO模型"></a>IO模型</h1><p>一个IO输入操作通常包括2个阶段：</p>
+<ol>
+<li>等待数据准备好；</li>
+<li>从内核向进程复制数据。</li>
+</ol>
+<p>对于网络IO模型，这2步分别是：</p>
+<ol>
+<li>等待数据从网络到达。当所等待分组到达时，它被复制到内核中的某个缓冲区；</li>
+<li>把数据从内核缓冲区复制到应用进程缓冲区。</li>
+</ol>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2021/09/05/%E4%B8%8D%E5%90%8CIO%E6%A8%A1%E5%9E%8B%E7%9A%84%E6%AF%94%E8%BE%83/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
         
   
   
@@ -1287,125 +1408,6 @@
   
   
 
-        
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block home" lang="zh-Hans">
-    <link itemprop="mainEntityOfPage" href="https://xusenqi.github.io/2019/07/24/%E4%B8%80%E6%AC%A1mongo%E6%85%A2%E6%9F%A5%E8%AF%A2%E7%9A%84%E4%BC%98%E5%8C%96%E8%BF%87%E7%A8%8B/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/ppwqgtl.png">
-      <meta itemprop="name" content="patrick.xu">
-      <meta itemprop="description" content="完成比完美更重要">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="许森琪的博客">
-    </span>
-      <header class="post-header">
-        <h1 class="post-title" itemprop="name headline">
-          
-            <a href="/2019/07/24/%E4%B8%80%E6%AC%A1mongo%E6%85%A2%E6%9F%A5%E8%AF%A2%E7%9A%84%E4%BC%98%E5%8C%96%E8%BF%87%E7%A8%8B/" class="post-title-link" itemprop="url">一次mongo慢查询的优化过程</a>
-        </h1>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2019-07-24 00:39:19" itemprop="dateCreated datePublished" datetime="2019-07-24T00:39:19+08:00">2019-07-24</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-calendar-check-o"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2021-08-19 17:54:38" itemprop="dateModified" datetime="2021-08-19T17:54:38+08:00">2021-08-19</time>
-              </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/%E6%95%B0%E6%8D%AE%E5%BA%93/" itemprop="url" rel="index">
-                    <span itemprop="name">数据库</span>
-                  </a>
-                </span>
-            </span>
-
-          
-            <span id="/2019/07/24/%E4%B8%80%E6%AC%A1mongo%E6%85%A2%E6%9F%A5%E8%AF%A2%E7%9A%84%E4%BC%98%E5%8C%96%E8%BF%87%E7%A8%8B/" class="post-meta-item leancloud_visitors" data-flag-title="一次mongo慢查询的优化过程" title="阅读次数">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-eye"></i>
-              </span>
-              <span class="post-meta-item-text">阅读次数：</span>
-              <span class="leancloud-visitors-count"></span>
-            </span>
-  
-  <span class="post-meta-item">
-    
-      <span class="post-meta-item-icon">
-        <i class="fa fa-comment-o"></i>
-      </span>
-      <span class="post-meta-item-text">Valine：</span>
-    
-    <a title="valine" href="/2019/07/24/%E4%B8%80%E6%AC%A1mongo%E6%85%A2%E6%9F%A5%E8%AF%A2%E7%9A%84%E4%BC%98%E5%8C%96%E8%BF%87%E7%A8%8B/#comments" itemprop="discussionUrl">
-      <span class="post-comments-count valine-comment-count" data-xid="/2019/07/24/%E4%B8%80%E6%AC%A1mongo%E6%85%A2%E6%9F%A5%E8%AF%A2%E7%9A%84%E4%BC%98%E5%8C%96%E8%BF%87%E7%A8%8B/" itemprop="commentCount"></span>
-    </a>
-  </span>
-  
-  <br>
-            <span class="post-meta-item" title="本文字数">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-file-word-o"></i>
-              </span>
-                <span class="post-meta-item-text">本文字数：</span>
-              <span>9.1k</span>
-            </span>
-            <span class="post-meta-item" title="阅读时长">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-clock-o"></i>
-              </span>
-                <span class="post-meta-item-text">阅读时长 &asymp;</span>
-              <span>15 分钟</span>
-            </span>
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <p>今天发现查询mongo时容易慢查询，现在将整个排查及优化过程,总结记录如下。</p>
-<h1 id="Database-Profiler介绍"><a href="#Database-Profiler介绍" class="headerlink" title="Database Profiler介绍"></a>Database Profiler介绍</h1><p>类似于mysql,Profiler可以实现慢查询日志的功能，它把数据收集在system.profile集合里。该集合是一个capped collection（有上限的集合）。Profiler默认是关闭的，可以在一个database或者一个instance上设置开启，设置不同的profiling levels.<br>具体描述见<a target="_blank" rel="noopener" href="https://docs.mongodb.com/manual/tutorial/manage-the-database-profiler/">Database Profiler</a>。</p>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2019/07/24/%E4%B8%80%E6%AC%A1mongo%E6%85%A2%E6%9F%A5%E8%AF%A2%E7%9A%84%E4%BC%98%E5%8C%96%E8%BF%87%E7%A8%8B/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
   </div>
 
   
@@ -1478,7 +1480,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">27</span>
+          <span class="site-state-item-count">28</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
@@ -1491,7 +1493,7 @@
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">37</span>
+        <span class="site-state-item-count">39</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
@@ -1530,12 +1532,12 @@
     <span class="post-meta-item-icon">
       <i class="fa fa-area-chart"></i>
     </span>
-    <span title="站点总字数">124k</span>
+    <span title="站点总字数">127k</span>
     <span class="post-meta-divider">|</span>
     <span class="post-meta-item-icon">
       <i class="fa fa-coffee"></i>
     </span>
-    <span title="站点阅读时长">3:26</span>
+    <span title="站点阅读时长">3:31</span>
 </div>
   <div class="theme-info">主题 – <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> v7.7.0
   </div>
