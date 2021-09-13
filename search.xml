@@ -1,6 +1,104 @@
 <?xml version="1.0" encoding="utf-8"?>
 <search>
   <entry>
+    <title>Go语言 - 01 工作区和GOPATH</title>
+    <url>/2018/08/12/Go%E8%AF%AD%E8%A8%80-01-%E5%B7%A5%E4%BD%9C%E5%8C%BA%E5%92%8CGOPATH/</url>
+    <content><![CDATA[<h2 id="Go语言的安装"><a href="#Go语言的安装" class="headerlink" title="Go语言的安装"></a>Go语言的安装</h2><p>参照官网文档 <a href="https://golang.org/doc/install">https://golang.org/doc/install</a><br>可以在命令行中输入命令来验证是否安装成功：</p>
+<ul>
+<li>go version：查看安装的版本</li>
+<li>go env：当前go的配置环境</li>
+</ul>
+<p>2个环境变量，即 GOROOT、GOPATH和GOBIN:</p>
+<ul>
+<li>GOROOT：go的安装路径</li>
+<li>GOPATH：go的工作路径<span id="more"></span></li>
+</ul>
+<h2 id="问题-：设置-GOPATH-有什么意义？"><a href="#问题-：设置-GOPATH-有什么意义？" class="headerlink" title="问题 ：设置 GOPATH 有什么意义？"></a>问题 ：设置 GOPATH 有什么意义？</h2><p>典型回答<br>环境变量 GOPATH 的值可以是一个目录的路径，也可以包含多个目录路径，每个目录都代表 Go 语言的一个工作区（workspace）。<br>这些工作区用于放置 Go 语言的源码文件，以及安装（install）后的归档文件和可执行文件。<br>一个典型的workspace如下：</p>
+<figure class="highlight awk"><table><tr><td class="code"><pre><span class="line">bin/</span><br><span class="line">    hello                 <span class="comment"># command executable </span></span><br><span class="line">pkg/</span><br><span class="line">    linux_amd64/          <span class="comment"># this will reflect your OS and architecture</span></span><br><span class="line">        github.com<span class="regexp">/user/</span></span><br><span class="line">            stringutil.a  <span class="comment"># package object</span></span><br><span class="line">src/</span><br><span class="line">    github.com<span class="regexp">/user/</span></span><br><span class="line">        hello/</span><br><span class="line">            hello.go      <span class="comment"># command source</span></span><br><span class="line">        stringutil/</span><br><span class="line">            reverse.go    <span class="comment"># package source</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="知识扩展"><a href="#知识扩展" class="headerlink" title="知识扩展"></a>知识扩展</h2><h3 id="Go-语言源码的组织方式"><a href="#Go-语言源码的组织方式" class="headerlink" title="Go 语言源码的组织方式"></a>Go 语言源码的组织方式</h3><p>以代码包(package)为基本组织单位的。代码包其实是与目录一一对应的。目录可以有子目录，所以代码包也可以有子包。</p>
+<p>一个代码包中可以包含任意个以.go 为扩展名的源码文件，这些源码文件都需要被声明为属于同一个代码包。代码包的名称一般会与这些源码文件所在的目录同名。如果不同名，那么在构建、安装的过程中会以代码包名称为准。</p>
+<p>代码包的导入：</p>
+<figure class="highlight arduino"><table><tr><td class="code"><pre><span class="line"><span class="keyword">import</span> <span class="string">&quot;github.com/labstack/echo&quot;</span></span><br></pre></td></tr></table></figure>
+
+<p>在工作区中，一个代码包的导入路径实际上就是从 src 子目录，到该包的实际存储位置的相对路径。下面我马上就会谈到 src子目录。<br>插播：Go语言的源码文件有三大类，即：命令源码文件、库源码文件和测试源码文件。</p>
+<h3 id="构建-go-build-和安装-go-install"><a href="#构建-go-build-和安装-go-install" class="headerlink" title="构建(go build)和安装(go install)"></a>构建(go build)和安装(go install)</h3><p>go build: 用于编译我们指定的源码文件或代码包以及它们的依赖包。<br>对于只包含库源码文件的代码包, go build命令在编译时，只会做检查性的编译，操作的结果文件只会存在于临时目录中，立刻自动删除，而不会输出任何结果文件。<br>如果想保留在临时工作目录，不删除掉：</p>
+<figure class="highlight awk"><table><tr><td class="code"><pre><span class="line">➜  stringutil go build -work</span><br><span class="line">WORK=<span class="regexp">/var/</span>folders<span class="regexp">/5s/</span><span class="number">25</span>ck5pv16rg55hr2kfdvtszc0000gp<span class="regexp">/T/g</span>o-build412712988</span><br></pre></td></tr></table></figure>
+<p>如果构建的是命令源码文件，那么操作的结果文件会被搬运到那个源码文件所在的目录中。</p>
+<figure class="highlight vim"><table><tr><td class="code"><pre><span class="line">➜  hello gi<span class="variable">t:</span>(master) ✗ <span class="keyword">ls</span></span><br><span class="line">hello.<span class="keyword">go</span></span><br><span class="line">➜  hello gi<span class="variable">t:</span>(master) ✗ <span class="keyword">go</span> build</span><br><span class="line">➜  hello gi<span class="variable">t:</span>(master) ✗ <span class="keyword">ls</span></span><br><span class="line">hello    hello.<span class="keyword">go</span></span><br></pre></td></tr></table></figure>
+<p>go install: 安装操作会先执行构建(go build)，然后还会进行链接操作，并且把结果文件搬运到指定目录。<br>进一步说，如果安装的是库源码文件，那么结果文件会被搬运到它所在工作区的 pkg 目录下的某个子目录中。</p>
+<figure class="highlight awk"><table><tr><td class="code"><pre><span class="line">➜  XuSenqi ls <span class="regexp">/Users/</span>patrick.xu<span class="regexp">/go/</span>pkg<span class="regexp">/darwin_amd64/gi</span>thub.com/XuSenqi</span><br><span class="line">➜  XuSenqi go install github.com<span class="regexp">/XuSenqi/</span>stringutil</span><br><span class="line">➜  XuSenqi ls <span class="regexp">/Users/</span>patrick.xu<span class="regexp">/go/</span>pkg<span class="regexp">/darwin_amd64/gi</span>thub.com/XuSenqi</span><br><span class="line">stringutil.a</span><br></pre></td></tr></table></figure>
+
+<p>如果安装的是命令源码文件，那么结果文件会被搬运到它所在工作区的 bin 目录中，或者环境变量GOBIN指向的目录中。同时，依赖的代码包也会安装到pgk下对应的目录中。</p>
+<figure class="highlight gradle"><table><tr><td class="code"><pre><span class="line">➜  XuSenqi ls <span class="regexp">/Users/</span>patrick.xu<span class="regexp">/go/</span>pkg<span class="regexp">/darwin_amd64/gi</span>thub.com/XuSenqi</span><br><span class="line">➜  XuSenqi ls <span class="regexp">/Users/</span>patrick.xu<span class="regexp">/go/</span>bin/hello</span><br><span class="line">ls: <span class="regexp">/Users/</span>patrick.xu<span class="regexp">/go/</span>bin/hello: No such <span class="keyword">file</span> or directory</span><br><span class="line">➜  XuSenqi go install github.com<span class="regexp">/XuSenqi/</span>hello/</span><br><span class="line">➜  XuSenqi ls <span class="regexp">/Users/</span>patrick.xu<span class="regexp">/go/</span>pkg<span class="regexp">/darwin_amd64/gi</span>thub.com/XuSenqi</span><br><span class="line">stringutil.a</span><br><span class="line">➜  XuSenqi ls <span class="regexp">/Users/</span>patrick.xu<span class="regexp">/go/</span>bin/hello</span><br><span class="line"><span class="regexp">/Users/</span>patrick.xu<span class="regexp">/go/</span>bin/hello</span><br></pre></td></tr></table></figure>
+<h3 id="go-build-命令一些可选项的用途和用法"><a href="#go-build-命令一些可选项的用途和用法" class="headerlink" title="go build 命令一些可选项的用途和用法"></a>go build 命令一些可选项的用途和用法</h3><p>在运行go build命令的时候，默认不会编译目标代码包所依赖的那些代码包。当然，如果被依赖的代码包的归档文件不存在，或者源码文件有了变化，那它还是会被编译。</p>
+<p>如果要强制编译它们，可以在执行命令的时候加入标记-a。此时，不但目标代码包总是会被编译，它依赖的代码包也总会被编译，即使依赖的是标准库中的代码包也是如此。</p>
+<p>表1 go build命令的常用标记说明</p>
+<table>
+<thead>
+<tr>
+<th>标记名称</th>
+<th align="center">标记描述</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>-a</td>
+<td align="center">强行对所有涉及到的代码包（包含标准库中的代码包）进行重新构建，即使它们已经是最新的了。</td>
+</tr>
+<tr>
+<td>-n</td>
+<td align="center">打印编译期间所用到的其它命令，但是并不真正执行它们。</td>
+</tr>
+<tr>
+<td>-p n</td>
+<td align="center">指定编译过程中执行各任务的并行数量（确切地说应该是并发数量）。在默认情况下，该数量等于CPU的逻辑核数。但是在darwin/arm平台（即iPhone和iPad所用的平台）下，该数量默认是1。</td>
+</tr>
+<tr>
+<td>-race</td>
+<td align="center">开启竞态条件的检测。不过此标记目前仅在linux/amd64、freebsd/amd64、darwin/amd64和windows/amd64平台下受到支持。</td>
+</tr>
+<tr>
+<td>-v</td>
+<td align="center">打印出那些被编译的代码包的名字。</td>
+</tr>
+<tr>
+<td>-work</td>
+<td align="center">打印出编译时生成的临时工作目录的路径，并在编译结束时保留它。在默认情况下，编译结束时会删除该目录。</td>
+</tr>
+<tr>
+<td>-x</td>
+<td align="center">打印编译期间所用到的其它命令。注意它与-n标记的区别。</td>
+</tr>
+</tbody></table>
+<h3 id="go-get"><a href="#go-get" class="headerlink" title="go get"></a>go get</h3><p>go get可以根据要求和实际情况从互联网上下载或更新指定的代码包及其依赖包，并对它们进行go build和go install。</p>
+<figure class="highlight awk"><table><tr><td class="code"><pre><span class="line">➜  XuSenqi go get github.com<span class="regexp">/hyper-carrot/g</span>o_lib/logging</span><br><span class="line">➜  XuSenqi ls <span class="variable">$GOPATH</span><span class="regexp">/src/gi</span>thub.com<span class="regexp">/hyper-carrot/g</span>o_lib/logging</span><br><span class="line">base.go           console_logger.go log_manager.go    logger_test.go    tag.go</span><br><span class="line">➜  XuSenqi ls <span class="regexp">/Users/</span>patrick.xu<span class="regexp">/go/</span>pkg<span class="regexp">/darwin_amd64/gi</span>thub.com<span class="regexp">/hyper-carrot/g</span>o_lib/logging.a</span><br><span class="line"><span class="regexp">/Users/</span>patrick.xu<span class="regexp">/go/</span>pkg<span class="regexp">/darwin_amd64/gi</span>thub.com<span class="regexp">/hyper-carrot/g</span>o_lib/logging.a</span><br></pre></td></tr></table></figure>
+<p>表2 go get命令的常用标记说明</p>
+<table>
+<thead>
+<tr>
+<th>标记名称</th>
+<th align="center">标记描述</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>-d</td>
+<td align="center">让命令程序只执行下载动作，而不执行安装动作。</td>
+</tr>
+<tr>
+<td>-u</td>
+<td align="center">让命令利用网络来更新已有代码包及其依赖包。默认情况下，该命令只会从网络上下载本地不存在的代码包，而不会更新已有的代码包。</td>
+</tr>
+</tbody></table>
+<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><p>go build<br><a href="http://wiki.jikexueyuan.com/project/go-command-tutorial/0.1.html">http://wiki.jikexueyuan.com/project/go-command-tutorial/0.1.html</a><br>go get<br><a href="http://wiki.jikexueyuan.com/project/go-command-tutorial/0.3.html">http://wiki.jikexueyuan.com/project/go-command-tutorial/0.3.html</a><br><a href="https://github.com/hyper0x/go_command_tutorial/blob/master/0.3.md">https://github.com/hyper0x/go_command_tutorial/blob/master/0.3.md</a></p>
+]]></content>
+      <categories>
+        <category>Go</category>
+      </categories>
+      <tags>
+        <tag>Go</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>c++ profile的大杀器-gperftools的使用</title>
     <url>/2020/12/06/C++Profile%E7%9A%84%E5%A4%A7%E6%9D%80%E5%99%A8_gperftools%E7%9A%84%E4%BD%BF%E7%94%A8/</url>
     <content><![CDATA[<p>熟悉golang的同学，一定很熟悉用pprof来作为性能分析和可视化的工具，包括 cpu profile, memery profile等。这么方便且炫的功能，在C++里也一样能实现。所需要的工具就是gperftools。</p>
@@ -155,104 +253,6 @@
         <tag>c++</tag>
         <tag>profile</tag>
         <tag>gperftools</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>Go语言 - 01 工作区和GOPATH</title>
-    <url>/2018/08/12/Go%E8%AF%AD%E8%A8%80-01-%E5%B7%A5%E4%BD%9C%E5%8C%BA%E5%92%8CGOPATH/</url>
-    <content><![CDATA[<h2 id="Go语言的安装"><a href="#Go语言的安装" class="headerlink" title="Go语言的安装"></a>Go语言的安装</h2><p>参照官网文档 <a href="https://golang.org/doc/install">https://golang.org/doc/install</a><br>可以在命令行中输入命令来验证是否安装成功：</p>
-<ul>
-<li>go version：查看安装的版本</li>
-<li>go env：当前go的配置环境</li>
-</ul>
-<p>2个环境变量，即 GOROOT、GOPATH和GOBIN:</p>
-<ul>
-<li>GOROOT：go的安装路径</li>
-<li>GOPATH：go的工作路径<span id="more"></span></li>
-</ul>
-<h2 id="问题-：设置-GOPATH-有什么意义？"><a href="#问题-：设置-GOPATH-有什么意义？" class="headerlink" title="问题 ：设置 GOPATH 有什么意义？"></a>问题 ：设置 GOPATH 有什么意义？</h2><p>典型回答<br>环境变量 GOPATH 的值可以是一个目录的路径，也可以包含多个目录路径，每个目录都代表 Go 语言的一个工作区（workspace）。<br>这些工作区用于放置 Go 语言的源码文件，以及安装（install）后的归档文件和可执行文件。<br>一个典型的workspace如下：</p>
-<figure class="highlight awk"><table><tr><td class="code"><pre><span class="line">bin/</span><br><span class="line">    hello                 <span class="comment"># command executable </span></span><br><span class="line">pkg/</span><br><span class="line">    linux_amd64/          <span class="comment"># this will reflect your OS and architecture</span></span><br><span class="line">        github.com<span class="regexp">/user/</span></span><br><span class="line">            stringutil.a  <span class="comment"># package object</span></span><br><span class="line">src/</span><br><span class="line">    github.com<span class="regexp">/user/</span></span><br><span class="line">        hello/</span><br><span class="line">            hello.go      <span class="comment"># command source</span></span><br><span class="line">        stringutil/</span><br><span class="line">            reverse.go    <span class="comment"># package source</span></span><br></pre></td></tr></table></figure>
-
-<h2 id="知识扩展"><a href="#知识扩展" class="headerlink" title="知识扩展"></a>知识扩展</h2><h3 id="Go-语言源码的组织方式"><a href="#Go-语言源码的组织方式" class="headerlink" title="Go 语言源码的组织方式"></a>Go 语言源码的组织方式</h3><p>以代码包(package)为基本组织单位的。代码包其实是与目录一一对应的。目录可以有子目录，所以代码包也可以有子包。</p>
-<p>一个代码包中可以包含任意个以.go 为扩展名的源码文件，这些源码文件都需要被声明为属于同一个代码包。代码包的名称一般会与这些源码文件所在的目录同名。如果不同名，那么在构建、安装的过程中会以代码包名称为准。</p>
-<p>代码包的导入：</p>
-<figure class="highlight arduino"><table><tr><td class="code"><pre><span class="line"><span class="keyword">import</span> <span class="string">&quot;github.com/labstack/echo&quot;</span></span><br></pre></td></tr></table></figure>
-
-<p>在工作区中，一个代码包的导入路径实际上就是从 src 子目录，到该包的实际存储位置的相对路径。下面我马上就会谈到 src子目录。<br>插播：Go语言的源码文件有三大类，即：命令源码文件、库源码文件和测试源码文件。</p>
-<h3 id="构建-go-build-和安装-go-install"><a href="#构建-go-build-和安装-go-install" class="headerlink" title="构建(go build)和安装(go install)"></a>构建(go build)和安装(go install)</h3><p>go build: 用于编译我们指定的源码文件或代码包以及它们的依赖包。<br>对于只包含库源码文件的代码包, go build命令在编译时，只会做检查性的编译，操作的结果文件只会存在于临时目录中，立刻自动删除，而不会输出任何结果文件。<br>如果想保留在临时工作目录，不删除掉：</p>
-<figure class="highlight awk"><table><tr><td class="code"><pre><span class="line">➜  stringutil go build -work</span><br><span class="line">WORK=<span class="regexp">/var/</span>folders<span class="regexp">/5s/</span><span class="number">25</span>ck5pv16rg55hr2kfdvtszc0000gp<span class="regexp">/T/g</span>o-build412712988</span><br></pre></td></tr></table></figure>
-<p>如果构建的是命令源码文件，那么操作的结果文件会被搬运到那个源码文件所在的目录中。</p>
-<figure class="highlight vim"><table><tr><td class="code"><pre><span class="line">➜  hello gi<span class="variable">t:</span>(master) ✗ <span class="keyword">ls</span></span><br><span class="line">hello.<span class="keyword">go</span></span><br><span class="line">➜  hello gi<span class="variable">t:</span>(master) ✗ <span class="keyword">go</span> build</span><br><span class="line">➜  hello gi<span class="variable">t:</span>(master) ✗ <span class="keyword">ls</span></span><br><span class="line">hello    hello.<span class="keyword">go</span></span><br></pre></td></tr></table></figure>
-<p>go install: 安装操作会先执行构建(go build)，然后还会进行链接操作，并且把结果文件搬运到指定目录。<br>进一步说，如果安装的是库源码文件，那么结果文件会被搬运到它所在工作区的 pkg 目录下的某个子目录中。</p>
-<figure class="highlight awk"><table><tr><td class="code"><pre><span class="line">➜  XuSenqi ls <span class="regexp">/Users/</span>patrick.xu<span class="regexp">/go/</span>pkg<span class="regexp">/darwin_amd64/gi</span>thub.com/XuSenqi</span><br><span class="line">➜  XuSenqi go install github.com<span class="regexp">/XuSenqi/</span>stringutil</span><br><span class="line">➜  XuSenqi ls <span class="regexp">/Users/</span>patrick.xu<span class="regexp">/go/</span>pkg<span class="regexp">/darwin_amd64/gi</span>thub.com/XuSenqi</span><br><span class="line">stringutil.a</span><br></pre></td></tr></table></figure>
-
-<p>如果安装的是命令源码文件，那么结果文件会被搬运到它所在工作区的 bin 目录中，或者环境变量GOBIN指向的目录中。同时，依赖的代码包也会安装到pgk下对应的目录中。</p>
-<figure class="highlight gradle"><table><tr><td class="code"><pre><span class="line">➜  XuSenqi ls <span class="regexp">/Users/</span>patrick.xu<span class="regexp">/go/</span>pkg<span class="regexp">/darwin_amd64/gi</span>thub.com/XuSenqi</span><br><span class="line">➜  XuSenqi ls <span class="regexp">/Users/</span>patrick.xu<span class="regexp">/go/</span>bin/hello</span><br><span class="line">ls: <span class="regexp">/Users/</span>patrick.xu<span class="regexp">/go/</span>bin/hello: No such <span class="keyword">file</span> or directory</span><br><span class="line">➜  XuSenqi go install github.com<span class="regexp">/XuSenqi/</span>hello/</span><br><span class="line">➜  XuSenqi ls <span class="regexp">/Users/</span>patrick.xu<span class="regexp">/go/</span>pkg<span class="regexp">/darwin_amd64/gi</span>thub.com/XuSenqi</span><br><span class="line">stringutil.a</span><br><span class="line">➜  XuSenqi ls <span class="regexp">/Users/</span>patrick.xu<span class="regexp">/go/</span>bin/hello</span><br><span class="line"><span class="regexp">/Users/</span>patrick.xu<span class="regexp">/go/</span>bin/hello</span><br></pre></td></tr></table></figure>
-<h3 id="go-build-命令一些可选项的用途和用法"><a href="#go-build-命令一些可选项的用途和用法" class="headerlink" title="go build 命令一些可选项的用途和用法"></a>go build 命令一些可选项的用途和用法</h3><p>在运行go build命令的时候，默认不会编译目标代码包所依赖的那些代码包。当然，如果被依赖的代码包的归档文件不存在，或者源码文件有了变化，那它还是会被编译。</p>
-<p>如果要强制编译它们，可以在执行命令的时候加入标记-a。此时，不但目标代码包总是会被编译，它依赖的代码包也总会被编译，即使依赖的是标准库中的代码包也是如此。</p>
-<p>表1 go build命令的常用标记说明</p>
-<table>
-<thead>
-<tr>
-<th>标记名称</th>
-<th align="center">标记描述</th>
-</tr>
-</thead>
-<tbody><tr>
-<td>-a</td>
-<td align="center">强行对所有涉及到的代码包（包含标准库中的代码包）进行重新构建，即使它们已经是最新的了。</td>
-</tr>
-<tr>
-<td>-n</td>
-<td align="center">打印编译期间所用到的其它命令，但是并不真正执行它们。</td>
-</tr>
-<tr>
-<td>-p n</td>
-<td align="center">指定编译过程中执行各任务的并行数量（确切地说应该是并发数量）。在默认情况下，该数量等于CPU的逻辑核数。但是在darwin/arm平台（即iPhone和iPad所用的平台）下，该数量默认是1。</td>
-</tr>
-<tr>
-<td>-race</td>
-<td align="center">开启竞态条件的检测。不过此标记目前仅在linux/amd64、freebsd/amd64、darwin/amd64和windows/amd64平台下受到支持。</td>
-</tr>
-<tr>
-<td>-v</td>
-<td align="center">打印出那些被编译的代码包的名字。</td>
-</tr>
-<tr>
-<td>-work</td>
-<td align="center">打印出编译时生成的临时工作目录的路径，并在编译结束时保留它。在默认情况下，编译结束时会删除该目录。</td>
-</tr>
-<tr>
-<td>-x</td>
-<td align="center">打印编译期间所用到的其它命令。注意它与-n标记的区别。</td>
-</tr>
-</tbody></table>
-<h3 id="go-get"><a href="#go-get" class="headerlink" title="go get"></a>go get</h3><p>go get可以根据要求和实际情况从互联网上下载或更新指定的代码包及其依赖包，并对它们进行go build和go install。</p>
-<figure class="highlight awk"><table><tr><td class="code"><pre><span class="line">➜  XuSenqi go get github.com<span class="regexp">/hyper-carrot/g</span>o_lib/logging</span><br><span class="line">➜  XuSenqi ls <span class="variable">$GOPATH</span><span class="regexp">/src/gi</span>thub.com<span class="regexp">/hyper-carrot/g</span>o_lib/logging</span><br><span class="line">base.go           console_logger.go log_manager.go    logger_test.go    tag.go</span><br><span class="line">➜  XuSenqi ls <span class="regexp">/Users/</span>patrick.xu<span class="regexp">/go/</span>pkg<span class="regexp">/darwin_amd64/gi</span>thub.com<span class="regexp">/hyper-carrot/g</span>o_lib/logging.a</span><br><span class="line"><span class="regexp">/Users/</span>patrick.xu<span class="regexp">/go/</span>pkg<span class="regexp">/darwin_amd64/gi</span>thub.com<span class="regexp">/hyper-carrot/g</span>o_lib/logging.a</span><br></pre></td></tr></table></figure>
-<p>表2 go get命令的常用标记说明</p>
-<table>
-<thead>
-<tr>
-<th>标记名称</th>
-<th align="center">标记描述</th>
-</tr>
-</thead>
-<tbody><tr>
-<td>-d</td>
-<td align="center">让命令程序只执行下载动作，而不执行安装动作。</td>
-</tr>
-<tr>
-<td>-u</td>
-<td align="center">让命令利用网络来更新已有代码包及其依赖包。默认情况下，该命令只会从网络上下载本地不存在的代码包，而不会更新已有的代码包。</td>
-</tr>
-</tbody></table>
-<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><p>go build<br><a href="http://wiki.jikexueyuan.com/project/go-command-tutorial/0.1.html">http://wiki.jikexueyuan.com/project/go-command-tutorial/0.1.html</a><br>go get<br><a href="http://wiki.jikexueyuan.com/project/go-command-tutorial/0.3.html">http://wiki.jikexueyuan.com/project/go-command-tutorial/0.3.html</a><br><a href="https://github.com/hyper0x/go_command_tutorial/blob/master/0.3.md">https://github.com/hyper0x/go_command_tutorial/blob/master/0.3.md</a></p>
-]]></content>
-      <categories>
-        <category>Go</category>
-      </categories>
-      <tags>
-        <tag>Go</tag>
       </tags>
   </entry>
   <entry>
@@ -1465,6 +1465,31 @@
       </tags>
   </entry>
   <entry>
+    <title>并发控制</title>
+    <url>/2018/08/14/%E5%B9%B6%E5%8F%91%E6%8E%A7%E5%88%B6/</url>
+    <content><![CDATA[<h2 id="并发场景"><a href="#并发场景" class="headerlink" title="并发场景"></a>并发场景</h2><p>秒杀场景，多人并发申请购买同一种商品。<br>下面以2人抢购同一件商品举例，商品数量为1。<br>基本流程如下：</p>
+<img src="/2018/08/14/%E5%B9%B6%E5%8F%91%E6%8E%A7%E5%88%B6/%E8%B4%AD%E4%B9%B0%E8%AE%B0%E5%BD%95.png" class="" title="image">
+<p>这个流程中存在明显的并发问题，当进程A查看有1个商品，但未开始创建购买记录，此时另一个进程B也进行了资源检查，发现有1个商品，顺利通过，并完成购买操作，此时A继续执行，则1个商品会产生两条购买的记录。（这个并发场景很简单，很普遍）</p>
+<h2 id="解决方案"><a href="#解决方案" class="headerlink" title="解决方案"></a>解决方案</h2><p>解决方案通常是2类：<br>1 通过将请求分发到不同set，减少并发的可能性，分而治之。这里暂时不讨论。<br>2 当收到并发请求时，如何处理。</p>
+<h3 id="加锁操作先占有锁资源，再占有资源"><a href="#加锁操作先占有锁资源，再占有资源" class="headerlink" title="加锁操作先占有锁资源，再占有资源"></a>加锁操作先占有锁资源，再占有资源</h3><p>a. 锁库存<br>b. 插入“秒杀”记录<br>c. 更新库存</p>
+<p>“秒杀”系统的设计难点就在这个事务操作上。商品库存在DB中记为一行，大量用户同时“秒杀”同一商品时，第一个到达DB的请求锁住了这行库存记录。在第一个事务完成提交之前这个锁一直被第一个请求占用，其他到达的请求全部失败。</p>
+<p>加锁的方案，效率会比较低。实际应用时，通常要配合排队系统，让没有获取到锁的请求排队。</p>
+<h3 id="单独开发请求排队调度模块"><a href="#单独开发请求排队调度模块" class="headerlink" title="单独开发请求排队调度模块"></a>单独开发请求排队调度模块</h3><p>排队模块接收用户的抢红包请求，以FIFO模式保存下来，调度模块负责FIFO队列的动态调度，一旦有空闲资源，便从队列头部把用户的访问请求取出后交给真正提供服务的模块处理。优点是，具有中心节点的统一资源管理，对系统的可控性强，可深度定制。缺点是，所有请求流量都会有中心节点参与，效率必然会比分布式无中心系统低，并且，中心节点也很容易成为整个系统的性能瓶颈。</p>
+<h3 id="巧用Redis-特性，使其成为分布式序号生成器（我们最终采用的做法）-–-具体还要再看，如何利用redis的特性"><a href="#巧用Redis-特性，使其成为分布式序号生成器（我们最终采用的做法）-–-具体还要再看，如何利用redis的特性" class="headerlink" title="巧用Redis 特性，使其成为分布式序号生成器（我们最终采用的做法） – 具体还要再看，如何利用redis的特性"></a>巧用Redis 特性，使其成为分布式序号生成器（我们最终采用的做法） – 具体还要再看，如何利用redis的特性</h3><p>参考<br><a href="https://www.ibm.com/developerworks/cn/web/wa-design-small-and-good-kill-system/index.html">https://www.ibm.com/developerworks/cn/web/wa-design-small-and-good-kill-system/index.html</a><br><a href="https://blog.csdn.net/zhanjianshinian/article/details/53342730">https://blog.csdn.net/zhanjianshinian/article/details/53342730</a><br>每件商品以一个数字ID来标识，这个ID是全局唯一的，所有围绕商品的操作都使用这个ID作为数据的关联项。</p>
+<p>Redis节点内存储的是这个分组可以分发的商品ID号段，利用Redis特性实现红包分发，各服务节点通过Redis原语获取当前拆到的红包。这种做法的思路是，Redis 本身是单进程工作模型，来自分布式系统各个节点的操作请求天然的被 Redis Server 做了一个同步队列，只要每个请求执行的足够快，这个队列就不会引起阻塞及请求超时。而本例中我们使用了 DECR 原语，性能上是可以满足需求的。Redis 在这里相当于是充当一个分布式序号发生器的功能，分发红包 ID。</p>
+<h3 id="通过memcached来控制并发数-–-具体还要再看"><a href="#通过memcached来控制并发数-–-具体还要再看" class="headerlink" title="通过memcached来控制并发数 – 具体还要再看"></a>通过memcached来控制并发数 – 具体还要再看</h3><p><a href="https://blog.csdn.net/echo3/article/details/17580347">https://blog.csdn.net/echo3/article/details/17580347</a>  使用memcached进行并发控制（写的非常好）<br><a href="http://www.infoq.com/cn/articles/2017hongbao-weixin#">http://www.infoq.com/cn/articles/2017hongbao-weixin#</a>  百亿级微信红包的高并发资金交易系统设计方案<br><a href="https://blog.csdn.net/yanker1990/article/details/78737626">https://blog.csdn.net/yanker1990/article/details/78737626</a>  Memcache的并发问题和利用CAS的解决方案</p>
+<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><p>如何设计一个小而美的秒杀系统？<br><a href="https://www.ibm.com/developerworks/cn/web/wa-design-small-and-good-kill-system/index.html">https://www.ibm.com/developerworks/cn/web/wa-design-small-and-good-kill-system/index.html</a><br>使用memcached进行并发控制（写的非常好）<br><a href="https://blog.csdn.net/echo3/article/details/17580347">https://blog.csdn.net/echo3/article/details/17580347</a><br>电商秒杀系统设计分析<br><a href="https://blog.csdn.net/zhanjianshinian/article/details/53342730">https://blog.csdn.net/zhanjianshinian/article/details/53342730</a></p>
+<p><a href="https://memcached.org/about">https://memcached.org/about</a><br>Redis DECR命令<br><a href="https://www.kancloud.cn/thinkphp/redis-quickstart/36180">https://www.kancloud.cn/thinkphp/redis-quickstart/36180</a></p>
+<p>云主机的问题:<br>申请时要排队，好像没有意义。<br>防止申请到同一台宿主机，前面做的临时添加资源是否有用。跟定时更新是否有冲突？</p>
+]]></content>
+      <categories>
+        <category>架构设计</category>
+      </categories>
+      <tags>
+        <tag>并发控制</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>文件删除空间未释放的例子</title>
     <url>/2018/11/10/%E6%96%87%E4%BB%B6%E5%B7%B2%E5%88%A0%E9%99%A4%E7%A9%BA%E9%97%B4%E6%9C%AA%E9%87%8A%E6%94%BE%E7%9A%84%E4%BE%8B%E5%AD%90/</url>
     <content><![CDATA[<h2 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h2><p>在删除文件后，有时会遇到磁盘空间并未被释放的场景。这里自己尝试复现，并去做相关的说明。</p>
@@ -1512,31 +1537,6 @@
       </categories>
       <tags>
         <tag>文件系统</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>并发控制</title>
-    <url>/2018/08/14/%E5%B9%B6%E5%8F%91%E6%8E%A7%E5%88%B6/</url>
-    <content><![CDATA[<h2 id="并发场景"><a href="#并发场景" class="headerlink" title="并发场景"></a>并发场景</h2><p>秒杀场景，多人并发申请购买同一种商品。<br>下面以2人抢购同一件商品举例，商品数量为1。<br>基本流程如下：</p>
-<img src="/2018/08/14/%E5%B9%B6%E5%8F%91%E6%8E%A7%E5%88%B6/%E8%B4%AD%E4%B9%B0%E8%AE%B0%E5%BD%95.png" class="" title="image">
-<p>这个流程中存在明显的并发问题，当进程A查看有1个商品，但未开始创建购买记录，此时另一个进程B也进行了资源检查，发现有1个商品，顺利通过，并完成购买操作，此时A继续执行，则1个商品会产生两条购买的记录。（这个并发场景很简单，很普遍）</p>
-<h2 id="解决方案"><a href="#解决方案" class="headerlink" title="解决方案"></a>解决方案</h2><p>解决方案通常是2类：<br>1 通过将请求分发到不同set，减少并发的可能性，分而治之。这里暂时不讨论。<br>2 当收到并发请求时，如何处理。</p>
-<h3 id="加锁操作先占有锁资源，再占有资源"><a href="#加锁操作先占有锁资源，再占有资源" class="headerlink" title="加锁操作先占有锁资源，再占有资源"></a>加锁操作先占有锁资源，再占有资源</h3><p>a. 锁库存<br>b. 插入“秒杀”记录<br>c. 更新库存</p>
-<p>“秒杀”系统的设计难点就在这个事务操作上。商品库存在DB中记为一行，大量用户同时“秒杀”同一商品时，第一个到达DB的请求锁住了这行库存记录。在第一个事务完成提交之前这个锁一直被第一个请求占用，其他到达的请求全部失败。</p>
-<p>加锁的方案，效率会比较低。实际应用时，通常要配合排队系统，让没有获取到锁的请求排队。</p>
-<h3 id="单独开发请求排队调度模块"><a href="#单独开发请求排队调度模块" class="headerlink" title="单独开发请求排队调度模块"></a>单独开发请求排队调度模块</h3><p>排队模块接收用户的抢红包请求，以FIFO模式保存下来，调度模块负责FIFO队列的动态调度，一旦有空闲资源，便从队列头部把用户的访问请求取出后交给真正提供服务的模块处理。优点是，具有中心节点的统一资源管理，对系统的可控性强，可深度定制。缺点是，所有请求流量都会有中心节点参与，效率必然会比分布式无中心系统低，并且，中心节点也很容易成为整个系统的性能瓶颈。</p>
-<h3 id="巧用Redis-特性，使其成为分布式序号生成器（我们最终采用的做法）-–-具体还要再看，如何利用redis的特性"><a href="#巧用Redis-特性，使其成为分布式序号生成器（我们最终采用的做法）-–-具体还要再看，如何利用redis的特性" class="headerlink" title="巧用Redis 特性，使其成为分布式序号生成器（我们最终采用的做法） – 具体还要再看，如何利用redis的特性"></a>巧用Redis 特性，使其成为分布式序号生成器（我们最终采用的做法） – 具体还要再看，如何利用redis的特性</h3><p>参考<br><a href="https://www.ibm.com/developerworks/cn/web/wa-design-small-and-good-kill-system/index.html">https://www.ibm.com/developerworks/cn/web/wa-design-small-and-good-kill-system/index.html</a><br><a href="https://blog.csdn.net/zhanjianshinian/article/details/53342730">https://blog.csdn.net/zhanjianshinian/article/details/53342730</a><br>每件商品以一个数字ID来标识，这个ID是全局唯一的，所有围绕商品的操作都使用这个ID作为数据的关联项。</p>
-<p>Redis节点内存储的是这个分组可以分发的商品ID号段，利用Redis特性实现红包分发，各服务节点通过Redis原语获取当前拆到的红包。这种做法的思路是，Redis 本身是单进程工作模型，来自分布式系统各个节点的操作请求天然的被 Redis Server 做了一个同步队列，只要每个请求执行的足够快，这个队列就不会引起阻塞及请求超时。而本例中我们使用了 DECR 原语，性能上是可以满足需求的。Redis 在这里相当于是充当一个分布式序号发生器的功能，分发红包 ID。</p>
-<h3 id="通过memcached来控制并发数-–-具体还要再看"><a href="#通过memcached来控制并发数-–-具体还要再看" class="headerlink" title="通过memcached来控制并发数 – 具体还要再看"></a>通过memcached来控制并发数 – 具体还要再看</h3><p><a href="https://blog.csdn.net/echo3/article/details/17580347">https://blog.csdn.net/echo3/article/details/17580347</a>  使用memcached进行并发控制（写的非常好）<br><a href="http://www.infoq.com/cn/articles/2017hongbao-weixin#">http://www.infoq.com/cn/articles/2017hongbao-weixin#</a>  百亿级微信红包的高并发资金交易系统设计方案<br><a href="https://blog.csdn.net/yanker1990/article/details/78737626">https://blog.csdn.net/yanker1990/article/details/78737626</a>  Memcache的并发问题和利用CAS的解决方案</p>
-<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><p>如何设计一个小而美的秒杀系统？<br><a href="https://www.ibm.com/developerworks/cn/web/wa-design-small-and-good-kill-system/index.html">https://www.ibm.com/developerworks/cn/web/wa-design-small-and-good-kill-system/index.html</a><br>使用memcached进行并发控制（写的非常好）<br><a href="https://blog.csdn.net/echo3/article/details/17580347">https://blog.csdn.net/echo3/article/details/17580347</a><br>电商秒杀系统设计分析<br><a href="https://blog.csdn.net/zhanjianshinian/article/details/53342730">https://blog.csdn.net/zhanjianshinian/article/details/53342730</a></p>
-<p><a href="https://memcached.org/about">https://memcached.org/about</a><br>Redis DECR命令<br><a href="https://www.kancloud.cn/thinkphp/redis-quickstart/36180">https://www.kancloud.cn/thinkphp/redis-quickstart/36180</a></p>
-<p>云主机的问题:<br>申请时要排队，好像没有意义。<br>防止申请到同一台宿主机，前面做的临时添加资源是否有用。跟定时更新是否有冲突？</p>
-]]></content>
-      <categories>
-        <category>架构设计</category>
-      </categories>
-      <tags>
-        <tag>并发控制</tag>
       </tags>
   </entry>
   <entry>
