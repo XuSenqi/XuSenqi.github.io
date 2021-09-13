@@ -56,13 +56,15 @@
 <meta property="og:description" content="IO模型一个IO输入操作通常包括2个阶段：  等待数据准备好； 从内核向进程复制数据。  对于网络IO模型，这2步分别是：  等待数据从网络到达。当所等待分组到达时，它被复制到内核中的某个缓冲区； 把数据从内核缓冲区复制到应用进程缓冲区。">
 <meta property="og:locale">
 <meta property="og:image" content="https://xusenqi.github.io/2021/09/05/%E4%B8%8D%E5%90%8CIO%E6%A8%A1%E5%9E%8B%E7%9A%84%E6%AF%94%E8%BE%83/%E9%98%BB%E5%A1%9E%E5%BC%8FIO%E6%A8%A1%E5%9E%8B.png">
+<meta property="og:image" content="https://xusenqi.github.io/2021/09/05/%E4%B8%8D%E5%90%8CIO%E6%A8%A1%E5%9E%8B%E7%9A%84%E6%AF%94%E8%BE%83/%E5%8D%95%E7%BA%BF%E7%A8%8Bcs.png">
+<meta property="og:image" content="https://xusenqi.github.io/2021/09/05/%E4%B8%8D%E5%90%8CIO%E6%A8%A1%E5%9E%8B%E7%9A%84%E6%AF%94%E8%BE%83/%E5%A4%9A%E7%BA%BF%E7%A8%8Bcs.png">
 <meta property="og:image" content="https://xusenqi.github.io/2021/09/05/%E4%B8%8D%E5%90%8CIO%E6%A8%A1%E5%9E%8B%E7%9A%84%E6%AF%94%E8%BE%83/%E9%9D%9E%E9%98%BB%E5%A1%9EIO%E6%A8%A1%E5%9E%8B.png">
 <meta property="og:image" content="https://xusenqi.github.io/2021/09/05/%E4%B8%8D%E5%90%8CIO%E6%A8%A1%E5%9E%8B%E7%9A%84%E6%AF%94%E8%BE%83/IO%E5%A4%9A%E8%B7%AF%E5%A4%8D%E7%94%A8.png">
 <meta property="og:image" content="https://xusenqi.github.io/2021/09/05/%E4%B8%8D%E5%90%8CIO%E6%A8%A1%E5%9E%8B%E7%9A%84%E6%AF%94%E8%BE%83/%E4%BF%A1%E5%8F%B7%E9%A9%B1%E5%8A%A8%E5%BC%8FIO%E6%A8%A1%E5%9E%8B.png">
 <meta property="og:image" content="https://xusenqi.github.io/2021/09/05/%E4%B8%8D%E5%90%8CIO%E6%A8%A1%E5%9E%8B%E7%9A%84%E6%AF%94%E8%BE%83/%E5%BC%82%E6%AD%A5IO%E6%A8%A1%E5%9E%8B.png">
 <meta property="og:image" content="https://xusenqi.github.io/2021/09/05/%E4%B8%8D%E5%90%8CIO%E6%A8%A1%E5%9E%8B%E7%9A%84%E6%AF%94%E8%BE%83/%E6%A8%A1%E5%9E%8B%E6%AF%94%E8%BE%83.png">
 <meta property="article:published_time" content="2021-09-05T08:50:02.000Z">
-<meta property="article:modified_time" content="2021-09-05T09:48:27.763Z">
+<meta property="article:modified_time" content="2021-09-13T07:12:55.111Z">
 <meta property="article:author" content="patrick.xu">
 <meta property="article:tag" content="io">
 <meta property="article:tag" content="linux">
@@ -244,10 +246,16 @@
                 <i class="fa fa-calendar-o"></i>
               </span>
               <span class="post-meta-item-text">发表于</span>
-              
 
-              <time title="创建时间：2021-09-05 16:50:02 / 修改时间：17:48:27" itemprop="dateCreated datePublished" datetime="2021-09-05T16:50:02+08:00">2021-09-05</time>
+              <time title="创建时间：2021-09-05 16:50:02" itemprop="dateCreated datePublished" datetime="2021-09-05T16:50:02+08:00">2021-09-05</time>
             </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-09-13 15:12:55" itemprop="dateModified" datetime="2021-09-13T15:12:55+08:00">2021-09-13</time>
+              </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
                 <i class="fa fa-folder-o"></i>
@@ -331,10 +339,10 @@
 
 <p>blocking IO的特点就是在IO执行的两个阶段（等待数据和拷贝数据两个阶段）都被block了。对网络编程来说，线程将被阻塞，无法执行任何运算或响应任何的网络请求。</p>
 <p>当构建client/server模型时，是简单的“一问一答”的服务器。这种服务器，使用blocking IO，在处理一个client的请求时，无法响应其他client的请求。</p>
-
+<img src="/2021/09/05/%E4%B8%8D%E5%90%8CIO%E6%A8%A1%E5%9E%8B%E7%9A%84%E6%AF%94%E8%BE%83/%E5%8D%95%E7%BA%BF%E7%A8%8Bcs.png" class="" title="WeChatWorkScreenshot_f92023a6-f337-4065-af6a-160afaed88fd">
 
 <p>通常的改进方式是使用多进程/多线程；一般采用消耗资源较轻的多线程。进一步提升性能，可以采用线程池。使用多线程或线程池时，client/server模型为</p>
-
+<img src="/2021/09/05/%E4%B8%8D%E5%90%8CIO%E6%A8%A1%E5%9E%8B%E7%9A%84%E6%AF%94%E8%BE%83/%E5%A4%9A%E7%BA%BF%E7%A8%8Bcs.png" class="" title="WeChatWorkScreenshot_a82f4745-5164-43c3-9abb-5ffaca1c5443">
 
 <p>“线程池”旨在减少创建和销毁线程的频率，其维持一定合理数量的线程，并让空闲的线程重新承担新的执行任务。“连接池”维持连接的缓存池，尽量重用已有的连接、减少创建和关闭连接的频率。</p>
 <p>但依然存在2个问题：</p>

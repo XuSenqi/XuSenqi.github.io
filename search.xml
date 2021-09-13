@@ -1377,10 +1377,10 @@
 
 <p>blocking IO的特点就是在IO执行的两个阶段（等待数据和拷贝数据两个阶段）都被block了。对网络编程来说，线程将被阻塞，无法执行任何运算或响应任何的网络请求。</p>
 <p>当构建client/server模型时，是简单的“一问一答”的服务器。这种服务器，使用blocking IO，在处理一个client的请求时，无法响应其他client的请求。</p>
-
+<img src="/2021/09/05/%E4%B8%8D%E5%90%8CIO%E6%A8%A1%E5%9E%8B%E7%9A%84%E6%AF%94%E8%BE%83/%E5%8D%95%E7%BA%BF%E7%A8%8Bcs.png" class="" title="WeChatWorkScreenshot_f92023a6-f337-4065-af6a-160afaed88fd">
 
 <p>通常的改进方式是使用多进程/多线程；一般采用消耗资源较轻的多线程。进一步提升性能，可以采用线程池。使用多线程或线程池时，client/server模型为</p>
-
+<img src="/2021/09/05/%E4%B8%8D%E5%90%8CIO%E6%A8%A1%E5%9E%8B%E7%9A%84%E6%AF%94%E8%BE%83/%E5%A4%9A%E7%BA%BF%E7%A8%8Bcs.png" class="" title="WeChatWorkScreenshot_a82f4745-5164-43c3-9abb-5ffaca1c5443">
 
 <p>“线程池”旨在减少创建和销毁线程的频率，其维持一定合理数量的线程，并让空闲的线程重新承担新的执行任务。“连接池”维持连接的缓存池，尽量重用已有的连接、减少创建和关闭连接的频率。</p>
 <p>但依然存在2个问题：</p>
@@ -1643,35 +1643,6 @@
       </tags>
   </entry>
   <entry>
-    <title>这些年读过的那些书&amp;&amp;待读清单列表</title>
-    <url>/2019/08/31/%E8%BF%99%E4%BA%9B%E5%B9%B4%E8%AF%BB%E8%BF%87%E7%9A%84%E9%82%A3%E4%BA%9B%E4%B9%A6-%E5%BE%85%E8%AF%BB%E6%B8%85%E5%8D%95%E5%88%97%E8%A1%A8/</url>
-    <content><![CDATA[<p>每年给自己列个计划，要读哪些书，到年尾看看真正看完的有多少。</p>
-<h1 id="2020年待读清单列表"><a href="#2020年待读清单列表" class="headerlink" title="2020年待读清单列表"></a>2020年待读清单列表</h1><ol>
-<li> 《Designing Data-Intensive Applications》</li>
-</ol>
-<h1 id="2019年待读清单列表"><a href="#2019年待读清单列表" class="headerlink" title="2019年待读清单列表"></a>2019年待读清单列表</h1><ol>
-<li>UNIX环境高级编程（第3版）</li>
-<li>重构网络 SDN架构与实现</li>
-<li>软件定义网络</li>
-<li>全球通史 从史前史到21实际 第7版修订版 上</li>
-<li>全球通史 从史前史到21实际 第7版修订版 下<span id="more"></span></li>
-</ol>
-<h1 id="这些年读过的那些书"><a href="#这些年读过的那些书" class="headerlink" title="这些年读过的那些书"></a>这些年读过的那些书</h1><h2 id="2020年"><a href="#2020年" class="headerlink" title="2020年"></a>2020年</h2><ol>
-<li>《深度思考》 深度思考前的盲目勤奋，注定是吃力不讨好的徒劳。香奈儿前全球CEO从普通职员到职场巅峰的人生进阶之路。大脑中走得越远，现实中走得越稳。</li>
-</ol>
-<h2 id="2019年"><a href="#2019年" class="headerlink" title="2019年"></a>2019年</h2><ol>
-<li>《TCP/IP详解 卷1：协议（原书第2版）》 <a href="https://xusenqi.github.io/2019/04/24/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0-TCP-IP%E8%AF%A6%E8%A7%A3-%E5%8D%B71%EF%BC%9A%E5%8D%8F%E8%AE%AE/">读书笔记-TCP/IP详解 卷1：协议</a></li>
-<li>《软技能 代码之外的生存指南（Soft Skills - The Software Developer’s Life Manual）》对于程序员是很不错的心灵鸡汤，从职业、自我营销、学习、生产力等方面，讲述了作者的方法和心得，很值得借鉴。</li>
-</ol>
-]]></content>
-      <categories>
-        <category>读书笔记</category>
-      </categories>
-      <tags>
-        <tag>清单</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>读书笔记-TCP/IP详解 卷1：协议</title>
     <url>/2019/04/24/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0-TCP-IP%E8%AF%A6%E8%A7%A3-%E5%8D%B71%EF%BC%9A%E5%8D%8F%E8%AE%AE/</url>
     <content><![CDATA[<p>不同层的PDU（Protocol Data Unit）</p>
@@ -1825,6 +1796,35 @@
       </categories>
       <tags>
         <tag>网络</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>这些年读过的那些书&amp;&amp;待读清单列表</title>
+    <url>/2019/08/31/%E8%BF%99%E4%BA%9B%E5%B9%B4%E8%AF%BB%E8%BF%87%E7%9A%84%E9%82%A3%E4%BA%9B%E4%B9%A6-%E5%BE%85%E8%AF%BB%E6%B8%85%E5%8D%95%E5%88%97%E8%A1%A8/</url>
+    <content><![CDATA[<p>每年给自己列个计划，要读哪些书，到年尾看看真正看完的有多少。</p>
+<h1 id="2020年待读清单列表"><a href="#2020年待读清单列表" class="headerlink" title="2020年待读清单列表"></a>2020年待读清单列表</h1><ol>
+<li> 《Designing Data-Intensive Applications》</li>
+</ol>
+<h1 id="2019年待读清单列表"><a href="#2019年待读清单列表" class="headerlink" title="2019年待读清单列表"></a>2019年待读清单列表</h1><ol>
+<li>UNIX环境高级编程（第3版）</li>
+<li>重构网络 SDN架构与实现</li>
+<li>软件定义网络</li>
+<li>全球通史 从史前史到21实际 第7版修订版 上</li>
+<li>全球通史 从史前史到21实际 第7版修订版 下<span id="more"></span></li>
+</ol>
+<h1 id="这些年读过的那些书"><a href="#这些年读过的那些书" class="headerlink" title="这些年读过的那些书"></a>这些年读过的那些书</h1><h2 id="2020年"><a href="#2020年" class="headerlink" title="2020年"></a>2020年</h2><ol>
+<li>《深度思考》 深度思考前的盲目勤奋，注定是吃力不讨好的徒劳。香奈儿前全球CEO从普通职员到职场巅峰的人生进阶之路。大脑中走得越远，现实中走得越稳。</li>
+</ol>
+<h2 id="2019年"><a href="#2019年" class="headerlink" title="2019年"></a>2019年</h2><ol>
+<li>《TCP/IP详解 卷1：协议（原书第2版）》 <a href="https://xusenqi.github.io/2019/04/24/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0-TCP-IP%E8%AF%A6%E8%A7%A3-%E5%8D%B71%EF%BC%9A%E5%8D%8F%E8%AE%AE/">读书笔记-TCP/IP详解 卷1：协议</a></li>
+<li>《软技能 代码之外的生存指南（Soft Skills - The Software Developer’s Life Manual）》对于程序员是很不错的心灵鸡汤，从职业、自我营销、学习、生产力等方面，讲述了作者的方法和心得，很值得借鉴。</li>
+</ol>
+]]></content>
+      <categories>
+        <category>读书笔记</category>
+      </categories>
+      <tags>
+        <tag>清单</tag>
       </tags>
   </entry>
   <entry>
