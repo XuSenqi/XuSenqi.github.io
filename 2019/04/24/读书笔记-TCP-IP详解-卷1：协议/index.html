@@ -21,7 +21,7 @@
 <script id="hexo-configurations">
   var NexT = window.NexT || {};
   var CONFIG = {
-    hostname: new URL('https://xusenqi.github.io').hostname,
+    hostname: new URL('https://xusenqi.site').hostname,
     root: '/',
     scheme: 'Gemini',
     version: '7.7.0',
@@ -51,41 +51,41 @@
   <meta name="description" content="不同层的PDU（Protocol Data Unit）  传输层：Segment(帧) 网络层： Packet 链路层：Frame 物理层： Bit">
 <meta property="og:type" content="article">
 <meta property="og:title" content="读书笔记-TCP&#x2F;IP详解 卷1：协议">
-<meta property="og:url" content="https://xusenqi.github.io/2019/04/24/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0-TCP-IP%E8%AF%A6%E8%A7%A3-%E5%8D%B71%EF%BC%9A%E5%8D%8F%E8%AE%AE/index.html">
+<meta property="og:url" content="https://xusenqi.site/2019/04/24/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0-TCP-IP%E8%AF%A6%E8%A7%A3-%E5%8D%B71%EF%BC%9A%E5%8D%8F%E8%AE%AE/index.html">
 <meta property="og:site_name" content="许森琪的博客">
 <meta property="og:description" content="不同层的PDU（Protocol Data Unit）  传输层：Segment(帧) 网络层： Packet 链路层：Frame 物理层： Bit">
 <meta property="og:locale">
-<meta property="og:image" content="https://xusenqi.github.io/2019/04/24/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0-TCP-IP%E8%AF%A6%E8%A7%A3-%E5%8D%B71%EF%BC%9A%E5%8D%8F%E8%AE%AE/%E4%BC%A0%E5%85%A5%E7%9A%84%E5%B8%A7%E5%9C%A8%E4%B8%BB%E6%9C%BA%E4%B8%8A%E7%9A%84%E5%88%86%E8%A7%A3.png">
-<meta property="og:image" content="https://xusenqi.github.io/2019/04/24/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0-TCP-IP%E8%AF%A6%E8%A7%A3-%E5%8D%B71%EF%BC%9A%E5%8D%8F%E8%AE%AE/%E4%BB%A5%E5%A4%AA%E7%BD%91%E5%B8%A7%E6%A0%BC%E5%BC%8F.png">
-<meta property="og:image" content="https://xusenqi.github.io/2019/04/24/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0-TCP-IP%E8%AF%A6%E8%A7%A3-%E5%8D%B71%EF%BC%9A%E5%8D%8F%E8%AE%AE/IPV4%E6%95%B0%E6%8D%AE%E6%8A%A5.png">
-<meta property="og:image" content="https://xusenqi.github.io/2019/04/24/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0-TCP-IP%E8%AF%A6%E8%A7%A3-%E5%8D%B71%EF%BC%9A%E5%8D%8F%E8%AE%AE/DHCP%E4%BA%A4%E6%8D%A2.png">
-<meta property="og:image" content="https://xusenqi.github.io/2019/04/24/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0-TCP-IP%E8%AF%A6%E8%A7%A3-%E5%8D%B71%EF%BC%9A%E5%8D%8F%E8%AE%AE/IPV4_udp%E6%95%B0%E6%8D%AE%E6%8A%A5.jpg">
-<meta property="og:image" content="https://xusenqi.github.io/2019/04/24/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0-TCP-IP%E8%AF%A6%E8%A7%A3-%E5%8D%B71%EF%BC%9A%E5%8D%8F%E8%AE%AE/udp%E5%A4%B4%E9%83%A8%E5%92%8C%E8%B4%9F%E8%BD%BD%E5%8C%BA.jpg">
-<meta property="og:image" content="https://xusenqi.github.io/2019/04/24/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0-TCP-IP%E8%AF%A6%E8%A7%A3-%E5%8D%B71%EF%BC%9A%E5%8D%8F%E8%AE%AE/%E7%94%A8%E4%BA%8E%E8%AE%A1%E7%AE%97UDPIPV4%E6%95%B0%E6%8D%AE%E6%8A%A5%E7%9A%84%E5%AD%97%E6%AE%B5.jpg">
-<meta property="og:image" content="https://xusenqi.github.io/2019/04/24/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0-TCP-IP%E8%AF%A6%E8%A7%A3-%E5%8D%B71%EF%BC%9A%E5%8D%8F%E8%AE%AE/%E5%8F%91%E9%80%81%E6%96%B9%E7%AA%97%E5%8F%A3.png">
-<meta property="og:image" content="https://xusenqi.github.io/2019/04/24/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0-TCP-IP%E8%AF%A6%E8%A7%A3-%E5%8D%B71%EF%BC%9A%E5%8D%8F%E8%AE%AE/TCP%E5%9C%A8IP%E6%95%B0%E6%8D%AE%E6%8A%A5%E4%B8%AD%E7%9A%84%E5%B0%81%E8%A3%85.png">
-<meta property="og:image" content="https://xusenqi.github.io/2019/04/24/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0-TCP-IP%E8%AF%A6%E8%A7%A3-%E5%8D%B71%EF%BC%9A%E5%8D%8F%E8%AE%AE/TCP%E5%A4%B4%E9%83%A8.png">
-<meta property="og:image" content="https://xusenqi.github.io/2019/04/24/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0-TCP-IP%E8%AF%A6%E8%A7%A3-%E5%8D%B71%EF%BC%9A%E5%8D%8F%E8%AE%AE/TCP_flags.png">
-<meta property="og:image" content="https://xusenqi.github.io/2019/04/24/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0-TCP-IP%E8%AF%A6%E8%A7%A3-%E5%8D%B71%EF%BC%9A%E5%8D%8F%E8%AE%AE/TCP%E4%B8%89%E6%AC%A1%E6%8F%A1%E6%89%8B.png">
-<meta property="og:image" content="https://xusenqi.github.io/2019/04/24/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0-TCP-IP%E8%AF%A6%E8%A7%A3-%E5%8D%B71%EF%BC%9A%E5%8D%8F%E8%AE%AE/TCP%E5%8D%8A%E5%85%B3%E9%97%AD.png">
-<meta property="og:image" content="https://xusenqi.github.io/2019/04/24/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0-TCP-IP%E8%AF%A6%E8%A7%A3-%E5%8D%B71%EF%BC%9A%E5%8D%8F%E8%AE%AE/%E4%BD%BF%E7%94%A8%E5%9B%BA%E5%AE%9A%E5%BA%8F%E5%88%97%E5%8F%B7%E7%9A%84%E9%97%AE%E9%A2%98.png">
-<meta property="og:image" content="https://xusenqi.github.io/2019/04/24/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0-TCP-IP%E8%AF%A6%E8%A7%A3-%E5%8D%B71%EF%BC%9A%E5%8D%8F%E8%AE%AE/TCP%E9%80%89%E9%A1%B9.jpg">
-<meta property="og:image" content="https://xusenqi.github.io/2019/04/24/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0-TCP-IP%E8%AF%A6%E8%A7%A3-%E5%8D%B71%EF%BC%9A%E5%8D%8F%E8%AE%AE/%E4%BA%A4%E4%BA%92%E5%BC%8F%E9%80%9A%E4%BF%A1.png">
-<meta property="og:image" content="https://xusenqi.github.io/2019/04/24/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0-TCP-IP%E8%AF%A6%E8%A7%A3-%E5%8D%B71%EF%BC%9A%E5%8D%8F%E8%AE%AE/%E5%BB%B6%E6%97%B6%E7%A1%AE%E8%AE%A4.png">
-<meta property="og:image" content="https://xusenqi.github.io/2019/04/24/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0-TCP-IP%E8%AF%A6%E8%A7%A3-%E5%8D%B71%EF%BC%9A%E5%8D%8F%E8%AE%AE/Nagle%E7%AE%97%E6%B3%95%E7%9A%84%E5%AF%B9%E6%AF%94.png">
-<meta property="og:image" content="https://xusenqi.github.io/2019/04/24/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0-TCP-IP%E8%AF%A6%E8%A7%A3-%E5%8D%B71%EF%BC%9A%E5%8D%8F%E8%AE%AE/%E5%BB%B6%E6%97%B6ACK%E5%92%8CNagle%E7%AE%97%E6%B3%95%E7%9B%B8%E7%BB%93%E5%90%88.png">
-<meta property="og:image" content="https://xusenqi.github.io/2019/04/24/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0-TCP-IP%E8%AF%A6%E8%A7%A3-%E5%8D%B71%EF%BC%9A%E5%8D%8F%E8%AE%AE/%E5%8F%91%E9%80%81%E7%AB%AF%E6%BB%91%E5%8A%A8%E7%AA%97%E5%8F%A3.png">
-<meta property="og:image" content="https://xusenqi.github.io/2019/04/24/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0-TCP-IP%E8%AF%A6%E8%A7%A3-%E5%8D%B71%EF%BC%9A%E5%8D%8F%E8%AE%AE/%E6%8E%A5%E6%94%B6%E7%AB%AF%E6%BB%91%E5%8A%A8%E7%AA%97%E5%8F%A3.png">
-<meta property="og:image" content="https://xusenqi.github.io/2019/04/24/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0-TCP-IP%E8%AF%A6%E8%A7%A3-%E5%8D%B71%EF%BC%9A%E5%8D%8F%E8%AE%AE/KeepAlive%E6%8A%A5%E6%96%87%E5%BA%8F%E5%88%97%E5%8F%B7.png">
-<meta property="og:image" content="https://xusenqi.github.io/2019/04/24/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0-TCP-IP%E8%AF%A6%E8%A7%A3-%E5%8D%B71%EF%BC%9A%E5%8D%8F%E8%AE%AE/TCPKeepAlive%E6%8E%A2%E6%B5%8B%E6%9C%BA%E5%88%B6.png">
+<meta property="og:image" content="https://xusenqi.site/2019/04/24/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0-TCP-IP%E8%AF%A6%E8%A7%A3-%E5%8D%B71%EF%BC%9A%E5%8D%8F%E8%AE%AE/%E4%BC%A0%E5%85%A5%E7%9A%84%E5%B8%A7%E5%9C%A8%E4%B8%BB%E6%9C%BA%E4%B8%8A%E7%9A%84%E5%88%86%E8%A7%A3.png">
+<meta property="og:image" content="https://xusenqi.site/2019/04/24/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0-TCP-IP%E8%AF%A6%E8%A7%A3-%E5%8D%B71%EF%BC%9A%E5%8D%8F%E8%AE%AE/%E4%BB%A5%E5%A4%AA%E7%BD%91%E5%B8%A7%E6%A0%BC%E5%BC%8F.png">
+<meta property="og:image" content="https://xusenqi.site/2019/04/24/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0-TCP-IP%E8%AF%A6%E8%A7%A3-%E5%8D%B71%EF%BC%9A%E5%8D%8F%E8%AE%AE/IPV4%E6%95%B0%E6%8D%AE%E6%8A%A5.png">
+<meta property="og:image" content="https://xusenqi.site/2019/04/24/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0-TCP-IP%E8%AF%A6%E8%A7%A3-%E5%8D%B71%EF%BC%9A%E5%8D%8F%E8%AE%AE/DHCP%E4%BA%A4%E6%8D%A2.png">
+<meta property="og:image" content="https://xusenqi.site/2019/04/24/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0-TCP-IP%E8%AF%A6%E8%A7%A3-%E5%8D%B71%EF%BC%9A%E5%8D%8F%E8%AE%AE/IPV4_udp%E6%95%B0%E6%8D%AE%E6%8A%A5.jpg">
+<meta property="og:image" content="https://xusenqi.site/2019/04/24/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0-TCP-IP%E8%AF%A6%E8%A7%A3-%E5%8D%B71%EF%BC%9A%E5%8D%8F%E8%AE%AE/udp%E5%A4%B4%E9%83%A8%E5%92%8C%E8%B4%9F%E8%BD%BD%E5%8C%BA.jpg">
+<meta property="og:image" content="https://xusenqi.site/2019/04/24/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0-TCP-IP%E8%AF%A6%E8%A7%A3-%E5%8D%B71%EF%BC%9A%E5%8D%8F%E8%AE%AE/%E7%94%A8%E4%BA%8E%E8%AE%A1%E7%AE%97UDPIPV4%E6%95%B0%E6%8D%AE%E6%8A%A5%E7%9A%84%E5%AD%97%E6%AE%B5.jpg">
+<meta property="og:image" content="https://xusenqi.site/2019/04/24/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0-TCP-IP%E8%AF%A6%E8%A7%A3-%E5%8D%B71%EF%BC%9A%E5%8D%8F%E8%AE%AE/%E5%8F%91%E9%80%81%E6%96%B9%E7%AA%97%E5%8F%A3.png">
+<meta property="og:image" content="https://xusenqi.site/2019/04/24/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0-TCP-IP%E8%AF%A6%E8%A7%A3-%E5%8D%B71%EF%BC%9A%E5%8D%8F%E8%AE%AE/TCP%E5%9C%A8IP%E6%95%B0%E6%8D%AE%E6%8A%A5%E4%B8%AD%E7%9A%84%E5%B0%81%E8%A3%85.png">
+<meta property="og:image" content="https://xusenqi.site/2019/04/24/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0-TCP-IP%E8%AF%A6%E8%A7%A3-%E5%8D%B71%EF%BC%9A%E5%8D%8F%E8%AE%AE/TCP%E5%A4%B4%E9%83%A8.png">
+<meta property="og:image" content="https://xusenqi.site/2019/04/24/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0-TCP-IP%E8%AF%A6%E8%A7%A3-%E5%8D%B71%EF%BC%9A%E5%8D%8F%E8%AE%AE/TCP_flags.png">
+<meta property="og:image" content="https://xusenqi.site/2019/04/24/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0-TCP-IP%E8%AF%A6%E8%A7%A3-%E5%8D%B71%EF%BC%9A%E5%8D%8F%E8%AE%AE/TCP%E4%B8%89%E6%AC%A1%E6%8F%A1%E6%89%8B.png">
+<meta property="og:image" content="https://xusenqi.site/2019/04/24/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0-TCP-IP%E8%AF%A6%E8%A7%A3-%E5%8D%B71%EF%BC%9A%E5%8D%8F%E8%AE%AE/TCP%E5%8D%8A%E5%85%B3%E9%97%AD.png">
+<meta property="og:image" content="https://xusenqi.site/2019/04/24/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0-TCP-IP%E8%AF%A6%E8%A7%A3-%E5%8D%B71%EF%BC%9A%E5%8D%8F%E8%AE%AE/%E4%BD%BF%E7%94%A8%E5%9B%BA%E5%AE%9A%E5%BA%8F%E5%88%97%E5%8F%B7%E7%9A%84%E9%97%AE%E9%A2%98.png">
+<meta property="og:image" content="https://xusenqi.site/2019/04/24/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0-TCP-IP%E8%AF%A6%E8%A7%A3-%E5%8D%B71%EF%BC%9A%E5%8D%8F%E8%AE%AE/TCP%E9%80%89%E9%A1%B9.jpg">
+<meta property="og:image" content="https://xusenqi.site/2019/04/24/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0-TCP-IP%E8%AF%A6%E8%A7%A3-%E5%8D%B71%EF%BC%9A%E5%8D%8F%E8%AE%AE/%E4%BA%A4%E4%BA%92%E5%BC%8F%E9%80%9A%E4%BF%A1.png">
+<meta property="og:image" content="https://xusenqi.site/2019/04/24/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0-TCP-IP%E8%AF%A6%E8%A7%A3-%E5%8D%B71%EF%BC%9A%E5%8D%8F%E8%AE%AE/%E5%BB%B6%E6%97%B6%E7%A1%AE%E8%AE%A4.png">
+<meta property="og:image" content="https://xusenqi.site/2019/04/24/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0-TCP-IP%E8%AF%A6%E8%A7%A3-%E5%8D%B71%EF%BC%9A%E5%8D%8F%E8%AE%AE/Nagle%E7%AE%97%E6%B3%95%E7%9A%84%E5%AF%B9%E6%AF%94.png">
+<meta property="og:image" content="https://xusenqi.site/2019/04/24/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0-TCP-IP%E8%AF%A6%E8%A7%A3-%E5%8D%B71%EF%BC%9A%E5%8D%8F%E8%AE%AE/%E5%BB%B6%E6%97%B6ACK%E5%92%8CNagle%E7%AE%97%E6%B3%95%E7%9B%B8%E7%BB%93%E5%90%88.png">
+<meta property="og:image" content="https://xusenqi.site/2019/04/24/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0-TCP-IP%E8%AF%A6%E8%A7%A3-%E5%8D%B71%EF%BC%9A%E5%8D%8F%E8%AE%AE/%E5%8F%91%E9%80%81%E7%AB%AF%E6%BB%91%E5%8A%A8%E7%AA%97%E5%8F%A3.png">
+<meta property="og:image" content="https://xusenqi.site/2019/04/24/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0-TCP-IP%E8%AF%A6%E8%A7%A3-%E5%8D%B71%EF%BC%9A%E5%8D%8F%E8%AE%AE/%E6%8E%A5%E6%94%B6%E7%AB%AF%E6%BB%91%E5%8A%A8%E7%AA%97%E5%8F%A3.png">
+<meta property="og:image" content="https://xusenqi.site/2019/04/24/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0-TCP-IP%E8%AF%A6%E8%A7%A3-%E5%8D%B71%EF%BC%9A%E5%8D%8F%E8%AE%AE/KeepAlive%E6%8A%A5%E6%96%87%E5%BA%8F%E5%88%97%E5%8F%B7.png">
+<meta property="og:image" content="https://xusenqi.site/2019/04/24/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0-TCP-IP%E8%AF%A6%E8%A7%A3-%E5%8D%B71%EF%BC%9A%E5%8D%8F%E8%AE%AE/TCPKeepAlive%E6%8E%A2%E6%B5%8B%E6%9C%BA%E5%88%B6.png">
 <meta property="article:published_time" content="2019-04-24T15:38:54.000Z">
 <meta property="article:modified_time" content="2021-08-19T09:54:38.837Z">
 <meta property="article:author" content="patrick.xu">
 <meta property="article:tag" content="网络">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="https://xusenqi.github.io/2019/04/24/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0-TCP-IP%E8%AF%A6%E8%A7%A3-%E5%8D%B71%EF%BC%9A%E5%8D%8F%E8%AE%AE/%E4%BC%A0%E5%85%A5%E7%9A%84%E5%B8%A7%E5%9C%A8%E4%B8%BB%E6%9C%BA%E4%B8%8A%E7%9A%84%E5%88%86%E8%A7%A3.png">
+<meta name="twitter:image" content="https://xusenqi.site/2019/04/24/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0-TCP-IP%E8%AF%A6%E8%A7%A3-%E5%8D%B71%EF%BC%9A%E5%8D%8F%E8%AE%AE/%E4%BC%A0%E5%85%A5%E7%9A%84%E5%B8%A7%E5%9C%A8%E4%B8%BB%E6%9C%BA%E4%B8%8A%E7%9A%84%E5%88%86%E8%A7%A3.png">
 
-<link rel="canonical" href="https://xusenqi.github.io/2019/04/24/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0-TCP-IP%E8%AF%A6%E8%A7%A3-%E5%8D%B71%EF%BC%9A%E5%8D%8F%E8%AE%AE/">
+<link rel="canonical" href="https://xusenqi.site/2019/04/24/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0-TCP-IP%E8%AF%A6%E8%A7%A3-%E5%8D%B71%EF%BC%9A%E5%8D%8F%E8%AE%AE/">
 
 
 <script id="page-configurations">
@@ -238,7 +238,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block " lang="zh-Hans">
-    <link itemprop="mainEntityOfPage" href="https://xusenqi.github.io/2019/04/24/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0-TCP-IP%E8%AF%A6%E8%A7%A3-%E5%8D%B71%EF%BC%9A%E5%8D%8F%E8%AE%AE/">
+    <link itemprop="mainEntityOfPage" href="https://xusenqi.site/2019/04/24/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0-TCP-IP%E8%AF%A6%E8%A7%A3-%E5%8D%B71%EF%BC%9A%E5%8D%8F%E8%AE%AE/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/ppwqgtl.png">

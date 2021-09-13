@@ -21,7 +21,7 @@
 <script id="hexo-configurations">
   var NexT = window.NexT || {};
   var CONFIG = {
-    hostname: new URL('https://xusenqi.github.io').hostname,
+    hostname: new URL('https://xusenqi.site').hostname,
     root: '/',
     scheme: 'Gemini',
     version: '7.7.0',
@@ -51,20 +51,20 @@
   <meta name="description" content="tcp四次挥手TCP四次挥手的过程以及握手两端状态的变化。   挥手过程  第一次挥手: 主动关闭方(可以使客户端，也可以是服务器端，这里标记为：A)，将FIN置为1，ACK置为1，Seq(Sequence Number)设置为X为上一次对方传送过来的Ack(Acknowledgment Number)值，Ack(Acknowledgment Number)设置为Y为上一次对方传过来的Seq(Se">
 <meta property="og:type" content="article">
 <meta property="og:title" content="TCP四次挥手">
-<meta property="og:url" content="https://xusenqi.github.io/2018/05/15/TCP%E5%9B%9B%E6%AC%A1%E6%8C%A5%E6%89%8B/index.html">
+<meta property="og:url" content="https://xusenqi.site/2018/05/15/TCP%E5%9B%9B%E6%AC%A1%E6%8C%A5%E6%89%8B/index.html">
 <meta property="og:site_name" content="许森琪的博客">
 <meta property="og:description" content="tcp四次挥手TCP四次挥手的过程以及握手两端状态的变化。   挥手过程  第一次挥手: 主动关闭方(可以使客户端，也可以是服务器端，这里标记为：A)，将FIN置为1，ACK置为1，Seq(Sequence Number)设置为X为上一次对方传送过来的Ack(Acknowledgment Number)值，Ack(Acknowledgment Number)设置为Y为上一次对方传过来的Seq(Se">
 <meta property="og:locale">
-<meta property="og:image" content="https://xusenqi.github.io/2018/05/15/TCP%E5%9B%9B%E6%AC%A1%E6%8C%A5%E6%89%8B/tcp%E5%9B%9B%E6%AC%A1%E6%8C%A5%E6%89%8B.png">
-<meta property="og:image" content="https://xusenqi.github.io/2018/05/15/TCP%E5%9B%9B%E6%AC%A1%E6%8C%A5%E6%89%8B/%E5%9B%9B%E6%AC%A1%E6%8C%A5%E6%89%8B%E6%8A%93%E5%8C%85.jpg">
+<meta property="og:image" content="https://xusenqi.site/2018/05/15/TCP%E5%9B%9B%E6%AC%A1%E6%8C%A5%E6%89%8B/tcp%E5%9B%9B%E6%AC%A1%E6%8C%A5%E6%89%8B.png">
+<meta property="og:image" content="https://xusenqi.site/2018/05/15/TCP%E5%9B%9B%E6%AC%A1%E6%8C%A5%E6%89%8B/%E5%9B%9B%E6%AC%A1%E6%8C%A5%E6%89%8B%E6%8A%93%E5%8C%85.jpg">
 <meta property="article:published_time" content="2018-05-15T03:21:20.000Z">
 <meta property="article:modified_time" content="2021-08-19T09:54:38.574Z">
 <meta property="article:author" content="patrick.xu">
 <meta property="article:tag" content="TCP">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="https://xusenqi.github.io/2018/05/15/TCP%E5%9B%9B%E6%AC%A1%E6%8C%A5%E6%89%8B/tcp%E5%9B%9B%E6%AC%A1%E6%8C%A5%E6%89%8B.png">
+<meta name="twitter:image" content="https://xusenqi.site/2018/05/15/TCP%E5%9B%9B%E6%AC%A1%E6%8C%A5%E6%89%8B/tcp%E5%9B%9B%E6%AC%A1%E6%8C%A5%E6%89%8B.png">
 
-<link rel="canonical" href="https://xusenqi.github.io/2018/05/15/TCP%E5%9B%9B%E6%AC%A1%E6%8C%A5%E6%89%8B/">
+<link rel="canonical" href="https://xusenqi.site/2018/05/15/TCP%E5%9B%9B%E6%AC%A1%E6%8C%A5%E6%89%8B/">
 
 
 <script id="page-configurations">
@@ -217,7 +217,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block " lang="zh-Hans">
-    <link itemprop="mainEntityOfPage" href="https://xusenqi.github.io/2018/05/15/TCP%E5%9B%9B%E6%AC%A1%E6%8C%A5%E6%89%8B/">
+    <link itemprop="mainEntityOfPage" href="https://xusenqi.site/2018/05/15/TCP%E5%9B%9B%E6%AC%A1%E6%8C%A5%E6%89%8B/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/ppwqgtl.png">

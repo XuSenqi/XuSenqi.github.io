@@ -21,7 +21,7 @@
 <script id="hexo-configurations">
   var NexT = window.NexT || {};
   var CONFIG = {
-    hostname: new URL('https://xusenqi.github.io').hostname,
+    hostname: new URL('https://xusenqi.site').hostname,
     root: '/',
     scheme: 'Gemini',
     version: '7.7.0',
@@ -51,36 +51,36 @@
   <meta name="description" content="问题的描述本地镜像在不同物理机之间的传输，这里是通过自研的工具rsc，包含rsc_client和rsc_server。 rsc_server对收到的数据的处理不当，对IO可能产生不理想的结果：（1）当Bps或者iops 过高时，可能使dm-0的util过高，甚至100%，影响上面虚机的IO；（2）当传输过程中Bps过低时，会使得传输镜像过慢，影响效率，甚至导致创建虚机失败。 dm-0是物理机上的数">
 <meta property="og:type" content="article">
 <meta property="og:title" content="磁盘IO在文件传输过程中的稳定控制优化">
-<meta property="og:url" content="https://xusenqi.github.io/2018/04/18/%E7%A3%81%E7%9B%98IO%E5%9C%A8%E6%96%87%E4%BB%B6%E4%BC%A0%E8%BE%93%E8%BF%87%E7%A8%8B%E4%B8%AD%E7%9A%84%E7%A8%B3%E5%AE%9A%E6%8E%A7%E5%88%B6%E6%96%B9%E6%B3%95/index.html">
+<meta property="og:url" content="https://xusenqi.site/2018/04/18/%E7%A3%81%E7%9B%98IO%E5%9C%A8%E6%96%87%E4%BB%B6%E4%BC%A0%E8%BE%93%E8%BF%87%E7%A8%8B%E4%B8%AD%E7%9A%84%E7%A8%B3%E5%AE%9A%E6%8E%A7%E5%88%B6%E6%96%B9%E6%B3%95/index.html">
 <meta property="og:site_name" content="许森琪的博客">
 <meta property="og:description" content="问题的描述本地镜像在不同物理机之间的传输，这里是通过自研的工具rsc，包含rsc_client和rsc_server。 rsc_server对收到的数据的处理不当，对IO可能产生不理想的结果：（1）当Bps或者iops 过高时，可能使dm-0的util过高，甚至100%，影响上面虚机的IO；（2）当传输过程中Bps过低时，会使得传输镜像过慢，影响效率，甚至导致创建虚机失败。 dm-0是物理机上的数">
 <meta property="og:locale">
-<meta property="og:image" content="https://xusenqi.github.io/2018/04/18/%E7%A3%81%E7%9B%98IO%E5%9C%A8%E6%96%87%E4%BB%B6%E4%BC%A0%E8%BE%93%E8%BF%87%E7%A8%8B%E4%B8%AD%E7%9A%84%E7%A8%B3%E5%AE%9A%E6%8E%A7%E5%88%B6%E6%96%B9%E6%B3%95/2-nolimit-1.png">
-<meta property="og:image" content="https://xusenqi.github.io/2018/04/18/%E7%A3%81%E7%9B%98IO%E5%9C%A8%E6%96%87%E4%BB%B6%E4%BC%A0%E8%BE%93%E8%BF%87%E7%A8%8B%E4%B8%AD%E7%9A%84%E7%A8%B3%E5%AE%9A%E6%8E%A7%E5%88%B6%E6%96%B9%E6%B3%95/2-nolimit-2.png">
-<meta property="og:image" content="https://xusenqi.github.io/2018/04/18/%E7%A3%81%E7%9B%98IO%E5%9C%A8%E6%96%87%E4%BB%B6%E4%BC%A0%E8%BE%93%E8%BF%87%E7%A8%8B%E4%B8%AD%E7%9A%84%E7%A8%B3%E5%AE%9A%E6%8E%A7%E5%88%B6%E6%96%B9%E6%B3%95/2-nolimit-3.png">
-<meta property="og:image" content="https://xusenqi.github.io/2018/04/18/%E7%A3%81%E7%9B%98IO%E5%9C%A8%E6%96%87%E4%BB%B6%E4%BC%A0%E8%BE%93%E8%BF%87%E7%A8%8B%E4%B8%AD%E7%9A%84%E7%A8%B3%E5%AE%9A%E6%8E%A7%E5%88%B6%E6%96%B9%E6%B3%95/3-1-limit-1.png">
-<meta property="og:image" content="https://xusenqi.github.io/2018/04/18/%E7%A3%81%E7%9B%98IO%E5%9C%A8%E6%96%87%E4%BB%B6%E4%BC%A0%E8%BE%93%E8%BF%87%E7%A8%8B%E4%B8%AD%E7%9A%84%E7%A8%B3%E5%AE%9A%E6%8E%A7%E5%88%B6%E6%96%B9%E6%B3%95/3-1-limit-2.png">
-<meta property="og:image" content="https://xusenqi.github.io/2018/04/18/%E7%A3%81%E7%9B%98IO%E5%9C%A8%E6%96%87%E4%BB%B6%E4%BC%A0%E8%BE%93%E8%BF%87%E7%A8%8B%E4%B8%AD%E7%9A%84%E7%A8%B3%E5%AE%9A%E6%8E%A7%E5%88%B6%E6%96%B9%E6%B3%95/3-1-limit-3.png">
-<meta property="og:image" content="https://xusenqi.github.io/2018/04/18/%E7%A3%81%E7%9B%98IO%E5%9C%A8%E6%96%87%E4%BB%B6%E4%BC%A0%E8%BE%93%E8%BF%87%E7%A8%8B%E4%B8%AD%E7%9A%84%E7%A8%B3%E5%AE%9A%E6%8E%A7%E5%88%B6%E6%96%B9%E6%B3%95/3-2-flushlimit-1.png">
-<meta property="og:image" content="https://xusenqi.github.io/2018/04/18/%E7%A3%81%E7%9B%98IO%E5%9C%A8%E6%96%87%E4%BB%B6%E4%BC%A0%E8%BE%93%E8%BF%87%E7%A8%8B%E4%B8%AD%E7%9A%84%E7%A8%B3%E5%AE%9A%E6%8E%A7%E5%88%B6%E6%96%B9%E6%B3%95/3-2-flushlimit-2.png">
-<meta property="og:image" content="https://xusenqi.github.io/2018/04/18/%E7%A3%81%E7%9B%98IO%E5%9C%A8%E6%96%87%E4%BB%B6%E4%BC%A0%E8%BE%93%E8%BF%87%E7%A8%8B%E4%B8%AD%E7%9A%84%E7%A8%B3%E5%AE%9A%E6%8E%A7%E5%88%B6%E6%96%B9%E6%B3%95/3-2-flushlimit-3.png">
-<meta property="og:image" content="https://xusenqi.github.io/2018/04/18/%E7%A3%81%E7%9B%98IO%E5%9C%A8%E6%96%87%E4%BB%B6%E4%BC%A0%E8%BE%93%E8%BF%87%E7%A8%8B%E4%B8%AD%E7%9A%84%E7%A8%B3%E5%AE%9A%E6%8E%A7%E5%88%B6%E6%96%B9%E6%B3%95/3-2-flushlimit-4.png">
-<meta property="og:image" content="https://xusenqi.github.io/2018/04/18/%E7%A3%81%E7%9B%98IO%E5%9C%A8%E6%96%87%E4%BB%B6%E4%BC%A0%E8%BE%93%E8%BF%87%E7%A8%8B%E4%B8%AD%E7%9A%84%E7%A8%B3%E5%AE%9A%E6%8E%A7%E5%88%B6%E6%96%B9%E6%B3%95/3-2-flushlimit-5.png">
-<meta property="og:image" content="https://xusenqi.github.io/2018/04/18/%E7%A3%81%E7%9B%98IO%E5%9C%A8%E6%96%87%E4%BB%B6%E4%BC%A0%E8%BE%93%E8%BF%87%E7%A8%8B%E4%B8%AD%E7%9A%84%E7%A8%B3%E5%AE%9A%E6%8E%A7%E5%88%B6%E6%96%B9%E6%B3%95/3-2-flushlimit-6.png">
-<meta property="og:image" content="https://xusenqi.github.io/2018/04/18/%E7%A3%81%E7%9B%98IO%E5%9C%A8%E6%96%87%E4%BB%B6%E4%BC%A0%E8%BE%93%E8%BF%87%E7%A8%8B%E4%B8%AD%E7%9A%84%E7%A8%B3%E5%AE%9A%E6%8E%A7%E5%88%B6%E6%96%B9%E6%B3%95/3-3-sync-1.png">
-<meta property="og:image" content="https://xusenqi.github.io/2018/04/18/%E7%A3%81%E7%9B%98IO%E5%9C%A8%E6%96%87%E4%BB%B6%E4%BC%A0%E8%BE%93%E8%BF%87%E7%A8%8B%E4%B8%AD%E7%9A%84%E7%A8%B3%E5%AE%9A%E6%8E%A7%E5%88%B6%E6%96%B9%E6%B3%95/3-3-sync-2.png">
-<meta property="og:image" content="https://xusenqi.github.io/2018/04/18/%E7%A3%81%E7%9B%98IO%E5%9C%A8%E6%96%87%E4%BB%B6%E4%BC%A0%E8%BE%93%E8%BF%87%E7%A8%8B%E4%B8%AD%E7%9A%84%E7%A8%B3%E5%AE%9A%E6%8E%A7%E5%88%B6%E6%96%B9%E6%B3%95/3-4-fsync-1.png">
-<meta property="og:image" content="https://xusenqi.github.io/2018/04/18/%E7%A3%81%E7%9B%98IO%E5%9C%A8%E6%96%87%E4%BB%B6%E4%BC%A0%E8%BE%93%E8%BF%87%E7%A8%8B%E4%B8%AD%E7%9A%84%E7%A8%B3%E5%AE%9A%E6%8E%A7%E5%88%B6%E6%96%B9%E6%B3%95/3-4-fsync-2.png">
-<meta property="og:image" content="https://xusenqi.github.io/2018/04/18/%E7%A3%81%E7%9B%98IO%E5%9C%A8%E6%96%87%E4%BB%B6%E4%BC%A0%E8%BE%93%E8%BF%87%E7%A8%8B%E4%B8%AD%E7%9A%84%E7%A8%B3%E5%AE%9A%E6%8E%A7%E5%88%B6%E6%96%B9%E6%B3%95/3-4-fsync-3.png">
-<meta property="og:image" content="https://xusenqi.github.io/2018/04/18/%E7%A3%81%E7%9B%98IO%E5%9C%A8%E6%96%87%E4%BB%B6%E4%BC%A0%E8%BE%93%E8%BF%87%E7%A8%8B%E4%B8%AD%E7%9A%84%E7%A8%B3%E5%AE%9A%E6%8E%A7%E5%88%B6%E6%96%B9%E6%B3%95/3-4-fsync-4.png">
-<meta property="og:image" content="https://xusenqi.github.io/2018/04/18/%E7%A3%81%E7%9B%98IO%E5%9C%A8%E6%96%87%E4%BB%B6%E4%BC%A0%E8%BE%93%E8%BF%87%E7%A8%8B%E4%B8%AD%E7%9A%84%E7%A8%B3%E5%AE%9A%E6%8E%A7%E5%88%B6%E6%96%B9%E6%B3%95/3-4-fsync-5.png">
-<meta property="og:image" content="https://xusenqi.github.io/2018/04/18/%E7%A3%81%E7%9B%98IO%E5%9C%A8%E6%96%87%E4%BB%B6%E4%BC%A0%E8%BE%93%E8%BF%87%E7%A8%8B%E4%B8%AD%E7%9A%84%E7%A8%B3%E5%AE%9A%E6%8E%A7%E5%88%B6%E6%96%B9%E6%B3%95/3-4-fsync-6.png">
-<meta property="og:image" content="https://xusenqi.github.io/2018/04/18/%E7%A3%81%E7%9B%98IO%E5%9C%A8%E6%96%87%E4%BB%B6%E4%BC%A0%E8%BE%93%E8%BF%87%E7%A8%8B%E4%B8%AD%E7%9A%84%E7%A8%B3%E5%AE%9A%E6%8E%A7%E5%88%B6%E6%96%B9%E6%B3%95/3-4-fsync-7.png">
-<meta property="og:image" content="https://xusenqi.github.io/2018/04/18/%E7%A3%81%E7%9B%98IO%E5%9C%A8%E6%96%87%E4%BB%B6%E4%BC%A0%E8%BE%93%E8%BF%87%E7%A8%8B%E4%B8%AD%E7%9A%84%E7%A8%B3%E5%AE%9A%E6%8E%A7%E5%88%B6%E6%96%B9%E6%B3%95/3-4-fsync-8.png">
-<meta property="og:image" content="https://xusenqi.github.io/2018/04/18/%E7%A3%81%E7%9B%98IO%E5%9C%A8%E6%96%87%E4%BB%B6%E4%BC%A0%E8%BE%93%E8%BF%87%E7%A8%8B%E4%B8%AD%E7%9A%84%E7%A8%B3%E5%AE%9A%E6%8E%A7%E5%88%B6%E6%96%B9%E6%B3%95/4-final-1.png">
-<meta property="og:image" content="https://xusenqi.github.io/2018/04/18/%E7%A3%81%E7%9B%98IO%E5%9C%A8%E6%96%87%E4%BB%B6%E4%BC%A0%E8%BE%93%E8%BF%87%E7%A8%8B%E4%B8%AD%E7%9A%84%E7%A8%B3%E5%AE%9A%E6%8E%A7%E5%88%B6%E6%96%B9%E6%B3%95/4-final-2.png">
-<meta property="og:image" content="https://xusenqi.github.io/2018/04/18/%E7%A3%81%E7%9B%98IO%E5%9C%A8%E6%96%87%E4%BB%B6%E4%BC%A0%E8%BE%93%E8%BF%87%E7%A8%8B%E4%B8%AD%E7%9A%84%E7%A8%B3%E5%AE%9A%E6%8E%A7%E5%88%B6%E6%96%B9%E6%B3%95/4-final-3.png">
-<meta property="og:image" content="https://xusenqi.github.io/2018/04/18/%E7%A3%81%E7%9B%98IO%E5%9C%A8%E6%96%87%E4%BB%B6%E4%BC%A0%E8%BE%93%E8%BF%87%E7%A8%8B%E4%B8%AD%E7%9A%84%E7%A8%B3%E5%AE%9A%E6%8E%A7%E5%88%B6%E6%96%B9%E6%B3%95/4-final-4.png">
+<meta property="og:image" content="https://xusenqi.site/2018/04/18/%E7%A3%81%E7%9B%98IO%E5%9C%A8%E6%96%87%E4%BB%B6%E4%BC%A0%E8%BE%93%E8%BF%87%E7%A8%8B%E4%B8%AD%E7%9A%84%E7%A8%B3%E5%AE%9A%E6%8E%A7%E5%88%B6%E6%96%B9%E6%B3%95/2-nolimit-1.png">
+<meta property="og:image" content="https://xusenqi.site/2018/04/18/%E7%A3%81%E7%9B%98IO%E5%9C%A8%E6%96%87%E4%BB%B6%E4%BC%A0%E8%BE%93%E8%BF%87%E7%A8%8B%E4%B8%AD%E7%9A%84%E7%A8%B3%E5%AE%9A%E6%8E%A7%E5%88%B6%E6%96%B9%E6%B3%95/2-nolimit-2.png">
+<meta property="og:image" content="https://xusenqi.site/2018/04/18/%E7%A3%81%E7%9B%98IO%E5%9C%A8%E6%96%87%E4%BB%B6%E4%BC%A0%E8%BE%93%E8%BF%87%E7%A8%8B%E4%B8%AD%E7%9A%84%E7%A8%B3%E5%AE%9A%E6%8E%A7%E5%88%B6%E6%96%B9%E6%B3%95/2-nolimit-3.png">
+<meta property="og:image" content="https://xusenqi.site/2018/04/18/%E7%A3%81%E7%9B%98IO%E5%9C%A8%E6%96%87%E4%BB%B6%E4%BC%A0%E8%BE%93%E8%BF%87%E7%A8%8B%E4%B8%AD%E7%9A%84%E7%A8%B3%E5%AE%9A%E6%8E%A7%E5%88%B6%E6%96%B9%E6%B3%95/3-1-limit-1.png">
+<meta property="og:image" content="https://xusenqi.site/2018/04/18/%E7%A3%81%E7%9B%98IO%E5%9C%A8%E6%96%87%E4%BB%B6%E4%BC%A0%E8%BE%93%E8%BF%87%E7%A8%8B%E4%B8%AD%E7%9A%84%E7%A8%B3%E5%AE%9A%E6%8E%A7%E5%88%B6%E6%96%B9%E6%B3%95/3-1-limit-2.png">
+<meta property="og:image" content="https://xusenqi.site/2018/04/18/%E7%A3%81%E7%9B%98IO%E5%9C%A8%E6%96%87%E4%BB%B6%E4%BC%A0%E8%BE%93%E8%BF%87%E7%A8%8B%E4%B8%AD%E7%9A%84%E7%A8%B3%E5%AE%9A%E6%8E%A7%E5%88%B6%E6%96%B9%E6%B3%95/3-1-limit-3.png">
+<meta property="og:image" content="https://xusenqi.site/2018/04/18/%E7%A3%81%E7%9B%98IO%E5%9C%A8%E6%96%87%E4%BB%B6%E4%BC%A0%E8%BE%93%E8%BF%87%E7%A8%8B%E4%B8%AD%E7%9A%84%E7%A8%B3%E5%AE%9A%E6%8E%A7%E5%88%B6%E6%96%B9%E6%B3%95/3-2-flushlimit-1.png">
+<meta property="og:image" content="https://xusenqi.site/2018/04/18/%E7%A3%81%E7%9B%98IO%E5%9C%A8%E6%96%87%E4%BB%B6%E4%BC%A0%E8%BE%93%E8%BF%87%E7%A8%8B%E4%B8%AD%E7%9A%84%E7%A8%B3%E5%AE%9A%E6%8E%A7%E5%88%B6%E6%96%B9%E6%B3%95/3-2-flushlimit-2.png">
+<meta property="og:image" content="https://xusenqi.site/2018/04/18/%E7%A3%81%E7%9B%98IO%E5%9C%A8%E6%96%87%E4%BB%B6%E4%BC%A0%E8%BE%93%E8%BF%87%E7%A8%8B%E4%B8%AD%E7%9A%84%E7%A8%B3%E5%AE%9A%E6%8E%A7%E5%88%B6%E6%96%B9%E6%B3%95/3-2-flushlimit-3.png">
+<meta property="og:image" content="https://xusenqi.site/2018/04/18/%E7%A3%81%E7%9B%98IO%E5%9C%A8%E6%96%87%E4%BB%B6%E4%BC%A0%E8%BE%93%E8%BF%87%E7%A8%8B%E4%B8%AD%E7%9A%84%E7%A8%B3%E5%AE%9A%E6%8E%A7%E5%88%B6%E6%96%B9%E6%B3%95/3-2-flushlimit-4.png">
+<meta property="og:image" content="https://xusenqi.site/2018/04/18/%E7%A3%81%E7%9B%98IO%E5%9C%A8%E6%96%87%E4%BB%B6%E4%BC%A0%E8%BE%93%E8%BF%87%E7%A8%8B%E4%B8%AD%E7%9A%84%E7%A8%B3%E5%AE%9A%E6%8E%A7%E5%88%B6%E6%96%B9%E6%B3%95/3-2-flushlimit-5.png">
+<meta property="og:image" content="https://xusenqi.site/2018/04/18/%E7%A3%81%E7%9B%98IO%E5%9C%A8%E6%96%87%E4%BB%B6%E4%BC%A0%E8%BE%93%E8%BF%87%E7%A8%8B%E4%B8%AD%E7%9A%84%E7%A8%B3%E5%AE%9A%E6%8E%A7%E5%88%B6%E6%96%B9%E6%B3%95/3-2-flushlimit-6.png">
+<meta property="og:image" content="https://xusenqi.site/2018/04/18/%E7%A3%81%E7%9B%98IO%E5%9C%A8%E6%96%87%E4%BB%B6%E4%BC%A0%E8%BE%93%E8%BF%87%E7%A8%8B%E4%B8%AD%E7%9A%84%E7%A8%B3%E5%AE%9A%E6%8E%A7%E5%88%B6%E6%96%B9%E6%B3%95/3-3-sync-1.png">
+<meta property="og:image" content="https://xusenqi.site/2018/04/18/%E7%A3%81%E7%9B%98IO%E5%9C%A8%E6%96%87%E4%BB%B6%E4%BC%A0%E8%BE%93%E8%BF%87%E7%A8%8B%E4%B8%AD%E7%9A%84%E7%A8%B3%E5%AE%9A%E6%8E%A7%E5%88%B6%E6%96%B9%E6%B3%95/3-3-sync-2.png">
+<meta property="og:image" content="https://xusenqi.site/2018/04/18/%E7%A3%81%E7%9B%98IO%E5%9C%A8%E6%96%87%E4%BB%B6%E4%BC%A0%E8%BE%93%E8%BF%87%E7%A8%8B%E4%B8%AD%E7%9A%84%E7%A8%B3%E5%AE%9A%E6%8E%A7%E5%88%B6%E6%96%B9%E6%B3%95/3-4-fsync-1.png">
+<meta property="og:image" content="https://xusenqi.site/2018/04/18/%E7%A3%81%E7%9B%98IO%E5%9C%A8%E6%96%87%E4%BB%B6%E4%BC%A0%E8%BE%93%E8%BF%87%E7%A8%8B%E4%B8%AD%E7%9A%84%E7%A8%B3%E5%AE%9A%E6%8E%A7%E5%88%B6%E6%96%B9%E6%B3%95/3-4-fsync-2.png">
+<meta property="og:image" content="https://xusenqi.site/2018/04/18/%E7%A3%81%E7%9B%98IO%E5%9C%A8%E6%96%87%E4%BB%B6%E4%BC%A0%E8%BE%93%E8%BF%87%E7%A8%8B%E4%B8%AD%E7%9A%84%E7%A8%B3%E5%AE%9A%E6%8E%A7%E5%88%B6%E6%96%B9%E6%B3%95/3-4-fsync-3.png">
+<meta property="og:image" content="https://xusenqi.site/2018/04/18/%E7%A3%81%E7%9B%98IO%E5%9C%A8%E6%96%87%E4%BB%B6%E4%BC%A0%E8%BE%93%E8%BF%87%E7%A8%8B%E4%B8%AD%E7%9A%84%E7%A8%B3%E5%AE%9A%E6%8E%A7%E5%88%B6%E6%96%B9%E6%B3%95/3-4-fsync-4.png">
+<meta property="og:image" content="https://xusenqi.site/2018/04/18/%E7%A3%81%E7%9B%98IO%E5%9C%A8%E6%96%87%E4%BB%B6%E4%BC%A0%E8%BE%93%E8%BF%87%E7%A8%8B%E4%B8%AD%E7%9A%84%E7%A8%B3%E5%AE%9A%E6%8E%A7%E5%88%B6%E6%96%B9%E6%B3%95/3-4-fsync-5.png">
+<meta property="og:image" content="https://xusenqi.site/2018/04/18/%E7%A3%81%E7%9B%98IO%E5%9C%A8%E6%96%87%E4%BB%B6%E4%BC%A0%E8%BE%93%E8%BF%87%E7%A8%8B%E4%B8%AD%E7%9A%84%E7%A8%B3%E5%AE%9A%E6%8E%A7%E5%88%B6%E6%96%B9%E6%B3%95/3-4-fsync-6.png">
+<meta property="og:image" content="https://xusenqi.site/2018/04/18/%E7%A3%81%E7%9B%98IO%E5%9C%A8%E6%96%87%E4%BB%B6%E4%BC%A0%E8%BE%93%E8%BF%87%E7%A8%8B%E4%B8%AD%E7%9A%84%E7%A8%B3%E5%AE%9A%E6%8E%A7%E5%88%B6%E6%96%B9%E6%B3%95/3-4-fsync-7.png">
+<meta property="og:image" content="https://xusenqi.site/2018/04/18/%E7%A3%81%E7%9B%98IO%E5%9C%A8%E6%96%87%E4%BB%B6%E4%BC%A0%E8%BE%93%E8%BF%87%E7%A8%8B%E4%B8%AD%E7%9A%84%E7%A8%B3%E5%AE%9A%E6%8E%A7%E5%88%B6%E6%96%B9%E6%B3%95/3-4-fsync-8.png">
+<meta property="og:image" content="https://xusenqi.site/2018/04/18/%E7%A3%81%E7%9B%98IO%E5%9C%A8%E6%96%87%E4%BB%B6%E4%BC%A0%E8%BE%93%E8%BF%87%E7%A8%8B%E4%B8%AD%E7%9A%84%E7%A8%B3%E5%AE%9A%E6%8E%A7%E5%88%B6%E6%96%B9%E6%B3%95/4-final-1.png">
+<meta property="og:image" content="https://xusenqi.site/2018/04/18/%E7%A3%81%E7%9B%98IO%E5%9C%A8%E6%96%87%E4%BB%B6%E4%BC%A0%E8%BE%93%E8%BF%87%E7%A8%8B%E4%B8%AD%E7%9A%84%E7%A8%B3%E5%AE%9A%E6%8E%A7%E5%88%B6%E6%96%B9%E6%B3%95/4-final-2.png">
+<meta property="og:image" content="https://xusenqi.site/2018/04/18/%E7%A3%81%E7%9B%98IO%E5%9C%A8%E6%96%87%E4%BB%B6%E4%BC%A0%E8%BE%93%E8%BF%87%E7%A8%8B%E4%B8%AD%E7%9A%84%E7%A8%B3%E5%AE%9A%E6%8E%A7%E5%88%B6%E6%96%B9%E6%B3%95/4-final-3.png">
+<meta property="og:image" content="https://xusenqi.site/2018/04/18/%E7%A3%81%E7%9B%98IO%E5%9C%A8%E6%96%87%E4%BB%B6%E4%BC%A0%E8%BE%93%E8%BF%87%E7%A8%8B%E4%B8%AD%E7%9A%84%E7%A8%B3%E5%AE%9A%E6%8E%A7%E5%88%B6%E6%96%B9%E6%B3%95/4-final-4.png">
 <meta property="article:published_time" content="2018-04-17T17:19:50.000Z">
 <meta property="article:modified_time" content="2021-08-19T09:54:38.707Z">
 <meta property="article:author" content="patrick.xu">
@@ -88,9 +88,9 @@
 <meta property="article:tag" content="cgroup">
 <meta property="article:tag" content="磁盘IO">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="https://xusenqi.github.io/2018/04/18/%E7%A3%81%E7%9B%98IO%E5%9C%A8%E6%96%87%E4%BB%B6%E4%BC%A0%E8%BE%93%E8%BF%87%E7%A8%8B%E4%B8%AD%E7%9A%84%E7%A8%B3%E5%AE%9A%E6%8E%A7%E5%88%B6%E6%96%B9%E6%B3%95/2-nolimit-1.png">
+<meta name="twitter:image" content="https://xusenqi.site/2018/04/18/%E7%A3%81%E7%9B%98IO%E5%9C%A8%E6%96%87%E4%BB%B6%E4%BC%A0%E8%BE%93%E8%BF%87%E7%A8%8B%E4%B8%AD%E7%9A%84%E7%A8%B3%E5%AE%9A%E6%8E%A7%E5%88%B6%E6%96%B9%E6%B3%95/2-nolimit-1.png">
 
-<link rel="canonical" href="https://xusenqi.github.io/2018/04/18/%E7%A3%81%E7%9B%98IO%E5%9C%A8%E6%96%87%E4%BB%B6%E4%BC%A0%E8%BE%93%E8%BF%87%E7%A8%8B%E4%B8%AD%E7%9A%84%E7%A8%B3%E5%AE%9A%E6%8E%A7%E5%88%B6%E6%96%B9%E6%B3%95/">
+<link rel="canonical" href="https://xusenqi.site/2018/04/18/%E7%A3%81%E7%9B%98IO%E5%9C%A8%E6%96%87%E4%BB%B6%E4%BC%A0%E8%BE%93%E8%BF%87%E7%A8%8B%E4%B8%AD%E7%9A%84%E7%A8%B3%E5%AE%9A%E6%8E%A7%E5%88%B6%E6%96%B9%E6%B3%95/">
 
 
 <script id="page-configurations">
@@ -243,7 +243,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block " lang="zh-Hans">
-    <link itemprop="mainEntityOfPage" href="https://xusenqi.github.io/2018/04/18/%E7%A3%81%E7%9B%98IO%E5%9C%A8%E6%96%87%E4%BB%B6%E4%BC%A0%E8%BE%93%E8%BF%87%E7%A8%8B%E4%B8%AD%E7%9A%84%E7%A8%B3%E5%AE%9A%E6%8E%A7%E5%88%B6%E6%96%B9%E6%B3%95/">
+    <link itemprop="mainEntityOfPage" href="https://xusenqi.site/2018/04/18/%E7%A3%81%E7%9B%98IO%E5%9C%A8%E6%96%87%E4%BB%B6%E4%BC%A0%E8%BE%93%E8%BF%87%E7%A8%8B%E4%B8%AD%E7%9A%84%E7%A8%B3%E5%AE%9A%E6%8E%A7%E5%88%B6%E6%96%B9%E6%B3%95/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/ppwqgtl.png">

@@ -21,7 +21,7 @@
 <script id="hexo-configurations">
   var NexT = window.NexT || {};
   var CONFIG = {
-    hostname: new URL('https://xusenqi.github.io').hostname,
+    hostname: new URL('https://xusenqi.site').hostname,
     root: '/',
     scheme: 'Gemini',
     version: '7.7.0',
@@ -51,23 +51,23 @@
   <meta name="description" content="kubeadm介绍 Kubeadm is a tool built to provide kubeadm init and kubeadm join as best-practice “fast paths” for creating Kubernetes clusters.   kubeadm init  创建一个 Master节点  kubeadm join 将一个 Node 节点加入到当前集">
 <meta property="og:type" content="article">
 <meta property="og:title" content="kubeadm部署single control-plane k8s集群">
-<meta property="og:url" content="https://xusenqi.github.io/2019/12/11/kubeadm%E9%83%A8%E7%BD%B2single-control-plane-k8s%E9%9B%86%E7%BE%A4/index.html">
+<meta property="og:url" content="https://xusenqi.site/2019/12/11/kubeadm%E9%83%A8%E7%BD%B2single-control-plane-k8s%E9%9B%86%E7%BE%A4/index.html">
 <meta property="og:site_name" content="许森琪的博客">
 <meta property="og:description" content="kubeadm介绍 Kubeadm is a tool built to provide kubeadm init and kubeadm join as best-practice “fast paths” for creating Kubernetes clusters.   kubeadm init  创建一个 Master节点  kubeadm join 将一个 Node 节点加入到当前集">
 <meta property="og:locale">
-<meta property="og:image" content="https://xusenqi.github.io/2019/12/11/kubeadm%E9%83%A8%E7%BD%B2single-control-plane-k8s%E9%9B%86%E7%BE%A4/kube_init_steps.png">
-<meta property="og:image" content="https://xusenqi.github.io/2019/12/11/kubeadm%E9%83%A8%E7%BD%B2single-control-plane-k8s%E9%9B%86%E7%BE%A4/flannel%E7%BD%91%E7%BB%9C%E6%8F%92%E4%BB%B6%E9%83%A8%E7%BD%B2.png">
-<meta property="og:image" content="https://xusenqi.github.io/2019/12/11/kubeadm%E9%83%A8%E7%BD%B2single-control-plane-k8s%E9%9B%86%E7%BE%A4/kube_join_steps.png">
-<meta property="og:image" content="https://xusenqi.github.io/2019/12/11/kubeadm%E9%83%A8%E7%BD%B2single-control-plane-k8s%E9%9B%86%E7%BE%A4/kubeadm_token_create.png">
+<meta property="og:image" content="https://xusenqi.site/2019/12/11/kubeadm%E9%83%A8%E7%BD%B2single-control-plane-k8s%E9%9B%86%E7%BE%A4/kube_init_steps.png">
+<meta property="og:image" content="https://xusenqi.site/2019/12/11/kubeadm%E9%83%A8%E7%BD%B2single-control-plane-k8s%E9%9B%86%E7%BE%A4/flannel%E7%BD%91%E7%BB%9C%E6%8F%92%E4%BB%B6%E9%83%A8%E7%BD%B2.png">
+<meta property="og:image" content="https://xusenqi.site/2019/12/11/kubeadm%E9%83%A8%E7%BD%B2single-control-plane-k8s%E9%9B%86%E7%BE%A4/kube_join_steps.png">
+<meta property="og:image" content="https://xusenqi.site/2019/12/11/kubeadm%E9%83%A8%E7%BD%B2single-control-plane-k8s%E9%9B%86%E7%BE%A4/kubeadm_token_create.png">
 <meta property="article:published_time" content="2019-12-10T16:58:25.000Z">
 <meta property="article:modified_time" content="2021-08-19T09:54:38.671Z">
 <meta property="article:author" content="patrick.xu">
 <meta property="article:tag" content="k8s">
 <meta property="article:tag" content="kubeadm">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="https://xusenqi.github.io/2019/12/11/kubeadm%E9%83%A8%E7%BD%B2single-control-plane-k8s%E9%9B%86%E7%BE%A4/kube_init_steps.png">
+<meta name="twitter:image" content="https://xusenqi.site/2019/12/11/kubeadm%E9%83%A8%E7%BD%B2single-control-plane-k8s%E9%9B%86%E7%BE%A4/kube_init_steps.png">
 
-<link rel="canonical" href="https://xusenqi.github.io/2019/12/11/kubeadm%E9%83%A8%E7%BD%B2single-control-plane-k8s%E9%9B%86%E7%BE%A4/">
+<link rel="canonical" href="https://xusenqi.site/2019/12/11/kubeadm%E9%83%A8%E7%BD%B2single-control-plane-k8s%E9%9B%86%E7%BE%A4/">
 
 
 <script id="page-configurations">
@@ -220,7 +220,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block " lang="zh-Hans">
-    <link itemprop="mainEntityOfPage" href="https://xusenqi.github.io/2019/12/11/kubeadm%E9%83%A8%E7%BD%B2single-control-plane-k8s%E9%9B%86%E7%BE%A4/">
+    <link itemprop="mainEntityOfPage" href="https://xusenqi.site/2019/12/11/kubeadm%E9%83%A8%E7%BD%B2single-control-plane-k8s%E9%9B%86%E7%BE%A4/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/ppwqgtl.png">

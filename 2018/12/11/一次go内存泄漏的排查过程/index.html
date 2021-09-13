@@ -21,7 +21,7 @@
 <script id="hexo-configurations">
   var NexT = window.NexT || {};
   var CONFIG = {
-    hostname: new URL('https://xusenqi.github.io').hostname,
+    hostname: new URL('https://xusenqi.site').hostname,
     root: '/',
     scheme: 'Gemini',
     version: '7.7.0',
@@ -51,23 +51,23 @@
   <meta name="description" content="背景线上一个go语言写的服务，在连续跑了10多天后，占用内存从最开始的20M左右，涨到了1个多G，有内存泄漏的问题，将整个排查过程和相应方法进行整理，做个记录。   pprofGo语言自带的pprof工具，是检测Golang开发应用性能的利器。 pprof 采样数据主要有三种获取方式:  runtime&#x2F;pprof: 手动调用runtime.StartCPUProfile或者runtime.Sto">
 <meta property="og:type" content="article">
 <meta property="og:title" content="一次go语言内存泄漏的排查过程">
-<meta property="og:url" content="https://xusenqi.github.io/2018/12/11/%E4%B8%80%E6%AC%A1go%E5%86%85%E5%AD%98%E6%B3%84%E6%BC%8F%E7%9A%84%E6%8E%92%E6%9F%A5%E8%BF%87%E7%A8%8B/index.html">
+<meta property="og:url" content="https://xusenqi.site/2018/12/11/%E4%B8%80%E6%AC%A1go%E5%86%85%E5%AD%98%E6%B3%84%E6%BC%8F%E7%9A%84%E6%8E%92%E6%9F%A5%E8%BF%87%E7%A8%8B/index.html">
 <meta property="og:site_name" content="许森琪的博客">
 <meta property="og:description" content="背景线上一个go语言写的服务，在连续跑了10多天后，占用内存从最开始的20M左右，涨到了1个多G，有内存泄漏的问题，将整个排查过程和相应方法进行整理，做个记录。   pprofGo语言自带的pprof工具，是检测Golang开发应用性能的利器。 pprof 采样数据主要有三种获取方式:  runtime&#x2F;pprof: 手动调用runtime.StartCPUProfile或者runtime.Sto">
 <meta property="og:locale">
-<meta property="og:image" content="https://xusenqi.github.io/2018/12/11/%E4%B8%80%E6%AC%A1go%E5%86%85%E5%AD%98%E6%B3%84%E6%BC%8F%E7%9A%84%E6%8E%92%E6%9F%A5%E8%BF%87%E7%A8%8B/1_%E5%86%85%E5%AD%98%E6%B3%84%E6%BC%8F.png">
-<meta property="og:image" content="https://xusenqi.github.io/2018/12/11/%E4%B8%80%E6%AC%A1go%E5%86%85%E5%AD%98%E6%B3%84%E6%BC%8F%E7%9A%84%E6%8E%92%E6%9F%A5%E8%BF%87%E7%A8%8B/3_netpprof%E6%B5%8F%E8%A7%88%E5%99%A8%E6%88%AA%E5%9B%BE2.png">
-<meta property="og:image" content="https://xusenqi.github.io/2018/12/11/%E4%B8%80%E6%AC%A1go%E5%86%85%E5%AD%98%E6%B3%84%E6%BC%8F%E7%9A%84%E6%8E%92%E6%9F%A5%E8%BF%87%E7%A8%8B/4_netpprof_debug_1.png">
-<meta property="og:image" content="https://xusenqi.github.io/2018/12/11/%E4%B8%80%E6%AC%A1go%E5%86%85%E5%AD%98%E6%B3%84%E6%BC%8F%E7%9A%84%E6%8E%92%E6%9F%A5%E8%BF%87%E7%A8%8B/6_%E5%86%85%E5%AD%98%E6%B3%84%E6%BC%8F%E8%A7%A3%E5%86%B3.png">
-<meta property="og:image" content="https://xusenqi.github.io/2018/12/11/%E4%B8%80%E6%AC%A1go%E5%86%85%E5%AD%98%E6%B3%84%E6%BC%8F%E7%9A%84%E6%8E%92%E6%9F%A5%E8%BF%87%E7%A8%8B/5_cpu%E8%80%97%E6%97%B6%E8%B0%83%E5%BA%A6%E5%9B%BE.png">
+<meta property="og:image" content="https://xusenqi.site/2018/12/11/%E4%B8%80%E6%AC%A1go%E5%86%85%E5%AD%98%E6%B3%84%E6%BC%8F%E7%9A%84%E6%8E%92%E6%9F%A5%E8%BF%87%E7%A8%8B/1_%E5%86%85%E5%AD%98%E6%B3%84%E6%BC%8F.png">
+<meta property="og:image" content="https://xusenqi.site/2018/12/11/%E4%B8%80%E6%AC%A1go%E5%86%85%E5%AD%98%E6%B3%84%E6%BC%8F%E7%9A%84%E6%8E%92%E6%9F%A5%E8%BF%87%E7%A8%8B/3_netpprof%E6%B5%8F%E8%A7%88%E5%99%A8%E6%88%AA%E5%9B%BE2.png">
+<meta property="og:image" content="https://xusenqi.site/2018/12/11/%E4%B8%80%E6%AC%A1go%E5%86%85%E5%AD%98%E6%B3%84%E6%BC%8F%E7%9A%84%E6%8E%92%E6%9F%A5%E8%BF%87%E7%A8%8B/4_netpprof_debug_1.png">
+<meta property="og:image" content="https://xusenqi.site/2018/12/11/%E4%B8%80%E6%AC%A1go%E5%86%85%E5%AD%98%E6%B3%84%E6%BC%8F%E7%9A%84%E6%8E%92%E6%9F%A5%E8%BF%87%E7%A8%8B/6_%E5%86%85%E5%AD%98%E6%B3%84%E6%BC%8F%E8%A7%A3%E5%86%B3.png">
+<meta property="og:image" content="https://xusenqi.site/2018/12/11/%E4%B8%80%E6%AC%A1go%E5%86%85%E5%AD%98%E6%B3%84%E6%BC%8F%E7%9A%84%E6%8E%92%E6%9F%A5%E8%BF%87%E7%A8%8B/5_cpu%E8%80%97%E6%97%B6%E8%B0%83%E5%BA%A6%E5%9B%BE.png">
 <meta property="article:published_time" content="2018-12-10T16:29:12.000Z">
 <meta property="article:modified_time" content="2021-08-19T09:54:38.730Z">
 <meta property="article:author" content="patrick.xu">
 <meta property="article:tag" content="Go">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="https://xusenqi.github.io/2018/12/11/%E4%B8%80%E6%AC%A1go%E5%86%85%E5%AD%98%E6%B3%84%E6%BC%8F%E7%9A%84%E6%8E%92%E6%9F%A5%E8%BF%87%E7%A8%8B/1_%E5%86%85%E5%AD%98%E6%B3%84%E6%BC%8F.png">
+<meta name="twitter:image" content="https://xusenqi.site/2018/12/11/%E4%B8%80%E6%AC%A1go%E5%86%85%E5%AD%98%E6%B3%84%E6%BC%8F%E7%9A%84%E6%8E%92%E6%9F%A5%E8%BF%87%E7%A8%8B/1_%E5%86%85%E5%AD%98%E6%B3%84%E6%BC%8F.png">
 
-<link rel="canonical" href="https://xusenqi.github.io/2018/12/11/%E4%B8%80%E6%AC%A1go%E5%86%85%E5%AD%98%E6%B3%84%E6%BC%8F%E7%9A%84%E6%8E%92%E6%9F%A5%E8%BF%87%E7%A8%8B/">
+<link rel="canonical" href="https://xusenqi.site/2018/12/11/%E4%B8%80%E6%AC%A1go%E5%86%85%E5%AD%98%E6%B3%84%E6%BC%8F%E7%9A%84%E6%8E%92%E6%9F%A5%E8%BF%87%E7%A8%8B/">
 
 
 <script id="page-configurations">
@@ -220,7 +220,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block " lang="zh-Hans">
-    <link itemprop="mainEntityOfPage" href="https://xusenqi.github.io/2018/12/11/%E4%B8%80%E6%AC%A1go%E5%86%85%E5%AD%98%E6%B3%84%E6%BC%8F%E7%9A%84%E6%8E%92%E6%9F%A5%E8%BF%87%E7%A8%8B/">
+    <link itemprop="mainEntityOfPage" href="https://xusenqi.site/2018/12/11/%E4%B8%80%E6%AC%A1go%E5%86%85%E5%AD%98%E6%B3%84%E6%BC%8F%E7%9A%84%E6%8E%92%E6%9F%A5%E8%BF%87%E7%A8%8B/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/ppwqgtl.png">
