@@ -1,104 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <search>
   <entry>
-    <title>Go语言 - 01 工作区和GOPATH</title>
-    <url>/2018/08/12/Go%E8%AF%AD%E8%A8%80-01-%E5%B7%A5%E4%BD%9C%E5%8C%BA%E5%92%8CGOPATH/</url>
-    <content><![CDATA[<h2 id="Go语言的安装"><a href="#Go语言的安装" class="headerlink" title="Go语言的安装"></a>Go语言的安装</h2><p>参照官网文档 <a href="https://golang.org/doc/install">https://golang.org/doc/install</a><br>可以在命令行中输入命令来验证是否安装成功：</p>
-<ul>
-<li>go version：查看安装的版本</li>
-<li>go env：当前go的配置环境</li>
-</ul>
-<p>2个环境变量，即 GOROOT、GOPATH和GOBIN:</p>
-<ul>
-<li>GOROOT：go的安装路径</li>
-<li>GOPATH：go的工作路径<span id="more"></span></li>
-</ul>
-<h2 id="问题-：设置-GOPATH-有什么意义？"><a href="#问题-：设置-GOPATH-有什么意义？" class="headerlink" title="问题 ：设置 GOPATH 有什么意义？"></a>问题 ：设置 GOPATH 有什么意义？</h2><p>典型回答<br>环境变量 GOPATH 的值可以是一个目录的路径，也可以包含多个目录路径，每个目录都代表 Go 语言的一个工作区（workspace）。<br>这些工作区用于放置 Go 语言的源码文件，以及安装（install）后的归档文件和可执行文件。<br>一个典型的workspace如下：</p>
-<figure class="highlight awk"><table><tr><td class="code"><pre><span class="line">bin/</span><br><span class="line">    hello                 <span class="comment"># command executable </span></span><br><span class="line">pkg/</span><br><span class="line">    linux_amd64/          <span class="comment"># this will reflect your OS and architecture</span></span><br><span class="line">        github.com<span class="regexp">/user/</span></span><br><span class="line">            stringutil.a  <span class="comment"># package object</span></span><br><span class="line">src/</span><br><span class="line">    github.com<span class="regexp">/user/</span></span><br><span class="line">        hello/</span><br><span class="line">            hello.go      <span class="comment"># command source</span></span><br><span class="line">        stringutil/</span><br><span class="line">            reverse.go    <span class="comment"># package source</span></span><br></pre></td></tr></table></figure>
-
-<h2 id="知识扩展"><a href="#知识扩展" class="headerlink" title="知识扩展"></a>知识扩展</h2><h3 id="Go-语言源码的组织方式"><a href="#Go-语言源码的组织方式" class="headerlink" title="Go 语言源码的组织方式"></a>Go 语言源码的组织方式</h3><p>以代码包(package)为基本组织单位的。代码包其实是与目录一一对应的。目录可以有子目录，所以代码包也可以有子包。</p>
-<p>一个代码包中可以包含任意个以.go 为扩展名的源码文件，这些源码文件都需要被声明为属于同一个代码包。代码包的名称一般会与这些源码文件所在的目录同名。如果不同名，那么在构建、安装的过程中会以代码包名称为准。</p>
-<p>代码包的导入：</p>
-<figure class="highlight arduino"><table><tr><td class="code"><pre><span class="line"><span class="keyword">import</span> <span class="string">&quot;github.com/labstack/echo&quot;</span></span><br></pre></td></tr></table></figure>
-
-<p>在工作区中，一个代码包的导入路径实际上就是从 src 子目录，到该包的实际存储位置的相对路径。下面我马上就会谈到 src子目录。<br>插播：Go语言的源码文件有三大类，即：命令源码文件、库源码文件和测试源码文件。</p>
-<h3 id="构建-go-build-和安装-go-install"><a href="#构建-go-build-和安装-go-install" class="headerlink" title="构建(go build)和安装(go install)"></a>构建(go build)和安装(go install)</h3><p>go build: 用于编译我们指定的源码文件或代码包以及它们的依赖包。<br>对于只包含库源码文件的代码包, go build命令在编译时，只会做检查性的编译，操作的结果文件只会存在于临时目录中，立刻自动删除，而不会输出任何结果文件。<br>如果想保留在临时工作目录，不删除掉：</p>
-<figure class="highlight awk"><table><tr><td class="code"><pre><span class="line">➜  stringutil go build -work</span><br><span class="line">WORK=<span class="regexp">/var/</span>folders<span class="regexp">/5s/</span><span class="number">25</span>ck5pv16rg55hr2kfdvtszc0000gp<span class="regexp">/T/g</span>o-build412712988</span><br></pre></td></tr></table></figure>
-<p>如果构建的是命令源码文件，那么操作的结果文件会被搬运到那个源码文件所在的目录中。</p>
-<figure class="highlight vim"><table><tr><td class="code"><pre><span class="line">➜  hello gi<span class="variable">t:</span>(master) ✗ <span class="keyword">ls</span></span><br><span class="line">hello.<span class="keyword">go</span></span><br><span class="line">➜  hello gi<span class="variable">t:</span>(master) ✗ <span class="keyword">go</span> build</span><br><span class="line">➜  hello gi<span class="variable">t:</span>(master) ✗ <span class="keyword">ls</span></span><br><span class="line">hello    hello.<span class="keyword">go</span></span><br></pre></td></tr></table></figure>
-<p>go install: 安装操作会先执行构建(go build)，然后还会进行链接操作，并且把结果文件搬运到指定目录。<br>进一步说，如果安装的是库源码文件，那么结果文件会被搬运到它所在工作区的 pkg 目录下的某个子目录中。</p>
-<figure class="highlight awk"><table><tr><td class="code"><pre><span class="line">➜  XuSenqi ls <span class="regexp">/Users/</span>patrick.xu<span class="regexp">/go/</span>pkg<span class="regexp">/darwin_amd64/gi</span>thub.com/XuSenqi</span><br><span class="line">➜  XuSenqi go install github.com<span class="regexp">/XuSenqi/</span>stringutil</span><br><span class="line">➜  XuSenqi ls <span class="regexp">/Users/</span>patrick.xu<span class="regexp">/go/</span>pkg<span class="regexp">/darwin_amd64/gi</span>thub.com/XuSenqi</span><br><span class="line">stringutil.a</span><br></pre></td></tr></table></figure>
-
-<p>如果安装的是命令源码文件，那么结果文件会被搬运到它所在工作区的 bin 目录中，或者环境变量GOBIN指向的目录中。同时，依赖的代码包也会安装到pgk下对应的目录中。</p>
-<figure class="highlight gradle"><table><tr><td class="code"><pre><span class="line">➜  XuSenqi ls <span class="regexp">/Users/</span>patrick.xu<span class="regexp">/go/</span>pkg<span class="regexp">/darwin_amd64/gi</span>thub.com/XuSenqi</span><br><span class="line">➜  XuSenqi ls <span class="regexp">/Users/</span>patrick.xu<span class="regexp">/go/</span>bin/hello</span><br><span class="line">ls: <span class="regexp">/Users/</span>patrick.xu<span class="regexp">/go/</span>bin/hello: No such <span class="keyword">file</span> or directory</span><br><span class="line">➜  XuSenqi go install github.com<span class="regexp">/XuSenqi/</span>hello/</span><br><span class="line">➜  XuSenqi ls <span class="regexp">/Users/</span>patrick.xu<span class="regexp">/go/</span>pkg<span class="regexp">/darwin_amd64/gi</span>thub.com/XuSenqi</span><br><span class="line">stringutil.a</span><br><span class="line">➜  XuSenqi ls <span class="regexp">/Users/</span>patrick.xu<span class="regexp">/go/</span>bin/hello</span><br><span class="line"><span class="regexp">/Users/</span>patrick.xu<span class="regexp">/go/</span>bin/hello</span><br></pre></td></tr></table></figure>
-<h3 id="go-build-命令一些可选项的用途和用法"><a href="#go-build-命令一些可选项的用途和用法" class="headerlink" title="go build 命令一些可选项的用途和用法"></a>go build 命令一些可选项的用途和用法</h3><p>在运行go build命令的时候，默认不会编译目标代码包所依赖的那些代码包。当然，如果被依赖的代码包的归档文件不存在，或者源码文件有了变化，那它还是会被编译。</p>
-<p>如果要强制编译它们，可以在执行命令的时候加入标记-a。此时，不但目标代码包总是会被编译，它依赖的代码包也总会被编译，即使依赖的是标准库中的代码包也是如此。</p>
-<p>表1 go build命令的常用标记说明</p>
-<table>
-<thead>
-<tr>
-<th>标记名称</th>
-<th align="center">标记描述</th>
-</tr>
-</thead>
-<tbody><tr>
-<td>-a</td>
-<td align="center">强行对所有涉及到的代码包（包含标准库中的代码包）进行重新构建，即使它们已经是最新的了。</td>
-</tr>
-<tr>
-<td>-n</td>
-<td align="center">打印编译期间所用到的其它命令，但是并不真正执行它们。</td>
-</tr>
-<tr>
-<td>-p n</td>
-<td align="center">指定编译过程中执行各任务的并行数量（确切地说应该是并发数量）。在默认情况下，该数量等于CPU的逻辑核数。但是在darwin/arm平台（即iPhone和iPad所用的平台）下，该数量默认是1。</td>
-</tr>
-<tr>
-<td>-race</td>
-<td align="center">开启竞态条件的检测。不过此标记目前仅在linux/amd64、freebsd/amd64、darwin/amd64和windows/amd64平台下受到支持。</td>
-</tr>
-<tr>
-<td>-v</td>
-<td align="center">打印出那些被编译的代码包的名字。</td>
-</tr>
-<tr>
-<td>-work</td>
-<td align="center">打印出编译时生成的临时工作目录的路径，并在编译结束时保留它。在默认情况下，编译结束时会删除该目录。</td>
-</tr>
-<tr>
-<td>-x</td>
-<td align="center">打印编译期间所用到的其它命令。注意它与-n标记的区别。</td>
-</tr>
-</tbody></table>
-<h3 id="go-get"><a href="#go-get" class="headerlink" title="go get"></a>go get</h3><p>go get可以根据要求和实际情况从互联网上下载或更新指定的代码包及其依赖包，并对它们进行go build和go install。</p>
-<figure class="highlight awk"><table><tr><td class="code"><pre><span class="line">➜  XuSenqi go get github.com<span class="regexp">/hyper-carrot/g</span>o_lib/logging</span><br><span class="line">➜  XuSenqi ls <span class="variable">$GOPATH</span><span class="regexp">/src/gi</span>thub.com<span class="regexp">/hyper-carrot/g</span>o_lib/logging</span><br><span class="line">base.go           console_logger.go log_manager.go    logger_test.go    tag.go</span><br><span class="line">➜  XuSenqi ls <span class="regexp">/Users/</span>patrick.xu<span class="regexp">/go/</span>pkg<span class="regexp">/darwin_amd64/gi</span>thub.com<span class="regexp">/hyper-carrot/g</span>o_lib/logging.a</span><br><span class="line"><span class="regexp">/Users/</span>patrick.xu<span class="regexp">/go/</span>pkg<span class="regexp">/darwin_amd64/gi</span>thub.com<span class="regexp">/hyper-carrot/g</span>o_lib/logging.a</span><br></pre></td></tr></table></figure>
-<p>表2 go get命令的常用标记说明</p>
-<table>
-<thead>
-<tr>
-<th>标记名称</th>
-<th align="center">标记描述</th>
-</tr>
-</thead>
-<tbody><tr>
-<td>-d</td>
-<td align="center">让命令程序只执行下载动作，而不执行安装动作。</td>
-</tr>
-<tr>
-<td>-u</td>
-<td align="center">让命令利用网络来更新已有代码包及其依赖包。默认情况下，该命令只会从网络上下载本地不存在的代码包，而不会更新已有的代码包。</td>
-</tr>
-</tbody></table>
-<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><p>go build<br><a href="http://wiki.jikexueyuan.com/project/go-command-tutorial/0.1.html">http://wiki.jikexueyuan.com/project/go-command-tutorial/0.1.html</a><br>go get<br><a href="http://wiki.jikexueyuan.com/project/go-command-tutorial/0.3.html">http://wiki.jikexueyuan.com/project/go-command-tutorial/0.3.html</a><br><a href="https://github.com/hyper0x/go_command_tutorial/blob/master/0.3.md">https://github.com/hyper0x/go_command_tutorial/blob/master/0.3.md</a></p>
-]]></content>
-      <categories>
-        <category>Go</category>
-      </categories>
-      <tags>
-        <tag>Go</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>c++ profile的大杀器-gperftools的使用</title>
     <url>/2020/12/06/C++Profile%E7%9A%84%E5%A4%A7%E6%9D%80%E5%99%A8_gperftools%E7%9A%84%E4%BD%BF%E7%94%A8/</url>
     <content><![CDATA[<p>熟悉golang的同学，一定很熟悉用pprof来作为性能分析和可视化的工具，包括 cpu profile, memery profile等。这么方便且炫的功能，在C++里也一样能实现。所需要的工具就是gperftools。</p>
@@ -253,6 +155,104 @@
         <tag>c++</tag>
         <tag>profile</tag>
         <tag>gperftools</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>Go语言 - 01 工作区和GOPATH</title>
+    <url>/2018/08/12/Go%E8%AF%AD%E8%A8%80-01-%E5%B7%A5%E4%BD%9C%E5%8C%BA%E5%92%8CGOPATH/</url>
+    <content><![CDATA[<h2 id="Go语言的安装"><a href="#Go语言的安装" class="headerlink" title="Go语言的安装"></a>Go语言的安装</h2><p>参照官网文档 <a href="https://golang.org/doc/install">https://golang.org/doc/install</a><br>可以在命令行中输入命令来验证是否安装成功：</p>
+<ul>
+<li>go version：查看安装的版本</li>
+<li>go env：当前go的配置环境</li>
+</ul>
+<p>2个环境变量，即 GOROOT、GOPATH和GOBIN:</p>
+<ul>
+<li>GOROOT：go的安装路径</li>
+<li>GOPATH：go的工作路径<span id="more"></span></li>
+</ul>
+<h2 id="问题-：设置-GOPATH-有什么意义？"><a href="#问题-：设置-GOPATH-有什么意义？" class="headerlink" title="问题 ：设置 GOPATH 有什么意义？"></a>问题 ：设置 GOPATH 有什么意义？</h2><p>典型回答<br>环境变量 GOPATH 的值可以是一个目录的路径，也可以包含多个目录路径，每个目录都代表 Go 语言的一个工作区（workspace）。<br>这些工作区用于放置 Go 语言的源码文件，以及安装（install）后的归档文件和可执行文件。<br>一个典型的workspace如下：</p>
+<figure class="highlight awk"><table><tr><td class="code"><pre><span class="line">bin/</span><br><span class="line">    hello                 <span class="comment"># command executable </span></span><br><span class="line">pkg/</span><br><span class="line">    linux_amd64/          <span class="comment"># this will reflect your OS and architecture</span></span><br><span class="line">        github.com<span class="regexp">/user/</span></span><br><span class="line">            stringutil.a  <span class="comment"># package object</span></span><br><span class="line">src/</span><br><span class="line">    github.com<span class="regexp">/user/</span></span><br><span class="line">        hello/</span><br><span class="line">            hello.go      <span class="comment"># command source</span></span><br><span class="line">        stringutil/</span><br><span class="line">            reverse.go    <span class="comment"># package source</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="知识扩展"><a href="#知识扩展" class="headerlink" title="知识扩展"></a>知识扩展</h2><h3 id="Go-语言源码的组织方式"><a href="#Go-语言源码的组织方式" class="headerlink" title="Go 语言源码的组织方式"></a>Go 语言源码的组织方式</h3><p>以代码包(package)为基本组织单位的。代码包其实是与目录一一对应的。目录可以有子目录，所以代码包也可以有子包。</p>
+<p>一个代码包中可以包含任意个以.go 为扩展名的源码文件，这些源码文件都需要被声明为属于同一个代码包。代码包的名称一般会与这些源码文件所在的目录同名。如果不同名，那么在构建、安装的过程中会以代码包名称为准。</p>
+<p>代码包的导入：</p>
+<figure class="highlight arduino"><table><tr><td class="code"><pre><span class="line"><span class="keyword">import</span> <span class="string">&quot;github.com/labstack/echo&quot;</span></span><br></pre></td></tr></table></figure>
+
+<p>在工作区中，一个代码包的导入路径实际上就是从 src 子目录，到该包的实际存储位置的相对路径。下面我马上就会谈到 src子目录。<br>插播：Go语言的源码文件有三大类，即：命令源码文件、库源码文件和测试源码文件。</p>
+<h3 id="构建-go-build-和安装-go-install"><a href="#构建-go-build-和安装-go-install" class="headerlink" title="构建(go build)和安装(go install)"></a>构建(go build)和安装(go install)</h3><p>go build: 用于编译我们指定的源码文件或代码包以及它们的依赖包。<br>对于只包含库源码文件的代码包, go build命令在编译时，只会做检查性的编译，操作的结果文件只会存在于临时目录中，立刻自动删除，而不会输出任何结果文件。<br>如果想保留在临时工作目录，不删除掉：</p>
+<figure class="highlight awk"><table><tr><td class="code"><pre><span class="line">➜  stringutil go build -work</span><br><span class="line">WORK=<span class="regexp">/var/</span>folders<span class="regexp">/5s/</span><span class="number">25</span>ck5pv16rg55hr2kfdvtszc0000gp<span class="regexp">/T/g</span>o-build412712988</span><br></pre></td></tr></table></figure>
+<p>如果构建的是命令源码文件，那么操作的结果文件会被搬运到那个源码文件所在的目录中。</p>
+<figure class="highlight vim"><table><tr><td class="code"><pre><span class="line">➜  hello gi<span class="variable">t:</span>(master) ✗ <span class="keyword">ls</span></span><br><span class="line">hello.<span class="keyword">go</span></span><br><span class="line">➜  hello gi<span class="variable">t:</span>(master) ✗ <span class="keyword">go</span> build</span><br><span class="line">➜  hello gi<span class="variable">t:</span>(master) ✗ <span class="keyword">ls</span></span><br><span class="line">hello    hello.<span class="keyword">go</span></span><br></pre></td></tr></table></figure>
+<p>go install: 安装操作会先执行构建(go build)，然后还会进行链接操作，并且把结果文件搬运到指定目录。<br>进一步说，如果安装的是库源码文件，那么结果文件会被搬运到它所在工作区的 pkg 目录下的某个子目录中。</p>
+<figure class="highlight awk"><table><tr><td class="code"><pre><span class="line">➜  XuSenqi ls <span class="regexp">/Users/</span>patrick.xu<span class="regexp">/go/</span>pkg<span class="regexp">/darwin_amd64/gi</span>thub.com/XuSenqi</span><br><span class="line">➜  XuSenqi go install github.com<span class="regexp">/XuSenqi/</span>stringutil</span><br><span class="line">➜  XuSenqi ls <span class="regexp">/Users/</span>patrick.xu<span class="regexp">/go/</span>pkg<span class="regexp">/darwin_amd64/gi</span>thub.com/XuSenqi</span><br><span class="line">stringutil.a</span><br></pre></td></tr></table></figure>
+
+<p>如果安装的是命令源码文件，那么结果文件会被搬运到它所在工作区的 bin 目录中，或者环境变量GOBIN指向的目录中。同时，依赖的代码包也会安装到pgk下对应的目录中。</p>
+<figure class="highlight gradle"><table><tr><td class="code"><pre><span class="line">➜  XuSenqi ls <span class="regexp">/Users/</span>patrick.xu<span class="regexp">/go/</span>pkg<span class="regexp">/darwin_amd64/gi</span>thub.com/XuSenqi</span><br><span class="line">➜  XuSenqi ls <span class="regexp">/Users/</span>patrick.xu<span class="regexp">/go/</span>bin/hello</span><br><span class="line">ls: <span class="regexp">/Users/</span>patrick.xu<span class="regexp">/go/</span>bin/hello: No such <span class="keyword">file</span> or directory</span><br><span class="line">➜  XuSenqi go install github.com<span class="regexp">/XuSenqi/</span>hello/</span><br><span class="line">➜  XuSenqi ls <span class="regexp">/Users/</span>patrick.xu<span class="regexp">/go/</span>pkg<span class="regexp">/darwin_amd64/gi</span>thub.com/XuSenqi</span><br><span class="line">stringutil.a</span><br><span class="line">➜  XuSenqi ls <span class="regexp">/Users/</span>patrick.xu<span class="regexp">/go/</span>bin/hello</span><br><span class="line"><span class="regexp">/Users/</span>patrick.xu<span class="regexp">/go/</span>bin/hello</span><br></pre></td></tr></table></figure>
+<h3 id="go-build-命令一些可选项的用途和用法"><a href="#go-build-命令一些可选项的用途和用法" class="headerlink" title="go build 命令一些可选项的用途和用法"></a>go build 命令一些可选项的用途和用法</h3><p>在运行go build命令的时候，默认不会编译目标代码包所依赖的那些代码包。当然，如果被依赖的代码包的归档文件不存在，或者源码文件有了变化，那它还是会被编译。</p>
+<p>如果要强制编译它们，可以在执行命令的时候加入标记-a。此时，不但目标代码包总是会被编译，它依赖的代码包也总会被编译，即使依赖的是标准库中的代码包也是如此。</p>
+<p>表1 go build命令的常用标记说明</p>
+<table>
+<thead>
+<tr>
+<th>标记名称</th>
+<th align="center">标记描述</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>-a</td>
+<td align="center">强行对所有涉及到的代码包（包含标准库中的代码包）进行重新构建，即使它们已经是最新的了。</td>
+</tr>
+<tr>
+<td>-n</td>
+<td align="center">打印编译期间所用到的其它命令，但是并不真正执行它们。</td>
+</tr>
+<tr>
+<td>-p n</td>
+<td align="center">指定编译过程中执行各任务的并行数量（确切地说应该是并发数量）。在默认情况下，该数量等于CPU的逻辑核数。但是在darwin/arm平台（即iPhone和iPad所用的平台）下，该数量默认是1。</td>
+</tr>
+<tr>
+<td>-race</td>
+<td align="center">开启竞态条件的检测。不过此标记目前仅在linux/amd64、freebsd/amd64、darwin/amd64和windows/amd64平台下受到支持。</td>
+</tr>
+<tr>
+<td>-v</td>
+<td align="center">打印出那些被编译的代码包的名字。</td>
+</tr>
+<tr>
+<td>-work</td>
+<td align="center">打印出编译时生成的临时工作目录的路径，并在编译结束时保留它。在默认情况下，编译结束时会删除该目录。</td>
+</tr>
+<tr>
+<td>-x</td>
+<td align="center">打印编译期间所用到的其它命令。注意它与-n标记的区别。</td>
+</tr>
+</tbody></table>
+<h3 id="go-get"><a href="#go-get" class="headerlink" title="go get"></a>go get</h3><p>go get可以根据要求和实际情况从互联网上下载或更新指定的代码包及其依赖包，并对它们进行go build和go install。</p>
+<figure class="highlight awk"><table><tr><td class="code"><pre><span class="line">➜  XuSenqi go get github.com<span class="regexp">/hyper-carrot/g</span>o_lib/logging</span><br><span class="line">➜  XuSenqi ls <span class="variable">$GOPATH</span><span class="regexp">/src/gi</span>thub.com<span class="regexp">/hyper-carrot/g</span>o_lib/logging</span><br><span class="line">base.go           console_logger.go log_manager.go    logger_test.go    tag.go</span><br><span class="line">➜  XuSenqi ls <span class="regexp">/Users/</span>patrick.xu<span class="regexp">/go/</span>pkg<span class="regexp">/darwin_amd64/gi</span>thub.com<span class="regexp">/hyper-carrot/g</span>o_lib/logging.a</span><br><span class="line"><span class="regexp">/Users/</span>patrick.xu<span class="regexp">/go/</span>pkg<span class="regexp">/darwin_amd64/gi</span>thub.com<span class="regexp">/hyper-carrot/g</span>o_lib/logging.a</span><br></pre></td></tr></table></figure>
+<p>表2 go get命令的常用标记说明</p>
+<table>
+<thead>
+<tr>
+<th>标记名称</th>
+<th align="center">标记描述</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>-d</td>
+<td align="center">让命令程序只执行下载动作，而不执行安装动作。</td>
+</tr>
+<tr>
+<td>-u</td>
+<td align="center">让命令利用网络来更新已有代码包及其依赖包。默认情况下，该命令只会从网络上下载本地不存在的代码包，而不会更新已有的代码包。</td>
+</tr>
+</tbody></table>
+<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><p>go build<br><a href="http://wiki.jikexueyuan.com/project/go-command-tutorial/0.1.html">http://wiki.jikexueyuan.com/project/go-command-tutorial/0.1.html</a><br>go get<br><a href="http://wiki.jikexueyuan.com/project/go-command-tutorial/0.3.html">http://wiki.jikexueyuan.com/project/go-command-tutorial/0.3.html</a><br><a href="https://github.com/hyper0x/go_command_tutorial/blob/master/0.3.md">https://github.com/hyper0x/go_command_tutorial/blob/master/0.3.md</a></p>
+]]></content>
+      <categories>
+        <category>Go</category>
+      </categories>
+      <tags>
+        <tag>Go</tag>
       </tags>
   </entry>
   <entry>
@@ -945,6 +945,16 @@
       </tags>
   </entry>
   <entry>
+    <title>nodejs获取客户端IP Address(转)</title>
+    <url>/2018/12/14/nodejs%E8%8E%B7%E5%8F%96%E5%AE%A2%E6%88%B7%E7%AB%AFIP-Address/</url>
+    <content><![CDATA[<p>在网上看见很多问node.js如何获取客户端IP,所以记录下来，以供大家参考。</p>
+<figure class="highlight ada"><table><tr><td class="code"><pre><span class="line"><span class="keyword">function</span> <span class="title">getClientIp</span>(req) &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="type">req.headers[&#x27;x-forwarded-for&#x27;]</span> ||</span><br><span class="line">        req.connection.remoteAddress ||</span><br><span class="line">        req.socket.remoteAddress ||</span><br><span class="line">        req.connection.socket.remoteAddress;</span><br><span class="line">    &#125;;</span><br></pre></td></tr></table></figure>
+
+<p>代码，第一段判断是否有反向代理IP(头信息：x-forwarded-for)，再判断connection的远程IP，以及后端的socket的IP。</p>
+<p><a href="https://www.cnblogs.com/whitewolf/p/3572724.html">nodejs获取客户端IP Address</a></p>
+]]></content>
+  </entry>
+  <entry>
     <title>一次go语言内存泄漏的排查过程</title>
     <url>/2018/12/11/%E4%B8%80%E6%AC%A1go%E5%86%85%E5%AD%98%E6%B3%84%E6%BC%8F%E7%9A%84%E6%8E%92%E6%9F%A5%E8%BF%87%E7%A8%8B/</url>
     <content><![CDATA[<h2 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h2><p>线上一个go语言写的服务，在连续跑了10多天后，占用内存从最开始的20M左右，涨到了1个多G，有内存泄漏的问题，将整个排查过程和相应方法进行整理，做个记录。</p>
@@ -1067,16 +1077,6 @@
       <tags>
         <tag>Go</tag>
       </tags>
-  </entry>
-  <entry>
-    <title>nodejs获取客户端IP Address(转)</title>
-    <url>/2018/12/14/nodejs%E8%8E%B7%E5%8F%96%E5%AE%A2%E6%88%B7%E7%AB%AFIP-Address/</url>
-    <content><![CDATA[<p>在网上看见很多问node.js如何获取客户端IP,所以记录下来，以供大家参考。</p>
-<figure class="highlight ada"><table><tr><td class="code"><pre><span class="line"><span class="keyword">function</span> <span class="title">getClientIp</span>(req) &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="type">req.headers[&#x27;x-forwarded-for&#x27;]</span> ||</span><br><span class="line">        req.connection.remoteAddress ||</span><br><span class="line">        req.socket.remoteAddress ||</span><br><span class="line">        req.connection.socket.remoteAddress;</span><br><span class="line">    &#125;;</span><br></pre></td></tr></table></figure>
-
-<p>代码，第一段判断是否有反向代理IP(头信息：x-forwarded-for)，再判断connection的远程IP，以及后端的socket的IP。</p>
-<p><a href="https://www.cnblogs.com/whitewolf/p/3572724.html">nodejs获取客户端IP Address</a></p>
-]]></content>
   </entry>
   <entry>
     <title>一次mongo慢查询的优化过程</title>
@@ -1643,6 +1643,35 @@
       </tags>
   </entry>
   <entry>
+    <title>这些年读过的那些书&amp;&amp;待读清单列表</title>
+    <url>/2019/08/31/%E8%BF%99%E4%BA%9B%E5%B9%B4%E8%AF%BB%E8%BF%87%E7%9A%84%E9%82%A3%E4%BA%9B%E4%B9%A6-%E5%BE%85%E8%AF%BB%E6%B8%85%E5%8D%95%E5%88%97%E8%A1%A8/</url>
+    <content><![CDATA[<p>每年给自己列个计划，要读哪些书，到年尾看看真正看完的有多少。</p>
+<h1 id="2020年待读清单列表"><a href="#2020年待读清单列表" class="headerlink" title="2020年待读清单列表"></a>2020年待读清单列表</h1><ol>
+<li> 《Designing Data-Intensive Applications》</li>
+</ol>
+<h1 id="2019年待读清单列表"><a href="#2019年待读清单列表" class="headerlink" title="2019年待读清单列表"></a>2019年待读清单列表</h1><ol>
+<li>UNIX环境高级编程（第3版）</li>
+<li>重构网络 SDN架构与实现</li>
+<li>软件定义网络</li>
+<li>全球通史 从史前史到21实际 第7版修订版 上</li>
+<li>全球通史 从史前史到21实际 第7版修订版 下<span id="more"></span></li>
+</ol>
+<h1 id="这些年读过的那些书"><a href="#这些年读过的那些书" class="headerlink" title="这些年读过的那些书"></a>这些年读过的那些书</h1><h2 id="2020年"><a href="#2020年" class="headerlink" title="2020年"></a>2020年</h2><ol>
+<li>《深度思考》 深度思考前的盲目勤奋，注定是吃力不讨好的徒劳。香奈儿前全球CEO从普通职员到职场巅峰的人生进阶之路。大脑中走得越远，现实中走得越稳。</li>
+</ol>
+<h2 id="2019年"><a href="#2019年" class="headerlink" title="2019年"></a>2019年</h2><ol>
+<li>《TCP/IP详解 卷1：协议（原书第2版）》 <a href="https://xusenqi.github.io/2019/04/24/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0-TCP-IP%E8%AF%A6%E8%A7%A3-%E5%8D%B71%EF%BC%9A%E5%8D%8F%E8%AE%AE/">读书笔记-TCP/IP详解 卷1：协议</a></li>
+<li>《软技能 代码之外的生存指南（Soft Skills - The Software Developer’s Life Manual）》对于程序员是很不错的心灵鸡汤，从职业、自我营销、学习、生产力等方面，讲述了作者的方法和心得，很值得借鉴。</li>
+</ol>
+]]></content>
+      <categories>
+        <category>读书笔记</category>
+      </categories>
+      <tags>
+        <tag>清单</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>读书笔记-TCP/IP详解 卷1：协议</title>
     <url>/2019/04/24/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0-TCP-IP%E8%AF%A6%E8%A7%A3-%E5%8D%B71%EF%BC%9A%E5%8D%8F%E8%AE%AE/</url>
     <content><![CDATA[<p>不同层的PDU（Protocol Data Unit）</p>
@@ -1796,35 +1825,6 @@
       </categories>
       <tags>
         <tag>网络</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>这些年读过的那些书&amp;&amp;待读清单列表</title>
-    <url>/2019/08/31/%E8%BF%99%E4%BA%9B%E5%B9%B4%E8%AF%BB%E8%BF%87%E7%9A%84%E9%82%A3%E4%BA%9B%E4%B9%A6-%E5%BE%85%E8%AF%BB%E6%B8%85%E5%8D%95%E5%88%97%E8%A1%A8/</url>
-    <content><![CDATA[<p>每年给自己列个计划，要读哪些书，到年尾看看真正看完的有多少。</p>
-<h1 id="2020年待读清单列表"><a href="#2020年待读清单列表" class="headerlink" title="2020年待读清单列表"></a>2020年待读清单列表</h1><ol>
-<li> 《Designing Data-Intensive Applications》</li>
-</ol>
-<h1 id="2019年待读清单列表"><a href="#2019年待读清单列表" class="headerlink" title="2019年待读清单列表"></a>2019年待读清单列表</h1><ol>
-<li>UNIX环境高级编程（第3版）</li>
-<li>重构网络 SDN架构与实现</li>
-<li>软件定义网络</li>
-<li>全球通史 从史前史到21实际 第7版修订版 上</li>
-<li>全球通史 从史前史到21实际 第7版修订版 下<span id="more"></span></li>
-</ol>
-<h1 id="这些年读过的那些书"><a href="#这些年读过的那些书" class="headerlink" title="这些年读过的那些书"></a>这些年读过的那些书</h1><h2 id="2020年"><a href="#2020年" class="headerlink" title="2020年"></a>2020年</h2><ol>
-<li>《深度思考》 深度思考前的盲目勤奋，注定是吃力不讨好的徒劳。香奈儿前全球CEO从普通职员到职场巅峰的人生进阶之路。大脑中走得越远，现实中走得越稳。</li>
-</ol>
-<h2 id="2019年"><a href="#2019年" class="headerlink" title="2019年"></a>2019年</h2><ol>
-<li>《TCP/IP详解 卷1：协议（原书第2版）》 <a href="https://xusenqi.github.io/2019/04/24/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0-TCP-IP%E8%AF%A6%E8%A7%A3-%E5%8D%B71%EF%BC%9A%E5%8D%8F%E8%AE%AE/">读书笔记-TCP/IP详解 卷1：协议</a></li>
-<li>《软技能 代码之外的生存指南（Soft Skills - The Software Developer’s Life Manual）》对于程序员是很不错的心灵鸡汤，从职业、自我营销、学习、生产力等方面，讲述了作者的方法和心得，很值得借鉴。</li>
-</ol>
-]]></content>
-      <categories>
-        <category>读书笔记</category>
-      </categories>
-      <tags>
-        <tag>清单</tag>
       </tags>
   </entry>
   <entry>
