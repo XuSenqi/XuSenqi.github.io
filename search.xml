@@ -693,41 +693,6 @@
       </tags>
   </entry>
   <entry>
-    <title>goroutine调度器</title>
-    <url>/2019/07/28/goroutine%E8%B0%83%E5%BA%A6%E5%99%A8/</url>
-    <content><![CDATA[<h1 id="goroutine调度器简介"><a href="#goroutine调度器简介" class="headerlink" title="goroutine调度器简介"></a>goroutine调度器简介</h1><p>G-P-M模型，下面这张图很直观。</p>
-<img src="/2019/07/28/goroutine%E8%B0%83%E5%BA%A6%E5%99%A8/goroutine-scheduler-model.png" class="" title="image">
-<span id="more"></span>
-<p>具体内容，参考以下链接，已经说得很详细，不再重复。</p>
-<ul>
-<li><a href="http://morsmachine.dk/go-scheduler">The Go scheduler</a></li>
-<li><a href="https://tonybai.com/2017/06/23/an-intro-about-goroutine-scheduler/">也谈goroutine调度器</a></li>
-<li><a href="https://segmentfault.com/a/1190000015464889">Goroutine并发调度模型深度解析之手撸一个协程池</a></li>
-<li>源码阅读的话，推荐国内的雨痕老师在其《Go语言学习笔记》</li>
-</ul>
-<h1 id="例子"><a href="#例子" class="headerlink" title="例子"></a>例子</h1><figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"><span class="keyword">import</span> <span class="string">&quot;fmt&quot;</span></span><br><span class="line"><span class="keyword">import</span> <span class="string">&quot;time&quot;</span></span><br><span class="line"><span class="keyword">import</span> <span class="string">&quot;runtime&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">    <span class="keyword">var</span> x <span class="keyword">int</span></span><br><span class="line">    fmt.Println(<span class="string">&quot;GOMAXPROCS =&quot;</span>, runtime.GOMAXPROCS(<span class="number">0</span>) )</span><br><span class="line">    threads := runtime.GOMAXPROCS(<span class="number">0</span>)</span><br><span class="line">    <span class="keyword">for</span> i := <span class="number">0</span>; i &lt; threads; i++ &#123;</span><br><span class="line">        <span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">            <span class="keyword">for</span> &#123; x++ &#125;</span><br><span class="line">        &#125;()</span><br><span class="line">    &#125;</span><br><span class="line">    fmt.Println(<span class="string">&quot;Before time.Sleep&quot;</span>)</span><br><span class="line">    time.Sleep(time.Second)</span><br><span class="line">    fmt.Println(<span class="string">&quot;After time.Sleep&quot;</span>)</span><br><span class="line">    fmt.Println(<span class="string">&quot;x =&quot;</span>, x)  <span class="comment">//程序能运行到这里吗？</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>运行之后，发现main函数运行到Sleep之后，就卡住了，是什么原因呢？</p>
-<figure class="highlight stylus"><table><tr><td class="code"><pre><span class="line"><span class="selector-attr">[patrickxu@vm1 src]</span>$ ./test</span><br><span class="line">GOMAXPROCS = <span class="number">8</span></span><br><span class="line">Before <span class="selector-tag">time</span><span class="selector-class">.Sleep</span></span><br><span class="line"></span><br><span class="line"></span><br></pre></td></tr></table></figure>
-
-<p>因为main函数在执行time.Sleep(time.Second)后，main函数本身占据的P(G-P-M模型中的P)也被for{ x++ }一直占着,抢占的机制。这下总共8个P，全部一直被for { x++ }占着，永远轮不到主函数了。</p>
-<p>runtime.GOMAXPROCS(0)默认等于CPU核数8。每个P可以分配到一个M(即线程)，总共2 + runtime.GOMAXPROCS(0) = 10个。</p>
-<figure class="highlight tap"><table><tr><td class="code"><pre><span class="line">[patrickxu@vm1 ~]$ ps -eLf | grep test</span><br><span class="line">519     <span class="number"> 26778 </span>26325<span class="number"> 26778 </span><span class="number"> 0 </span> <span class="number"> 10 </span>00:18 pts/42   00:00:00 ./test</span><br><span class="line">519     <span class="number"> 26778 </span>26325<span class="number"> 26779 </span><span class="number"> 0 </span> <span class="number"> 10 </span>00:18 pts/42   00:00:00 ./test</span><br><span class="line">519     <span class="number"> 26778 </span>26325<span class="number"> 26780 </span>99  <span class="number"> 10 </span>00:18 pts/42   00:02:28 ./test</span><br><span class="line">519     <span class="number"> 26778 </span>26325<span class="number"> 26781 </span>99  <span class="number"> 10 </span>00:18 pts/42   00:02:28 ./test</span><br><span class="line">519     <span class="number"> 26778 </span>26325<span class="number"> 26782 </span>99  <span class="number"> 10 </span>00:18 pts/42   00:02:28 ./test</span><br><span class="line">519     <span class="number"> 26778 </span>26325<span class="number"> 26783 </span>99  <span class="number"> 10 </span>00:18 pts/42   00:02:28 ./test</span><br><span class="line">519     <span class="number"> 26778 </span>26325<span class="number"> 26784 </span>99  <span class="number"> 10 </span>00:18 pts/42   00:02:28 ./test</span><br><span class="line">519     <span class="number"> 26778 </span>26325<span class="number"> 26785 </span>99  <span class="number"> 10 </span>00:18 pts/42   00:02:27 ./test</span><br><span class="line">519     <span class="number"> 26778 </span>26325<span class="number"> 26786 </span>99  <span class="number"> 10 </span>00:18 pts/42   00:02:28 ./test</span><br><span class="line">519     <span class="number"> 26778 </span>26325<span class="number"> 26787 </span>99  <span class="number"> 10 </span>00:18 pts/42   00:02:28 ./test</span><br></pre></td></tr></table></figure>
-
-
-<p>如果把time.Sleep(time.Second)去掉后，马上全部执行结束。</p>
-<figure class="highlight elixir"><table><tr><td class="code"><pre><span class="line">[patrickxu<span class="variable">@vm1</span> src]<span class="variable">$ </span>./test</span><br><span class="line">GOMAXPROCS = <span class="number">8</span></span><br><span class="line">x = 0</span><br></pre></td></tr></table></figure>
-<p>当然也可以把GOMAXPROCS设打，比如threads := runtime.GOMAXPROCS(10)。有足够多的P，也可以运行完。</p>
-]]></content>
-      <categories>
-        <category>go</category>
-      </categories>
-      <tags>
-        <tag>goroutine</tag>
-        <tag>调度</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>golang中的map并发读写问题</title>
     <url>/2020/03/08/golang%E4%B8%AD%E7%9A%84map%E5%B9%B6%E5%8F%91%E8%AF%BB%E5%86%99%E9%97%AE%E9%A2%98/</url>
     <content><![CDATA[<h1 id="map不是并发安全的"><a href="#map不是并发安全的" class="headerlink" title="map不是并发安全的"></a>map不是并发安全的</h1><p>官方的<a href="https://golang.org/doc/faq#atomic_maps">faq</a>里有说明，考虑到有性能损失，map没有设计成原子操作，在并发读写时会有问题。</p>
@@ -776,14 +741,39 @@
       </tags>
   </entry>
   <entry>
-    <title>nodejs获取客户端IP Address(转)</title>
-    <url>/2018/12/14/nodejs%E8%8E%B7%E5%8F%96%E5%AE%A2%E6%88%B7%E7%AB%AFIP-Address/</url>
-    <content><![CDATA[<p>在网上看见很多问node.js如何获取客户端IP,所以记录下来，以供大家参考。</p>
-<figure class="highlight ada"><table><tr><td class="code"><pre><span class="line"><span class="keyword">function</span> <span class="title">getClientIp</span>(req) &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="type">req.headers[&#x27;x-forwarded-for&#x27;]</span> ||</span><br><span class="line">        req.connection.remoteAddress ||</span><br><span class="line">        req.socket.remoteAddress ||</span><br><span class="line">        req.connection.socket.remoteAddress;</span><br><span class="line">    &#125;;</span><br></pre></td></tr></table></figure>
+    <title>goroutine调度器</title>
+    <url>/2019/07/28/goroutine%E8%B0%83%E5%BA%A6%E5%99%A8/</url>
+    <content><![CDATA[<h1 id="goroutine调度器简介"><a href="#goroutine调度器简介" class="headerlink" title="goroutine调度器简介"></a>goroutine调度器简介</h1><p>G-P-M模型，下面这张图很直观。</p>
+<img src="/2019/07/28/goroutine%E8%B0%83%E5%BA%A6%E5%99%A8/goroutine-scheduler-model.png" class="" title="image">
+<span id="more"></span>
+<p>具体内容，参考以下链接，已经说得很详细，不再重复。</p>
+<ul>
+<li><a href="http://morsmachine.dk/go-scheduler">The Go scheduler</a></li>
+<li><a href="https://tonybai.com/2017/06/23/an-intro-about-goroutine-scheduler/">也谈goroutine调度器</a></li>
+<li><a href="https://segmentfault.com/a/1190000015464889">Goroutine并发调度模型深度解析之手撸一个协程池</a></li>
+<li>源码阅读的话，推荐国内的雨痕老师在其《Go语言学习笔记》</li>
+</ul>
+<h1 id="例子"><a href="#例子" class="headerlink" title="例子"></a>例子</h1><figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"><span class="keyword">import</span> <span class="string">&quot;fmt&quot;</span></span><br><span class="line"><span class="keyword">import</span> <span class="string">&quot;time&quot;</span></span><br><span class="line"><span class="keyword">import</span> <span class="string">&quot;runtime&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">    <span class="keyword">var</span> x <span class="keyword">int</span></span><br><span class="line">    fmt.Println(<span class="string">&quot;GOMAXPROCS =&quot;</span>, runtime.GOMAXPROCS(<span class="number">0</span>) )</span><br><span class="line">    threads := runtime.GOMAXPROCS(<span class="number">0</span>)</span><br><span class="line">    <span class="keyword">for</span> i := <span class="number">0</span>; i &lt; threads; i++ &#123;</span><br><span class="line">        <span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">            <span class="keyword">for</span> &#123; x++ &#125;</span><br><span class="line">        &#125;()</span><br><span class="line">    &#125;</span><br><span class="line">    fmt.Println(<span class="string">&quot;Before time.Sleep&quot;</span>)</span><br><span class="line">    time.Sleep(time.Second)</span><br><span class="line">    fmt.Println(<span class="string">&quot;After time.Sleep&quot;</span>)</span><br><span class="line">    fmt.Println(<span class="string">&quot;x =&quot;</span>, x)  <span class="comment">//程序能运行到这里吗？</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
-<p>代码，第一段判断是否有反向代理IP(头信息：x-forwarded-for)，再判断connection的远程IP，以及后端的socket的IP。</p>
-<p><a href="https://www.cnblogs.com/whitewolf/p/3572724.html">nodejs获取客户端IP Address</a></p>
+<p>运行之后，发现main函数运行到Sleep之后，就卡住了，是什么原因呢？</p>
+<figure class="highlight stylus"><table><tr><td class="code"><pre><span class="line"><span class="selector-attr">[patrickxu@vm1 src]</span>$ ./test</span><br><span class="line">GOMAXPROCS = <span class="number">8</span></span><br><span class="line">Before <span class="selector-tag">time</span><span class="selector-class">.Sleep</span></span><br><span class="line"></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>因为main函数在执行time.Sleep(time.Second)后，main函数本身占据的P(G-P-M模型中的P)也被for{ x++ }一直占着,抢占的机制。这下总共8个P，全部一直被for { x++ }占着，永远轮不到主函数了。</p>
+<p>runtime.GOMAXPROCS(0)默认等于CPU核数8。每个P可以分配到一个M(即线程)，总共2 + runtime.GOMAXPROCS(0) = 10个。</p>
+<figure class="highlight tap"><table><tr><td class="code"><pre><span class="line">[patrickxu@vm1 ~]$ ps -eLf | grep test</span><br><span class="line">519     <span class="number"> 26778 </span>26325<span class="number"> 26778 </span><span class="number"> 0 </span> <span class="number"> 10 </span>00:18 pts/42   00:00:00 ./test</span><br><span class="line">519     <span class="number"> 26778 </span>26325<span class="number"> 26779 </span><span class="number"> 0 </span> <span class="number"> 10 </span>00:18 pts/42   00:00:00 ./test</span><br><span class="line">519     <span class="number"> 26778 </span>26325<span class="number"> 26780 </span>99  <span class="number"> 10 </span>00:18 pts/42   00:02:28 ./test</span><br><span class="line">519     <span class="number"> 26778 </span>26325<span class="number"> 26781 </span>99  <span class="number"> 10 </span>00:18 pts/42   00:02:28 ./test</span><br><span class="line">519     <span class="number"> 26778 </span>26325<span class="number"> 26782 </span>99  <span class="number"> 10 </span>00:18 pts/42   00:02:28 ./test</span><br><span class="line">519     <span class="number"> 26778 </span>26325<span class="number"> 26783 </span>99  <span class="number"> 10 </span>00:18 pts/42   00:02:28 ./test</span><br><span class="line">519     <span class="number"> 26778 </span>26325<span class="number"> 26784 </span>99  <span class="number"> 10 </span>00:18 pts/42   00:02:28 ./test</span><br><span class="line">519     <span class="number"> 26778 </span>26325<span class="number"> 26785 </span>99  <span class="number"> 10 </span>00:18 pts/42   00:02:27 ./test</span><br><span class="line">519     <span class="number"> 26778 </span>26325<span class="number"> 26786 </span>99  <span class="number"> 10 </span>00:18 pts/42   00:02:28 ./test</span><br><span class="line">519     <span class="number"> 26778 </span>26325<span class="number"> 26787 </span>99  <span class="number"> 10 </span>00:18 pts/42   00:02:28 ./test</span><br></pre></td></tr></table></figure>
+
+
+<p>如果把time.Sleep(time.Second)去掉后，马上全部执行结束。</p>
+<figure class="highlight elixir"><table><tr><td class="code"><pre><span class="line">[patrickxu<span class="variable">@vm1</span> src]<span class="variable">$ </span>./test</span><br><span class="line">GOMAXPROCS = <span class="number">8</span></span><br><span class="line">x = 0</span><br></pre></td></tr></table></figure>
+<p>当然也可以把GOMAXPROCS设打，比如threads := runtime.GOMAXPROCS(10)。有足够多的P，也可以运行完。</p>
 ]]></content>
+      <categories>
+        <category>go</category>
+      </categories>
+      <tags>
+        <tag>goroutine</tag>
+        <tag>调度</tag>
+      </tags>
   </entry>
   <entry>
     <title>kubeadm部署single control-plane k8s集群</title>
@@ -955,6 +945,16 @@
       </tags>
   </entry>
   <entry>
+    <title>nodejs获取客户端IP Address(转)</title>
+    <url>/2018/12/14/nodejs%E8%8E%B7%E5%8F%96%E5%AE%A2%E6%88%B7%E7%AB%AFIP-Address/</url>
+    <content><![CDATA[<p>在网上看见很多问node.js如何获取客户端IP,所以记录下来，以供大家参考。</p>
+<figure class="highlight ada"><table><tr><td class="code"><pre><span class="line"><span class="keyword">function</span> <span class="title">getClientIp</span>(req) &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="type">req.headers[&#x27;x-forwarded-for&#x27;]</span> ||</span><br><span class="line">        req.connection.remoteAddress ||</span><br><span class="line">        req.socket.remoteAddress ||</span><br><span class="line">        req.connection.socket.remoteAddress;</span><br><span class="line">    &#125;;</span><br></pre></td></tr></table></figure>
+
+<p>代码，第一段判断是否有反向代理IP(头信息：x-forwarded-for)，再判断connection的远程IP，以及后端的socket的IP。</p>
+<p><a href="https://www.cnblogs.com/whitewolf/p/3572724.html">nodejs获取客户端IP Address</a></p>
+]]></content>
+  </entry>
+  <entry>
     <title>一次go语言内存泄漏的排查过程</title>
     <url>/2018/12/11/%E4%B8%80%E6%AC%A1go%E5%86%85%E5%AD%98%E6%B3%84%E6%BC%8F%E7%9A%84%E6%8E%92%E6%9F%A5%E8%BF%87%E7%A8%8B/</url>
     <content><![CDATA[<h2 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h2><p>线上一个go语言写的服务，在连续跑了10多天后，占用内存从最开始的20M左右，涨到了1个多G，有内存泄漏的问题，将整个排查过程和相应方法进行整理，做个记录。</p>
@@ -1049,6 +1049,16 @@
 <figure class="highlight vim"><table><tr><td class="code"><pre><span class="line">➜  uhost-<span class="keyword">go</span> gi<span class="variable">t:</span>(from_pxu) ✗ <span class="keyword">go</span> tool pprof uhost_server pprof.uhost_server.samples.cpu.<span class="number">004</span>.pb</span><br><span class="line">Entering interactive <span class="keyword">mode</span> (<span class="built_in">type</span> <span class="string">&quot;help&quot;</span> <span class="keyword">for</span> commands)</span><br><span class="line">(pprof) web</span><br><span class="line">(pprof) web getSuitableResource</span><br></pre></td></tr></table></figure>
 
 <p>但是web命令生成的调用图往往是残缺的，不知道是什么原因。但找到下面更好的方式。</p>
+<h4 id="本地显示远程的调用图（推荐）"><a href="#本地显示远程的调用图（推荐）" class="headerlink" title="本地显示远程的调用图（推荐）"></a>本地显示远程的调用图（推荐）</h4><p>后来返现一种更易用的方式，服务在线上运行，本地浏览器直接打开调用图。<br>线上服务器ip为172.21.212.101，pprof监听端口为8991。</p>
+<p>下面还是以cpu耗时为例</p>
+<figure class="highlight vim"><table><tr><td class="code"><pre><span class="line">[root@gw ~]# <span class="keyword">go</span> tool pprof http://<span class="number">172.21</span>.<span class="number">212.101</span>:<span class="number">8991</span>/<span class="keyword">debug</span>/pprof/<span class="keyword">profile</span></span><br><span class="line">Fetching <span class="keyword">profile</span> over HTTP from http://<span class="number">172.21</span>.<span class="number">212.101</span>:<span class="number">8991</span>/<span class="keyword">debug</span>/pprof/<span class="keyword">profile</span></span><br><span class="line">Saved <span class="keyword">profile</span> in /root/pprof/pprof.node_server.samples.cpu.<span class="number">005</span>.pb.gz</span><br><span class="line">File: node_server</span><br><span class="line">Type: cpu</span><br><span class="line">Time: Sep <span class="number">16</span>, <span class="number">2021</span> at <span class="number">4</span>:<span class="number">36</span>pm (CST)</span><br><span class="line">Duration: <span class="number">30.18</span>s, Total samples = <span class="number">5.15</span>mins (<span class="number">1023.28</span>%)</span><br><span class="line">Entering interactive <span class="keyword">mode</span> (<span class="built_in">type</span> <span class="string">&quot;help&quot;</span> <span class="keyword">for</span> commands, <span class="string">&quot;o&quot;</span> <span class="keyword">for</span> <span class="keyword">options</span>)</span><br><span class="line">(pprof) </span><br></pre></td></tr></table></figure>
+
+<p>然后在线上服务器再起一个8992的端口</p>
+<figure class="highlight awk"><table><tr><td class="code"><pre><span class="line">[root@gw ~]<span class="comment"># go tool pprof -http=&quot;172.21.212.101:8992&quot; http://172.21.212.101:8991/debug/pprof/profile</span></span><br><span class="line">Fetching profile over HTTP from http:<span class="regexp">//</span><span class="number">172.21</span>.<span class="number">212.101</span>:<span class="number">8991</span><span class="regexp">/debug/</span>pprof/profile</span><br><span class="line">Saved profile <span class="keyword">in</span> <span class="regexp">/root/</span>pprof/pprof.node_server.samples.cpu.<span class="number">006</span>.pb.gz</span><br><span class="line">Serving web UI on http:<span class="regexp">//</span><span class="number">172.21</span>.<span class="number">212.101</span>:<span class="number">8992</span></span><br><span class="line">http:<span class="regexp">//</span><span class="number">172.21</span>.<span class="number">212.101</span>:<span class="number">8992</span></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>在本地浏览器可以直接打开web UI</p>
+<img src="/2018/12/11/%E4%B8%80%E6%AC%A1go%E5%86%85%E5%AD%98%E6%B3%84%E6%BC%8F%E7%9A%84%E6%8E%92%E6%9F%A5%E8%BF%87%E7%A8%8B/pprof_webui.png" class="" title="image">
+<p>还有火焰图，汇编代码等，功能更加强大。</p>
 <h2 id="pprof-1"><a href="#pprof-1" class="headerlink" title="pprof"></a>pprof</h2><p>As of Go 1.11, flamegraph visualizations are available in go tool pprof directly!</p>
 <p>This will listen on :8081 and open a browser.<br>Change :8081 to a port of your choice.</p>
 <p>$ go tool pprof -http=”:8081” [binary] [profile]</p>
@@ -1076,91 +1086,6 @@
       </categories>
       <tags>
         <tag>Go</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>不同IO模型的比较</title>
-    <url>/2021/09/05/%E4%B8%8D%E5%90%8CIO%E6%A8%A1%E5%9E%8B%E7%9A%84%E6%AF%94%E8%BE%83/</url>
-    <content><![CDATA[<h1 id="IO模型"><a href="#IO模型" class="headerlink" title="IO模型"></a>IO模型</h1><p>一个IO输入操作通常包括2个阶段：</p>
-<ol>
-<li>等待数据准备好；</li>
-<li>从内核向进程复制数据。</li>
-</ol>
-<p>对于网络IO模型，这2步分别是：</p>
-<ol>
-<li>等待数据从网络到达。当所等待分组到达时，它被复制到内核中的某个缓冲区；</li>
-<li>把数据从内核缓冲区复制到应用进程缓冲区。</li>
-</ol>
-<span id="more"></span>
-
-<p>不同的IO模型就是对2个阶段的不同处理，linux下有5种io模型：</p>
-<ul>
-<li>阻塞式I/O（blocking I/O）</li>
-<li>非阻塞式I/O （nonblocking I/O）</li>
-<li>I/O多路复用 （I/O multiplexing）</li>
-<li>信号驱动I/O （signal driven I/O (SIGIO)）</li>
-<li>异步I/O （asynchronous I/O (the POSIX aio_functions)）</li>
-</ul>
-<h1 id="不同的IO模型"><a href="#不同的IO模型" class="headerlink" title="不同的IO模型"></a>不同的IO模型</h1><h2 id="阻塞式I-O模型"><a href="#阻塞式I-O模型" class="headerlink" title="阻塞式I/O模型"></a>阻塞式I/O模型</h2><p>最常用的模型就是阻塞式I/O模型。以recvfrom这个系统调用为例，当被应用进程调用以后，直到数据报到达且被复制到应用进程缓冲区中或发生错误才返回。这期间都是阻塞的。</p>
-<img src="/2021/09/05/%E4%B8%8D%E5%90%8CIO%E6%A8%A1%E5%9E%8B%E7%9A%84%E6%AF%94%E8%BE%83/%E9%98%BB%E5%A1%9E%E5%BC%8FIO%E6%A8%A1%E5%9E%8B.png" class="" title="image-20210905171931687">
-
-<p>blocking IO的特点就是在IO执行的两个阶段（等待数据和拷贝数据两个阶段）都被block了。对网络编程来说，线程将被阻塞，无法执行任何运算或响应任何的网络请求。</p>
-<p>当构建client/server模型时，是简单的“一问一答”的服务器。这种服务器，使用blocking IO，在处理一个client的请求时，无法响应其他client的请求。</p>
-<img src="/2021/09/05/%E4%B8%8D%E5%90%8CIO%E6%A8%A1%E5%9E%8B%E7%9A%84%E6%AF%94%E8%BE%83/%E5%8D%95%E7%BA%BF%E7%A8%8Bcs.png" class="" title="WeChatWorkScreenshot_f92023a6-f337-4065-af6a-160afaed88fd">
-
-<p>通常的改进方式是使用多进程/多线程；一般采用消耗资源较轻的多线程。进一步提升性能，可以采用线程池。使用多线程或线程池时，client/server模型为</p>
-<img src="/2021/09/05/%E4%B8%8D%E5%90%8CIO%E6%A8%A1%E5%9E%8B%E7%9A%84%E6%AF%94%E8%BE%83/%E5%A4%9A%E7%BA%BF%E7%A8%8Bcs.png" class="" title="WeChatWorkScreenshot_a82f4745-5164-43c3-9abb-5ffaca1c5443">
-
-<p>“线程池”旨在减少创建和销毁线程的频率，其维持一定合理数量的线程，并让空闲的线程重新承担新的执行任务。“连接池”维持连接的缓存池，尽量重用已有的连接、减少创建和关闭连接的频率。</p>
-<p>但依然存在2个问题：</p>
-<ul>
-<li>当同时响应过多的连接请求时，则无论多线程还是多进程都会严重占据系统资源，降低系统对外界响应效率，而线程与进程本身也更容易进入假死状态。</li>
-<li>“线程池”和“连接池”技术也只是在一定程度上缓解了频繁调用IO接口带来的资源占用。而且，所谓“池”始终有其上限，当请求大大超过上限时，“池”构成的系统对外界的响应并不比没有池的时候效果好多少。所以使用“池”必须考虑其面临的响应规模，并根据响应规模调整“池”的大小。</li>
-</ul>
-<h2 id="非阻塞I-O"><a href="#非阻塞I-O" class="headerlink" title="非阻塞I/O"></a>非阻塞I/O</h2><p>从图中可以看出，当用户进程发出read操作时，如果kernel中的数据还没有准备好，那么它并不会block用户进程，而是立刻返回一个error。从用户进程角度讲 ，它发起一个read操作后，并不需要等待，而是马上就得到了一个结果。用户进程判断结果是一个error时，它就知道数据还没有准备好，于是它可以再次发送read操作。一旦kernel中的数据准备好了，并且又再次收到了用户进程的system call，那么它马上就将数据拷贝到了用户内存，然后返回。</p>
-<p><strong>所以，在非阻塞式IO中，用户进程其实是需要不断的主动询问kernel数据准备好了没有。</strong></p>
-<p>非阻塞的接口相比于阻塞型接口的显著差异在于，在被调用之后立即返回。</p>
-<img src="/2021/09/05/%E4%B8%8D%E5%90%8CIO%E6%A8%A1%E5%9E%8B%E7%9A%84%E6%AF%94%E8%BE%83/%E9%9D%9E%E9%98%BB%E5%A1%9EIO%E6%A8%A1%E5%9E%8B.png" class="" title="image-20210905173145424">
-
-<p>上述模型绝不被推荐。因为，<strong>循环调用recv()将大幅度推高CPU 占用率；此外，在这个方案中recv()更多的是起到检测“操作是否完成”的作用，实际操作系统提供了更为高效的检测“操作是否完成“作用的接口，例如select()多路复用模式，可以一次检测多个连接是否活跃。</strong></p>
-<h2 id="I-O多路复用模型"><a href="#I-O多路复用模型" class="headerlink" title="I/O多路复用模型"></a>I/O多路复用模型</h2><p>为了让用户进程减少系统调用，就出现了IO多路复用。IO多路复用是指内核一旦发现进程指定的一个或者多个IO条件准备读取，它就通知该进程，目前支持I/O多路复用的系统调用有<code>select</code>、<code>poll</code>、<code>epoll</code>。I/O多路复用就是通过一种机制，一个进程可以监视多个描述符（socket），一旦某个描述符就绪（一般是读就绪或者写就绪），能够通知程序进行相应的读写操作。</p>
-<h3 id="select-poll"><a href="#select-poll" class="headerlink" title="select/poll"></a>select/poll</h3><img src="/2021/09/05/%E4%B8%8D%E5%90%8CIO%E6%A8%A1%E5%9E%8B%E7%9A%84%E6%AF%94%E8%BE%83/IO%E5%A4%9A%E8%B7%AF%E5%A4%8D%E7%94%A8.png" class="" title="image-20210905173524378">
-
-<p>为了让内核帮助用户进程完成文件描述符的遍历，内核增加了系统调用select/poll(select与poll本质上没有什么不同，就是poll减少了文件描述符的个数限制)。</p>
-<p>select/poll的步骤大致为：</p>
-<ul>
-<li>用户进程只需要<strong>调用select系统调用函数，并且将文件描述符全部传递给select就可以让内核帮助用户进程完成所有的查询。此时，整个</strong>process被select这个函数block住。</li>
-<li>等数据准备好后， 内核将对应的文件描述符返回给用户进程。</li>
-<li>用户进程依次调用其他系统调用函数完成IO的执行过程。</li>
-</ul>
-<h3 id="epoll"><a href="#epoll" class="headerlink" title="epoll"></a>epoll</h3><p>在select实现的多路复用中依然存在一些问题。</p>
-<ol>
-<li>用户进程需要传递所有的文件描述符，然后内核将数据准备好的文件描述符再次传递回去，这种数据的拷贝降低了IO的速度。</li>
-<li>内核依然会执行复杂度为O(n)的主动遍历操作。</li>
-</ol>
-<p>当内核初始化epoll时，会开辟一块内核高速cache区，用于安置我们监听的socket，这些socket会以红黑树的形式保存在内核的cache里，以支持快速的查找，插入，删除．同时，建立了一个list链表，用于存储准备就绪的事件．所以调用epoll_wait时，在timeout时间内，只是简单的观察这个list链表是否有数据，如果没有，则睡眠至超时时间到返回；如果有数据，则在超时时间到，拷贝至用户态events数组中．</p>
-<p>注意：没有用到mmap</p>
-<p>那么，这个准备就绪list链表是怎么维护的呢？当我们执行epoll_ctl时，除了把socket放到epoll文件系统里file对象对应的红黑树上之外，还会给内核中断处理程序注册一个回调函数，告诉内核，如果这个句柄的中断到了，就把它放到准备就绪list链表里。所以，当一个socket上有数据到了，内核在把网卡上的数据copy到内核中后就来把socket插入到准备就绪链表里了。</p>
-<h2 id="信号驱动式IO模型"><a href="#信号驱动式IO模型" class="headerlink" title="信号驱动式IO模型"></a>信号驱动式IO模型</h2><p>在IO执行的数据准备阶段，不会阻塞用户进程。当用户进程需要等待数据的时候，会向内核发送一个信号，告诉内核需要数据，然后用户进程就继续做别的事情去了，而当内核中的数据准备好之后，内核立马发给用户进程一个信号，用户进程收到信号之后，立马调用recvfrom，去查收数据。</p>
-<img src="/2021/09/05/%E4%B8%8D%E5%90%8CIO%E6%A8%A1%E5%9E%8B%E7%9A%84%E6%AF%94%E8%BE%83/%E4%BF%A1%E5%8F%B7%E9%A9%B1%E5%8A%A8%E5%BC%8FIO%E6%A8%A1%E5%9E%8B.png" class="" title="image-20210905174040690">
-
-<h1 id="异步IO模型"><a href="#异步IO模型" class="headerlink" title="异步IO模型"></a>异步IO模型</h1><p>用户进程发起read操作之后，立刻就可以开始去做其它的事。而另一方面，从kernel的角度，当它受到一个asynchronous read之后，首先它会立刻返回，所以不会对用户进程产生任何block。然后，kernel会等待数据准备完成，然后将数据拷贝到用户内存，当这一切都完成之后，kernel会给用户进程发送一个signal，告诉它read操作完成了。</p>
-<img src="/2021/09/05/%E4%B8%8D%E5%90%8CIO%E6%A8%A1%E5%9E%8B%E7%9A%84%E6%AF%94%E8%BE%83/%E5%BC%82%E6%AD%A5IO%E6%A8%A1%E5%9E%8B.png" class="" title="image-20210905174321963">
-
-<h1 id="各个IO模型的比较"><a href="#各个IO模型的比较" class="headerlink" title="各个IO模型的比较"></a>各个IO模型的比较</h1><img src="/2021/09/05/%E4%B8%8D%E5%90%8CIO%E6%A8%A1%E5%9E%8B%E7%9A%84%E6%AF%94%E8%BE%83/%E6%A8%A1%E5%9E%8B%E6%AF%94%E8%BE%83.png" class="" title="image-20210905174434370">
-
-
-
-<h1 id="参考链接"><a href="#参考链接" class="headerlink" title="参考链接"></a>参考链接</h1><p><a href="https://www.huaweicloud.com/articles/26b1b9fda29be3fb03a51370d373ff49.html">https://www.huaweicloud.com/articles/26b1b9fda29be3fb03a51370d373ff49.html</a></p>
-<p><a href="https://segmentfault.com/a/1190000037596024">https://segmentfault.com/a/1190000037596024</a></p>
-<p>UNIX网络编程</p>
-]]></content>
-      <categories>
-        <category>linux</category>
-      </categories>
-      <tags>
-        <tag>io</tag>
-        <tag>linux</tag>
       </tags>
   </entry>
   <entry>
@@ -1435,6 +1360,146 @@
       </tags>
   </entry>
   <entry>
+    <title>不同IO模型的比较</title>
+    <url>/2021/09/05/%E4%B8%8D%E5%90%8CIO%E6%A8%A1%E5%9E%8B%E7%9A%84%E6%AF%94%E8%BE%83/</url>
+    <content><![CDATA[<h1 id="IO模型"><a href="#IO模型" class="headerlink" title="IO模型"></a>IO模型</h1><p>一个IO输入操作通常包括2个阶段：</p>
+<ol>
+<li>等待数据准备好；</li>
+<li>从内核向进程复制数据。</li>
+</ol>
+<p>对于网络IO模型，这2步分别是：</p>
+<ol>
+<li>等待数据从网络到达。当所等待分组到达时，它被复制到内核中的某个缓冲区；</li>
+<li>把数据从内核缓冲区复制到应用进程缓冲区。</li>
+</ol>
+<span id="more"></span>
+
+<p>不同的IO模型就是对2个阶段的不同处理，linux下有5种io模型：</p>
+<ul>
+<li>阻塞式I/O（blocking I/O）</li>
+<li>非阻塞式I/O （nonblocking I/O）</li>
+<li>I/O多路复用 （I/O multiplexing）</li>
+<li>信号驱动I/O （signal driven I/O (SIGIO)）</li>
+<li>异步I/O （asynchronous I/O (the POSIX aio_functions)）</li>
+</ul>
+<h1 id="不同的IO模型"><a href="#不同的IO模型" class="headerlink" title="不同的IO模型"></a>不同的IO模型</h1><h2 id="阻塞式I-O模型"><a href="#阻塞式I-O模型" class="headerlink" title="阻塞式I/O模型"></a>阻塞式I/O模型</h2><p>最常用的模型就是阻塞式I/O模型。以recvfrom这个系统调用为例，当被应用进程调用以后，直到数据报到达且被复制到应用进程缓冲区中或发生错误才返回。这期间都是阻塞的。</p>
+<img src="/2021/09/05/%E4%B8%8D%E5%90%8CIO%E6%A8%A1%E5%9E%8B%E7%9A%84%E6%AF%94%E8%BE%83/%E9%98%BB%E5%A1%9E%E5%BC%8FIO%E6%A8%A1%E5%9E%8B.png" class="" title="image-20210905171931687">
+
+<p>blocking IO的特点就是在IO执行的两个阶段（等待数据和拷贝数据两个阶段）都被block了。对网络编程来说，线程将被阻塞，无法执行任何运算或响应任何的网络请求。</p>
+<p>当构建client/server模型时，是简单的“一问一答”的服务器。这种服务器，使用blocking IO，在处理一个client的请求时，无法响应其他client的请求。</p>
+<img src="/2021/09/05/%E4%B8%8D%E5%90%8CIO%E6%A8%A1%E5%9E%8B%E7%9A%84%E6%AF%94%E8%BE%83/%E5%8D%95%E7%BA%BF%E7%A8%8Bcs.png" class="" title="WeChatWorkScreenshot_f92023a6-f337-4065-af6a-160afaed88fd">
+
+<p>通常的改进方式是使用多进程/多线程；一般采用消耗资源较轻的多线程。进一步提升性能，可以采用线程池。使用多线程或线程池时，client/server模型为</p>
+<img src="/2021/09/05/%E4%B8%8D%E5%90%8CIO%E6%A8%A1%E5%9E%8B%E7%9A%84%E6%AF%94%E8%BE%83/%E5%A4%9A%E7%BA%BF%E7%A8%8Bcs.png" class="" title="WeChatWorkScreenshot_a82f4745-5164-43c3-9abb-5ffaca1c5443">
+
+<p>“线程池”旨在减少创建和销毁线程的频率，其维持一定合理数量的线程，并让空闲的线程重新承担新的执行任务。“连接池”维持连接的缓存池，尽量重用已有的连接、减少创建和关闭连接的频率。</p>
+<p>但依然存在2个问题：</p>
+<ul>
+<li>当同时响应过多的连接请求时，则无论多线程还是多进程都会严重占据系统资源，降低系统对外界响应效率，而线程与进程本身也更容易进入假死状态。</li>
+<li>“线程池”和“连接池”技术也只是在一定程度上缓解了频繁调用IO接口带来的资源占用。而且，所谓“池”始终有其上限，当请求大大超过上限时，“池”构成的系统对外界的响应并不比没有池的时候效果好多少。所以使用“池”必须考虑其面临的响应规模，并根据响应规模调整“池”的大小。</li>
+</ul>
+<h2 id="非阻塞I-O"><a href="#非阻塞I-O" class="headerlink" title="非阻塞I/O"></a>非阻塞I/O</h2><p>从图中可以看出，当用户进程发出read操作时，如果kernel中的数据还没有准备好，那么它并不会block用户进程，而是立刻返回一个error。从用户进程角度讲 ，它发起一个read操作后，并不需要等待，而是马上就得到了一个结果。用户进程判断结果是一个error时，它就知道数据还没有准备好，于是它可以再次发送read操作。一旦kernel中的数据准备好了，并且又再次收到了用户进程的system call，那么它马上就将数据拷贝到了用户内存，然后返回。</p>
+<p><strong>所以，在非阻塞式IO中，用户进程其实是需要不断的主动询问kernel数据准备好了没有。</strong></p>
+<p>非阻塞的接口相比于阻塞型接口的显著差异在于，在被调用之后立即返回。</p>
+<img src="/2021/09/05/%E4%B8%8D%E5%90%8CIO%E6%A8%A1%E5%9E%8B%E7%9A%84%E6%AF%94%E8%BE%83/%E9%9D%9E%E9%98%BB%E5%A1%9EIO%E6%A8%A1%E5%9E%8B.png" class="" title="image-20210905173145424">
+
+<p>上述模型绝不被推荐。因为，<strong>循环调用recv()将大幅度推高CPU 占用率；此外，在这个方案中recv()更多的是起到检测“操作是否完成”的作用，实际操作系统提供了更为高效的检测“操作是否完成“作用的接口，例如select()多路复用模式，可以一次检测多个连接是否活跃。</strong></p>
+<h2 id="I-O多路复用模型"><a href="#I-O多路复用模型" class="headerlink" title="I/O多路复用模型"></a>I/O多路复用模型</h2><p>为了让用户进程减少系统调用，就出现了IO多路复用。IO多路复用是指内核一旦发现进程指定的一个或者多个IO条件准备读取，它就通知该进程，目前支持I/O多路复用的系统调用有<code>select</code>、<code>poll</code>、<code>epoll</code>。I/O多路复用就是通过一种机制，一个进程可以监视多个描述符（socket），一旦某个描述符就绪（一般是读就绪或者写就绪），能够通知程序进行相应的读写操作。</p>
+<h3 id="select-poll"><a href="#select-poll" class="headerlink" title="select/poll"></a>select/poll</h3><img src="/2021/09/05/%E4%B8%8D%E5%90%8CIO%E6%A8%A1%E5%9E%8B%E7%9A%84%E6%AF%94%E8%BE%83/IO%E5%A4%9A%E8%B7%AF%E5%A4%8D%E7%94%A8.png" class="" title="image-20210905173524378">
+
+<p>为了让内核帮助用户进程完成文件描述符的遍历，内核增加了系统调用select/poll(select与poll本质上没有什么不同，就是poll减少了文件描述符的个数限制)。</p>
+<p>select/poll的步骤大致为：</p>
+<ul>
+<li>用户进程只需要<strong>调用select系统调用函数，并且将文件描述符全部传递给select就可以让内核帮助用户进程完成所有的查询。此时，整个</strong>process被select这个函数block住。</li>
+<li>等数据准备好后， 内核将对应的文件描述符返回给用户进程。</li>
+<li>用户进程依次调用其他系统调用函数完成IO的执行过程。</li>
+</ul>
+<h3 id="epoll"><a href="#epoll" class="headerlink" title="epoll"></a>epoll</h3><p>在select实现的多路复用中依然存在一些问题。</p>
+<ol>
+<li>用户进程需要传递所有的文件描述符，然后内核将数据准备好的文件描述符再次传递回去，这种数据的拷贝降低了IO的速度。</li>
+<li>内核依然会执行复杂度为O(n)的主动遍历操作。</li>
+</ol>
+<p>当内核初始化epoll时，会开辟一块内核高速cache区，用于安置我们监听的socket，这些socket会以红黑树的形式保存在内核的cache里，以支持快速的查找，插入，删除．同时，建立了一个list链表，用于存储准备就绪的事件．所以调用epoll_wait时，在timeout时间内，只是简单的观察这个list链表是否有数据，如果没有，则睡眠至超时时间到返回；如果有数据，则在超时时间到，拷贝至用户态events数组中．</p>
+<p>注意：没有用到mmap</p>
+<p>那么，这个准备就绪list链表是怎么维护的呢？当我们执行epoll_ctl时，除了把socket放到epoll文件系统里file对象对应的红黑树上之外，还会给内核中断处理程序注册一个回调函数，告诉内核，如果这个句柄的中断到了，就把它放到准备就绪list链表里。所以，当一个socket上有数据到了，内核在把网卡上的数据copy到内核中后就来把socket插入到准备就绪链表里了。</p>
+<h2 id="信号驱动式IO模型"><a href="#信号驱动式IO模型" class="headerlink" title="信号驱动式IO模型"></a>信号驱动式IO模型</h2><p>在IO执行的数据准备阶段，不会阻塞用户进程。当用户进程需要等待数据的时候，会向内核发送一个信号，告诉内核需要数据，然后用户进程就继续做别的事情去了，而当内核中的数据准备好之后，内核立马发给用户进程一个信号，用户进程收到信号之后，立马调用recvfrom，去查收数据。</p>
+<img src="/2021/09/05/%E4%B8%8D%E5%90%8CIO%E6%A8%A1%E5%9E%8B%E7%9A%84%E6%AF%94%E8%BE%83/%E4%BF%A1%E5%8F%B7%E9%A9%B1%E5%8A%A8%E5%BC%8FIO%E6%A8%A1%E5%9E%8B.png" class="" title="image-20210905174040690">
+
+<h1 id="异步IO模型"><a href="#异步IO模型" class="headerlink" title="异步IO模型"></a>异步IO模型</h1><p>用户进程发起read操作之后，立刻就可以开始去做其它的事。而另一方面，从kernel的角度，当它受到一个asynchronous read之后，首先它会立刻返回，所以不会对用户进程产生任何block。然后，kernel会等待数据准备完成，然后将数据拷贝到用户内存，当这一切都完成之后，kernel会给用户进程发送一个signal，告诉它read操作完成了。</p>
+<img src="/2021/09/05/%E4%B8%8D%E5%90%8CIO%E6%A8%A1%E5%9E%8B%E7%9A%84%E6%AF%94%E8%BE%83/%E5%BC%82%E6%AD%A5IO%E6%A8%A1%E5%9E%8B.png" class="" title="image-20210905174321963">
+
+<h1 id="各个IO模型的比较"><a href="#各个IO模型的比较" class="headerlink" title="各个IO模型的比较"></a>各个IO模型的比较</h1><img src="/2021/09/05/%E4%B8%8D%E5%90%8CIO%E6%A8%A1%E5%9E%8B%E7%9A%84%E6%AF%94%E8%BE%83/%E6%A8%A1%E5%9E%8B%E6%AF%94%E8%BE%83.png" class="" title="image-20210905174434370">
+
+
+
+<h1 id="参考链接"><a href="#参考链接" class="headerlink" title="参考链接"></a>参考链接</h1><p><a href="https://www.huaweicloud.com/articles/26b1b9fda29be3fb03a51370d373ff49.html">https://www.huaweicloud.com/articles/26b1b9fda29be3fb03a51370d373ff49.html</a></p>
+<p><a href="https://segmentfault.com/a/1190000037596024">https://segmentfault.com/a/1190000037596024</a></p>
+<p>UNIX网络编程</p>
+]]></content>
+      <categories>
+        <category>linux</category>
+      </categories>
+      <tags>
+        <tag>io</tag>
+        <tag>linux</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>分布式系统架构的简介</title>
+    <url>/2019/03/18/%E5%88%86%E5%B8%83%E5%BC%8F%E7%B3%BB%E7%BB%9F%E6%9E%B6%E6%9E%84%E7%9A%84%E7%AE%80%E4%BB%8B/</url>
+    <content><![CDATA[<p>摘自 分布式系统架构的冰与火 左耳听风</p>
+<h2 id="分布式系统架构的优缺点"><a href="#分布式系统架构的优缺点" class="headerlink" title="分布式系统架构的优缺点"></a>分布式系统架构的优缺点</h2><p>需要分布式系统架构，来代替传统的单体架构的原因：</p>
+<ol>
+<li>增大系统容量 –&gt; 提高性能<br>单台机器的性能无法满足要求时，需要垂直或者水平拆分成分布式系统架构，让更多的机器去承担。</li>
+<li>加强系统可用 –&gt; 提高服务可用性<br>避免单点故障。</li>
+</ol>
+<p>分布式系统是一种trade-off</p>
+<img src="/2019/03/18/%E5%88%86%E5%B8%83%E5%BC%8F%E7%B3%BB%E7%BB%9F%E6%9E%B6%E6%9E%84%E7%9A%84%E7%AE%80%E4%BB%8B/%E5%8D%95%E4%BD%93%E5%BA%94%E7%94%A8%E5%92%8C%E5%88%86%E5%B8%83%E5%BC%8F%E6%9E%B6%E6%9E%84%E7%9A%84%E4%BC%98%E7%BC%BA%E7%82%B9.png" class="" title="image">
+
+<h2 id="分布式系统的发展"><a href="#分布式系统的发展" class="headerlink" title="分布式系统的发展"></a>分布式系统的发展</h2><p>SOA——基于服务的架构</p>
+<img src="/2019/03/18/%E5%88%86%E5%B8%83%E5%BC%8F%E7%B3%BB%E7%BB%9F%E6%9E%B6%E6%9E%84%E7%9A%84%E7%AE%80%E4%BB%8B/SOA%E6%9E%B6%E6%9E%84%E7%9A%84%E6%BC%94%E5%8C%96.png" class="" title="image">
+
+<ol>
+<li>20 世纪 90 年代前，是单体架构，软件模块高度耦合。</li>
+<li>2000 年左右出现了比较松耦合的 SOA 架构，这个架构需要一个标准的协议或是中间件来联动其它相关联的服务.</li>
+<li>而 2010 年后，出现了微服务架构，这个架构更为松耦合。每一个微服务都能独立完整地运行（所谓的自包含），后端单体的数据库也被微服务这样的架构分散到不同的服务中。而它和传统 SOA 的差别在于，服务间的整合需要一个服务编排或是服务整合的引擎。就好像交响乐中需要有一个指挥来把所有乐器编排和组织在一起。</li>
+</ol>
+<p>一般来说，这个编排和组织引擎可以是工作流引擎，也可以是网关。当然，还需要辅助于像容器化调度这样的技术方式，如 Kubernetes.</p>
+]]></content>
+      <categories>
+        <category>分布式系统</category>
+      </categories>
+      <tags>
+        <tag>分布式系统</tag>
+        <tag>架构</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>并发控制</title>
+    <url>/2018/08/14/%E5%B9%B6%E5%8F%91%E6%8E%A7%E5%88%B6/</url>
+    <content><![CDATA[<h2 id="并发场景"><a href="#并发场景" class="headerlink" title="并发场景"></a>并发场景</h2><p>秒杀场景，多人并发申请购买同一种商品。<br>下面以2人抢购同一件商品举例，商品数量为1。<br>基本流程如下：</p>
+<img src="/2018/08/14/%E5%B9%B6%E5%8F%91%E6%8E%A7%E5%88%B6/%E8%B4%AD%E4%B9%B0%E8%AE%B0%E5%BD%95.png" class="" title="image">
+<p>这个流程中存在明显的并发问题，当进程A查看有1个商品，但未开始创建购买记录，此时另一个进程B也进行了资源检查，发现有1个商品，顺利通过，并完成购买操作，此时A继续执行，则1个商品会产生两条购买的记录。（这个并发场景很简单，很普遍）</p>
+<h2 id="解决方案"><a href="#解决方案" class="headerlink" title="解决方案"></a>解决方案</h2><p>解决方案通常是2类：<br>1 通过将请求分发到不同set，减少并发的可能性，分而治之。这里暂时不讨论。<br>2 当收到并发请求时，如何处理。</p>
+<h3 id="加锁操作先占有锁资源，再占有资源"><a href="#加锁操作先占有锁资源，再占有资源" class="headerlink" title="加锁操作先占有锁资源，再占有资源"></a>加锁操作先占有锁资源，再占有资源</h3><p>a. 锁库存<br>b. 插入“秒杀”记录<br>c. 更新库存</p>
+<p>“秒杀”系统的设计难点就在这个事务操作上。商品库存在DB中记为一行，大量用户同时“秒杀”同一商品时，第一个到达DB的请求锁住了这行库存记录。在第一个事务完成提交之前这个锁一直被第一个请求占用，其他到达的请求全部失败。</p>
+<p>加锁的方案，效率会比较低。实际应用时，通常要配合排队系统，让没有获取到锁的请求排队。</p>
+<h3 id="单独开发请求排队调度模块"><a href="#单独开发请求排队调度模块" class="headerlink" title="单独开发请求排队调度模块"></a>单独开发请求排队调度模块</h3><p>排队模块接收用户的抢红包请求，以FIFO模式保存下来，调度模块负责FIFO队列的动态调度，一旦有空闲资源，便从队列头部把用户的访问请求取出后交给真正提供服务的模块处理。优点是，具有中心节点的统一资源管理，对系统的可控性强，可深度定制。缺点是，所有请求流量都会有中心节点参与，效率必然会比分布式无中心系统低，并且，中心节点也很容易成为整个系统的性能瓶颈。</p>
+<h3 id="巧用Redis-特性，使其成为分布式序号生成器（我们最终采用的做法）-–-具体还要再看，如何利用redis的特性"><a href="#巧用Redis-特性，使其成为分布式序号生成器（我们最终采用的做法）-–-具体还要再看，如何利用redis的特性" class="headerlink" title="巧用Redis 特性，使其成为分布式序号生成器（我们最终采用的做法） – 具体还要再看，如何利用redis的特性"></a>巧用Redis 特性，使其成为分布式序号生成器（我们最终采用的做法） – 具体还要再看，如何利用redis的特性</h3><p>参考<br><a href="https://www.ibm.com/developerworks/cn/web/wa-design-small-and-good-kill-system/index.html">https://www.ibm.com/developerworks/cn/web/wa-design-small-and-good-kill-system/index.html</a><br><a href="https://blog.csdn.net/zhanjianshinian/article/details/53342730">https://blog.csdn.net/zhanjianshinian/article/details/53342730</a><br>每件商品以一个数字ID来标识，这个ID是全局唯一的，所有围绕商品的操作都使用这个ID作为数据的关联项。</p>
+<p>Redis节点内存储的是这个分组可以分发的商品ID号段，利用Redis特性实现红包分发，各服务节点通过Redis原语获取当前拆到的红包。这种做法的思路是，Redis 本身是单进程工作模型，来自分布式系统各个节点的操作请求天然的被 Redis Server 做了一个同步队列，只要每个请求执行的足够快，这个队列就不会引起阻塞及请求超时。而本例中我们使用了 DECR 原语，性能上是可以满足需求的。Redis 在这里相当于是充当一个分布式序号发生器的功能，分发红包 ID。</p>
+<h3 id="通过memcached来控制并发数-–-具体还要再看"><a href="#通过memcached来控制并发数-–-具体还要再看" class="headerlink" title="通过memcached来控制并发数 – 具体还要再看"></a>通过memcached来控制并发数 – 具体还要再看</h3><p><a href="https://blog.csdn.net/echo3/article/details/17580347">https://blog.csdn.net/echo3/article/details/17580347</a>  使用memcached进行并发控制（写的非常好）<br><a href="http://www.infoq.com/cn/articles/2017hongbao-weixin#">http://www.infoq.com/cn/articles/2017hongbao-weixin#</a>  百亿级微信红包的高并发资金交易系统设计方案<br><a href="https://blog.csdn.net/yanker1990/article/details/78737626">https://blog.csdn.net/yanker1990/article/details/78737626</a>  Memcache的并发问题和利用CAS的解决方案</p>
+<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><p>如何设计一个小而美的秒杀系统？<br><a href="https://www.ibm.com/developerworks/cn/web/wa-design-small-and-good-kill-system/index.html">https://www.ibm.com/developerworks/cn/web/wa-design-small-and-good-kill-system/index.html</a><br>使用memcached进行并发控制（写的非常好）<br><a href="https://blog.csdn.net/echo3/article/details/17580347">https://blog.csdn.net/echo3/article/details/17580347</a><br>电商秒杀系统设计分析<br><a href="https://blog.csdn.net/zhanjianshinian/article/details/53342730">https://blog.csdn.net/zhanjianshinian/article/details/53342730</a></p>
+<p><a href="https://memcached.org/about">https://memcached.org/about</a><br>Redis DECR命令<br><a href="https://www.kancloud.cn/thinkphp/redis-quickstart/36180">https://www.kancloud.cn/thinkphp/redis-quickstart/36180</a></p>
+<p>云主机的问题:<br>申请时要排队，好像没有意义。<br>防止申请到同一台宿主机，前面做的临时添加资源是否有用。跟定时更新是否有冲突？</p>
+]]></content>
+      <categories>
+        <category>架构设计</category>
+      </categories>
+      <tags>
+        <tag>并发控制</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>文件删除空间未释放的例子</title>
     <url>/2018/11/10/%E6%96%87%E4%BB%B6%E5%B7%B2%E5%88%A0%E9%99%A4%E7%A9%BA%E9%97%B4%E6%9C%AA%E9%87%8A%E6%94%BE%E7%9A%84%E4%BE%8B%E5%AD%90/</url>
     <content><![CDATA[<h2 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h2><p>在删除文件后，有时会遇到磁盘空间并未被释放的场景。这里自己尝试复现，并去做相关的说明。</p>
@@ -1585,176 +1650,6 @@
         <tag>限速</tag>
         <tag>cgroup</tag>
         <tag>磁盘IO</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>分布式系统架构的简介</title>
-    <url>/2019/03/18/%E5%88%86%E5%B8%83%E5%BC%8F%E7%B3%BB%E7%BB%9F%E6%9E%B6%E6%9E%84%E7%9A%84%E7%AE%80%E4%BB%8B/</url>
-    <content><![CDATA[<p>摘自 分布式系统架构的冰与火 左耳听风</p>
-<h2 id="分布式系统架构的优缺点"><a href="#分布式系统架构的优缺点" class="headerlink" title="分布式系统架构的优缺点"></a>分布式系统架构的优缺点</h2><p>需要分布式系统架构，来代替传统的单体架构的原因：</p>
-<ol>
-<li>增大系统容量 –&gt; 提高性能<br>单台机器的性能无法满足要求时，需要垂直或者水平拆分成分布式系统架构，让更多的机器去承担。</li>
-<li>加强系统可用 –&gt; 提高服务可用性<br>避免单点故障。</li>
-</ol>
-<p>分布式系统是一种trade-off</p>
-<img src="/2019/03/18/%E5%88%86%E5%B8%83%E5%BC%8F%E7%B3%BB%E7%BB%9F%E6%9E%B6%E6%9E%84%E7%9A%84%E7%AE%80%E4%BB%8B/%E5%8D%95%E4%BD%93%E5%BA%94%E7%94%A8%E5%92%8C%E5%88%86%E5%B8%83%E5%BC%8F%E6%9E%B6%E6%9E%84%E7%9A%84%E4%BC%98%E7%BC%BA%E7%82%B9.png" class="" title="image">
-
-<h2 id="分布式系统的发展"><a href="#分布式系统的发展" class="headerlink" title="分布式系统的发展"></a>分布式系统的发展</h2><p>SOA——基于服务的架构</p>
-<img src="/2019/03/18/%E5%88%86%E5%B8%83%E5%BC%8F%E7%B3%BB%E7%BB%9F%E6%9E%B6%E6%9E%84%E7%9A%84%E7%AE%80%E4%BB%8B/SOA%E6%9E%B6%E6%9E%84%E7%9A%84%E6%BC%94%E5%8C%96.png" class="" title="image">
-
-<ol>
-<li>20 世纪 90 年代前，是单体架构，软件模块高度耦合。</li>
-<li>2000 年左右出现了比较松耦合的 SOA 架构，这个架构需要一个标准的协议或是中间件来联动其它相关联的服务.</li>
-<li>而 2010 年后，出现了微服务架构，这个架构更为松耦合。每一个微服务都能独立完整地运行（所谓的自包含），后端单体的数据库也被微服务这样的架构分散到不同的服务中。而它和传统 SOA 的差别在于，服务间的整合需要一个服务编排或是服务整合的引擎。就好像交响乐中需要有一个指挥来把所有乐器编排和组织在一起。</li>
-</ol>
-<p>一般来说，这个编排和组织引擎可以是工作流引擎，也可以是网关。当然，还需要辅助于像容器化调度这样的技术方式，如 Kubernetes.</p>
-]]></content>
-      <categories>
-        <category>分布式系统</category>
-      </categories>
-      <tags>
-        <tag>分布式系统</tag>
-        <tag>架构</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>这些年读过的那些书&amp;&amp;待读清单列表</title>
-    <url>/2019/08/31/%E8%BF%99%E4%BA%9B%E5%B9%B4%E8%AF%BB%E8%BF%87%E7%9A%84%E9%82%A3%E4%BA%9B%E4%B9%A6-%E5%BE%85%E8%AF%BB%E6%B8%85%E5%8D%95%E5%88%97%E8%A1%A8/</url>
-    <content><![CDATA[<p>每年给自己列个计划，要读哪些书，到年尾看看真正看完的有多少。</p>
-<h1 id="2020年待读清单列表"><a href="#2020年待读清单列表" class="headerlink" title="2020年待读清单列表"></a>2020年待读清单列表</h1><ol>
-<li> 《Designing Data-Intensive Applications》</li>
-</ol>
-<h1 id="2019年待读清单列表"><a href="#2019年待读清单列表" class="headerlink" title="2019年待读清单列表"></a>2019年待读清单列表</h1><ol>
-<li>UNIX环境高级编程（第3版）</li>
-<li>重构网络 SDN架构与实现</li>
-<li>软件定义网络</li>
-<li>全球通史 从史前史到21实际 第7版修订版 上</li>
-<li>全球通史 从史前史到21实际 第7版修订版 下<span id="more"></span></li>
-</ol>
-<h1 id="这些年读过的那些书"><a href="#这些年读过的那些书" class="headerlink" title="这些年读过的那些书"></a>这些年读过的那些书</h1><h2 id="2020年"><a href="#2020年" class="headerlink" title="2020年"></a>2020年</h2><ol>
-<li>《深度思考》 深度思考前的盲目勤奋，注定是吃力不讨好的徒劳。香奈儿前全球CEO从普通职员到职场巅峰的人生进阶之路。大脑中走得越远，现实中走得越稳。</li>
-</ol>
-<h2 id="2019年"><a href="#2019年" class="headerlink" title="2019年"></a>2019年</h2><ol>
-<li>《TCP/IP详解 卷1：协议（原书第2版）》 <a href="https://xusenqi.github.io/2019/04/24/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0-TCP-IP%E8%AF%A6%E8%A7%A3-%E5%8D%B71%EF%BC%9A%E5%8D%8F%E8%AE%AE/">读书笔记-TCP/IP详解 卷1：协议</a></li>
-<li>《软技能 代码之外的生存指南（Soft Skills - The Software Developer’s Life Manual）》对于程序员是很不错的心灵鸡汤，从职业、自我营销、学习、生产力等方面，讲述了作者的方法和心得，很值得借鉴。</li>
-</ol>
-]]></content>
-      <categories>
-        <category>读书笔记</category>
-      </categories>
-      <tags>
-        <tag>清单</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>通过delve(dlv)调试golang程序</title>
-    <url>/2019/08/25/%E9%80%9A%E8%BF%87delve-dlv-%E8%B0%83%E8%AF%95golang%E7%A8%8B%E5%BA%8F/</url>
-    <content><![CDATA[<h1 id="介绍"><a href="#介绍" class="headerlink" title="介绍"></a>介绍</h1><p>gdb是强大的调试工具。但对于golang程序来说，delve是个更好的选择，它能更好地理解Go runtime, data structures, and expressions，尤其是goroutine。</p>
-<p>以下描述引用自<a href="https://golang.google.cn/doc/gdb">Debugging Go Code with GDB</a>【1】</p>
-<blockquote>
-<p>Note that Delve is a better alternative to GDB when debugging Go programs built with the standard toolchain. It understands the Go runtime, data structures, and expressions better than GDB. Delve currently supports Linux, OSX, and Windows on amd64. For the most up-to-date list of supported platforms, please see the Delve documentation.</p>
-</blockquote>
-<span id="more"></span>
-<blockquote>
-<p>GDB does not understand Go programs well. The stack management, threading, and runtime contain aspects that differ enough from the execution model GDB expects that they can confuse the debugger and cause incorrect results even when the program is compiled with gccgo. As a consequence, although GDB can be useful in some situations (e.g., debugging Cgo code, or debugging the runtime itself), it is not a reliable debugger for Go programs, particularly heavily concurrent ones. Moreover, it is not a priority for the Go project to address these issues, which are difficult.</p>
-</blockquote>
-<p>Delve is a debugger for the Go programming language【2】.</p>
-<h1 id="安装"><a href="#安装" class="headerlink" title="安装"></a>安装</h1><p>安装过程参考<a href="https://github.com/go-delve/delve/tree/master/Documentation/installation">https://github.com/go-delve/delve/tree/master/Documentation/installation</a></p>
-<p>安装好后，可以查看版本</p>
-<figure class="highlight stata"><table><tr><td class="code"><pre><span class="line">➜  _posts dlv <span class="keyword">version</span></span><br><span class="line">Delve Debugger</span><br><span class="line"><span class="keyword">Version</span>: 1.1.0</span><br><span class="line">Build: <span class="variable">$Id</span>: 1990ba12450cab9425a2ae62e6ab988725023d5c</span><br></pre></td></tr></table></figure>
-
-<h1 id="调试方法"><a href="#调试方法" class="headerlink" title="调试方法"></a>调试方法</h1><p>dlv提供了多种调试命令，如debug、exec、attach、core等，具体见官网文档或help信息。接下介绍常用的几种。</p>
-<h2 id="dlv-debug"><a href="#dlv-debug" class="headerlink" title="dlv debug"></a>dlv debug</h2><p>这是一个代码工程实例, 位于目录GoWorks/GoDbg。</p>
-<img src="/2019/08/25/%E9%80%9A%E8%BF%87delve-dlv-%E8%B0%83%E8%AF%95golang%E7%A8%8B%E5%BA%8F/godbg_project.jpg" class="" title="image">
-
-<ul>
-<li>如果位于工程目录下，可以dlv debug开始调试；</li>
-<li>也可以指定目录，dlv debug GoWorks/GoDbg; </li>
-<li>如果要传入参数，添加–后指定， 如dlv debug GoWorks/GoDbg – -arg1 value</li>
-</ul>
-<figure class="highlight stylus"><table><tr><td class="code"><pre><span class="line">➜  GoDbg dlv debug GoWorks/GoDbg</span><br><span class="line">Type <span class="string">&#x27;help&#x27;</span> <span class="keyword">for</span> list of commands.</span><br><span class="line">(dlv) break <span class="selector-tag">main</span><span class="selector-class">.main</span></span><br><span class="line">Breakpoint <span class="number">1</span> set at <span class="number">0</span>x1089f6b <span class="keyword">for</span> <span class="selector-tag">main</span><span class="selector-class">.main</span>() ./<span class="selector-tag">main</span><span class="selector-class">.go</span>:<span class="number">7</span></span><br><span class="line">(dlv) continue</span><br><span class="line">&gt; <span class="selector-tag">main</span><span class="selector-class">.main</span>() ./<span class="selector-tag">main</span><span class="selector-class">.go</span>:<span class="number">7</span> (hits goroutine(<span class="number">1</span>):<span class="number">1</span> total:<span class="number">1</span>) (PC: <span class="number">0</span>x1089f6b)</span><br><span class="line">     <span class="number">2</span>:	import (</span><br><span class="line">     <span class="number">3</span>:		<span class="string">&quot;GoWorks/GoDbg/mylib&quot;</span></span><br><span class="line">     <span class="number">4</span>:		<span class="string">&quot;fmt&quot;</span></span><br><span class="line">     <span class="number">5</span>:		<span class="string">&quot;os&quot;</span></span><br><span class="line">     <span class="number">6</span>:	)</span><br><span class="line">=&gt;   <span class="number">7</span>:	func <span class="selector-tag">main</span>() &#123;</span><br><span class="line">     <span class="number">8</span>:		fmt<span class="selector-class">.Println</span>(<span class="string">&quot;Golang dbg test...&quot;</span>)</span><br><span class="line">     <span class="number">9</span>:		<span class="selector-tag">var</span> argc = len(os.Args)</span><br><span class="line">    <span class="number">10</span>:		<span class="selector-tag">var</span> argv = append(<span class="selector-attr">[]</span>string&#123;&#125;, os<span class="selector-class">.Args</span>...)</span><br><span class="line">    <span class="number">11</span>:		fmt<span class="selector-class">.Printf</span>(<span class="string">&quot;argc:%d\n&quot;</span>, argc)</span><br><span class="line">    <span class="number">12</span>:		fmt<span class="selector-class">.Printf</span>(<span class="string">&quot;argv:%v\n&quot;</span>, argv)</span><br><span class="line">(dlv) next</span><br><span class="line">&gt; <span class="selector-tag">main</span><span class="selector-class">.main</span>() ./<span class="selector-tag">main</span><span class="selector-class">.go</span>:<span class="number">8</span> (PC: <span class="number">0</span>x1089f82)</span><br><span class="line">     <span class="number">3</span>:		<span class="string">&quot;GoWorks/GoDbg/mylib&quot;</span></span><br><span class="line">     <span class="number">4</span>:		<span class="string">&quot;fmt&quot;</span></span><br><span class="line">     <span class="number">5</span>:		<span class="string">&quot;os&quot;</span></span><br><span class="line">     <span class="number">6</span>:	)</span><br><span class="line">     <span class="number">7</span>:	func <span class="selector-tag">main</span>() &#123;</span><br><span class="line">=&gt;   <span class="number">8</span>:		fmt<span class="selector-class">.Println</span>(<span class="string">&quot;Golang dbg test...&quot;</span>)</span><br><span class="line">     <span class="number">9</span>:		<span class="selector-tag">var</span> argc = len(os.Args)</span><br><span class="line">    <span class="number">10</span>:		<span class="selector-tag">var</span> argv = append(<span class="selector-attr">[]</span>string&#123;&#125;, os<span class="selector-class">.Args</span>...)</span><br><span class="line">    <span class="number">11</span>:		fmt<span class="selector-class">.Printf</span>(<span class="string">&quot;argc:%d\n&quot;</span>, argc)</span><br><span class="line">    <span class="number">12</span>:		fmt<span class="selector-class">.Printf</span>(<span class="string">&quot;argv:%v\n&quot;</span>, argv)</span><br><span class="line">    <span class="number">13</span>:		<span class="selector-tag">var</span> var1 = <span class="number">1</span></span><br></pre></td></tr></table></figure>
-
-<p>具体有哪些debug命令，可以help来查看，与gdb的很类似，goroutine/goroutines的是dlv中特有的。</p>
-<figure class="highlight applescript"><table><tr><td class="code"><pre><span class="line">(dlv) help</span><br><span class="line">The following commands are available:</span><br><span class="line">    args <span class="comment">------------------------ Print function arguments.</span></span><br><span class="line">    break (<span class="built_in">alias</span>: b) <span class="comment">------------ Sets a breakpoint.</span></span><br><span class="line">    breakpoints (<span class="built_in">alias</span>: bp) <span class="comment">----- Print out info for active breakpoints.</span></span><br><span class="line">    call <span class="comment">------------------------ Resumes process, injecting a function call (EXPERIMENTAL!!!)</span></span><br><span class="line">    clear <span class="comment">----------------------- Deletes breakpoint.</span></span><br><span class="line">    clearall <span class="comment">-------------------- Deletes multiple breakpoints.</span></span><br><span class="line">    condition (<span class="built_in">alias</span>: cond) <span class="comment">----- Set breakpoint condition.</span></span><br><span class="line">    config <span class="comment">---------------------- Changes configuration parameters.</span></span><br><span class="line">    <span class="keyword">continue</span> (<span class="built_in">alias</span>: c) <span class="comment">--------- Run until breakpoint or program termination.   // 继续运行</span></span><br><span class="line">    deferred <span class="comment">-------------------- Executes command in the context of a deferred call.</span></span><br><span class="line">    disassemble (<span class="built_in">alias</span>: disass) - Disassembler.</span><br><span class="line">    down <span class="comment">------------------------ Move the current frame down.</span></span><br><span class="line">    edit (<span class="built_in">alias</span>: ed) <span class="comment">------------ Open where you are in $DELVE_EDITOR or $EDITOR</span></span><br><span class="line">    <span class="keyword">exit</span> (<span class="built_in">alias</span>: quit | q) <span class="comment">------ Exit the debugger.</span></span><br><span class="line">    frame <span class="comment">----------------------- Set the current frame, or execute command on a different frame.</span></span><br><span class="line">    funcs <span class="comment">----------------------- Print list of functions.</span></span><br><span class="line">    goroutine (<span class="built_in">alias</span>: gr) <span class="comment">------- Shows or changes current goroutine</span></span><br><span class="line">    goroutines (<span class="built_in">alias</span>: grs) <span class="comment">----- List program goroutines.</span></span><br><span class="line">    help (<span class="built_in">alias</span>: h) <span class="comment">------------- Prints the help message.</span></span><br><span class="line">    libraries <span class="comment">------------------- List loaded dynamic libraries</span></span><br><span class="line">    <span class="built_in">list</span> (<span class="built_in">alias</span>: ls | l) <span class="comment">-------- Show source code.    // 显示代码</span></span><br><span class="line">    locals <span class="comment">---------------------- Print local variables.</span></span><br><span class="line">    next (<span class="built_in">alias</span>: n) <span class="comment">------------- Step over to next source line.  // 单步下一句</span></span><br><span class="line">    <span class="keyword">on</span> <span class="comment">-------------------------- Executes a command when a breakpoint is hit.</span></span><br><span class="line">    print (<span class="built_in">alias</span>: p) <span class="comment">------------ Evaluate an expression.</span></span><br><span class="line">    regs <span class="comment">------------------------ Print contents of CPU registers.</span></span><br><span class="line">    restart (<span class="built_in">alias</span>: r) <span class="comment">---------- Restart process.</span></span><br><span class="line">    <span class="keyword">set</span> <span class="comment">------------------------- Changes the value of a variable.</span></span><br><span class="line">    source <span class="comment">---------------------- Executes a file containing a list of delve commands</span></span><br><span class="line">    sources <span class="comment">--------------------- Print list of source files.</span></span><br><span class="line">    stack (<span class="built_in">alias</span>: bt) <span class="comment">----------- Print stack trace.</span></span><br><span class="line">    step (<span class="built_in">alias</span>: s) <span class="comment">------------- Single step through program.  // 进入函数内,单步下一句</span></span><br><span class="line">    step-instruction (<span class="built_in">alias</span>: si)  Single step a single cpu instruction.</span><br><span class="line">    stepout (<span class="built_in">alias</span>: so) <span class="comment">--------- Step out of the current function.</span></span><br><span class="line">    thread (<span class="built_in">alias</span>: tr) <span class="comment">---------- Switch to the specified thread.</span></span><br><span class="line">    threads <span class="comment">--------------------- Print out info for every traced thread.</span></span><br><span class="line">    trace (<span class="built_in">alias</span>: t) <span class="comment">------------ Set tracepoint.</span></span><br><span class="line">    types <span class="comment">----------------------- Print list of types</span></span><br><span class="line">    up <span class="comment">-------------------------- Move the current frame up.</span></span><br><span class="line">    vars <span class="comment">------------------------ Print package variables.</span></span><br><span class="line">    whatis <span class="comment">---------------------- Prints type of an expression.</span></span><br><span class="line">Type help followed <span class="keyword">by</span> a command <span class="keyword">for</span> full documentation.</span><br></pre></td></tr></table></figure>
-
-<h2 id="dlv-exec"><a href="#dlv-exec" class="headerlink" title="dlv exec"></a>dlv exec</h2><p>Execute a precompiled binary, and begin a debug session.</p>
-<figure class="highlight jboss-cli"><table><tr><td class="code"><pre><span class="line">➜  file <span class="string">./main</span></span><br><span class="line"><span class="string">./main</span>: Mach-O 64-bit executable x86_64</span><br><span class="line">➜  dlv exec <span class="string">./main</span></span><br><span class="line">Type &#x27;<span class="keyword">help</span>&#x27; for list of commands.</span><br><span class="line"><span class="params">(dlv)</span></span><br></pre></td></tr></table></figure>
-
-
-<h2 id="dlv-attach"><a href="#dlv-attach" class="headerlink" title="dlv attach"></a>dlv attach</h2><p>Attach to running process and begin debugging.</p>
-<p>注意：<strong>在退出时，有可选是否要kill该进程</strong>。</p>
-<figure class="highlight powershell"><table><tr><td class="code"><pre><span class="line">[<span class="type">root</span>@<span class="type">yg</span>-<span class="type">man</span>-<span class="type">uhost</span>-<span class="type">set9</span>-<span class="number">01</span> ~]<span class="comment"># dlv attach 22063</span></span><br><span class="line"><span class="built_in">Type</span> <span class="string">&#x27;help&#x27;</span> <span class="keyword">for</span> list of commands.</span><br><span class="line">(dlv) q</span><br><span class="line">Would you like to <span class="built_in">kill</span> the <span class="keyword">process</span>? [<span class="type">Y</span>/<span class="type">n</span>] n</span><br></pre></td></tr></table></figure>
-
-<h2 id="dlv-core"><a href="#dlv-core" class="headerlink" title="dlv core"></a>dlv core</h2><p>Examine a core dump.</p>
-<p>注意：<strong>dlv不支持生成core，可以通过gdb attach上去后，执行gcore来生成core；然后再dlv core来调试</strong>。</p>
-<h1 id="线上调试的例子"><a href="#线上调试的例子" class="headerlink" title="线上调试的例子"></a>线上调试的例子</h1><h2 id="排查过程"><a href="#排查过程" class="headerlink" title="排查过程"></a>排查过程</h2><p>线上一个服务出现了问题，看日志是一个接口的程序跑了一半，后面不再执行下去了。</p>
-<p>dlv attach上去后，看到有很多.runtime_SemacquireMutex这个的goroutine，一直卡着。</p>
-<figure class="highlight gradle"><table><tr><td class="code"><pre><span class="line">Goroutine <span class="number">28232679</span> - User: <span class="regexp">/usr/</span>local<span class="regexp">/go/</span>src<span class="regexp">/runtime/</span>sema.go:<span class="number">62</span> sync.runtime_SemacquireMutex (<span class="number">0</span>x43cb74)</span><br><span class="line">Goroutine <span class="number">28232684</span> - User: <span class="regexp">/Users/</span>patrick.xu<span class="regexp">/go/</span>src<span class="regexp">/uframework/</span><span class="keyword">task</span><span class="regexp">/tcp_task.go:84 uframework/</span><span class="keyword">task</span>.(*TCPTask).Run (<span class="number">0</span>x6ce8cc)</span><br><span class="line">Goroutine <span class="number">28232685</span> - User: <span class="regexp">/usr/</span>local<span class="regexp">/go/</span>src<span class="regexp">/runtime/</span>sema.go:<span class="number">62</span> sync.runtime_SemacquireMutex (<span class="number">0</span>x43cb74)</span><br><span class="line">Goroutine <span class="number">28232686</span> - User: <span class="regexp">/usr/</span>local<span class="regexp">/go/</span>src<span class="regexp">/runtime/</span>sema.go:<span class="number">62</span> sync.runtime_SemacquireMutex (<span class="number">0</span>x43cb74)</span><br><span class="line">Goroutine <span class="number">28232688</span> - User: <span class="regexp">/Users/</span>patrick.xu<span class="regexp">/go/</span>src<span class="regexp">/uframework/</span><span class="keyword">task</span><span class="regexp">/tcp_task.go:84 uframework/</span><span class="keyword">task</span>.(*TCPTask).Run (<span class="number">0</span>x6ce8cc)</span><br><span class="line">Goroutine <span class="number">28232704</span> - User: <span class="regexp">/Users/</span>patrick.xu<span class="regexp">/go/</span>src<span class="regexp">/uframework/</span><span class="keyword">task</span><span class="regexp">/tcp_task.go:84 uframework/</span><span class="keyword">task</span>.(*TCPTask).Run (<span class="number">0</span>x6ce8cc)</span><br><span class="line">Goroutine <span class="number">28232705</span> - User: <span class="regexp">/usr/</span>local<span class="regexp">/go/</span>src<span class="regexp">/runtime/</span>sema.go:<span class="number">62</span> sync.runtime_SemacquireMutex (<span class="number">0</span>x43cb74)</span><br><span class="line">Goroutine <span class="number">28232710</span> - User: <span class="regexp">/Users/</span>patrick.xu<span class="regexp">/go/</span>src<span class="regexp">/uframework/</span><span class="keyword">task</span><span class="regexp">/tcp_task.go:84 uframework/</span><span class="keyword">task</span>.(*TCPTask).Run (<span class="number">0</span>x6ce8cc)</span><br><span class="line">Goroutine <span class="number">28232714</span> - User: <span class="regexp">/Users/</span>patrick.xu<span class="regexp">/go/</span>src<span class="regexp">/uframework/</span><span class="keyword">task</span><span class="regexp">/tcp_task.go:84 uframework/</span><span class="keyword">task</span>.(*TCPTask).Run (<span class="number">0</span>x6ce8cc)</span><br><span class="line">Goroutine <span class="number">28232715</span> - User: <span class="regexp">/usr/</span>local<span class="regexp">/go/</span>src<span class="regexp">/runtime/</span>sema.go:<span class="number">62</span> sync.runtime_SemacquireMutex (<span class="number">0</span>x43cb74)</span><br><span class="line">Goroutine <span class="number">28232718</span> - User: <span class="regexp">/Users/</span>patrick.xu<span class="regexp">/go/</span>src<span class="regexp">/uframework/</span><span class="keyword">task</span><span class="regexp">/tcp_task.go:84 uframework/</span><span class="keyword">task</span>.(*TCPTask).Run (<span class="number">0</span>x6ce8cc)</span><br><span class="line">Goroutine <span class="number">28232719</span> - User: <span class="regexp">/usr/</span>local<span class="regexp">/go/</span>src<span class="regexp">/runtime/</span>sema.go:<span class="number">62</span> sync.runtime_SemacquireMutex (<span class="number">0</span>x43cb74)</span><br><span class="line">Goroutine <span class="number">28232721</span> - User: <span class="regexp">/usr/</span>local<span class="regexp">/go/</span>src<span class="regexp">/runtime/</span>sema.go:<span class="number">62</span> sync.runtime_SemacquireMutex (<span class="number">0</span>x43cb74)</span><br><span class="line">Goroutine <span class="number">28232726</span> - User: <span class="regexp">/Users/</span>patrick.xu<span class="regexp">/go/</span>src<span class="regexp">/uframework/</span><span class="keyword">task</span><span class="regexp">/tcp_task.go:84 uframework/</span><span class="keyword">task</span>.(*TCPTask).Run (<span class="number">0</span>x6ce8cc)</span><br><span class="line">Goroutine <span class="number">28232727</span> - User: <span class="regexp">/usr/</span>local<span class="regexp">/go/</span>src<span class="regexp">/runtime/</span>sema.go:<span class="number">62</span> sync.runtime_SemacquireMutex (<span class="number">0</span>x43cb74)</span><br><span class="line">Goroutine <span class="number">28232939</span> - User: <span class="regexp">/Users/</span>patrick.xu<span class="regexp">/go/</span>src<span class="regexp">/uframework/</span><span class="keyword">task</span><span class="regexp">/tcp_task.go:84 uframework/</span><span class="keyword">task</span>.(*TCPTask).Run (<span class="number">0</span>x6ce8cc)</span><br><span class="line">Goroutine <span class="number">28232940</span> - User: <span class="regexp">/usr/</span>local<span class="regexp">/go/</span>src<span class="regexp">/runtime/</span>sema.go:<span class="number">62</span> sync.runtime_SemacquireMutex (<span class="number">0</span>x43cb74)</span><br><span class="line">Goroutine <span class="number">28239464</span> - User: <span class="regexp">/Users/</span>patrick.xu<span class="regexp">/go/</span>src<span class="regexp">/uframework/</span><span class="keyword">task</span><span class="regexp">/tcp_task.go:84 uframework/</span><span class="keyword">task</span>.(*TCPTask).Run (<span class="number">0</span>x6ce8cc)</span><br><span class="line">Goroutine <span class="number">28239465</span> - User: <span class="regexp">/usr/</span>local<span class="regexp">/go/</span>src<span class="regexp">/runtime/</span>sema.go:<span class="number">62</span> sync.runtime_SemacquireMutex (<span class="number">0</span>x43cb74)</span><br><span class="line">Goroutine <span class="number">28239914</span> - User: <span class="regexp">/Users/</span>patrick.xu<span class="regexp">/go/</span>src<span class="regexp">/uframework/</span><span class="keyword">task</span><span class="regexp">/tcp_task.go:84 uframework/</span><span class="keyword">task</span>.(*TCPTask).Run (<span class="number">0</span>x6ce8cc)</span><br><span class="line">Goroutine <span class="number">28239915</span> - User: <span class="regexp">/usr/</span>local<span class="regexp">/go/</span>src<span class="regexp">/runtime/</span>sema.go:<span class="number">62</span> sync.runtime_SemacquireMutex (<span class="number">0</span>x43cb74)</span><br><span class="line">Goroutine <span class="number">28239938</span> - User: <span class="regexp">/Users/</span>patrick.xu<span class="regexp">/go/</span>src<span class="regexp">/uframework/</span><span class="keyword">task</span><span class="regexp">/tcp_task.go:84 uframework/</span><span class="keyword">task</span>.(*TCPTask).Run (<span class="number">0</span>x6ce8cc)</span><br><span class="line">Goroutine <span class="number">28239939</span> - User: <span class="regexp">/usr/</span>local<span class="regexp">/go/</span>src<span class="regexp">/runtime/</span>sema.go:<span class="number">62</span> sync.runtime_SemacquireMutex (<span class="number">0</span>x43cb74)</span><br><span class="line">Goroutine <span class="number">28239965</span> - User: <span class="regexp">/Users/</span>patrick.xu<span class="regexp">/go/</span>src<span class="regexp">/uframework/</span><span class="keyword">task</span><span class="regexp">/tcp_task.go:84 uframework/</span><span class="keyword">task</span>.(*TCPTask).Run (<span class="number">0</span>x6ce8cc)</span><br><span class="line">Goroutine <span class="number">28239966</span> - User: <span class="regexp">/usr/</span>local<span class="regexp">/go/</span>src<span class="regexp">/runtime/</span>sema.go:<span class="number">62</span> sync.runtime_SemacquireMutex (<span class="number">0</span>x43cb74)</span><br><span class="line">Goroutine <span class="number">28239968</span> - User: <span class="regexp">/Users/</span>patrick.xu<span class="regexp">/go/</span>src<span class="regexp">/uframework/</span><span class="keyword">task</span><span class="regexp">/tcp_task.go:84 uframework/</span><span class="keyword">task</span>.(*TCPTask).Run (<span class="number">0</span>x6ce8cc)</span><br><span class="line">Goroutine <span class="number">28239984</span> - User: <span class="regexp">/Users/</span>patrick.xu<span class="regexp">/go/</span>src<span class="regexp">/uframework/</span><span class="keyword">task</span><span class="regexp">/tcp_task.go:84 uframework/</span><span class="keyword">task</span>.(*TCPTask).Run (<span class="number">0</span>x6ce8cc)</span><br><span class="line">Goroutine <span class="number">28239985</span> - User: <span class="regexp">/usr/</span>local<span class="regexp">/go/</span>src<span class="regexp">/runtime/</span>sema.go:<span class="number">62</span> sync.runtime_SemacquireMutex (<span class="number">0</span>x43cb74)</span><br><span class="line">Goroutine <span class="number">28240001</span> - User: <span class="regexp">/usr/</span>local<span class="regexp">/go/</span>src<span class="regexp">/runtime/</span>sema.go:<span class="number">62</span> sync.runtime_SemacquireMutex (<span class="number">0</span>x43cb74)</span><br><span class="line">Goroutine <span class="number">28240961</span> - User: <span class="regexp">/Users/</span>patrick.xu<span class="regexp">/go/</span>src<span class="regexp">/uframework/</span>log<span class="regexp">/logext.go:281 uframework/</span>log.RealWrite (<span class="number">0</span>x6bff2d)</span><br><span class="line">Goroutine <span class="number">28241103</span> - User: <span class="regexp">/Users/</span>patrick.xu<span class="regexp">/go/</span>src<span class="regexp">/uframework/u</span>tils<span class="regexp">/zookeeper/</span>zk<span class="regexp">/conn.go:515 uframework/u</span>tils<span class="regexp">/zookeeper/</span>zk.(*Conn).sendLoop (<span class="number">0</span>x7c7835)</span><br><span class="line">Goroutine <span class="number">28241104</span> - User: <span class="regexp">/usr/</span>local<span class="regexp">/go/</span>src<span class="regexp">/runtime/</span>netpoll.go:<span class="number">164</span> net.runtime_pollWait (<span class="number">0</span>x426ec9)</span><br><span class="line">Goroutine <span class="number">28241126</span> - User: <span class="regexp">/usr/</span>local<span class="regexp">/go/</span>src<span class="regexp">/runtime/</span>sema.go:<span class="number">47</span> sync.runtime_Semacquire (<span class="number">0</span>x43ca94)</span><br></pre></td></tr></table></figure>
-
-<p>看这个goroutine卡在了0x000000000046c45d in sync.(*Mutex).Lock，对应业务代码uhost-go/uhost-scheduler/logic.updateBuffer。</p>
-<figure class="highlight gradle"><table><tr><td class="code"><pre><span class="line">(dlv) gr <span class="number">28239985</span></span><br><span class="line">Switched <span class="keyword">from</span> <span class="number">28241159</span> to <span class="number">28239985</span> (thread <span class="number">31788</span>)</span><br><span class="line">(dlv) bt</span><br><span class="line"><span class="number">0</span>  <span class="number">0</span>x000000000042c76a in <span class="keyword">runtime</span>.gopark</span><br><span class="line">   at <span class="regexp">/usr/</span>local<span class="regexp">/go/</span>src<span class="regexp">/runtime/</span>proc.go:<span class="number">272</span></span><br><span class="line"><span class="number">1</span>  <span class="number">0</span>x000000000042c84e in <span class="keyword">runtime</span>.goparkunlock</span><br><span class="line">   at <span class="regexp">/usr/</span>local<span class="regexp">/go/</span>src<span class="regexp">/runtime/</span>proc.go:<span class="number">277</span></span><br><span class="line"><span class="number">2</span>  <span class="number">0</span>x000000000043ce91 in <span class="keyword">runtime</span>.semacquire</span><br><span class="line">   at <span class="regexp">/usr/</span>local<span class="regexp">/go/</span>src<span class="regexp">/runtime/</span>sema.go:<span class="number">130</span></span><br><span class="line"><span class="number">3</span>  <span class="number">0</span>x000000000043cb74 in sync.runtime_SemacquireMutex</span><br><span class="line">   at <span class="regexp">/usr/</span>local<span class="regexp">/go/</span>src<span class="regexp">/runtime/</span>sema.go:<span class="number">62</span></span><br><span class="line"><span class="number">4</span>  <span class="number">0</span>x000000000046c45d in sync.(*Mutex).Lock</span><br><span class="line">   at <span class="regexp">/usr/</span>local<span class="regexp">/go/</span>src<span class="regexp">/sync/mu</span>tex.go:<span class="number">87</span></span><br><span class="line"><span class="number">5</span>  <span class="number">0</span>x0000000000817b1d in uhost-go<span class="regexp">/uhost-scheduler/</span>logic.updateBuffer</span><br><span class="line">   at <span class="regexp">/Users/</span>patrick.xu<span class="regexp">/go/</span>src<span class="regexp">/uhost-go/u</span>host-scheduler<span class="regexp">/logic/g</span>et_suitable_resource.go:<span class="number">418</span></span><br><span class="line"><span class="number">6</span>  <span class="number">0</span>x0000000000814bd7 in uhost-go<span class="regexp">/uhost-scheduler/</span>logic.getSuitableResource</span><br><span class="line">   at <span class="regexp">/Users/</span>patrick.xu<span class="regexp">/go/</span>src<span class="regexp">/uhost-go/u</span>host-scheduler<span class="regexp">/logic/g</span>et_suitable_resource.go:<span class="number">328</span></span><br><span class="line"><span class="number">7</span>  <span class="number">0</span>x00000000006cecd4 in uframework/<span class="keyword">task</span>.TCPTaskFunc.ServeTCP</span><br><span class="line">   at <span class="regexp">/Users/</span>patrick.xu<span class="regexp">/go/</span>src<span class="regexp">/uframework/</span><span class="keyword">task</span>/tcp_task_handle.go:<span class="number">27</span></span><br><span class="line"><span class="number">8</span>  <span class="number">0</span>x00000000006d02b8 in uframework/<span class="keyword">task</span>.(*TCPTask).Run.func1</span><br><span class="line">   at <span class="regexp">/Users/</span>patrick.xu<span class="regexp">/go/</span>src<span class="regexp">/uframework/</span><span class="keyword">task</span>/tcp_task.go:<span class="number">66</span></span><br><span class="line"><span class="number">9</span>  <span class="number">0</span>x0000000000458dd1 in <span class="keyword">runtime</span>.goexit</span><br><span class="line">   at <span class="regexp">/usr/</span>local<span class="regexp">/go/</span>src<span class="regexp">/runtime/</span>asm_amd64.s:<span class="number">2197</span></span><br></pre></td></tr></table></figure>
-
-<p>再去看业务代码， <strong>frame 5 list</strong></p>
-<figure class="highlight gradle"><table><tr><td class="code"><pre><span class="line">(dlv) frame <span class="number">5</span> list</span><br><span class="line">Goroutine <span class="number">28239985</span> frame <span class="number">5</span> at <span class="regexp">/Users/</span>patrick.xu<span class="regexp">/go/</span>src<span class="regexp">/uhost-go/u</span>host-scheduler<span class="regexp">/logic/g</span>et_suitable_resource.go:<span class="number">418</span> (PC: <span class="number">0</span>x817b1d)</span><br><span class="line">Command failed: open <span class="regexp">/Users/</span>patrick.xu<span class="regexp">/go/</span>src<span class="regexp">/uhost-go/u</span>host-scheduler<span class="regexp">/logic/g</span>et_suitable_resource.go: no such <span class="keyword">file</span> or directory</span><br></pre></td></tr></table></figure>
-
-<p>由于线上没有源代码，提示文件不存在。到本地查看这行的代码。</p>
-<img src="/2019/08/25/%E9%80%9A%E8%BF%87delve-dlv-%E8%B0%83%E8%AF%95golang%E7%A8%8B%E5%BA%8F/lock.jpg" class="" title="image">
-
-<p>定位到这行后，再结合业务逻辑去分析，就能定位到是哪里问题，造成了这里的死锁。</p>
-<p>最后退出来后，注意向上代码别重启。</p>
-<figure class="highlight livecodeserver"><table><tr><td class="code"><pre><span class="line">(dlv) q</span><br><span class="line">Would you like <span class="built_in">to</span> <span class="built_in">kill</span> <span class="keyword">the</span> <span class="built_in">process</span>? [Y/n] n</span><br></pre></td></tr></table></figure>
-
-<p>最后查明原因是：</p>
-<p>调用updatePUhostSlice时，有多个不同wh.hostId的mapHostIdLock[wh.hostId].Lock()，没执行完时不会unlock；如果有并发调用updatePUhostSlice，且遍历whs的顺序和第一次不一样，有可能陷入死锁。</p>
-<figure class="highlight vim"><table><tr><td class="code"><pre><span class="line">func updatePUhostSlice(</span><br><span class="line">        ......</span><br><span class="line">        <span class="keyword">for</span> _, <span class="keyword">wh</span> := <span class="built_in">range</span> whs &#123;</span><br><span class="line"></span><br><span class="line">             <span class="keyword">if</span> mapHostIdLock[<span class="keyword">wh</span>.hostId] == nil &#123;</span><br><span class="line">                 mapHostIdLock[<span class="keyword">wh</span>.hostId] = <span class="keyword">new</span>(<span class="keyword">sync</span>.Mutex)</span><br><span class="line">             &#125;</span><br><span class="line">              mapHostIdLock[<span class="keyword">wh</span>.hostId].Lock()</span><br><span class="line">              defer mapHostIdLock[<span class="keyword">wh</span>.hostId].Unlock()</span><br><span class="line">              ......</span><br><span class="line">        &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>改进方法是：<br>把Lock()和defer Unlock()抽到一个函数里。注意：不能在循环里出现直接调用Lock()的代码。</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">updatePUhostSlice</span><span class="params">(</span></span></span><br><span class="line"><span class="params"><span class="function">        ......</span></span></span><br><span class="line"><span class="params"><span class="function">        <span class="keyword">for</span> _, wh := <span class="keyword">range</span> whs &#123;</span></span></span><br><span class="line"><span class="params"><span class="function">               recheckHostResource(xxx......)</span></span></span><br><span class="line">        &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">recheckHostResource</span><span class="params">(</span></span></span><br><span class="line"><span class="params"><span class="function">       sessionNo <span class="keyword">string</span>,</span></span></span><br><span class="line"><span class="params"><span class="function">       hostId <span class="keyword">uint64</span>,</span></span></span><br><span class="line"><span class="params"><span class="function">       alreadyMatched *<span class="keyword">uint32</span>,</span></span></span><br><span class="line"><span class="params"><span class="function">       pBHRrs *uhost.HostResourceSurvey,</span></span></span><br><span class="line"><span class="params"><span class="function">       uhostParams UhostParams,</span></span></span><br><span class="line"><span class="params"><span class="function">       )</span><span class="params">(isEnough <span class="keyword">bool</span>)</span></span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> mapHostIdLock[hostId] == <span class="literal">nil</span> &#123;</span><br><span class="line">       mapHostIdLock[hostId] = <span class="built_in">new</span>(sync.Mutex)</span><br><span class="line">    &#125;</span><br><span class="line">    mapHostIdLock[hostId].Lock()</span><br><span class="line">    <span class="keyword">defer</span> mapHostIdLock[hostId].Unlock()</span><br><span class="line">    .......</span><br><span class="line"> &#125;</span><br></pre></td></tr></table></figure>
-<h2 id="和gdb的对比"><a href="#和gdb的对比" class="headerlink" title="和gdb的对比"></a>和gdb的对比</h2><p>gdb能看出的信息有限，只能定位到线程这个层面，无法到goroutine这一层，很难定位出问题。</p>
-<figure class="highlight gradle"><table><tr><td class="code"><pre><span class="line">(gdb) info threads</span><br><span class="line">* <span class="number">1</span> process <span class="number">10732</span>  <span class="keyword">runtime</span>.epollwait () at <span class="regexp">/usr/</span>local<span class="regexp">/go/</span>src<span class="regexp">/runtime/</span>sys_linux_amd64.s:<span class="number">560</span></span><br><span class="line">(gdb) thread apply all bt</span><br><span class="line"></span><br><span class="line">Thread <span class="number">1</span> (process <span class="number">10732</span>):</span><br><span class="line">#<span class="number">0</span>  <span class="keyword">runtime</span>.epollwait () at <span class="regexp">/usr/</span>local<span class="regexp">/go/</span>src<span class="regexp">/runtime/</span>sys_linux_amd64.s:<span class="number">560</span></span><br><span class="line">#<span class="number">1</span>  <span class="number">0</span>x00000000004280d1 in <span class="keyword">runtime</span>.netpoll (block=<span class="keyword">true</span>, ~r1=<span class="number">0</span>x1) at <span class="regexp">/usr/</span>local<span class="regexp">/go/</span>src<span class="regexp">/runtime/</span>netpoll_epoll.go:<span class="number">67</span></span><br><span class="line">#<span class="number">2</span>  <span class="number">0</span>x0000000000430f8f in <span class="keyword">runtime</span>.findrunnable (gp#<span class="number">10</span>=<span class="number">0</span>xc42001c000, inheritTime=<span class="keyword">false</span>) at <span class="regexp">/usr/</span>local<span class="regexp">/go/</span>src<span class="regexp">/runtime/</span>proc.go:<span class="number">2084</span></span><br><span class="line">#<span class="number">3</span>  <span class="number">0</span>x0000000000431aec in <span class="keyword">runtime</span>.schedule () at <span class="regexp">/usr/</span>local<span class="regexp">/go/</span>src<span class="regexp">/runtime/</span>proc.go:<span class="number">2222</span></span><br><span class="line">#<span class="number">4</span>  <span class="number">0</span>x0000000000431deb in <span class="keyword">runtime</span>.park_m (gp=<span class="number">0</span>xc4200011e0) at <span class="regexp">/usr/</span>local<span class="regexp">/go/</span>src<span class="regexp">/runtime/</span>proc.go:<span class="number">2285</span></span><br><span class="line">#<span class="number">5</span>  <span class="number">0</span>x000000000045626b in <span class="keyword">runtime</span>.mcall () at <span class="regexp">/usr/</span>local<span class="regexp">/go/</span>src<span class="regexp">/runtime/</span>asm_amd64.s:<span class="number">269</span></span><br><span class="line">#<span class="number">6</span>  <span class="number">0</span>x0000000000cebd00 in <span class="keyword">runtime</span>.work ()</span><br><span class="line">#<span class="number">7</span>  <span class="number">0</span>x00007ffe3162bc70 in ?? ()</span><br><span class="line">#<span class="number">8</span>  <span class="number">0</span>x0000000000cebd80 in <span class="keyword">runtime</span>.work ()</span><br><span class="line">#<span class="number">9</span>  <span class="number">0</span>x00007ffe3162bc60 in ?? ()</span><br><span class="line">#<span class="number">10</span> <span class="number">0</span>x000000000042f0e4 in <span class="keyword">runtime</span>.mstart () at <span class="regexp">/usr/</span>local<span class="regexp">/go/</span>src<span class="regexp">/runtime/</span>proc.go:<span class="number">1149</span></span><br><span class="line">#<span class="number">11</span> <span class="number">0</span>x00000000004560d9 in <span class="keyword">runtime</span>.rt0_go () at <span class="regexp">/usr/</span>local<span class="regexp">/go/</span>src<span class="regexp">/runtime/</span>asm_amd64.s:<span class="number">169</span></span><br><span class="line">#<span class="number">12</span> <span class="number">0</span>x0000000000000009 in ?? ()</span><br><span class="line">#<span class="number">13</span> <span class="number">0</span>x00007ffe3162bca8 in ?? ()</span><br><span class="line">#<span class="number">14</span> <span class="number">0</span>x0000000000000009 in ?? ()</span><br><span class="line">#<span class="number">15</span> <span class="number">0</span>x00007ffe3162bca8 in ?? ()</span><br><span class="line">#<span class="number">16</span> <span class="number">0</span>x0000000000000000 in ?? ()</span><br></pre></td></tr></table></figure>
-
-<p>但可以用gdb产生core，采集一些现场信息，然后重启尽快恢复业务，事后再用dlv分析core来定位原因。</p>
-<h1 id="参考链接"><a href="#参考链接" class="headerlink" title="参考链接"></a>参考链接</h1><ol>
-<li><a href="https://golang.google.cn/doc/gdb">Debugging Go Code with GDB</a></li>
-<li><a href="https://github.com/go-delve/delve">go-delve/delve</a></li>
-<li><a href="http://lday.me/2017/02/27/0005_gdb-vs-dlv/">Golang程序调试工具介绍(gdb vs dlv)</a><ol start="4">
-<li><a href="https://zhuanlan.zhihu.com/p/66228858">实战分析一个运行起来会卡死的Go程序</a></li>
-</ol>
-</li>
-</ol>
-]]></content>
-      <categories>
-        <category>go</category>
-      </categories>
-      <tags>
-        <tag>debug</tag>
-        <tag>delve</tag>
-        <tag>dlv</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>并发控制</title>
-    <url>/2018/08/14/%E5%B9%B6%E5%8F%91%E6%8E%A7%E5%88%B6/</url>
-    <content><![CDATA[<h2 id="并发场景"><a href="#并发场景" class="headerlink" title="并发场景"></a>并发场景</h2><p>秒杀场景，多人并发申请购买同一种商品。<br>下面以2人抢购同一件商品举例，商品数量为1。<br>基本流程如下：</p>
-<img src="/2018/08/14/%E5%B9%B6%E5%8F%91%E6%8E%A7%E5%88%B6/%E8%B4%AD%E4%B9%B0%E8%AE%B0%E5%BD%95.png" class="" title="image">
-<p>这个流程中存在明显的并发问题，当进程A查看有1个商品，但未开始创建购买记录，此时另一个进程B也进行了资源检查，发现有1个商品，顺利通过，并完成购买操作，此时A继续执行，则1个商品会产生两条购买的记录。（这个并发场景很简单，很普遍）</p>
-<h2 id="解决方案"><a href="#解决方案" class="headerlink" title="解决方案"></a>解决方案</h2><p>解决方案通常是2类：<br>1 通过将请求分发到不同set，减少并发的可能性，分而治之。这里暂时不讨论。<br>2 当收到并发请求时，如何处理。</p>
-<h3 id="加锁操作先占有锁资源，再占有资源"><a href="#加锁操作先占有锁资源，再占有资源" class="headerlink" title="加锁操作先占有锁资源，再占有资源"></a>加锁操作先占有锁资源，再占有资源</h3><p>a. 锁库存<br>b. 插入“秒杀”记录<br>c. 更新库存</p>
-<p>“秒杀”系统的设计难点就在这个事务操作上。商品库存在DB中记为一行，大量用户同时“秒杀”同一商品时，第一个到达DB的请求锁住了这行库存记录。在第一个事务完成提交之前这个锁一直被第一个请求占用，其他到达的请求全部失败。</p>
-<p>加锁的方案，效率会比较低。实际应用时，通常要配合排队系统，让没有获取到锁的请求排队。</p>
-<h3 id="单独开发请求排队调度模块"><a href="#单独开发请求排队调度模块" class="headerlink" title="单独开发请求排队调度模块"></a>单独开发请求排队调度模块</h3><p>排队模块接收用户的抢红包请求，以FIFO模式保存下来，调度模块负责FIFO队列的动态调度，一旦有空闲资源，便从队列头部把用户的访问请求取出后交给真正提供服务的模块处理。优点是，具有中心节点的统一资源管理，对系统的可控性强，可深度定制。缺点是，所有请求流量都会有中心节点参与，效率必然会比分布式无中心系统低，并且，中心节点也很容易成为整个系统的性能瓶颈。</p>
-<h3 id="巧用Redis-特性，使其成为分布式序号生成器（我们最终采用的做法）-–-具体还要再看，如何利用redis的特性"><a href="#巧用Redis-特性，使其成为分布式序号生成器（我们最终采用的做法）-–-具体还要再看，如何利用redis的特性" class="headerlink" title="巧用Redis 特性，使其成为分布式序号生成器（我们最终采用的做法） – 具体还要再看，如何利用redis的特性"></a>巧用Redis 特性，使其成为分布式序号生成器（我们最终采用的做法） – 具体还要再看，如何利用redis的特性</h3><p>参考<br><a href="https://www.ibm.com/developerworks/cn/web/wa-design-small-and-good-kill-system/index.html">https://www.ibm.com/developerworks/cn/web/wa-design-small-and-good-kill-system/index.html</a><br><a href="https://blog.csdn.net/zhanjianshinian/article/details/53342730">https://blog.csdn.net/zhanjianshinian/article/details/53342730</a><br>每件商品以一个数字ID来标识，这个ID是全局唯一的，所有围绕商品的操作都使用这个ID作为数据的关联项。</p>
-<p>Redis节点内存储的是这个分组可以分发的商品ID号段，利用Redis特性实现红包分发，各服务节点通过Redis原语获取当前拆到的红包。这种做法的思路是，Redis 本身是单进程工作模型，来自分布式系统各个节点的操作请求天然的被 Redis Server 做了一个同步队列，只要每个请求执行的足够快，这个队列就不会引起阻塞及请求超时。而本例中我们使用了 DECR 原语，性能上是可以满足需求的。Redis 在这里相当于是充当一个分布式序号发生器的功能，分发红包 ID。</p>
-<h3 id="通过memcached来控制并发数-–-具体还要再看"><a href="#通过memcached来控制并发数-–-具体还要再看" class="headerlink" title="通过memcached来控制并发数 – 具体还要再看"></a>通过memcached来控制并发数 – 具体还要再看</h3><p><a href="https://blog.csdn.net/echo3/article/details/17580347">https://blog.csdn.net/echo3/article/details/17580347</a>  使用memcached进行并发控制（写的非常好）<br><a href="http://www.infoq.com/cn/articles/2017hongbao-weixin#">http://www.infoq.com/cn/articles/2017hongbao-weixin#</a>  百亿级微信红包的高并发资金交易系统设计方案<br><a href="https://blog.csdn.net/yanker1990/article/details/78737626">https://blog.csdn.net/yanker1990/article/details/78737626</a>  Memcache的并发问题和利用CAS的解决方案</p>
-<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><p>如何设计一个小而美的秒杀系统？<br><a href="https://www.ibm.com/developerworks/cn/web/wa-design-small-and-good-kill-system/index.html">https://www.ibm.com/developerworks/cn/web/wa-design-small-and-good-kill-system/index.html</a><br>使用memcached进行并发控制（写的非常好）<br><a href="https://blog.csdn.net/echo3/article/details/17580347">https://blog.csdn.net/echo3/article/details/17580347</a><br>电商秒杀系统设计分析<br><a href="https://blog.csdn.net/zhanjianshinian/article/details/53342730">https://blog.csdn.net/zhanjianshinian/article/details/53342730</a></p>
-<p><a href="https://memcached.org/about">https://memcached.org/about</a><br>Redis DECR命令<br><a href="https://www.kancloud.cn/thinkphp/redis-quickstart/36180">https://www.kancloud.cn/thinkphp/redis-quickstart/36180</a></p>
-<p>云主机的问题:<br>申请时要排队，好像没有意义。<br>防止申请到同一台宿主机，前面做的临时添加资源是否有用。跟定时更新是否有冲突？</p>
-]]></content>
-      <categories>
-        <category>架构设计</category>
-      </categories>
-      <tags>
-        <tag>并发控制</tag>
       </tags>
   </entry>
   <entry>
@@ -1911,6 +1806,121 @@
       </categories>
       <tags>
         <tag>网络</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>这些年读过的那些书&amp;&amp;待读清单列表</title>
+    <url>/2019/08/31/%E8%BF%99%E4%BA%9B%E5%B9%B4%E8%AF%BB%E8%BF%87%E7%9A%84%E9%82%A3%E4%BA%9B%E4%B9%A6-%E5%BE%85%E8%AF%BB%E6%B8%85%E5%8D%95%E5%88%97%E8%A1%A8/</url>
+    <content><![CDATA[<p>每年给自己列个计划，要读哪些书，到年尾看看真正看完的有多少。</p>
+<h1 id="2020年待读清单列表"><a href="#2020年待读清单列表" class="headerlink" title="2020年待读清单列表"></a>2020年待读清单列表</h1><ol>
+<li> 《Designing Data-Intensive Applications》</li>
+</ol>
+<h1 id="2019年待读清单列表"><a href="#2019年待读清单列表" class="headerlink" title="2019年待读清单列表"></a>2019年待读清单列表</h1><ol>
+<li>UNIX环境高级编程（第3版）</li>
+<li>重构网络 SDN架构与实现</li>
+<li>软件定义网络</li>
+<li>全球通史 从史前史到21实际 第7版修订版 上</li>
+<li>全球通史 从史前史到21实际 第7版修订版 下<span id="more"></span></li>
+</ol>
+<h1 id="这些年读过的那些书"><a href="#这些年读过的那些书" class="headerlink" title="这些年读过的那些书"></a>这些年读过的那些书</h1><h2 id="2020年"><a href="#2020年" class="headerlink" title="2020年"></a>2020年</h2><ol>
+<li>《深度思考》 深度思考前的盲目勤奋，注定是吃力不讨好的徒劳。香奈儿前全球CEO从普通职员到职场巅峰的人生进阶之路。大脑中走得越远，现实中走得越稳。</li>
+</ol>
+<h2 id="2019年"><a href="#2019年" class="headerlink" title="2019年"></a>2019年</h2><ol>
+<li>《TCP/IP详解 卷1：协议（原书第2版）》 <a href="https://xusenqi.github.io/2019/04/24/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0-TCP-IP%E8%AF%A6%E8%A7%A3-%E5%8D%B71%EF%BC%9A%E5%8D%8F%E8%AE%AE/">读书笔记-TCP/IP详解 卷1：协议</a></li>
+<li>《软技能 代码之外的生存指南（Soft Skills - The Software Developer’s Life Manual）》对于程序员是很不错的心灵鸡汤，从职业、自我营销、学习、生产力等方面，讲述了作者的方法和心得，很值得借鉴。</li>
+</ol>
+]]></content>
+      <categories>
+        <category>读书笔记</category>
+      </categories>
+      <tags>
+        <tag>清单</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>通过delve(dlv)调试golang程序</title>
+    <url>/2019/08/25/%E9%80%9A%E8%BF%87delve-dlv-%E8%B0%83%E8%AF%95golang%E7%A8%8B%E5%BA%8F/</url>
+    <content><![CDATA[<h1 id="介绍"><a href="#介绍" class="headerlink" title="介绍"></a>介绍</h1><p>gdb是强大的调试工具。但对于golang程序来说，delve是个更好的选择，它能更好地理解Go runtime, data structures, and expressions，尤其是goroutine。</p>
+<p>以下描述引用自<a href="https://golang.google.cn/doc/gdb">Debugging Go Code with GDB</a>【1】</p>
+<blockquote>
+<p>Note that Delve is a better alternative to GDB when debugging Go programs built with the standard toolchain. It understands the Go runtime, data structures, and expressions better than GDB. Delve currently supports Linux, OSX, and Windows on amd64. For the most up-to-date list of supported platforms, please see the Delve documentation.</p>
+</blockquote>
+<span id="more"></span>
+<blockquote>
+<p>GDB does not understand Go programs well. The stack management, threading, and runtime contain aspects that differ enough from the execution model GDB expects that they can confuse the debugger and cause incorrect results even when the program is compiled with gccgo. As a consequence, although GDB can be useful in some situations (e.g., debugging Cgo code, or debugging the runtime itself), it is not a reliable debugger for Go programs, particularly heavily concurrent ones. Moreover, it is not a priority for the Go project to address these issues, which are difficult.</p>
+</blockquote>
+<p>Delve is a debugger for the Go programming language【2】.</p>
+<h1 id="安装"><a href="#安装" class="headerlink" title="安装"></a>安装</h1><p>安装过程参考<a href="https://github.com/go-delve/delve/tree/master/Documentation/installation">https://github.com/go-delve/delve/tree/master/Documentation/installation</a></p>
+<p>安装好后，可以查看版本</p>
+<figure class="highlight stata"><table><tr><td class="code"><pre><span class="line">➜  _posts dlv <span class="keyword">version</span></span><br><span class="line">Delve Debugger</span><br><span class="line"><span class="keyword">Version</span>: 1.1.0</span><br><span class="line">Build: <span class="variable">$Id</span>: 1990ba12450cab9425a2ae62e6ab988725023d5c</span><br></pre></td></tr></table></figure>
+
+<h1 id="调试方法"><a href="#调试方法" class="headerlink" title="调试方法"></a>调试方法</h1><p>dlv提供了多种调试命令，如debug、exec、attach、core等，具体见官网文档或help信息。接下介绍常用的几种。</p>
+<h2 id="dlv-debug"><a href="#dlv-debug" class="headerlink" title="dlv debug"></a>dlv debug</h2><p>这是一个代码工程实例, 位于目录GoWorks/GoDbg。</p>
+<img src="/2019/08/25/%E9%80%9A%E8%BF%87delve-dlv-%E8%B0%83%E8%AF%95golang%E7%A8%8B%E5%BA%8F/godbg_project.jpg" class="" title="image">
+
+<ul>
+<li>如果位于工程目录下，可以dlv debug开始调试；</li>
+<li>也可以指定目录，dlv debug GoWorks/GoDbg; </li>
+<li>如果要传入参数，添加–后指定， 如dlv debug GoWorks/GoDbg – -arg1 value</li>
+</ul>
+<figure class="highlight stylus"><table><tr><td class="code"><pre><span class="line">➜  GoDbg dlv debug GoWorks/GoDbg</span><br><span class="line">Type <span class="string">&#x27;help&#x27;</span> <span class="keyword">for</span> list of commands.</span><br><span class="line">(dlv) break <span class="selector-tag">main</span><span class="selector-class">.main</span></span><br><span class="line">Breakpoint <span class="number">1</span> set at <span class="number">0</span>x1089f6b <span class="keyword">for</span> <span class="selector-tag">main</span><span class="selector-class">.main</span>() ./<span class="selector-tag">main</span><span class="selector-class">.go</span>:<span class="number">7</span></span><br><span class="line">(dlv) continue</span><br><span class="line">&gt; <span class="selector-tag">main</span><span class="selector-class">.main</span>() ./<span class="selector-tag">main</span><span class="selector-class">.go</span>:<span class="number">7</span> (hits goroutine(<span class="number">1</span>):<span class="number">1</span> total:<span class="number">1</span>) (PC: <span class="number">0</span>x1089f6b)</span><br><span class="line">     <span class="number">2</span>:	import (</span><br><span class="line">     <span class="number">3</span>:		<span class="string">&quot;GoWorks/GoDbg/mylib&quot;</span></span><br><span class="line">     <span class="number">4</span>:		<span class="string">&quot;fmt&quot;</span></span><br><span class="line">     <span class="number">5</span>:		<span class="string">&quot;os&quot;</span></span><br><span class="line">     <span class="number">6</span>:	)</span><br><span class="line">=&gt;   <span class="number">7</span>:	func <span class="selector-tag">main</span>() &#123;</span><br><span class="line">     <span class="number">8</span>:		fmt<span class="selector-class">.Println</span>(<span class="string">&quot;Golang dbg test...&quot;</span>)</span><br><span class="line">     <span class="number">9</span>:		<span class="selector-tag">var</span> argc = len(os.Args)</span><br><span class="line">    <span class="number">10</span>:		<span class="selector-tag">var</span> argv = append(<span class="selector-attr">[]</span>string&#123;&#125;, os<span class="selector-class">.Args</span>...)</span><br><span class="line">    <span class="number">11</span>:		fmt<span class="selector-class">.Printf</span>(<span class="string">&quot;argc:%d\n&quot;</span>, argc)</span><br><span class="line">    <span class="number">12</span>:		fmt<span class="selector-class">.Printf</span>(<span class="string">&quot;argv:%v\n&quot;</span>, argv)</span><br><span class="line">(dlv) next</span><br><span class="line">&gt; <span class="selector-tag">main</span><span class="selector-class">.main</span>() ./<span class="selector-tag">main</span><span class="selector-class">.go</span>:<span class="number">8</span> (PC: <span class="number">0</span>x1089f82)</span><br><span class="line">     <span class="number">3</span>:		<span class="string">&quot;GoWorks/GoDbg/mylib&quot;</span></span><br><span class="line">     <span class="number">4</span>:		<span class="string">&quot;fmt&quot;</span></span><br><span class="line">     <span class="number">5</span>:		<span class="string">&quot;os&quot;</span></span><br><span class="line">     <span class="number">6</span>:	)</span><br><span class="line">     <span class="number">7</span>:	func <span class="selector-tag">main</span>() &#123;</span><br><span class="line">=&gt;   <span class="number">8</span>:		fmt<span class="selector-class">.Println</span>(<span class="string">&quot;Golang dbg test...&quot;</span>)</span><br><span class="line">     <span class="number">9</span>:		<span class="selector-tag">var</span> argc = len(os.Args)</span><br><span class="line">    <span class="number">10</span>:		<span class="selector-tag">var</span> argv = append(<span class="selector-attr">[]</span>string&#123;&#125;, os<span class="selector-class">.Args</span>...)</span><br><span class="line">    <span class="number">11</span>:		fmt<span class="selector-class">.Printf</span>(<span class="string">&quot;argc:%d\n&quot;</span>, argc)</span><br><span class="line">    <span class="number">12</span>:		fmt<span class="selector-class">.Printf</span>(<span class="string">&quot;argv:%v\n&quot;</span>, argv)</span><br><span class="line">    <span class="number">13</span>:		<span class="selector-tag">var</span> var1 = <span class="number">1</span></span><br></pre></td></tr></table></figure>
+
+<p>具体有哪些debug命令，可以help来查看，与gdb的很类似，goroutine/goroutines的是dlv中特有的。</p>
+<figure class="highlight applescript"><table><tr><td class="code"><pre><span class="line">(dlv) help</span><br><span class="line">The following commands are available:</span><br><span class="line">    args <span class="comment">------------------------ Print function arguments.</span></span><br><span class="line">    break (<span class="built_in">alias</span>: b) <span class="comment">------------ Sets a breakpoint.</span></span><br><span class="line">    breakpoints (<span class="built_in">alias</span>: bp) <span class="comment">----- Print out info for active breakpoints.</span></span><br><span class="line">    call <span class="comment">------------------------ Resumes process, injecting a function call (EXPERIMENTAL!!!)</span></span><br><span class="line">    clear <span class="comment">----------------------- Deletes breakpoint.</span></span><br><span class="line">    clearall <span class="comment">-------------------- Deletes multiple breakpoints.</span></span><br><span class="line">    condition (<span class="built_in">alias</span>: cond) <span class="comment">----- Set breakpoint condition.</span></span><br><span class="line">    config <span class="comment">---------------------- Changes configuration parameters.</span></span><br><span class="line">    <span class="keyword">continue</span> (<span class="built_in">alias</span>: c) <span class="comment">--------- Run until breakpoint or program termination.   // 继续运行</span></span><br><span class="line">    deferred <span class="comment">-------------------- Executes command in the context of a deferred call.</span></span><br><span class="line">    disassemble (<span class="built_in">alias</span>: disass) - Disassembler.</span><br><span class="line">    down <span class="comment">------------------------ Move the current frame down.</span></span><br><span class="line">    edit (<span class="built_in">alias</span>: ed) <span class="comment">------------ Open where you are in $DELVE_EDITOR or $EDITOR</span></span><br><span class="line">    <span class="keyword">exit</span> (<span class="built_in">alias</span>: quit | q) <span class="comment">------ Exit the debugger.</span></span><br><span class="line">    frame <span class="comment">----------------------- Set the current frame, or execute command on a different frame.</span></span><br><span class="line">    funcs <span class="comment">----------------------- Print list of functions.</span></span><br><span class="line">    goroutine (<span class="built_in">alias</span>: gr) <span class="comment">------- Shows or changes current goroutine</span></span><br><span class="line">    goroutines (<span class="built_in">alias</span>: grs) <span class="comment">----- List program goroutines.</span></span><br><span class="line">    help (<span class="built_in">alias</span>: h) <span class="comment">------------- Prints the help message.</span></span><br><span class="line">    libraries <span class="comment">------------------- List loaded dynamic libraries</span></span><br><span class="line">    <span class="built_in">list</span> (<span class="built_in">alias</span>: ls | l) <span class="comment">-------- Show source code.    // 显示代码</span></span><br><span class="line">    locals <span class="comment">---------------------- Print local variables.</span></span><br><span class="line">    next (<span class="built_in">alias</span>: n) <span class="comment">------------- Step over to next source line.  // 单步下一句</span></span><br><span class="line">    <span class="keyword">on</span> <span class="comment">-------------------------- Executes a command when a breakpoint is hit.</span></span><br><span class="line">    print (<span class="built_in">alias</span>: p) <span class="comment">------------ Evaluate an expression.</span></span><br><span class="line">    regs <span class="comment">------------------------ Print contents of CPU registers.</span></span><br><span class="line">    restart (<span class="built_in">alias</span>: r) <span class="comment">---------- Restart process.</span></span><br><span class="line">    <span class="keyword">set</span> <span class="comment">------------------------- Changes the value of a variable.</span></span><br><span class="line">    source <span class="comment">---------------------- Executes a file containing a list of delve commands</span></span><br><span class="line">    sources <span class="comment">--------------------- Print list of source files.</span></span><br><span class="line">    stack (<span class="built_in">alias</span>: bt) <span class="comment">----------- Print stack trace.</span></span><br><span class="line">    step (<span class="built_in">alias</span>: s) <span class="comment">------------- Single step through program.  // 进入函数内,单步下一句</span></span><br><span class="line">    step-instruction (<span class="built_in">alias</span>: si)  Single step a single cpu instruction.</span><br><span class="line">    stepout (<span class="built_in">alias</span>: so) <span class="comment">--------- Step out of the current function.</span></span><br><span class="line">    thread (<span class="built_in">alias</span>: tr) <span class="comment">---------- Switch to the specified thread.</span></span><br><span class="line">    threads <span class="comment">--------------------- Print out info for every traced thread.</span></span><br><span class="line">    trace (<span class="built_in">alias</span>: t) <span class="comment">------------ Set tracepoint.</span></span><br><span class="line">    types <span class="comment">----------------------- Print list of types</span></span><br><span class="line">    up <span class="comment">-------------------------- Move the current frame up.</span></span><br><span class="line">    vars <span class="comment">------------------------ Print package variables.</span></span><br><span class="line">    whatis <span class="comment">---------------------- Prints type of an expression.</span></span><br><span class="line">Type help followed <span class="keyword">by</span> a command <span class="keyword">for</span> full documentation.</span><br></pre></td></tr></table></figure>
+
+<h2 id="dlv-exec"><a href="#dlv-exec" class="headerlink" title="dlv exec"></a>dlv exec</h2><p>Execute a precompiled binary, and begin a debug session.</p>
+<figure class="highlight jboss-cli"><table><tr><td class="code"><pre><span class="line">➜  file <span class="string">./main</span></span><br><span class="line"><span class="string">./main</span>: Mach-O 64-bit executable x86_64</span><br><span class="line">➜  dlv exec <span class="string">./main</span></span><br><span class="line">Type &#x27;<span class="keyword">help</span>&#x27; for list of commands.</span><br><span class="line"><span class="params">(dlv)</span></span><br></pre></td></tr></table></figure>
+
+
+<h2 id="dlv-attach"><a href="#dlv-attach" class="headerlink" title="dlv attach"></a>dlv attach</h2><p>Attach to running process and begin debugging.</p>
+<p>注意：<strong>在退出时，有可选是否要kill该进程</strong>。</p>
+<figure class="highlight powershell"><table><tr><td class="code"><pre><span class="line">[<span class="type">root</span>@<span class="type">yg</span>-<span class="type">man</span>-<span class="type">uhost</span>-<span class="type">set9</span>-<span class="number">01</span> ~]<span class="comment"># dlv attach 22063</span></span><br><span class="line"><span class="built_in">Type</span> <span class="string">&#x27;help&#x27;</span> <span class="keyword">for</span> list of commands.</span><br><span class="line">(dlv) q</span><br><span class="line">Would you like to <span class="built_in">kill</span> the <span class="keyword">process</span>? [<span class="type">Y</span>/<span class="type">n</span>] n</span><br></pre></td></tr></table></figure>
+
+<h2 id="dlv-core"><a href="#dlv-core" class="headerlink" title="dlv core"></a>dlv core</h2><p>Examine a core dump.</p>
+<p>注意：<strong>dlv不支持生成core，可以通过gdb attach上去后，执行gcore来生成core；然后再dlv core来调试</strong>。</p>
+<h1 id="线上调试的例子"><a href="#线上调试的例子" class="headerlink" title="线上调试的例子"></a>线上调试的例子</h1><h2 id="排查过程"><a href="#排查过程" class="headerlink" title="排查过程"></a>排查过程</h2><p>线上一个服务出现了问题，看日志是一个接口的程序跑了一半，后面不再执行下去了。</p>
+<p>dlv attach上去后，看到有很多.runtime_SemacquireMutex这个的goroutine，一直卡着。</p>
+<figure class="highlight gradle"><table><tr><td class="code"><pre><span class="line">Goroutine <span class="number">28232679</span> - User: <span class="regexp">/usr/</span>local<span class="regexp">/go/</span>src<span class="regexp">/runtime/</span>sema.go:<span class="number">62</span> sync.runtime_SemacquireMutex (<span class="number">0</span>x43cb74)</span><br><span class="line">Goroutine <span class="number">28232684</span> - User: <span class="regexp">/Users/</span>patrick.xu<span class="regexp">/go/</span>src<span class="regexp">/uframework/</span><span class="keyword">task</span><span class="regexp">/tcp_task.go:84 uframework/</span><span class="keyword">task</span>.(*TCPTask).Run (<span class="number">0</span>x6ce8cc)</span><br><span class="line">Goroutine <span class="number">28232685</span> - User: <span class="regexp">/usr/</span>local<span class="regexp">/go/</span>src<span class="regexp">/runtime/</span>sema.go:<span class="number">62</span> sync.runtime_SemacquireMutex (<span class="number">0</span>x43cb74)</span><br><span class="line">Goroutine <span class="number">28232686</span> - User: <span class="regexp">/usr/</span>local<span class="regexp">/go/</span>src<span class="regexp">/runtime/</span>sema.go:<span class="number">62</span> sync.runtime_SemacquireMutex (<span class="number">0</span>x43cb74)</span><br><span class="line">Goroutine <span class="number">28232688</span> - User: <span class="regexp">/Users/</span>patrick.xu<span class="regexp">/go/</span>src<span class="regexp">/uframework/</span><span class="keyword">task</span><span class="regexp">/tcp_task.go:84 uframework/</span><span class="keyword">task</span>.(*TCPTask).Run (<span class="number">0</span>x6ce8cc)</span><br><span class="line">Goroutine <span class="number">28232704</span> - User: <span class="regexp">/Users/</span>patrick.xu<span class="regexp">/go/</span>src<span class="regexp">/uframework/</span><span class="keyword">task</span><span class="regexp">/tcp_task.go:84 uframework/</span><span class="keyword">task</span>.(*TCPTask).Run (<span class="number">0</span>x6ce8cc)</span><br><span class="line">Goroutine <span class="number">28232705</span> - User: <span class="regexp">/usr/</span>local<span class="regexp">/go/</span>src<span class="regexp">/runtime/</span>sema.go:<span class="number">62</span> sync.runtime_SemacquireMutex (<span class="number">0</span>x43cb74)</span><br><span class="line">Goroutine <span class="number">28232710</span> - User: <span class="regexp">/Users/</span>patrick.xu<span class="regexp">/go/</span>src<span class="regexp">/uframework/</span><span class="keyword">task</span><span class="regexp">/tcp_task.go:84 uframework/</span><span class="keyword">task</span>.(*TCPTask).Run (<span class="number">0</span>x6ce8cc)</span><br><span class="line">Goroutine <span class="number">28232714</span> - User: <span class="regexp">/Users/</span>patrick.xu<span class="regexp">/go/</span>src<span class="regexp">/uframework/</span><span class="keyword">task</span><span class="regexp">/tcp_task.go:84 uframework/</span><span class="keyword">task</span>.(*TCPTask).Run (<span class="number">0</span>x6ce8cc)</span><br><span class="line">Goroutine <span class="number">28232715</span> - User: <span class="regexp">/usr/</span>local<span class="regexp">/go/</span>src<span class="regexp">/runtime/</span>sema.go:<span class="number">62</span> sync.runtime_SemacquireMutex (<span class="number">0</span>x43cb74)</span><br><span class="line">Goroutine <span class="number">28232718</span> - User: <span class="regexp">/Users/</span>patrick.xu<span class="regexp">/go/</span>src<span class="regexp">/uframework/</span><span class="keyword">task</span><span class="regexp">/tcp_task.go:84 uframework/</span><span class="keyword">task</span>.(*TCPTask).Run (<span class="number">0</span>x6ce8cc)</span><br><span class="line">Goroutine <span class="number">28232719</span> - User: <span class="regexp">/usr/</span>local<span class="regexp">/go/</span>src<span class="regexp">/runtime/</span>sema.go:<span class="number">62</span> sync.runtime_SemacquireMutex (<span class="number">0</span>x43cb74)</span><br><span class="line">Goroutine <span class="number">28232721</span> - User: <span class="regexp">/usr/</span>local<span class="regexp">/go/</span>src<span class="regexp">/runtime/</span>sema.go:<span class="number">62</span> sync.runtime_SemacquireMutex (<span class="number">0</span>x43cb74)</span><br><span class="line">Goroutine <span class="number">28232726</span> - User: <span class="regexp">/Users/</span>patrick.xu<span class="regexp">/go/</span>src<span class="regexp">/uframework/</span><span class="keyword">task</span><span class="regexp">/tcp_task.go:84 uframework/</span><span class="keyword">task</span>.(*TCPTask).Run (<span class="number">0</span>x6ce8cc)</span><br><span class="line">Goroutine <span class="number">28232727</span> - User: <span class="regexp">/usr/</span>local<span class="regexp">/go/</span>src<span class="regexp">/runtime/</span>sema.go:<span class="number">62</span> sync.runtime_SemacquireMutex (<span class="number">0</span>x43cb74)</span><br><span class="line">Goroutine <span class="number">28232939</span> - User: <span class="regexp">/Users/</span>patrick.xu<span class="regexp">/go/</span>src<span class="regexp">/uframework/</span><span class="keyword">task</span><span class="regexp">/tcp_task.go:84 uframework/</span><span class="keyword">task</span>.(*TCPTask).Run (<span class="number">0</span>x6ce8cc)</span><br><span class="line">Goroutine <span class="number">28232940</span> - User: <span class="regexp">/usr/</span>local<span class="regexp">/go/</span>src<span class="regexp">/runtime/</span>sema.go:<span class="number">62</span> sync.runtime_SemacquireMutex (<span class="number">0</span>x43cb74)</span><br><span class="line">Goroutine <span class="number">28239464</span> - User: <span class="regexp">/Users/</span>patrick.xu<span class="regexp">/go/</span>src<span class="regexp">/uframework/</span><span class="keyword">task</span><span class="regexp">/tcp_task.go:84 uframework/</span><span class="keyword">task</span>.(*TCPTask).Run (<span class="number">0</span>x6ce8cc)</span><br><span class="line">Goroutine <span class="number">28239465</span> - User: <span class="regexp">/usr/</span>local<span class="regexp">/go/</span>src<span class="regexp">/runtime/</span>sema.go:<span class="number">62</span> sync.runtime_SemacquireMutex (<span class="number">0</span>x43cb74)</span><br><span class="line">Goroutine <span class="number">28239914</span> - User: <span class="regexp">/Users/</span>patrick.xu<span class="regexp">/go/</span>src<span class="regexp">/uframework/</span><span class="keyword">task</span><span class="regexp">/tcp_task.go:84 uframework/</span><span class="keyword">task</span>.(*TCPTask).Run (<span class="number">0</span>x6ce8cc)</span><br><span class="line">Goroutine <span class="number">28239915</span> - User: <span class="regexp">/usr/</span>local<span class="regexp">/go/</span>src<span class="regexp">/runtime/</span>sema.go:<span class="number">62</span> sync.runtime_SemacquireMutex (<span class="number">0</span>x43cb74)</span><br><span class="line">Goroutine <span class="number">28239938</span> - User: <span class="regexp">/Users/</span>patrick.xu<span class="regexp">/go/</span>src<span class="regexp">/uframework/</span><span class="keyword">task</span><span class="regexp">/tcp_task.go:84 uframework/</span><span class="keyword">task</span>.(*TCPTask).Run (<span class="number">0</span>x6ce8cc)</span><br><span class="line">Goroutine <span class="number">28239939</span> - User: <span class="regexp">/usr/</span>local<span class="regexp">/go/</span>src<span class="regexp">/runtime/</span>sema.go:<span class="number">62</span> sync.runtime_SemacquireMutex (<span class="number">0</span>x43cb74)</span><br><span class="line">Goroutine <span class="number">28239965</span> - User: <span class="regexp">/Users/</span>patrick.xu<span class="regexp">/go/</span>src<span class="regexp">/uframework/</span><span class="keyword">task</span><span class="regexp">/tcp_task.go:84 uframework/</span><span class="keyword">task</span>.(*TCPTask).Run (<span class="number">0</span>x6ce8cc)</span><br><span class="line">Goroutine <span class="number">28239966</span> - User: <span class="regexp">/usr/</span>local<span class="regexp">/go/</span>src<span class="regexp">/runtime/</span>sema.go:<span class="number">62</span> sync.runtime_SemacquireMutex (<span class="number">0</span>x43cb74)</span><br><span class="line">Goroutine <span class="number">28239968</span> - User: <span class="regexp">/Users/</span>patrick.xu<span class="regexp">/go/</span>src<span class="regexp">/uframework/</span><span class="keyword">task</span><span class="regexp">/tcp_task.go:84 uframework/</span><span class="keyword">task</span>.(*TCPTask).Run (<span class="number">0</span>x6ce8cc)</span><br><span class="line">Goroutine <span class="number">28239984</span> - User: <span class="regexp">/Users/</span>patrick.xu<span class="regexp">/go/</span>src<span class="regexp">/uframework/</span><span class="keyword">task</span><span class="regexp">/tcp_task.go:84 uframework/</span><span class="keyword">task</span>.(*TCPTask).Run (<span class="number">0</span>x6ce8cc)</span><br><span class="line">Goroutine <span class="number">28239985</span> - User: <span class="regexp">/usr/</span>local<span class="regexp">/go/</span>src<span class="regexp">/runtime/</span>sema.go:<span class="number">62</span> sync.runtime_SemacquireMutex (<span class="number">0</span>x43cb74)</span><br><span class="line">Goroutine <span class="number">28240001</span> - User: <span class="regexp">/usr/</span>local<span class="regexp">/go/</span>src<span class="regexp">/runtime/</span>sema.go:<span class="number">62</span> sync.runtime_SemacquireMutex (<span class="number">0</span>x43cb74)</span><br><span class="line">Goroutine <span class="number">28240961</span> - User: <span class="regexp">/Users/</span>patrick.xu<span class="regexp">/go/</span>src<span class="regexp">/uframework/</span>log<span class="regexp">/logext.go:281 uframework/</span>log.RealWrite (<span class="number">0</span>x6bff2d)</span><br><span class="line">Goroutine <span class="number">28241103</span> - User: <span class="regexp">/Users/</span>patrick.xu<span class="regexp">/go/</span>src<span class="regexp">/uframework/u</span>tils<span class="regexp">/zookeeper/</span>zk<span class="regexp">/conn.go:515 uframework/u</span>tils<span class="regexp">/zookeeper/</span>zk.(*Conn).sendLoop (<span class="number">0</span>x7c7835)</span><br><span class="line">Goroutine <span class="number">28241104</span> - User: <span class="regexp">/usr/</span>local<span class="regexp">/go/</span>src<span class="regexp">/runtime/</span>netpoll.go:<span class="number">164</span> net.runtime_pollWait (<span class="number">0</span>x426ec9)</span><br><span class="line">Goroutine <span class="number">28241126</span> - User: <span class="regexp">/usr/</span>local<span class="regexp">/go/</span>src<span class="regexp">/runtime/</span>sema.go:<span class="number">47</span> sync.runtime_Semacquire (<span class="number">0</span>x43ca94)</span><br></pre></td></tr></table></figure>
+
+<p>看这个goroutine卡在了0x000000000046c45d in sync.(*Mutex).Lock，对应业务代码uhost-go/uhost-scheduler/logic.updateBuffer。</p>
+<figure class="highlight gradle"><table><tr><td class="code"><pre><span class="line">(dlv) gr <span class="number">28239985</span></span><br><span class="line">Switched <span class="keyword">from</span> <span class="number">28241159</span> to <span class="number">28239985</span> (thread <span class="number">31788</span>)</span><br><span class="line">(dlv) bt</span><br><span class="line"><span class="number">0</span>  <span class="number">0</span>x000000000042c76a in <span class="keyword">runtime</span>.gopark</span><br><span class="line">   at <span class="regexp">/usr/</span>local<span class="regexp">/go/</span>src<span class="regexp">/runtime/</span>proc.go:<span class="number">272</span></span><br><span class="line"><span class="number">1</span>  <span class="number">0</span>x000000000042c84e in <span class="keyword">runtime</span>.goparkunlock</span><br><span class="line">   at <span class="regexp">/usr/</span>local<span class="regexp">/go/</span>src<span class="regexp">/runtime/</span>proc.go:<span class="number">277</span></span><br><span class="line"><span class="number">2</span>  <span class="number">0</span>x000000000043ce91 in <span class="keyword">runtime</span>.semacquire</span><br><span class="line">   at <span class="regexp">/usr/</span>local<span class="regexp">/go/</span>src<span class="regexp">/runtime/</span>sema.go:<span class="number">130</span></span><br><span class="line"><span class="number">3</span>  <span class="number">0</span>x000000000043cb74 in sync.runtime_SemacquireMutex</span><br><span class="line">   at <span class="regexp">/usr/</span>local<span class="regexp">/go/</span>src<span class="regexp">/runtime/</span>sema.go:<span class="number">62</span></span><br><span class="line"><span class="number">4</span>  <span class="number">0</span>x000000000046c45d in sync.(*Mutex).Lock</span><br><span class="line">   at <span class="regexp">/usr/</span>local<span class="regexp">/go/</span>src<span class="regexp">/sync/mu</span>tex.go:<span class="number">87</span></span><br><span class="line"><span class="number">5</span>  <span class="number">0</span>x0000000000817b1d in uhost-go<span class="regexp">/uhost-scheduler/</span>logic.updateBuffer</span><br><span class="line">   at <span class="regexp">/Users/</span>patrick.xu<span class="regexp">/go/</span>src<span class="regexp">/uhost-go/u</span>host-scheduler<span class="regexp">/logic/g</span>et_suitable_resource.go:<span class="number">418</span></span><br><span class="line"><span class="number">6</span>  <span class="number">0</span>x0000000000814bd7 in uhost-go<span class="regexp">/uhost-scheduler/</span>logic.getSuitableResource</span><br><span class="line">   at <span class="regexp">/Users/</span>patrick.xu<span class="regexp">/go/</span>src<span class="regexp">/uhost-go/u</span>host-scheduler<span class="regexp">/logic/g</span>et_suitable_resource.go:<span class="number">328</span></span><br><span class="line"><span class="number">7</span>  <span class="number">0</span>x00000000006cecd4 in uframework/<span class="keyword">task</span>.TCPTaskFunc.ServeTCP</span><br><span class="line">   at <span class="regexp">/Users/</span>patrick.xu<span class="regexp">/go/</span>src<span class="regexp">/uframework/</span><span class="keyword">task</span>/tcp_task_handle.go:<span class="number">27</span></span><br><span class="line"><span class="number">8</span>  <span class="number">0</span>x00000000006d02b8 in uframework/<span class="keyword">task</span>.(*TCPTask).Run.func1</span><br><span class="line">   at <span class="regexp">/Users/</span>patrick.xu<span class="regexp">/go/</span>src<span class="regexp">/uframework/</span><span class="keyword">task</span>/tcp_task.go:<span class="number">66</span></span><br><span class="line"><span class="number">9</span>  <span class="number">0</span>x0000000000458dd1 in <span class="keyword">runtime</span>.goexit</span><br><span class="line">   at <span class="regexp">/usr/</span>local<span class="regexp">/go/</span>src<span class="regexp">/runtime/</span>asm_amd64.s:<span class="number">2197</span></span><br></pre></td></tr></table></figure>
+
+<p>再去看业务代码， <strong>frame 5 list</strong></p>
+<figure class="highlight gradle"><table><tr><td class="code"><pre><span class="line">(dlv) frame <span class="number">5</span> list</span><br><span class="line">Goroutine <span class="number">28239985</span> frame <span class="number">5</span> at <span class="regexp">/Users/</span>patrick.xu<span class="regexp">/go/</span>src<span class="regexp">/uhost-go/u</span>host-scheduler<span class="regexp">/logic/g</span>et_suitable_resource.go:<span class="number">418</span> (PC: <span class="number">0</span>x817b1d)</span><br><span class="line">Command failed: open <span class="regexp">/Users/</span>patrick.xu<span class="regexp">/go/</span>src<span class="regexp">/uhost-go/u</span>host-scheduler<span class="regexp">/logic/g</span>et_suitable_resource.go: no such <span class="keyword">file</span> or directory</span><br></pre></td></tr></table></figure>
+
+<p>由于线上没有源代码，提示文件不存在。到本地查看这行的代码。</p>
+<img src="/2019/08/25/%E9%80%9A%E8%BF%87delve-dlv-%E8%B0%83%E8%AF%95golang%E7%A8%8B%E5%BA%8F/lock.jpg" class="" title="image">
+
+<p>定位到这行后，再结合业务逻辑去分析，就能定位到是哪里问题，造成了这里的死锁。</p>
+<p>最后退出来后，注意向上代码别重启。</p>
+<figure class="highlight livecodeserver"><table><tr><td class="code"><pre><span class="line">(dlv) q</span><br><span class="line">Would you like <span class="built_in">to</span> <span class="built_in">kill</span> <span class="keyword">the</span> <span class="built_in">process</span>? [Y/n] n</span><br></pre></td></tr></table></figure>
+
+<p>最后查明原因是：</p>
+<p>调用updatePUhostSlice时，有多个不同wh.hostId的mapHostIdLock[wh.hostId].Lock()，没执行完时不会unlock；如果有并发调用updatePUhostSlice，且遍历whs的顺序和第一次不一样，有可能陷入死锁。</p>
+<figure class="highlight vim"><table><tr><td class="code"><pre><span class="line">func updatePUhostSlice(</span><br><span class="line">        ......</span><br><span class="line">        <span class="keyword">for</span> _, <span class="keyword">wh</span> := <span class="built_in">range</span> whs &#123;</span><br><span class="line"></span><br><span class="line">             <span class="keyword">if</span> mapHostIdLock[<span class="keyword">wh</span>.hostId] == nil &#123;</span><br><span class="line">                 mapHostIdLock[<span class="keyword">wh</span>.hostId] = <span class="keyword">new</span>(<span class="keyword">sync</span>.Mutex)</span><br><span class="line">             &#125;</span><br><span class="line">              mapHostIdLock[<span class="keyword">wh</span>.hostId].Lock()</span><br><span class="line">              defer mapHostIdLock[<span class="keyword">wh</span>.hostId].Unlock()</span><br><span class="line">              ......</span><br><span class="line">        &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>改进方法是：<br>把Lock()和defer Unlock()抽到一个函数里。注意：不能在循环里出现直接调用Lock()的代码。</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">updatePUhostSlice</span><span class="params">(</span></span></span><br><span class="line"><span class="params"><span class="function">        ......</span></span></span><br><span class="line"><span class="params"><span class="function">        <span class="keyword">for</span> _, wh := <span class="keyword">range</span> whs &#123;</span></span></span><br><span class="line"><span class="params"><span class="function">               recheckHostResource(xxx......)</span></span></span><br><span class="line">        &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">recheckHostResource</span><span class="params">(</span></span></span><br><span class="line"><span class="params"><span class="function">       sessionNo <span class="keyword">string</span>,</span></span></span><br><span class="line"><span class="params"><span class="function">       hostId <span class="keyword">uint64</span>,</span></span></span><br><span class="line"><span class="params"><span class="function">       alreadyMatched *<span class="keyword">uint32</span>,</span></span></span><br><span class="line"><span class="params"><span class="function">       pBHRrs *uhost.HostResourceSurvey,</span></span></span><br><span class="line"><span class="params"><span class="function">       uhostParams UhostParams,</span></span></span><br><span class="line"><span class="params"><span class="function">       )</span><span class="params">(isEnough <span class="keyword">bool</span>)</span></span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> mapHostIdLock[hostId] == <span class="literal">nil</span> &#123;</span><br><span class="line">       mapHostIdLock[hostId] = <span class="built_in">new</span>(sync.Mutex)</span><br><span class="line">    &#125;</span><br><span class="line">    mapHostIdLock[hostId].Lock()</span><br><span class="line">    <span class="keyword">defer</span> mapHostIdLock[hostId].Unlock()</span><br><span class="line">    .......</span><br><span class="line"> &#125;</span><br></pre></td></tr></table></figure>
+<h2 id="和gdb的对比"><a href="#和gdb的对比" class="headerlink" title="和gdb的对比"></a>和gdb的对比</h2><p>gdb能看出的信息有限，只能定位到线程这个层面，无法到goroutine这一层，很难定位出问题。</p>
+<figure class="highlight gradle"><table><tr><td class="code"><pre><span class="line">(gdb) info threads</span><br><span class="line">* <span class="number">1</span> process <span class="number">10732</span>  <span class="keyword">runtime</span>.epollwait () at <span class="regexp">/usr/</span>local<span class="regexp">/go/</span>src<span class="regexp">/runtime/</span>sys_linux_amd64.s:<span class="number">560</span></span><br><span class="line">(gdb) thread apply all bt</span><br><span class="line"></span><br><span class="line">Thread <span class="number">1</span> (process <span class="number">10732</span>):</span><br><span class="line">#<span class="number">0</span>  <span class="keyword">runtime</span>.epollwait () at <span class="regexp">/usr/</span>local<span class="regexp">/go/</span>src<span class="regexp">/runtime/</span>sys_linux_amd64.s:<span class="number">560</span></span><br><span class="line">#<span class="number">1</span>  <span class="number">0</span>x00000000004280d1 in <span class="keyword">runtime</span>.netpoll (block=<span class="keyword">true</span>, ~r1=<span class="number">0</span>x1) at <span class="regexp">/usr/</span>local<span class="regexp">/go/</span>src<span class="regexp">/runtime/</span>netpoll_epoll.go:<span class="number">67</span></span><br><span class="line">#<span class="number">2</span>  <span class="number">0</span>x0000000000430f8f in <span class="keyword">runtime</span>.findrunnable (gp#<span class="number">10</span>=<span class="number">0</span>xc42001c000, inheritTime=<span class="keyword">false</span>) at <span class="regexp">/usr/</span>local<span class="regexp">/go/</span>src<span class="regexp">/runtime/</span>proc.go:<span class="number">2084</span></span><br><span class="line">#<span class="number">3</span>  <span class="number">0</span>x0000000000431aec in <span class="keyword">runtime</span>.schedule () at <span class="regexp">/usr/</span>local<span class="regexp">/go/</span>src<span class="regexp">/runtime/</span>proc.go:<span class="number">2222</span></span><br><span class="line">#<span class="number">4</span>  <span class="number">0</span>x0000000000431deb in <span class="keyword">runtime</span>.park_m (gp=<span class="number">0</span>xc4200011e0) at <span class="regexp">/usr/</span>local<span class="regexp">/go/</span>src<span class="regexp">/runtime/</span>proc.go:<span class="number">2285</span></span><br><span class="line">#<span class="number">5</span>  <span class="number">0</span>x000000000045626b in <span class="keyword">runtime</span>.mcall () at <span class="regexp">/usr/</span>local<span class="regexp">/go/</span>src<span class="regexp">/runtime/</span>asm_amd64.s:<span class="number">269</span></span><br><span class="line">#<span class="number">6</span>  <span class="number">0</span>x0000000000cebd00 in <span class="keyword">runtime</span>.work ()</span><br><span class="line">#<span class="number">7</span>  <span class="number">0</span>x00007ffe3162bc70 in ?? ()</span><br><span class="line">#<span class="number">8</span>  <span class="number">0</span>x0000000000cebd80 in <span class="keyword">runtime</span>.work ()</span><br><span class="line">#<span class="number">9</span>  <span class="number">0</span>x00007ffe3162bc60 in ?? ()</span><br><span class="line">#<span class="number">10</span> <span class="number">0</span>x000000000042f0e4 in <span class="keyword">runtime</span>.mstart () at <span class="regexp">/usr/</span>local<span class="regexp">/go/</span>src<span class="regexp">/runtime/</span>proc.go:<span class="number">1149</span></span><br><span class="line">#<span class="number">11</span> <span class="number">0</span>x00000000004560d9 in <span class="keyword">runtime</span>.rt0_go () at <span class="regexp">/usr/</span>local<span class="regexp">/go/</span>src<span class="regexp">/runtime/</span>asm_amd64.s:<span class="number">169</span></span><br><span class="line">#<span class="number">12</span> <span class="number">0</span>x0000000000000009 in ?? ()</span><br><span class="line">#<span class="number">13</span> <span class="number">0</span>x00007ffe3162bca8 in ?? ()</span><br><span class="line">#<span class="number">14</span> <span class="number">0</span>x0000000000000009 in ?? ()</span><br><span class="line">#<span class="number">15</span> <span class="number">0</span>x00007ffe3162bca8 in ?? ()</span><br><span class="line">#<span class="number">16</span> <span class="number">0</span>x0000000000000000 in ?? ()</span><br></pre></td></tr></table></figure>
+
+<p>但可以用gdb产生core，采集一些现场信息，然后重启尽快恢复业务，事后再用dlv分析core来定位原因。</p>
+<h1 id="参考链接"><a href="#参考链接" class="headerlink" title="参考链接"></a>参考链接</h1><ol>
+<li><a href="https://golang.google.cn/doc/gdb">Debugging Go Code with GDB</a></li>
+<li><a href="https://github.com/go-delve/delve">go-delve/delve</a></li>
+<li><a href="http://lday.me/2017/02/27/0005_gdb-vs-dlv/">Golang程序调试工具介绍(gdb vs dlv)</a><ol start="4">
+<li><a href="https://zhuanlan.zhihu.com/p/66228858">实战分析一个运行起来会卡死的Go程序</a></li>
+</ol>
+</li>
+</ol>
+]]></content>
+      <categories>
+        <category>go</category>
+      </categories>
+      <tags>
+        <tag>debug</tag>
+        <tag>delve</tag>
+        <tag>dlv</tag>
       </tags>
   </entry>
   <entry>
