@@ -6,7 +6,7 @@
   <link href="https://xusenqi.site/atom.xml" rel="self"/>
   
   <link href="https://xusenqi.site/"/>
-  <updated>2022-03-19T16:54:07.009Z</updated>
+  <updated>2022-03-19T16:56:04.068Z</updated>
   <id>https://xusenqi.site/</id>
   
   <author>
@@ -21,11 +21,15 @@
     <link href="https://xusenqi.site/2022/03/19/cpu-cache/"/>
     <id>https://xusenqi.site/2022/03/19/cpu-cache/</id>
     <published>2022-03-19T15:03:13.000Z</published>
-    <updated>2022-03-19T16:54:07.009Z</updated>
+    <updated>2022-03-19T16:56:04.068Z</updated>
     
     
     <summary type="html">&lt;h1 id=&quot;1-cpu-cache的介绍&quot;&gt;&lt;a href=&quot;#1-cpu-cache的介绍&quot; class=&quot;headerlink&quot; title=&quot;1 cpu cache的介绍&quot;&gt;&lt;/a&gt;1 cpu cache的介绍&lt;/h1&gt;&lt;p&gt;cpu cache(高速缓存)分为三类：L1 cache、L2 cache和L3 cache。&lt;/p&gt;
-&lt;p&gt;其中：&lt;br&gt;● L1 cache分成两种，一种是指令缓存，一种是数据缓存。L2 cache和L3 cache不分指令和数据。&lt;br&gt;● L1 cache和L2 cache在每一个CPU核中，L3 cache则是所有CPU核心共享。&lt;br&gt;● L1、L2、L3的越离CPU近就越小，速度也越快，越离CPU远，速度也越慢。&lt;/p&gt;</summary>
+&lt;p&gt;其中：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;L1 cache分成两种，一种是指令缓存，一种是数据缓存。L2 cache和L3 cache不分指令和数据。&lt;/li&gt;
+&lt;li&gt;L1 cache和L2 cache在每一个CPU核中，L3 cache则是所有CPU核心共享。&lt;/li&gt;
+&lt;li&gt;L1、L2、L3的越离CPU近就越小，速度也越快，越离CPU远，速度也越慢。</summary>
     
     
     

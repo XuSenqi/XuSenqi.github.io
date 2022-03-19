@@ -632,9 +632,12 @@
     <title>cpu cache</title>
     <url>/2022/03/19/cpu-cache/</url>
     <content><![CDATA[<h1 id="1-cpu-cache的介绍"><a href="#1-cpu-cache的介绍" class="headerlink" title="1 cpu cache的介绍"></a>1 cpu cache的介绍</h1><p>cpu cache(高速缓存)分为三类：L1 cache、L2 cache和L3 cache。</p>
-<p>其中：<br>● L1 cache分成两种，一种是指令缓存，一种是数据缓存。L2 cache和L3 cache不分指令和数据。<br>● L1 cache和L2 cache在每一个CPU核中，L3 cache则是所有CPU核心共享。<br>● L1、L2、L3的越离CPU近就越小，速度也越快，越离CPU远，速度也越慢。</p>
-<span id="more"></span>
-
+<p>其中：</p>
+<ul>
+<li>L1 cache分成两种，一种是指令缓存，一种是数据缓存。L2 cache和L3 cache不分指令和数据。</li>
+<li>L1 cache和L2 cache在每一个CPU核中，L3 cache则是所有CPU核心共享。</li>
+<li>L1、L2、L3的越离CPU近就越小，速度也越快，越离CPU远，速度也越慢。<span id="more"></span></li>
+</ul>
 <p>以下是《深入理解计算机系统》书中的部分截图：</p>
 <p>计算机系统各种不同类型的缓存：</p>
 <img src="/2022/03/19/cpu-cache/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%B3%BB%E7%BB%9F%E4%B8%AD%E5%90%84%E7%A7%8D%E4%B8%8D%E5%90%8C%E7%B1%BB%E5%9E%8B%E7%9A%84%E7%BC%93%E5%AD%98.jpg" class="" title="image">
