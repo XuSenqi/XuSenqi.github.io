@@ -629,6 +629,63 @@
       </tags>
   </entry>
   <entry>
+    <title>cpu cache</title>
+    <url>/2022/03/19/cpu-cache/</url>
+    <content><![CDATA[<h1 id="1-cpu-cache的介绍"><a href="#1-cpu-cache的介绍" class="headerlink" title="1 cpu cache的介绍"></a>1 cpu cache的介绍</h1><p>cpu cache(高速缓存)分为三类：L1 cache、L2 cache和L3 cache。</p>
+<p>其中：<br>● L1 cache分成两种，一种是指令缓存，一种是数据缓存。L2 cache和L3 cache不分指令和数据。<br>● L1 cache和L2 cache在每一个CPU核中，L3 cache则是所有CPU核心共享。<br>● L1、L2、L3的越离CPU近就越小，速度也越快，越离CPU远，速度也越慢。</p>
+<span id="more"></span>
+
+<p>以下是《深入理解计算机系统》书中的部分截图：</p>
+<p>计算机系统各种不同类型的缓存：</p>
+<img src="/2022/03/19/cpu-cache/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%B3%BB%E7%BB%9F%E4%B8%AD%E5%90%84%E7%A7%8D%E4%B8%8D%E5%90%8C%E7%B1%BB%E5%9E%8B%E7%9A%84%E7%BC%93%E5%AD%98.jpg" class="" title="image">
+
+<p>Intel Core i7处理器的cache的层次结构：</p>
+<img src="/2022/03/19/cpu-cache/IntelCorei7%E7%9A%84%E9%AB%98%E9%80%9F%E7%BC%93%E5%AD%98%E5%B1%82%E6%AC%A1%E7%BB%93%E6%9E%84.png" class="" title="image">
+
+<p>Corei7高速缓存层次的特性</p>
+<img src="/2022/03/19/cpu-cache/Corei7%E9%AB%98%E9%80%9F%E7%BC%93%E5%AD%98%E5%B1%82%E6%AC%A1%E7%9A%84%E7%89%B9%E6%80%A7.png" class="" title="image">
+
+<h1 id="2-cpu-cache对程序性能的影响"><a href="#2-cpu-cache对程序性能的影响" class="headerlink" title="2 cpu cache对程序性能的影响"></a>2 cpu cache对程序性能的影响</h1><h1 id="2-1-存储器山"><a href="#2-1-存储器山" class="headerlink" title="2.1 存储器山"></a>2.1 存储器山</h1><p>程序从存储系统中读数据的速率为读吞吐量（read throughput），或者读带宽（read bandwidth）。</p>
+<p>x轴为参数size，控制时间局部性的程度；size的值越小，得到工作集越小，因此时间局部性越好。<br>y轴为参数stride，控制空间局部性的程度；strde的越小，得到的空间局部性越好。</p>
+<img src="/2022/03/19/cpu-cache/%E5%AD%98%E5%82%A8%E5%99%A8%E5%B1%B1.jpg" class="" title="image">
+
+<p>有以下几个结论：</p>
+<ul>
+<li>时间局部性</li>
+</ul>
+<p>stride固定时，size越小，工作集越小，固定时间内访问工作集的次数越多，就越能体现出时间局部性；</p>
+<ul>
+<li>空间局部性</li>
+</ul>
+<p> size固定，即固定工作集大小时，读吞吐量随着步长的增大而平缓下降，因为空间局部性变差；</p>
+<ul>
+<li>硬件预取</li>
+</ul>
+<p>注意到步长为1时，读吞吐量随工作集大小变化非常缓慢。 这是因为cpu cache的硬件预取机制。这是一项很聪明的机制，也是对于撰写具有良好局部性程序的程序员的一种奖赏。</p>
+<h1 id="2-2-Cache-line"><a href="#2-2-Cache-line" class="headerlink" title="2.2 Cache line"></a>2.2 Cache line</h1><p>先解释一个术语 Cache Line。缓存基本上来说就是把后面的数据加载到离自己近的地方，对于CPU来说，它是不会一个字节一个字节的加载的，因为这非常没有效率，一般来说都是要一块一块的加载的，对于这样的一块一块的数据单位，术语叫“Cache Line”，<br>一般来说，一个主流的CPU的Cache Line 是 64 Bytes（也有的CPU用32Bytes和128Bytes），64Bytes也就是16个32位的整型，这就是CPU从内存中捞数据上来的最小数据单位。</p>
+<figure class="highlight elixir"><table><tr><td class="code"><pre><span class="line"><span class="variable">$ </span>getconf LEVEL1_DCACHE_LINESIZE</span><br><span class="line"><span class="number">64</span></span><br><span class="line"><span class="variable">$ </span>getconf LEVEL2_CACHE_LINESIZE</span><br><span class="line"><span class="number">64</span></span><br></pre></td></tr></table></figure>
+
+<p>以下代码，测试间隔SIZE个元素，顺序遍历数组中的元素，测试所用的时间</p>
+<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">define</span> SIZE 67108864  <span class="comment">// 64 * 1024 * 1024.  The array will be 512 MiB.</span></span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">()</span> </span>&#123;</span><br><span class="line">   <span class="keyword">int64_t</span>* array = (<span class="keyword">int64_t</span>*)<span class="built_in">calloc</span>(SIZE, <span class="built_in"><span class="keyword">sizeof</span></span>(<span class="keyword">int64_t</span>));</span><br><span class="line">   <span class="keyword">clock_t</span> t0 = <span class="built_in">clock</span>();</span><br><span class="line">   <span class="keyword">for</span> (<span class="keyword">size_t</span> i = <span class="number">0</span>; i &lt; SIZE; i += STEP) &#123;</span><br><span class="line">      array[i] &amp;= <span class="number">1</span>;  <span class="comment">// Do something.  Anything; 这部分时间忽略</span></span><br><span class="line">   &#125;</span><br><span class="line">   <span class="keyword">clock_t</span> t1 = <span class="built_in">clock</span>();</span><br><span class="line">   <span class="built_in">printf</span>(<span class="string">&quot;%d %f\n&quot;</span>, STEP, <span class="number">1000</span> * (t1 - t0) / CLOCKS_PER_SEC);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>C 库函数 clock_t clock(void) 返回程序执行起（一般为程序的开头），处理器时钟所使用的时间。为了获取 CPU 所使用的秒数，您需要除以 CLOCKS_PER_SEC。</p>
+<img src="/2022/03/19/cpu-cache/cacheline%E6%B5%8B%E8%AF%95%E7%BB%93%E6%9E%9C.jpg" class="" title="image">
+
+<p>分析：</p>
+<ul>
+<li>Step Size为1~8时，处理时间基本一致，因为每个64Bytes的数据都有加载，即使不是每个数据都处理；但处理时间相比加载数据的时间太短，可以忽略。</li>
+<li>Step Size为16时，间隔128Bytes去修改，所以从内存中读取了一半的数据，时间为1/2；</li>
+<li>Step Size为32时，从内存中读取了1/4的数据, 所以时间为1/4;</li>
+</ul>
+<h1 id="2-3-Prefetching"><a href="#2-3-Prefetching" class="headerlink" title="2.3 Prefetching"></a>2.3 Prefetching</h1>]]></content>
+      <categories>
+        <category>cpu</category>
+      </categories>
+      <tags>
+        <tag>cpu</tag>
+        <tag>cache</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>du、df和ls的区别</title>
     <url>/2018/11/10/du%E3%80%81df%E5%92%8Cls%E7%9A%84%E5%8C%BA%E5%88%AB/</url>
     <content><![CDATA[<p>待整理。。。。</p>

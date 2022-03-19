@@ -6,7 +6,7 @@
   <link href="https://xusenqi.site/atom.xml" rel="self"/>
   
   <link href="https://xusenqi.site/"/>
-  <updated>2021-09-13T07:13:23.693Z</updated>
+  <updated>2022-03-19T16:54:07.009Z</updated>
   <id>https://xusenqi.site/</id>
   
   <author>
@@ -15,6 +15,28 @@
   </author>
   
   <generator uri="https://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>cpu cache</title>
+    <link href="https://xusenqi.site/2022/03/19/cpu-cache/"/>
+    <id>https://xusenqi.site/2022/03/19/cpu-cache/</id>
+    <published>2022-03-19T15:03:13.000Z</published>
+    <updated>2022-03-19T16:54:07.009Z</updated>
+    
+    
+    <summary type="html">&lt;h1 id=&quot;1-cpu-cache的介绍&quot;&gt;&lt;a href=&quot;#1-cpu-cache的介绍&quot; class=&quot;headerlink&quot; title=&quot;1 cpu cache的介绍&quot;&gt;&lt;/a&gt;1 cpu cache的介绍&lt;/h1&gt;&lt;p&gt;cpu cache(高速缓存)分为三类：L1 cache、L2 cache和L3 cache。&lt;/p&gt;
+&lt;p&gt;其中：&lt;br&gt;● L1 cache分成两种，一种是指令缓存，一种是数据缓存。L2 cache和L3 cache不分指令和数据。&lt;br&gt;● L1 cache和L2 cache在每一个CPU核中，L3 cache则是所有CPU核心共享。&lt;br&gt;● L1、L2、L3的越离CPU近就越小，速度也越快，越离CPU远，速度也越慢。&lt;/p&gt;</summary>
+    
+    
+    
+    <category term="cpu" scheme="https://xusenqi.site/categories/cpu/"/>
+    
+    
+    <category term="cpu" scheme="https://xusenqi.site/tags/cpu/"/>
+    
+    <category term="cache" scheme="https://xusenqi.site/tags/cache/"/>
+    
+  </entry>
   
   <entry>
     <title>不同IO模型的比较</title>
@@ -486,32 +508,6 @@
     
     
     <category term="linux命令" scheme="https://xusenqi.site/tags/linux%E5%91%BD%E4%BB%A4/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>文件删除空间未释放的例子</title>
-    <link href="https://xusenqi.site/2018/11/10/%E6%96%87%E4%BB%B6%E5%B7%B2%E5%88%A0%E9%99%A4%E7%A9%BA%E9%97%B4%E6%9C%AA%E9%87%8A%E6%94%BE%E7%9A%84%E4%BE%8B%E5%AD%90/"/>
-    <id>https://xusenqi.site/2018/11/10/%E6%96%87%E4%BB%B6%E5%B7%B2%E5%88%A0%E9%99%A4%E7%A9%BA%E9%97%B4%E6%9C%AA%E9%87%8A%E6%94%BE%E7%9A%84%E4%BE%8B%E5%AD%90/</id>
-    <published>2018-11-10T06:31:28.000Z</published>
-    <updated>2021-08-19T09:54:38.949Z</updated>
-    
-    
-      
-      
-        
-        
-    <summary type="html">&lt;h2 id=&quot;背景&quot;&gt;&lt;a href=&quot;#背景&quot; class=&quot;headerlink&quot; title=&quot;背景&quot;&gt;&lt;/a&gt;背景&lt;/h2&gt;&lt;p&gt;在删除文件后，有时会遇到磁盘空间并未被释放的场景。这里自己尝试复现，并去做相关的说明。&lt;/p&gt;
-&lt;h2 id=&quot;删除后空间未释放&quot;&gt;&lt;a</summary>
-        
-      
-    
-    
-    
-    <category term="linux" scheme="https://xusenqi.site/categories/linux/"/>
-    
-    
-    <category term="文件系统" scheme="https://xusenqi.site/tags/%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F/"/>
     
   </entry>
   
