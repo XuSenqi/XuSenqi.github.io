@@ -6,7 +6,7 @@
   <link href="https://xusenqi.site/atom.xml" rel="self"/>
   
   <link href="https://xusenqi.site/"/>
-  <updated>2022-03-19T16:56:04.068Z</updated>
+  <updated>2022-03-20T03:23:42.482Z</updated>
   <id>https://xusenqi.site/</id>
   
   <author>
@@ -21,7 +21,7 @@
     <link href="https://xusenqi.site/2022/03/19/cpu-cache/"/>
     <id>https://xusenqi.site/2022/03/19/cpu-cache/</id>
     <published>2022-03-19T15:03:13.000Z</published>
-    <updated>2022-03-19T16:56:04.068Z</updated>
+    <updated>2022-03-20T03:23:42.482Z</updated>
     
     
     <summary type="html">&lt;h1 id=&quot;1-cpu-cache的介绍&quot;&gt;&lt;a href=&quot;#1-cpu-cache的介绍&quot; class=&quot;headerlink&quot; title=&quot;1 cpu cache的介绍&quot;&gt;&lt;/a&gt;1 cpu cache的介绍&lt;/h1&gt;&lt;p&gt;cpu cache(高速缓存)分为三类：L1 cache、L2 cache和L3 cache。&lt;/p&gt;
