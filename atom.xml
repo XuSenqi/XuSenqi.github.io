@@ -6,7 +6,7 @@
   <link href="https://xusenqi.site/atom.xml" rel="self"/>
   
   <link href="https://xusenqi.site/"/>
-  <updated>2022-03-20T03:23:42.482Z</updated>
+  <updated>2022-04-03T15:29:40.412Z</updated>
   <id>https://xusenqi.site/</id>
   
   <author>
@@ -15,6 +15,27 @@
   </author>
   
   <generator uri="https://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>缺少指令集pclmulqdq导致无法执行crc32c的问题</title>
+    <link href="https://xusenqi.site/2022/04/01/%E7%BC%BA%E5%B0%91%E6%8C%87%E4%BB%A4%E9%9B%86pclmulqdq%E5%AF%BC%E8%87%B4%E6%97%A0%E6%B3%95%E6%89%A7%E8%A1%8Ccrc32c%E6%97%A0%E6%B3%95%E6%89%A7%E8%A1%8C%E7%9A%84%E9%97%AE%E9%A2%98/"/>
+    <id>https://xusenqi.site/2022/04/01/%E7%BC%BA%E5%B0%91%E6%8C%87%E4%BB%A4%E9%9B%86pclmulqdq%E5%AF%BC%E8%87%B4%E6%97%A0%E6%B3%95%E6%89%A7%E8%A1%8Ccrc32c%E6%97%A0%E6%B3%95%E6%89%A7%E8%A1%8C%E7%9A%84%E9%97%AE%E9%A2%98/</id>
+    <published>2022-04-01T14:54:00.000Z</published>
+    <updated>2022-04-03T15:29:40.412Z</updated>
+    
+    
+    <summary type="html">&lt;h1 id=&quot;问题&quot;&gt;&lt;a href=&quot;#问题&quot; class=&quot;headerlink&quot; title=&quot;问题&quot;&gt;&lt;/a&gt;问题&lt;/h1&gt;&lt;p&gt;之前跑程序一直在intel/amd的CPU上，最近要适配一款国产cpu -中科海光 Hygon C86 7151 16-core Processor。突然发现计算crc32的程序跑不起来了，是啥原因呢？&lt;/p&gt;</summary>
+    
+    
+    
+    <category term="cpu" scheme="https://xusenqi.site/categories/cpu/"/>
+    
+    
+    <category term="cpu" scheme="https://xusenqi.site/tags/cpu/"/>
+    
+    <category term="crc" scheme="https://xusenqi.site/tags/crc/"/>
+    
+  </entry>
   
   <entry>
     <title>cpu cache</title>
@@ -486,32 +507,6 @@
     <category term="网卡" scheme="https://xusenqi.site/tags/%E7%BD%91%E5%8D%A1/"/>
     
     <category term="多队列" scheme="https://xusenqi.site/tags/%E5%A4%9A%E9%98%9F%E5%88%97/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>du、df和ls的区别</title>
-    <link href="https://xusenqi.site/2018/11/10/du%E3%80%81df%E5%92%8Cls%E7%9A%84%E5%8C%BA%E5%88%AB/"/>
-    <id>https://xusenqi.site/2018/11/10/du%E3%80%81df%E5%92%8Cls%E7%9A%84%E5%8C%BA%E5%88%AB/</id>
-    <published>2018-11-10T08:24:21.000Z</published>
-    <updated>2021-08-19T09:54:38.645Z</updated>
-    
-    
-      
-      
-        
-        
-    <summary type="html">&lt;p&gt;待整理。。。。&lt;/p&gt;
-</summary>
-        
-      
-    
-    
-    
-    <category term="linux" scheme="https://xusenqi.site/categories/linux/"/>
-    
-    
-    <category term="linux命令" scheme="https://xusenqi.site/tags/linux%E5%91%BD%E4%BB%A4/"/>
     
   </entry>
   

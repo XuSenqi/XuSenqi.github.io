@@ -1,6 +1,104 @@
 <?xml version="1.0" encoding="utf-8"?>
 <search>
   <entry>
+    <title>Go语言 - 01 工作区和GOPATH</title>
+    <url>/2018/08/12/Go%E8%AF%AD%E8%A8%80-01-%E5%B7%A5%E4%BD%9C%E5%8C%BA%E5%92%8CGOPATH/</url>
+    <content><![CDATA[<h2 id="Go语言的安装"><a href="#Go语言的安装" class="headerlink" title="Go语言的安装"></a>Go语言的安装</h2><p>参照官网文档 <a href="https://golang.org/doc/install">https://golang.org/doc/install</a><br>可以在命令行中输入命令来验证是否安装成功：</p>
+<ul>
+<li>go version：查看安装的版本</li>
+<li>go env：当前go的配置环境</li>
+</ul>
+<p>2个环境变量，即 GOROOT、GOPATH和GOBIN:</p>
+<ul>
+<li>GOROOT：go的安装路径</li>
+<li>GOPATH：go的工作路径<span id="more"></span></li>
+</ul>
+<h2 id="问题-：设置-GOPATH-有什么意义？"><a href="#问题-：设置-GOPATH-有什么意义？" class="headerlink" title="问题 ：设置 GOPATH 有什么意义？"></a>问题 ：设置 GOPATH 有什么意义？</h2><p>典型回答<br>环境变量 GOPATH 的值可以是一个目录的路径，也可以包含多个目录路径，每个目录都代表 Go 语言的一个工作区（workspace）。<br>这些工作区用于放置 Go 语言的源码文件，以及安装（install）后的归档文件和可执行文件。<br>一个典型的workspace如下：</p>
+<figure class="highlight awk"><table><tr><td class="code"><pre><span class="line">bin/</span><br><span class="line">    hello                 <span class="comment"># command executable </span></span><br><span class="line">pkg/</span><br><span class="line">    linux_amd64/          <span class="comment"># this will reflect your OS and architecture</span></span><br><span class="line">        github.com<span class="regexp">/user/</span></span><br><span class="line">            stringutil.a  <span class="comment"># package object</span></span><br><span class="line">src/</span><br><span class="line">    github.com<span class="regexp">/user/</span></span><br><span class="line">        hello/</span><br><span class="line">            hello.go      <span class="comment"># command source</span></span><br><span class="line">        stringutil/</span><br><span class="line">            reverse.go    <span class="comment"># package source</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="知识扩展"><a href="#知识扩展" class="headerlink" title="知识扩展"></a>知识扩展</h2><h3 id="Go-语言源码的组织方式"><a href="#Go-语言源码的组织方式" class="headerlink" title="Go 语言源码的组织方式"></a>Go 语言源码的组织方式</h3><p>以代码包(package)为基本组织单位的。代码包其实是与目录一一对应的。目录可以有子目录，所以代码包也可以有子包。</p>
+<p>一个代码包中可以包含任意个以.go 为扩展名的源码文件，这些源码文件都需要被声明为属于同一个代码包。代码包的名称一般会与这些源码文件所在的目录同名。如果不同名，那么在构建、安装的过程中会以代码包名称为准。</p>
+<p>代码包的导入：</p>
+<figure class="highlight arduino"><table><tr><td class="code"><pre><span class="line"><span class="keyword">import</span> <span class="string">&quot;github.com/labstack/echo&quot;</span></span><br></pre></td></tr></table></figure>
+
+<p>在工作区中，一个代码包的导入路径实际上就是从 src 子目录，到该包的实际存储位置的相对路径。下面我马上就会谈到 src子目录。<br>插播：Go语言的源码文件有三大类，即：命令源码文件、库源码文件和测试源码文件。</p>
+<h3 id="构建-go-build-和安装-go-install"><a href="#构建-go-build-和安装-go-install" class="headerlink" title="构建(go build)和安装(go install)"></a>构建(go build)和安装(go install)</h3><p>go build: 用于编译我们指定的源码文件或代码包以及它们的依赖包。<br>对于只包含库源码文件的代码包, go build命令在编译时，只会做检查性的编译，操作的结果文件只会存在于临时目录中，立刻自动删除，而不会输出任何结果文件。<br>如果想保留在临时工作目录，不删除掉：</p>
+<figure class="highlight awk"><table><tr><td class="code"><pre><span class="line">➜  stringutil go build -work</span><br><span class="line">WORK=<span class="regexp">/var/</span>folders<span class="regexp">/5s/</span><span class="number">25</span>ck5pv16rg55hr2kfdvtszc0000gp<span class="regexp">/T/g</span>o-build412712988</span><br></pre></td></tr></table></figure>
+<p>如果构建的是命令源码文件，那么操作的结果文件会被搬运到那个源码文件所在的目录中。</p>
+<figure class="highlight vim"><table><tr><td class="code"><pre><span class="line">➜  hello gi<span class="variable">t:</span>(master) ✗ <span class="keyword">ls</span></span><br><span class="line">hello.<span class="keyword">go</span></span><br><span class="line">➜  hello gi<span class="variable">t:</span>(master) ✗ <span class="keyword">go</span> build</span><br><span class="line">➜  hello gi<span class="variable">t:</span>(master) ✗ <span class="keyword">ls</span></span><br><span class="line">hello    hello.<span class="keyword">go</span></span><br></pre></td></tr></table></figure>
+<p>go install: 安装操作会先执行构建(go build)，然后还会进行链接操作，并且把结果文件搬运到指定目录。<br>进一步说，如果安装的是库源码文件，那么结果文件会被搬运到它所在工作区的 pkg 目录下的某个子目录中。</p>
+<figure class="highlight awk"><table><tr><td class="code"><pre><span class="line">➜  XuSenqi ls <span class="regexp">/Users/</span>patrick.xu<span class="regexp">/go/</span>pkg<span class="regexp">/darwin_amd64/gi</span>thub.com/XuSenqi</span><br><span class="line">➜  XuSenqi go install github.com<span class="regexp">/XuSenqi/</span>stringutil</span><br><span class="line">➜  XuSenqi ls <span class="regexp">/Users/</span>patrick.xu<span class="regexp">/go/</span>pkg<span class="regexp">/darwin_amd64/gi</span>thub.com/XuSenqi</span><br><span class="line">stringutil.a</span><br></pre></td></tr></table></figure>
+
+<p>如果安装的是命令源码文件，那么结果文件会被搬运到它所在工作区的 bin 目录中，或者环境变量GOBIN指向的目录中。同时，依赖的代码包也会安装到pgk下对应的目录中。</p>
+<figure class="highlight gradle"><table><tr><td class="code"><pre><span class="line">➜  XuSenqi ls <span class="regexp">/Users/</span>patrick.xu<span class="regexp">/go/</span>pkg<span class="regexp">/darwin_amd64/gi</span>thub.com/XuSenqi</span><br><span class="line">➜  XuSenqi ls <span class="regexp">/Users/</span>patrick.xu<span class="regexp">/go/</span>bin/hello</span><br><span class="line">ls: <span class="regexp">/Users/</span>patrick.xu<span class="regexp">/go/</span>bin/hello: No such <span class="keyword">file</span> or directory</span><br><span class="line">➜  XuSenqi go install github.com<span class="regexp">/XuSenqi/</span>hello/</span><br><span class="line">➜  XuSenqi ls <span class="regexp">/Users/</span>patrick.xu<span class="regexp">/go/</span>pkg<span class="regexp">/darwin_amd64/gi</span>thub.com/XuSenqi</span><br><span class="line">stringutil.a</span><br><span class="line">➜  XuSenqi ls <span class="regexp">/Users/</span>patrick.xu<span class="regexp">/go/</span>bin/hello</span><br><span class="line"><span class="regexp">/Users/</span>patrick.xu<span class="regexp">/go/</span>bin/hello</span><br></pre></td></tr></table></figure>
+<h3 id="go-build-命令一些可选项的用途和用法"><a href="#go-build-命令一些可选项的用途和用法" class="headerlink" title="go build 命令一些可选项的用途和用法"></a>go build 命令一些可选项的用途和用法</h3><p>在运行go build命令的时候，默认不会编译目标代码包所依赖的那些代码包。当然，如果被依赖的代码包的归档文件不存在，或者源码文件有了变化，那它还是会被编译。</p>
+<p>如果要强制编译它们，可以在执行命令的时候加入标记-a。此时，不但目标代码包总是会被编译，它依赖的代码包也总会被编译，即使依赖的是标准库中的代码包也是如此。</p>
+<p>表1 go build命令的常用标记说明</p>
+<table>
+<thead>
+<tr>
+<th>标记名称</th>
+<th align="center">标记描述</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>-a</td>
+<td align="center">强行对所有涉及到的代码包（包含标准库中的代码包）进行重新构建，即使它们已经是最新的了。</td>
+</tr>
+<tr>
+<td>-n</td>
+<td align="center">打印编译期间所用到的其它命令，但是并不真正执行它们。</td>
+</tr>
+<tr>
+<td>-p n</td>
+<td align="center">指定编译过程中执行各任务的并行数量（确切地说应该是并发数量）。在默认情况下，该数量等于CPU的逻辑核数。但是在darwin/arm平台（即iPhone和iPad所用的平台）下，该数量默认是1。</td>
+</tr>
+<tr>
+<td>-race</td>
+<td align="center">开启竞态条件的检测。不过此标记目前仅在linux/amd64、freebsd/amd64、darwin/amd64和windows/amd64平台下受到支持。</td>
+</tr>
+<tr>
+<td>-v</td>
+<td align="center">打印出那些被编译的代码包的名字。</td>
+</tr>
+<tr>
+<td>-work</td>
+<td align="center">打印出编译时生成的临时工作目录的路径，并在编译结束时保留它。在默认情况下，编译结束时会删除该目录。</td>
+</tr>
+<tr>
+<td>-x</td>
+<td align="center">打印编译期间所用到的其它命令。注意它与-n标记的区别。</td>
+</tr>
+</tbody></table>
+<h3 id="go-get"><a href="#go-get" class="headerlink" title="go get"></a>go get</h3><p>go get可以根据要求和实际情况从互联网上下载或更新指定的代码包及其依赖包，并对它们进行go build和go install。</p>
+<figure class="highlight awk"><table><tr><td class="code"><pre><span class="line">➜  XuSenqi go get github.com<span class="regexp">/hyper-carrot/g</span>o_lib/logging</span><br><span class="line">➜  XuSenqi ls <span class="variable">$GOPATH</span><span class="regexp">/src/gi</span>thub.com<span class="regexp">/hyper-carrot/g</span>o_lib/logging</span><br><span class="line">base.go           console_logger.go log_manager.go    logger_test.go    tag.go</span><br><span class="line">➜  XuSenqi ls <span class="regexp">/Users/</span>patrick.xu<span class="regexp">/go/</span>pkg<span class="regexp">/darwin_amd64/gi</span>thub.com<span class="regexp">/hyper-carrot/g</span>o_lib/logging.a</span><br><span class="line"><span class="regexp">/Users/</span>patrick.xu<span class="regexp">/go/</span>pkg<span class="regexp">/darwin_amd64/gi</span>thub.com<span class="regexp">/hyper-carrot/g</span>o_lib/logging.a</span><br></pre></td></tr></table></figure>
+<p>表2 go get命令的常用标记说明</p>
+<table>
+<thead>
+<tr>
+<th>标记名称</th>
+<th align="center">标记描述</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>-d</td>
+<td align="center">让命令程序只执行下载动作，而不执行安装动作。</td>
+</tr>
+<tr>
+<td>-u</td>
+<td align="center">让命令利用网络来更新已有代码包及其依赖包。默认情况下，该命令只会从网络上下载本地不存在的代码包，而不会更新已有的代码包。</td>
+</tr>
+</tbody></table>
+<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><p>go build<br><a href="http://wiki.jikexueyuan.com/project/go-command-tutorial/0.1.html">http://wiki.jikexueyuan.com/project/go-command-tutorial/0.1.html</a><br>go get<br><a href="http://wiki.jikexueyuan.com/project/go-command-tutorial/0.3.html">http://wiki.jikexueyuan.com/project/go-command-tutorial/0.3.html</a><br><a href="https://github.com/hyper0x/go_command_tutorial/blob/master/0.3.md">https://github.com/hyper0x/go_command_tutorial/blob/master/0.3.md</a></p>
+]]></content>
+      <categories>
+        <category>Go</category>
+      </categories>
+      <tags>
+        <tag>Go</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>c++ profile的大杀器-gperftools的使用</title>
     <url>/2020/12/06/C++Profile%E7%9A%84%E5%A4%A7%E6%9D%80%E5%99%A8_gperftools%E7%9A%84%E4%BD%BF%E7%94%A8/</url>
     <content><![CDATA[<p>熟悉golang的同学，一定很熟悉用pprof来作为性能分析和可视化的工具，包括 cpu profile, memery profile等。这么方便且炫的功能，在C++里也一样能实现。所需要的工具就是gperftools。</p>
@@ -158,136 +256,10 @@
       </tags>
   </entry>
   <entry>
-    <title>Go语言 - 01 工作区和GOPATH</title>
-    <url>/2018/08/12/Go%E8%AF%AD%E8%A8%80-01-%E5%B7%A5%E4%BD%9C%E5%8C%BA%E5%92%8CGOPATH/</url>
-    <content><![CDATA[<h2 id="Go语言的安装"><a href="#Go语言的安装" class="headerlink" title="Go语言的安装"></a>Go语言的安装</h2><p>参照官网文档 <a href="https://golang.org/doc/install">https://golang.org/doc/install</a><br>可以在命令行中输入命令来验证是否安装成功：</p>
-<ul>
-<li>go version：查看安装的版本</li>
-<li>go env：当前go的配置环境</li>
-</ul>
-<p>2个环境变量，即 GOROOT、GOPATH和GOBIN:</p>
-<ul>
-<li>GOROOT：go的安装路径</li>
-<li>GOPATH：go的工作路径<span id="more"></span></li>
-</ul>
-<h2 id="问题-：设置-GOPATH-有什么意义？"><a href="#问题-：设置-GOPATH-有什么意义？" class="headerlink" title="问题 ：设置 GOPATH 有什么意义？"></a>问题 ：设置 GOPATH 有什么意义？</h2><p>典型回答<br>环境变量 GOPATH 的值可以是一个目录的路径，也可以包含多个目录路径，每个目录都代表 Go 语言的一个工作区（workspace）。<br>这些工作区用于放置 Go 语言的源码文件，以及安装（install）后的归档文件和可执行文件。<br>一个典型的workspace如下：</p>
-<figure class="highlight awk"><table><tr><td class="code"><pre><span class="line">bin/</span><br><span class="line">    hello                 <span class="comment"># command executable </span></span><br><span class="line">pkg/</span><br><span class="line">    linux_amd64/          <span class="comment"># this will reflect your OS and architecture</span></span><br><span class="line">        github.com<span class="regexp">/user/</span></span><br><span class="line">            stringutil.a  <span class="comment"># package object</span></span><br><span class="line">src/</span><br><span class="line">    github.com<span class="regexp">/user/</span></span><br><span class="line">        hello/</span><br><span class="line">            hello.go      <span class="comment"># command source</span></span><br><span class="line">        stringutil/</span><br><span class="line">            reverse.go    <span class="comment"># package source</span></span><br></pre></td></tr></table></figure>
-
-<h2 id="知识扩展"><a href="#知识扩展" class="headerlink" title="知识扩展"></a>知识扩展</h2><h3 id="Go-语言源码的组织方式"><a href="#Go-语言源码的组织方式" class="headerlink" title="Go 语言源码的组织方式"></a>Go 语言源码的组织方式</h3><p>以代码包(package)为基本组织单位的。代码包其实是与目录一一对应的。目录可以有子目录，所以代码包也可以有子包。</p>
-<p>一个代码包中可以包含任意个以.go 为扩展名的源码文件，这些源码文件都需要被声明为属于同一个代码包。代码包的名称一般会与这些源码文件所在的目录同名。如果不同名，那么在构建、安装的过程中会以代码包名称为准。</p>
-<p>代码包的导入：</p>
-<figure class="highlight arduino"><table><tr><td class="code"><pre><span class="line"><span class="keyword">import</span> <span class="string">&quot;github.com/labstack/echo&quot;</span></span><br></pre></td></tr></table></figure>
-
-<p>在工作区中，一个代码包的导入路径实际上就是从 src 子目录，到该包的实际存储位置的相对路径。下面我马上就会谈到 src子目录。<br>插播：Go语言的源码文件有三大类，即：命令源码文件、库源码文件和测试源码文件。</p>
-<h3 id="构建-go-build-和安装-go-install"><a href="#构建-go-build-和安装-go-install" class="headerlink" title="构建(go build)和安装(go install)"></a>构建(go build)和安装(go install)</h3><p>go build: 用于编译我们指定的源码文件或代码包以及它们的依赖包。<br>对于只包含库源码文件的代码包, go build命令在编译时，只会做检查性的编译，操作的结果文件只会存在于临时目录中，立刻自动删除，而不会输出任何结果文件。<br>如果想保留在临时工作目录，不删除掉：</p>
-<figure class="highlight awk"><table><tr><td class="code"><pre><span class="line">➜  stringutil go build -work</span><br><span class="line">WORK=<span class="regexp">/var/</span>folders<span class="regexp">/5s/</span><span class="number">25</span>ck5pv16rg55hr2kfdvtszc0000gp<span class="regexp">/T/g</span>o-build412712988</span><br></pre></td></tr></table></figure>
-<p>如果构建的是命令源码文件，那么操作的结果文件会被搬运到那个源码文件所在的目录中。</p>
-<figure class="highlight vim"><table><tr><td class="code"><pre><span class="line">➜  hello gi<span class="variable">t:</span>(master) ✗ <span class="keyword">ls</span></span><br><span class="line">hello.<span class="keyword">go</span></span><br><span class="line">➜  hello gi<span class="variable">t:</span>(master) ✗ <span class="keyword">go</span> build</span><br><span class="line">➜  hello gi<span class="variable">t:</span>(master) ✗ <span class="keyword">ls</span></span><br><span class="line">hello    hello.<span class="keyword">go</span></span><br></pre></td></tr></table></figure>
-<p>go install: 安装操作会先执行构建(go build)，然后还会进行链接操作，并且把结果文件搬运到指定目录。<br>进一步说，如果安装的是库源码文件，那么结果文件会被搬运到它所在工作区的 pkg 目录下的某个子目录中。</p>
-<figure class="highlight awk"><table><tr><td class="code"><pre><span class="line">➜  XuSenqi ls <span class="regexp">/Users/</span>patrick.xu<span class="regexp">/go/</span>pkg<span class="regexp">/darwin_amd64/gi</span>thub.com/XuSenqi</span><br><span class="line">➜  XuSenqi go install github.com<span class="regexp">/XuSenqi/</span>stringutil</span><br><span class="line">➜  XuSenqi ls <span class="regexp">/Users/</span>patrick.xu<span class="regexp">/go/</span>pkg<span class="regexp">/darwin_amd64/gi</span>thub.com/XuSenqi</span><br><span class="line">stringutil.a</span><br></pre></td></tr></table></figure>
-
-<p>如果安装的是命令源码文件，那么结果文件会被搬运到它所在工作区的 bin 目录中，或者环境变量GOBIN指向的目录中。同时，依赖的代码包也会安装到pgk下对应的目录中。</p>
-<figure class="highlight gradle"><table><tr><td class="code"><pre><span class="line">➜  XuSenqi ls <span class="regexp">/Users/</span>patrick.xu<span class="regexp">/go/</span>pkg<span class="regexp">/darwin_amd64/gi</span>thub.com/XuSenqi</span><br><span class="line">➜  XuSenqi ls <span class="regexp">/Users/</span>patrick.xu<span class="regexp">/go/</span>bin/hello</span><br><span class="line">ls: <span class="regexp">/Users/</span>patrick.xu<span class="regexp">/go/</span>bin/hello: No such <span class="keyword">file</span> or directory</span><br><span class="line">➜  XuSenqi go install github.com<span class="regexp">/XuSenqi/</span>hello/</span><br><span class="line">➜  XuSenqi ls <span class="regexp">/Users/</span>patrick.xu<span class="regexp">/go/</span>pkg<span class="regexp">/darwin_amd64/gi</span>thub.com/XuSenqi</span><br><span class="line">stringutil.a</span><br><span class="line">➜  XuSenqi ls <span class="regexp">/Users/</span>patrick.xu<span class="regexp">/go/</span>bin/hello</span><br><span class="line"><span class="regexp">/Users/</span>patrick.xu<span class="regexp">/go/</span>bin/hello</span><br></pre></td></tr></table></figure>
-<h3 id="go-build-命令一些可选项的用途和用法"><a href="#go-build-命令一些可选项的用途和用法" class="headerlink" title="go build 命令一些可选项的用途和用法"></a>go build 命令一些可选项的用途和用法</h3><p>在运行go build命令的时候，默认不会编译目标代码包所依赖的那些代码包。当然，如果被依赖的代码包的归档文件不存在，或者源码文件有了变化，那它还是会被编译。</p>
-<p>如果要强制编译它们，可以在执行命令的时候加入标记-a。此时，不但目标代码包总是会被编译，它依赖的代码包也总会被编译，即使依赖的是标准库中的代码包也是如此。</p>
-<p>表1 go build命令的常用标记说明</p>
-<table>
-<thead>
-<tr>
-<th>标记名称</th>
-<th align="center">标记描述</th>
-</tr>
-</thead>
-<tbody><tr>
-<td>-a</td>
-<td align="center">强行对所有涉及到的代码包（包含标准库中的代码包）进行重新构建，即使它们已经是最新的了。</td>
-</tr>
-<tr>
-<td>-n</td>
-<td align="center">打印编译期间所用到的其它命令，但是并不真正执行它们。</td>
-</tr>
-<tr>
-<td>-p n</td>
-<td align="center">指定编译过程中执行各任务的并行数量（确切地说应该是并发数量）。在默认情况下，该数量等于CPU的逻辑核数。但是在darwin/arm平台（即iPhone和iPad所用的平台）下，该数量默认是1。</td>
-</tr>
-<tr>
-<td>-race</td>
-<td align="center">开启竞态条件的检测。不过此标记目前仅在linux/amd64、freebsd/amd64、darwin/amd64和windows/amd64平台下受到支持。</td>
-</tr>
-<tr>
-<td>-v</td>
-<td align="center">打印出那些被编译的代码包的名字。</td>
-</tr>
-<tr>
-<td>-work</td>
-<td align="center">打印出编译时生成的临时工作目录的路径，并在编译结束时保留它。在默认情况下，编译结束时会删除该目录。</td>
-</tr>
-<tr>
-<td>-x</td>
-<td align="center">打印编译期间所用到的其它命令。注意它与-n标记的区别。</td>
-</tr>
-</tbody></table>
-<h3 id="go-get"><a href="#go-get" class="headerlink" title="go get"></a>go get</h3><p>go get可以根据要求和实际情况从互联网上下载或更新指定的代码包及其依赖包，并对它们进行go build和go install。</p>
-<figure class="highlight awk"><table><tr><td class="code"><pre><span class="line">➜  XuSenqi go get github.com<span class="regexp">/hyper-carrot/g</span>o_lib/logging</span><br><span class="line">➜  XuSenqi ls <span class="variable">$GOPATH</span><span class="regexp">/src/gi</span>thub.com<span class="regexp">/hyper-carrot/g</span>o_lib/logging</span><br><span class="line">base.go           console_logger.go log_manager.go    logger_test.go    tag.go</span><br><span class="line">➜  XuSenqi ls <span class="regexp">/Users/</span>patrick.xu<span class="regexp">/go/</span>pkg<span class="regexp">/darwin_amd64/gi</span>thub.com<span class="regexp">/hyper-carrot/g</span>o_lib/logging.a</span><br><span class="line"><span class="regexp">/Users/</span>patrick.xu<span class="regexp">/go/</span>pkg<span class="regexp">/darwin_amd64/gi</span>thub.com<span class="regexp">/hyper-carrot/g</span>o_lib/logging.a</span><br></pre></td></tr></table></figure>
-<p>表2 go get命令的常用标记说明</p>
-<table>
-<thead>
-<tr>
-<th>标记名称</th>
-<th align="center">标记描述</th>
-</tr>
-</thead>
-<tbody><tr>
-<td>-d</td>
-<td align="center">让命令程序只执行下载动作，而不执行安装动作。</td>
-</tr>
-<tr>
-<td>-u</td>
-<td align="center">让命令利用网络来更新已有代码包及其依赖包。默认情况下，该命令只会从网络上下载本地不存在的代码包，而不会更新已有的代码包。</td>
-</tr>
-</tbody></table>
-<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><p>go build<br><a href="http://wiki.jikexueyuan.com/project/go-command-tutorial/0.1.html">http://wiki.jikexueyuan.com/project/go-command-tutorial/0.1.html</a><br>go get<br><a href="http://wiki.jikexueyuan.com/project/go-command-tutorial/0.3.html">http://wiki.jikexueyuan.com/project/go-command-tutorial/0.3.html</a><br><a href="https://github.com/hyper0x/go_command_tutorial/blob/master/0.3.md">https://github.com/hyper0x/go_command_tutorial/blob/master/0.3.md</a></p>
-]]></content>
-      <categories>
-        <category>Go</category>
-      </categories>
-      <tags>
-        <tag>Go</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>HTTP Keepalive</title>
     <url>/2018/10/08/HTTP-Keepalive/</url>
     <content><![CDATA[<p>参考这里，已经很详细了 <a href="http://www.nowamagic.net/academy/detail/23350305">HTTP Keep-Alive是什么？如何工作？</a></p>
 ]]></content>
-  </entry>
-  <entry>
-    <title>TCP Keepalive</title>
-    <url>/2018/10/08/TCP-Keepalive/</url>
-    <content><![CDATA[<h2 id="TCP-Keepalive的作用"><a href="#TCP-Keepalive的作用" class="headerlink" title="TCP Keepalive的作用"></a>TCP Keepalive的作用</h2><p>链接建立之后，如果应用程序或者上层协议一直不发送数据，或者隔很长时间才发送一次数据，当链接很久没有数据报文传输时如何去确定对方还在线，到底是掉线了还是确实没有数据传输，链接还需不需要保持，这种情况在TCP协议设计中是需要考虑到的。 </p>
-<p>TCP协议通过一种巧妙的方式去解决这个问题，当超过一段时间之后，TCP自动发送一个数据为空的报文给对方，如果对方回应了这个报文，说明对方还在线，链接可以继续保持，如果对方没有报文返回，并且重试了多次之后则认为链接丢失，没有必要保持链接。 </p>
-<span id="more"></span>
-<h2 id="TCP-Keepalive的具体处理"><a href="#TCP-Keepalive的具体处理" class="headerlink" title="TCP Keepalive的具体处理"></a>TCP Keepalive的具体处理</h2><p>对于面向连接的TCP socket,在实际应用中通常都要检测对端是否处于连接中,连接端口分两种情况:</p>
-<p>1、连接正常关闭,调用close() shutdown()连接优雅关闭,send与recv立马返回错误,select返回SOCK_ERR;</p>
-<p>2、连接的对端异常关闭,比如网络断掉,突然断电.</p>
-<p>对于第二种情况,判断连接是否断开的方法有一下几种:</p>
-<p>1、自己编写心跳包程序,简单的说就是自己的程序加入一条线程,定时向对端发送数据包,查看是否有ACK,根据ACK的返回情况来管理连接。此方法比较通用,一般使用业务层心跳处理,灵活可控,但改变了现有的协议;</p>
-<p>2、使用TCP的keepalive机制,UNIX网络编程不推荐使用SO_KEEPALIVE来做心跳检测(为什么??)。<br>keepalive原理:TCP内嵌有心跳包,以服务端为例,当server检测到超过一定时间(/proc/sys/net/ipv4/tcp_keepalive_time 7200 即2小时)没有数据传输,那么会向client端发送一个keepalive packet,此时client端有三种反应:</p>
-<p>1、client端连接正常,返回一个ACK.server端收到ACK后重置计时器,在2小时后在发送探测.如果2小时内连接上有数据传输,那么在该时间的基础上向后推延2小时发送探测包;</p>
-<p>2、客户端异常关闭,或网络断开。client无响应,server收不到ACK,在一定时间(/proc/sys/net/ipv4/tcp_keepalive_intvl 75 即75秒)后重发keepalive packet, 并且重发一定次数(/proc/sys/net/ipv4/tcp_keepalive_probes 9 即9次);</p>
-<p>3、客户端曾经崩溃,但已经重启.server收到的探测响应是一个复位,server端终止连接。</p>
-<h2 id="注意和-HTTP的Keep-Alive区别"><a href="#注意和-HTTP的Keep-Alive区别" class="headerlink" title="注意和 HTTP的Keep-Alive区别"></a>注意和 HTTP的Keep-Alive区别</h2><p>http keep-alive与tcp keep-alive，不是同一回事，意图不一样。http keep-alive是为了让tcp活得更久一点，以便在同一个连接上传送多个http，提高socket的效率。<br>http-keepalive的具体作用查看这里 <a href="http://www.nowamagic.net/academy/detail/23350305">HTTP Keep-Alive是什么？如何工作？</a></p>
-<p>TCP的keepalive机制意图在于保活、心跳，检测连接错误。</p>
-<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><p><a href="https://blog.csdn.net/callinglove/article/details/38380673">Linux SO_KEEPALIVE属性,心跳</a></p>
-<p><a href="http://www.blogjava.net/yongboy/archive/2015/04/14/424413.html">随手记之TCP Keepalive笔记</a></p>
-]]></content>
-      <categories>
-        <category>网络</category>
-      </categories>
-      <tags>
-        <tag>TCP</tag>
-        <tag>Keepalive</tag>
-      </tags>
   </entry>
   <entry>
     <title>Remote Debugging Go Code with Visual Studio Code</title>
@@ -389,6 +361,34 @@
         <tag>vscode</tag>
         <tag>remote debug</tag>
         <tag>k8s</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>TCP Keepalive</title>
+    <url>/2018/10/08/TCP-Keepalive/</url>
+    <content><![CDATA[<h2 id="TCP-Keepalive的作用"><a href="#TCP-Keepalive的作用" class="headerlink" title="TCP Keepalive的作用"></a>TCP Keepalive的作用</h2><p>链接建立之后，如果应用程序或者上层协议一直不发送数据，或者隔很长时间才发送一次数据，当链接很久没有数据报文传输时如何去确定对方还在线，到底是掉线了还是确实没有数据传输，链接还需不需要保持，这种情况在TCP协议设计中是需要考虑到的。 </p>
+<p>TCP协议通过一种巧妙的方式去解决这个问题，当超过一段时间之后，TCP自动发送一个数据为空的报文给对方，如果对方回应了这个报文，说明对方还在线，链接可以继续保持，如果对方没有报文返回，并且重试了多次之后则认为链接丢失，没有必要保持链接。 </p>
+<span id="more"></span>
+<h2 id="TCP-Keepalive的具体处理"><a href="#TCP-Keepalive的具体处理" class="headerlink" title="TCP Keepalive的具体处理"></a>TCP Keepalive的具体处理</h2><p>对于面向连接的TCP socket,在实际应用中通常都要检测对端是否处于连接中,连接端口分两种情况:</p>
+<p>1、连接正常关闭,调用close() shutdown()连接优雅关闭,send与recv立马返回错误,select返回SOCK_ERR;</p>
+<p>2、连接的对端异常关闭,比如网络断掉,突然断电.</p>
+<p>对于第二种情况,判断连接是否断开的方法有一下几种:</p>
+<p>1、自己编写心跳包程序,简单的说就是自己的程序加入一条线程,定时向对端发送数据包,查看是否有ACK,根据ACK的返回情况来管理连接。此方法比较通用,一般使用业务层心跳处理,灵活可控,但改变了现有的协议;</p>
+<p>2、使用TCP的keepalive机制,UNIX网络编程不推荐使用SO_KEEPALIVE来做心跳检测(为什么??)。<br>keepalive原理:TCP内嵌有心跳包,以服务端为例,当server检测到超过一定时间(/proc/sys/net/ipv4/tcp_keepalive_time 7200 即2小时)没有数据传输,那么会向client端发送一个keepalive packet,此时client端有三种反应:</p>
+<p>1、client端连接正常,返回一个ACK.server端收到ACK后重置计时器,在2小时后在发送探测.如果2小时内连接上有数据传输,那么在该时间的基础上向后推延2小时发送探测包;</p>
+<p>2、客户端异常关闭,或网络断开。client无响应,server收不到ACK,在一定时间(/proc/sys/net/ipv4/tcp_keepalive_intvl 75 即75秒)后重发keepalive packet, 并且重发一定次数(/proc/sys/net/ipv4/tcp_keepalive_probes 9 即9次);</p>
+<p>3、客户端曾经崩溃,但已经重启.server收到的探测响应是一个复位,server端终止连接。</p>
+<h2 id="注意和-HTTP的Keep-Alive区别"><a href="#注意和-HTTP的Keep-Alive区别" class="headerlink" title="注意和 HTTP的Keep-Alive区别"></a>注意和 HTTP的Keep-Alive区别</h2><p>http keep-alive与tcp keep-alive，不是同一回事，意图不一样。http keep-alive是为了让tcp活得更久一点，以便在同一个连接上传送多个http，提高socket的效率。<br>http-keepalive的具体作用查看这里 <a href="http://www.nowamagic.net/academy/detail/23350305">HTTP Keep-Alive是什么？如何工作？</a></p>
+<p>TCP的keepalive机制意图在于保活、心跳，检测连接错误。</p>
+<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><p><a href="https://blog.csdn.net/callinglove/article/details/38380673">Linux SO_KEEPALIVE属性,心跳</a></p>
+<p><a href="http://www.blogjava.net/yongboy/archive/2015/04/14/424413.html">随手记之TCP Keepalive笔记</a></p>
+]]></content>
+      <categories>
+        <category>网络</category>
+      </categories>
+      <tags>
+        <tag>TCP</tag>
+        <tag>Keepalive</tag>
       </tags>
   </entry>
   <entry>
@@ -629,70 +629,6 @@
       </tags>
   </entry>
   <entry>
-    <title>du、df和ls的区别</title>
-    <url>/2018/11/10/du%E3%80%81df%E5%92%8Cls%E7%9A%84%E5%8C%BA%E5%88%AB/</url>
-    <content><![CDATA[<p>待整理。。。。</p>
-]]></content>
-      <categories>
-        <category>linux</category>
-      </categories>
-      <tags>
-        <tag>linux命令</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>golang - json操作的注意点</title>
-    <url>/2018/10/22/golang-json%E6%93%8D%E4%BD%9C%E7%9A%84%E6%B3%A8%E6%84%8F%E7%82%B9/</url>
-    <content><![CDATA[<h2 id="变量的大小写"><a href="#变量的大小写" class="headerlink" title="变量的大小写"></a>变量的大小写</h2><p>go中根据首字母的大小写来确定可以访问的权限。如果首字母大写，则可以被其他的包访问；如果首字母小写，则只能在本包中使用。包括接口、类型、函数和变量等。</p>
-<p>可以简单的理解成，首字母大写是公有的，首字母小写是私有的</p>
-<p>下面是一个排查该问题的例子：</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">	<span class="string">&quot;encoding/json&quot;</span></span><br><span class="line">	<span class="string">&quot;fmt&quot;</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> Position <span class="keyword">struct</span> &#123;</span><br><span class="line">	X <span class="keyword">int</span></span><br><span class="line">	Y <span class="keyword">int</span></span><br><span class="line">	Z <span class="keyword">int</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> Student <span class="keyword">struct</span> &#123;</span><br><span class="line">	Name     <span class="keyword">string</span></span><br><span class="line">	Sex      <span class="keyword">string</span></span><br><span class="line">	Age      <span class="keyword">int</span></span><br><span class="line">	position Position</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	position1 := Position&#123;<span class="number">10</span>, <span class="number">20</span>, <span class="number">30</span>&#125;</span><br><span class="line">	student1 := Student&#123;<span class="string">&quot;zhangsan&quot;</span>, <span class="string">&quot;male&quot;</span>, <span class="number">20</span>, position1&#125;</span><br><span class="line">	position2 := Position&#123;<span class="number">15</span>, <span class="number">10</span>, <span class="number">20</span>&#125;</span><br><span class="line">	student2 := Student&#123;<span class="string">&quot;lisi&quot;</span>, <span class="string">&quot;female&quot;</span>, <span class="number">18</span>, position2&#125;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">var</span> srcSlice = <span class="built_in">make</span>([]Student, <span class="number">2</span>)</span><br><span class="line">	srcSlice[<span class="number">0</span>] = student1</span><br><span class="line">	srcSlice[<span class="number">1</span>] = student2</span><br><span class="line">	fmt.Printf(<span class="string">&quot;Init:srcSlice is : %v\n&quot;</span>, srcSlice)</span><br><span class="line">	data, err := json.Marshal(srcSlice)</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		fmt.Printf(<span class="string">&quot;Serialize:json.Marshal error! %v\n&quot;</span>, err)</span><br><span class="line">		<span class="keyword">return</span></span><br><span class="line">	&#125;</span><br><span class="line">	fmt.Println(<span class="string">&quot;After serialize, data : \n&quot;</span>, <span class="keyword">string</span>(data))</span><br><span class="line"></span><br><span class="line">	<span class="keyword">var</span> dstSliece = <span class="built_in">make</span>([]Student, <span class="number">2</span>)</span><br><span class="line">	err = json.Unmarshal(data, &amp;dstSliece)</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		fmt.Printf(<span class="string">&quot;Deserialize: json.Unmarshal error! %v\n&quot;</span>, err)</span><br><span class="line">		<span class="keyword">return</span></span><br><span class="line">	&#125;</span><br><span class="line">	fmt.Printf(<span class="string">&quot;Deserialize:dstSlice is : %v\n&quot;</span>, dstSliece)</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
-
-<img src="/2018/10/22/golang-json%E6%93%8D%E4%BD%9C%E7%9A%84%E6%B3%A8%E6%84%8F%E7%82%B9/1_%E5%B0%8F%E5%86%99%E5%AF%BC%E8%87%B4%E5%BA%8F%E5%88%97%E5%8C%96%E5%90%8E%E6%95%B0%E6%8D%AE%E4%B8%A2%E5%A4%B1.png" class="" title="image">
-
-<p>很意外的是，我们反序列化后获取的对象数据dstSliece是错误的，Position里的数据都变成了0。而json.Unmarshal没有返回任何异常。</p>
-<p>观察将序列化后的json串，Position的数据丢了，这使得我们想到了可见性，即大写的符号在包外可见。通过走查代码，我们发现Student的定义中，Position的变量名是小写开始的。</p>
-<figure class="highlight elm"><table><tr><td class="code"><pre><span class="line"><span class="keyword">type</span> <span class="type">Student</span> struct &#123;</span><br><span class="line">    <span class="type">Name</span> string</span><br><span class="line">    <span class="type">Sex</span> string</span><br><span class="line">    <span class="type">Age</span> int</span><br><span class="line">    //position <span class="type">Position</span></span><br><span class="line">    <span class="type">Position</span> <span class="type">Position</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>改成大写后再观察结果，可以正常序列化。</p>
-<img src="/2018/10/22/golang-json%E6%93%8D%E4%BD%9C%E7%9A%84%E6%B3%A8%E6%84%8F%E7%82%B9/2_%E5%BA%8F%E5%88%97%E5%8C%96%E6%AD%A3%E5%B8%B8%E7%9A%84%E7%BB%93%E6%9E%9C.png" class="" title="image">
-
-<h2 id="序列化到json后改成小写"><a href="#序列化到json后改成小写" class="headerlink" title="序列化到json后改成小写"></a>序列化到json后改成小写</h2><p>对于json串，很多人喜欢全小写，对于大写开头的key感觉很刺眼，我们继续改进：</p>
-<figure class="highlight pgsql"><table><tr><td class="code"><pre><span class="line"><span class="keyword">type</span> Position struct &#123;</span><br><span class="line">    X <span class="type">int</span> `<span class="type">json</span>:&quot;x&quot;`</span><br><span class="line">    Y <span class="type">int</span> `<span class="type">json</span>:&quot;y&quot;`</span><br><span class="line">    Z <span class="type">int</span> `<span class="type">json</span>:&quot;z&quot;`</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> Student struct &#123;</span><br><span class="line">    <span class="type">Name</span> string `<span class="type">json</span>:&quot;name&quot;`</span><br><span class="line">    Sex string `<span class="type">json</span>:&quot;sex&quot;`</span><br><span class="line">    Age <span class="type">int</span> `<span class="type">json</span>:&quot;age&quot;`</span><br><span class="line">    Posi Position `<span class="type">json</span>:&quot;position&quot;`</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>再次运行程序，结果是我们期望的，打印如下：</p>
-<figure class="highlight csharp"><table><tr><td class="code"><pre><span class="line">Init:srcSlice <span class="keyword">is</span> : [&#123;zhangsan male <span class="number">20</span> &#123;<span class="number">10</span> <span class="number">20</span> <span class="number">30</span>&#125;&#125; &#123;lisi female <span class="number">18</span> &#123;<span class="number">15</span> <span class="number">10</span> <span class="number">20</span>&#125;&#125;]</span><br><span class="line">After serialize, data :</span><br><span class="line"> [<span class="meta">&#123;<span class="meta-string">&quot;name&quot;</span>:<span class="meta-string">&quot;zhangsan&quot;</span>,<span class="meta-string">&quot;sex&quot;</span>:<span class="meta-string">&quot;male&quot;</span>,<span class="meta-string">&quot;age&quot;</span>:20,<span class="meta-string">&quot;position&quot;</span>:&#123;<span class="meta-string">&quot;x&quot;</span>:10,<span class="meta-string">&quot;y&quot;</span>:20,<span class="meta-string">&quot;z&quot;</span>:30&#125;&#125;,&#123;<span class="meta-string">&quot;name&quot;</span>:<span class="meta-string">&quot;lisi&quot;</span>,<span class="meta-string">&quot;sex&quot;</span>:<span class="meta-string">&quot;female&quot;</span>,<span class="meta-string">&quot;age&quot;</span>:18,<span class="meta-string">&quot;position&quot;</span>:&#123;<span class="meta-string">&quot;x&quot;</span>:15,<span class="meta-string">&quot;y&quot;</span>:10,<span class="meta-string">&quot;z&quot;</span>:20&#125;&#125;</span>]</span><br><span class="line">Deserialize:dstSlice <span class="keyword">is</span> : [&#123;zhangsan male <span class="number">20</span> &#123;<span class="number">10</span> <span class="number">20</span> <span class="number">30</span>&#125;&#125; &#123;lisi female <span class="number">18</span> &#123;<span class="number">15</span> <span class="number">10</span> <span class="number">20</span>&#125;&#125;]</span><br></pre></td></tr></table></figure>
-
-<h2 id="omitempty"><a href="#omitempty" class="headerlink" title="omitempty"></a>omitempty</h2><figure class="highlight elm"><table><tr><td class="code"><pre><span class="line"><span class="keyword">type</span> <span class="type">Dog</span> struct &#123;</span><br><span class="line">	<span class="type">Breed</span> string</span><br><span class="line">	<span class="type">WeightKg</span> int</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<figure class="highlight css"><table><tr><td class="code"><pre><span class="line">func <span class="selector-tag">main</span>() &#123;</span><br><span class="line">	d := Dog&#123;</span><br><span class="line">		Breed:    <span class="string">&quot;dalmation&quot;</span>,</span><br><span class="line">		WeightKg: <span class="number">45</span>,</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="selector-tag">b</span>, _ := json.<span class="built_in">Marshal</span>(d)</span><br><span class="line">	fmt.<span class="built_in">Println</span>(<span class="built_in">string</span>(b))</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>output:</p>
-<figure class="highlight json"><table><tr><td class="code"><pre><span class="line">&#123;<span class="attr">&quot;Breed&quot;</span>:<span class="string">&quot;dalmation&quot;</span>,<span class="attr">&quot;WeightKg&quot;</span>:<span class="number">45</span>&#125;</span><br></pre></td></tr></table></figure>
-
-<p>如果对dog没有设置：</p>
-<figure class="highlight css"><table><tr><td class="code"><pre><span class="line">func <span class="selector-tag">main</span>() &#123;</span><br><span class="line">	d := Dog&#123;</span><br><span class="line">		Breed:    <span class="string">&quot;pug&quot;</span>,</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="selector-tag">b</span>, _ := json.<span class="built_in">Marshal</span>(d)</span><br><span class="line">	fmt.<span class="built_in">Println</span>(<span class="built_in">string</span>(b))</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>这会输出</p>
-<figure class="highlight json"><table><tr><td class="code"><pre><span class="line">&#123;<span class="attr">&quot;Breed&quot;</span>:<span class="string">&quot;pug&quot;</span>,<span class="attr">&quot;WeightKg&quot;</span>:<span class="number">0</span>&#125;</span><br></pre></td></tr></table></figure>
-
-<p>即使WeightKg的值是未知的。</p>
-<p>更好的方式是使“WeightKg”为null, 或者根本没有这个值。</p>
-<p>omitempty tag 正好可以起到这个作用.</p>
-<figure class="highlight crmsh"><table><tr><td class="code"><pre><span class="line"><span class="keyword">type</span> Dog struct &#123;</span><br><span class="line">	Breed    <span class="keyword">string</span></span><br><span class="line">	// The first comma below is to separate the name <span class="keyword">tag</span> <span class="title">from</span> the omitempty <span class="keyword">tag</span> </span><br><span class="line">	<span class="title">WeightKg</span> int `json:<span class="string">&quot;,omitempty&quot;</span>`</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>这会输出</p>
-<figure class="highlight json"><table><tr><td class="code"><pre><span class="line">&#123;<span class="attr">&quot;Breed&quot;</span>:<span class="string">&quot;pug&quot;</span>&#125;</span><br></pre></td></tr></table></figure>
-
-<h2 id="参考链接"><a href="#参考链接" class="headerlink" title="参考链接"></a>参考链接</h2><p><a href="https://www.jianshu.com/p/e737cb26c141">Golang初学者易犯的三种错误</a></p>
-<p><a href="https://www.sohamkamani.com/blog/golang/2018-07-19-golang-omitempty/">Go’s “omitempty” explained</a></p>
-]]></content>
-      <categories>
-        <category>Go</category>
-      </categories>
-      <tags>
-        <tag>Go</tag>
-        <tag>json</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>cpu cache</title>
     <url>/2022/03/19/cpu-cache/</url>
     <content><![CDATA[<h1 id="1-cpu-cache的介绍"><a href="#1-cpu-cache的介绍" class="headerlink" title="1 cpu cache的介绍"></a>1 cpu cache的介绍</h1><p>cpu cache(高速缓存)分为三类：L1 cache、L2 cache和L3 cache。</p>
@@ -775,6 +711,70 @@
       </tags>
   </entry>
   <entry>
+    <title>du、df和ls的区别</title>
+    <url>/2018/11/10/du%E3%80%81df%E5%92%8Cls%E7%9A%84%E5%8C%BA%E5%88%AB/</url>
+    <content><![CDATA[<p>待整理。。。。</p>
+]]></content>
+      <categories>
+        <category>linux</category>
+      </categories>
+      <tags>
+        <tag>linux命令</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>golang - json操作的注意点</title>
+    <url>/2018/10/22/golang-json%E6%93%8D%E4%BD%9C%E7%9A%84%E6%B3%A8%E6%84%8F%E7%82%B9/</url>
+    <content><![CDATA[<h2 id="变量的大小写"><a href="#变量的大小写" class="headerlink" title="变量的大小写"></a>变量的大小写</h2><p>go中根据首字母的大小写来确定可以访问的权限。如果首字母大写，则可以被其他的包访问；如果首字母小写，则只能在本包中使用。包括接口、类型、函数和变量等。</p>
+<p>可以简单的理解成，首字母大写是公有的，首字母小写是私有的</p>
+<p>下面是一个排查该问题的例子：</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">	<span class="string">&quot;encoding/json&quot;</span></span><br><span class="line">	<span class="string">&quot;fmt&quot;</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> Position <span class="keyword">struct</span> &#123;</span><br><span class="line">	X <span class="keyword">int</span></span><br><span class="line">	Y <span class="keyword">int</span></span><br><span class="line">	Z <span class="keyword">int</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> Student <span class="keyword">struct</span> &#123;</span><br><span class="line">	Name     <span class="keyword">string</span></span><br><span class="line">	Sex      <span class="keyword">string</span></span><br><span class="line">	Age      <span class="keyword">int</span></span><br><span class="line">	position Position</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	position1 := Position&#123;<span class="number">10</span>, <span class="number">20</span>, <span class="number">30</span>&#125;</span><br><span class="line">	student1 := Student&#123;<span class="string">&quot;zhangsan&quot;</span>, <span class="string">&quot;male&quot;</span>, <span class="number">20</span>, position1&#125;</span><br><span class="line">	position2 := Position&#123;<span class="number">15</span>, <span class="number">10</span>, <span class="number">20</span>&#125;</span><br><span class="line">	student2 := Student&#123;<span class="string">&quot;lisi&quot;</span>, <span class="string">&quot;female&quot;</span>, <span class="number">18</span>, position2&#125;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">var</span> srcSlice = <span class="built_in">make</span>([]Student, <span class="number">2</span>)</span><br><span class="line">	srcSlice[<span class="number">0</span>] = student1</span><br><span class="line">	srcSlice[<span class="number">1</span>] = student2</span><br><span class="line">	fmt.Printf(<span class="string">&quot;Init:srcSlice is : %v\n&quot;</span>, srcSlice)</span><br><span class="line">	data, err := json.Marshal(srcSlice)</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		fmt.Printf(<span class="string">&quot;Serialize:json.Marshal error! %v\n&quot;</span>, err)</span><br><span class="line">		<span class="keyword">return</span></span><br><span class="line">	&#125;</span><br><span class="line">	fmt.Println(<span class="string">&quot;After serialize, data : \n&quot;</span>, <span class="keyword">string</span>(data))</span><br><span class="line"></span><br><span class="line">	<span class="keyword">var</span> dstSliece = <span class="built_in">make</span>([]Student, <span class="number">2</span>)</span><br><span class="line">	err = json.Unmarshal(data, &amp;dstSliece)</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		fmt.Printf(<span class="string">&quot;Deserialize: json.Unmarshal error! %v\n&quot;</span>, err)</span><br><span class="line">		<span class="keyword">return</span></span><br><span class="line">	&#125;</span><br><span class="line">	fmt.Printf(<span class="string">&quot;Deserialize:dstSlice is : %v\n&quot;</span>, dstSliece)</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<img src="/2018/10/22/golang-json%E6%93%8D%E4%BD%9C%E7%9A%84%E6%B3%A8%E6%84%8F%E7%82%B9/1_%E5%B0%8F%E5%86%99%E5%AF%BC%E8%87%B4%E5%BA%8F%E5%88%97%E5%8C%96%E5%90%8E%E6%95%B0%E6%8D%AE%E4%B8%A2%E5%A4%B1.png" class="" title="image">
+
+<p>很意外的是，我们反序列化后获取的对象数据dstSliece是错误的，Position里的数据都变成了0。而json.Unmarshal没有返回任何异常。</p>
+<p>观察将序列化后的json串，Position的数据丢了，这使得我们想到了可见性，即大写的符号在包外可见。通过走查代码，我们发现Student的定义中，Position的变量名是小写开始的。</p>
+<figure class="highlight elm"><table><tr><td class="code"><pre><span class="line"><span class="keyword">type</span> <span class="type">Student</span> struct &#123;</span><br><span class="line">    <span class="type">Name</span> string</span><br><span class="line">    <span class="type">Sex</span> string</span><br><span class="line">    <span class="type">Age</span> int</span><br><span class="line">    //position <span class="type">Position</span></span><br><span class="line">    <span class="type">Position</span> <span class="type">Position</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>改成大写后再观察结果，可以正常序列化。</p>
+<img src="/2018/10/22/golang-json%E6%93%8D%E4%BD%9C%E7%9A%84%E6%B3%A8%E6%84%8F%E7%82%B9/2_%E5%BA%8F%E5%88%97%E5%8C%96%E6%AD%A3%E5%B8%B8%E7%9A%84%E7%BB%93%E6%9E%9C.png" class="" title="image">
+
+<h2 id="序列化到json后改成小写"><a href="#序列化到json后改成小写" class="headerlink" title="序列化到json后改成小写"></a>序列化到json后改成小写</h2><p>对于json串，很多人喜欢全小写，对于大写开头的key感觉很刺眼，我们继续改进：</p>
+<figure class="highlight pgsql"><table><tr><td class="code"><pre><span class="line"><span class="keyword">type</span> Position struct &#123;</span><br><span class="line">    X <span class="type">int</span> `<span class="type">json</span>:&quot;x&quot;`</span><br><span class="line">    Y <span class="type">int</span> `<span class="type">json</span>:&quot;y&quot;`</span><br><span class="line">    Z <span class="type">int</span> `<span class="type">json</span>:&quot;z&quot;`</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> Student struct &#123;</span><br><span class="line">    <span class="type">Name</span> string `<span class="type">json</span>:&quot;name&quot;`</span><br><span class="line">    Sex string `<span class="type">json</span>:&quot;sex&quot;`</span><br><span class="line">    Age <span class="type">int</span> `<span class="type">json</span>:&quot;age&quot;`</span><br><span class="line">    Posi Position `<span class="type">json</span>:&quot;position&quot;`</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>再次运行程序，结果是我们期望的，打印如下：</p>
+<figure class="highlight csharp"><table><tr><td class="code"><pre><span class="line">Init:srcSlice <span class="keyword">is</span> : [&#123;zhangsan male <span class="number">20</span> &#123;<span class="number">10</span> <span class="number">20</span> <span class="number">30</span>&#125;&#125; &#123;lisi female <span class="number">18</span> &#123;<span class="number">15</span> <span class="number">10</span> <span class="number">20</span>&#125;&#125;]</span><br><span class="line">After serialize, data :</span><br><span class="line"> [<span class="meta">&#123;<span class="meta-string">&quot;name&quot;</span>:<span class="meta-string">&quot;zhangsan&quot;</span>,<span class="meta-string">&quot;sex&quot;</span>:<span class="meta-string">&quot;male&quot;</span>,<span class="meta-string">&quot;age&quot;</span>:20,<span class="meta-string">&quot;position&quot;</span>:&#123;<span class="meta-string">&quot;x&quot;</span>:10,<span class="meta-string">&quot;y&quot;</span>:20,<span class="meta-string">&quot;z&quot;</span>:30&#125;&#125;,&#123;<span class="meta-string">&quot;name&quot;</span>:<span class="meta-string">&quot;lisi&quot;</span>,<span class="meta-string">&quot;sex&quot;</span>:<span class="meta-string">&quot;female&quot;</span>,<span class="meta-string">&quot;age&quot;</span>:18,<span class="meta-string">&quot;position&quot;</span>:&#123;<span class="meta-string">&quot;x&quot;</span>:15,<span class="meta-string">&quot;y&quot;</span>:10,<span class="meta-string">&quot;z&quot;</span>:20&#125;&#125;</span>]</span><br><span class="line">Deserialize:dstSlice <span class="keyword">is</span> : [&#123;zhangsan male <span class="number">20</span> &#123;<span class="number">10</span> <span class="number">20</span> <span class="number">30</span>&#125;&#125; &#123;lisi female <span class="number">18</span> &#123;<span class="number">15</span> <span class="number">10</span> <span class="number">20</span>&#125;&#125;]</span><br></pre></td></tr></table></figure>
+
+<h2 id="omitempty"><a href="#omitempty" class="headerlink" title="omitempty"></a>omitempty</h2><figure class="highlight elm"><table><tr><td class="code"><pre><span class="line"><span class="keyword">type</span> <span class="type">Dog</span> struct &#123;</span><br><span class="line">	<span class="type">Breed</span> string</span><br><span class="line">	<span class="type">WeightKg</span> int</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight css"><table><tr><td class="code"><pre><span class="line">func <span class="selector-tag">main</span>() &#123;</span><br><span class="line">	d := Dog&#123;</span><br><span class="line">		Breed:    <span class="string">&quot;dalmation&quot;</span>,</span><br><span class="line">		WeightKg: <span class="number">45</span>,</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="selector-tag">b</span>, _ := json.<span class="built_in">Marshal</span>(d)</span><br><span class="line">	fmt.<span class="built_in">Println</span>(<span class="built_in">string</span>(b))</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>output:</p>
+<figure class="highlight json"><table><tr><td class="code"><pre><span class="line">&#123;<span class="attr">&quot;Breed&quot;</span>:<span class="string">&quot;dalmation&quot;</span>,<span class="attr">&quot;WeightKg&quot;</span>:<span class="number">45</span>&#125;</span><br></pre></td></tr></table></figure>
+
+<p>如果对dog没有设置：</p>
+<figure class="highlight css"><table><tr><td class="code"><pre><span class="line">func <span class="selector-tag">main</span>() &#123;</span><br><span class="line">	d := Dog&#123;</span><br><span class="line">		Breed:    <span class="string">&quot;pug&quot;</span>,</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="selector-tag">b</span>, _ := json.<span class="built_in">Marshal</span>(d)</span><br><span class="line">	fmt.<span class="built_in">Println</span>(<span class="built_in">string</span>(b))</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这会输出</p>
+<figure class="highlight json"><table><tr><td class="code"><pre><span class="line">&#123;<span class="attr">&quot;Breed&quot;</span>:<span class="string">&quot;pug&quot;</span>,<span class="attr">&quot;WeightKg&quot;</span>:<span class="number">0</span>&#125;</span><br></pre></td></tr></table></figure>
+
+<p>即使WeightKg的值是未知的。</p>
+<p>更好的方式是使“WeightKg”为null, 或者根本没有这个值。</p>
+<p>omitempty tag 正好可以起到这个作用.</p>
+<figure class="highlight crmsh"><table><tr><td class="code"><pre><span class="line"><span class="keyword">type</span> Dog struct &#123;</span><br><span class="line">	Breed    <span class="keyword">string</span></span><br><span class="line">	// The first comma below is to separate the name <span class="keyword">tag</span> <span class="title">from</span> the omitempty <span class="keyword">tag</span> </span><br><span class="line">	<span class="title">WeightKg</span> int `json:<span class="string">&quot;,omitempty&quot;</span>`</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这会输出</p>
+<figure class="highlight json"><table><tr><td class="code"><pre><span class="line">&#123;<span class="attr">&quot;Breed&quot;</span>:<span class="string">&quot;pug&quot;</span>&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="参考链接"><a href="#参考链接" class="headerlink" title="参考链接"></a>参考链接</h2><p><a href="https://www.jianshu.com/p/e737cb26c141">Golang初学者易犯的三种错误</a></p>
+<p><a href="https://www.sohamkamani.com/blog/golang/2018-07-19-golang-omitempty/">Go’s “omitempty” explained</a></p>
+]]></content>
+      <categories>
+        <category>Go</category>
+      </categories>
+      <tags>
+        <tag>Go</tag>
+        <tag>json</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>golang中的map并发读写问题</title>
     <url>/2020/03/08/golang%E4%B8%AD%E7%9A%84map%E5%B9%B6%E5%8F%91%E8%AF%BB%E5%86%99%E9%97%AE%E9%A2%98/</url>
     <content><![CDATA[<h1 id="map不是并发安全的"><a href="#map不是并发安全的" class="headerlink" title="map不是并发安全的"></a>map不是并发安全的</h1><p>官方的<a href="https://golang.org/doc/faq#atomic_maps">faq</a>里有说明，考虑到有性能损失，map没有设计成原子操作，在并发读写时会有问题。</p>
@@ -820,6 +820,41 @@
       <tags>
         <tag>map</tag>
         <tag>并发</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>goroutine调度器</title>
+    <url>/2019/07/28/goroutine%E8%B0%83%E5%BA%A6%E5%99%A8/</url>
+    <content><![CDATA[<h1 id="goroutine调度器简介"><a href="#goroutine调度器简介" class="headerlink" title="goroutine调度器简介"></a>goroutine调度器简介</h1><p>G-P-M模型，下面这张图很直观。</p>
+<img src="/2019/07/28/goroutine%E8%B0%83%E5%BA%A6%E5%99%A8/goroutine-scheduler-model.png" class="" title="image">
+<span id="more"></span>
+<p>具体内容，参考以下链接，已经说得很详细，不再重复。</p>
+<ul>
+<li><a href="http://morsmachine.dk/go-scheduler">The Go scheduler</a></li>
+<li><a href="https://tonybai.com/2017/06/23/an-intro-about-goroutine-scheduler/">也谈goroutine调度器</a></li>
+<li><a href="https://segmentfault.com/a/1190000015464889">Goroutine并发调度模型深度解析之手撸一个协程池</a></li>
+<li>源码阅读的话，推荐国内的雨痕老师在其《Go语言学习笔记》</li>
+</ul>
+<h1 id="例子"><a href="#例子" class="headerlink" title="例子"></a>例子</h1><figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"><span class="keyword">import</span> <span class="string">&quot;fmt&quot;</span></span><br><span class="line"><span class="keyword">import</span> <span class="string">&quot;time&quot;</span></span><br><span class="line"><span class="keyword">import</span> <span class="string">&quot;runtime&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">    <span class="keyword">var</span> x <span class="keyword">int</span></span><br><span class="line">    fmt.Println(<span class="string">&quot;GOMAXPROCS =&quot;</span>, runtime.GOMAXPROCS(<span class="number">0</span>) )</span><br><span class="line">    threads := runtime.GOMAXPROCS(<span class="number">0</span>)</span><br><span class="line">    <span class="keyword">for</span> i := <span class="number">0</span>; i &lt; threads; i++ &#123;</span><br><span class="line">        <span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">            <span class="keyword">for</span> &#123; x++ &#125;</span><br><span class="line">        &#125;()</span><br><span class="line">    &#125;</span><br><span class="line">    fmt.Println(<span class="string">&quot;Before time.Sleep&quot;</span>)</span><br><span class="line">    time.Sleep(time.Second)</span><br><span class="line">    fmt.Println(<span class="string">&quot;After time.Sleep&quot;</span>)</span><br><span class="line">    fmt.Println(<span class="string">&quot;x =&quot;</span>, x)  <span class="comment">//程序能运行到这里吗？</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>运行之后，发现main函数运行到Sleep之后，就卡住了，是什么原因呢？</p>
+<figure class="highlight stylus"><table><tr><td class="code"><pre><span class="line"><span class="selector-attr">[patrickxu@vm1 src]</span>$ ./test</span><br><span class="line">GOMAXPROCS = <span class="number">8</span></span><br><span class="line">Before <span class="selector-tag">time</span><span class="selector-class">.Sleep</span></span><br><span class="line"></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>因为main函数在执行time.Sleep(time.Second)后，main函数本身占据的P(G-P-M模型中的P)也被for{ x++ }一直占着,抢占的机制。这下总共8个P，全部一直被for { x++ }占着，永远轮不到主函数了。</p>
+<p>runtime.GOMAXPROCS(0)默认等于CPU核数8。每个P可以分配到一个M(即线程)，总共2 + runtime.GOMAXPROCS(0) = 10个。</p>
+<figure class="highlight tap"><table><tr><td class="code"><pre><span class="line">[patrickxu@vm1 ~]$ ps -eLf | grep test</span><br><span class="line">519     <span class="number"> 26778 </span>26325<span class="number"> 26778 </span><span class="number"> 0 </span> <span class="number"> 10 </span>00:18 pts/42   00:00:00 ./test</span><br><span class="line">519     <span class="number"> 26778 </span>26325<span class="number"> 26779 </span><span class="number"> 0 </span> <span class="number"> 10 </span>00:18 pts/42   00:00:00 ./test</span><br><span class="line">519     <span class="number"> 26778 </span>26325<span class="number"> 26780 </span>99  <span class="number"> 10 </span>00:18 pts/42   00:02:28 ./test</span><br><span class="line">519     <span class="number"> 26778 </span>26325<span class="number"> 26781 </span>99  <span class="number"> 10 </span>00:18 pts/42   00:02:28 ./test</span><br><span class="line">519     <span class="number"> 26778 </span>26325<span class="number"> 26782 </span>99  <span class="number"> 10 </span>00:18 pts/42   00:02:28 ./test</span><br><span class="line">519     <span class="number"> 26778 </span>26325<span class="number"> 26783 </span>99  <span class="number"> 10 </span>00:18 pts/42   00:02:28 ./test</span><br><span class="line">519     <span class="number"> 26778 </span>26325<span class="number"> 26784 </span>99  <span class="number"> 10 </span>00:18 pts/42   00:02:28 ./test</span><br><span class="line">519     <span class="number"> 26778 </span>26325<span class="number"> 26785 </span>99  <span class="number"> 10 </span>00:18 pts/42   00:02:27 ./test</span><br><span class="line">519     <span class="number"> 26778 </span>26325<span class="number"> 26786 </span>99  <span class="number"> 10 </span>00:18 pts/42   00:02:28 ./test</span><br><span class="line">519     <span class="number"> 26778 </span>26325<span class="number"> 26787 </span>99  <span class="number"> 10 </span>00:18 pts/42   00:02:28 ./test</span><br></pre></td></tr></table></figure>
+
+
+<p>如果把time.Sleep(time.Second)去掉后，马上全部执行结束。</p>
+<figure class="highlight elixir"><table><tr><td class="code"><pre><span class="line">[patrickxu<span class="variable">@vm1</span> src]<span class="variable">$ </span>./test</span><br><span class="line">GOMAXPROCS = <span class="number">8</span></span><br><span class="line">x = 0</span><br></pre></td></tr></table></figure>
+<p>当然也可以把GOMAXPROCS设打，比如threads := runtime.GOMAXPROCS(10)。有足够多的P，也可以运行完。</p>
+]]></content>
+      <categories>
+        <category>go</category>
+      </categories>
+      <tags>
+        <tag>goroutine</tag>
+        <tag>调度</tag>
       </tags>
   </entry>
   <entry>
@@ -1136,175 +1171,6 @@
       </tags>
   </entry>
   <entry>
-    <title>一次node进程cpu负载高问题的处理</title>
-    <url>/2019/07/13/%E4%B8%80%E6%AC%A1node%E8%BF%9B%E7%A8%8Bcpu%E8%B4%9F%E8%BD%BD100-%E9%97%AE%E9%A2%98%E7%9A%84%E5%A4%84%E7%90%86/</url>
-    <content><![CDATA[<h1 id="1-node进程负载高的问题"><a href="#1-node进程负载高的问题" class="headerlink" title="1 node进程负载高的问题"></a>1 node进程负载高的问题</h1><ul>
-<li>线上有个用node开发的uhost-manager的服务。每个set内会有多台物理机，每台物理机（宿主机）上存在着1台或者多台虚拟机。uhost-manager里有个定时逻辑：每隔30s,从MongoDB里拉取所有的虚拟机的记录，数量为2000多台；将位于同一台宿主机上的虚拟机资源，包括cpu、内存、磁盘容量等，做个sum，将sum再填入对应宿主机（共200多台）的记录里，表示已经被占用的资源。</li>
-<li>由于计算量大，和代码写得差，导致在该定时的计算任务执行时，会把占用的cpu单核打满；如果uhost-manager此时又有其他接口被调用时，就会出现响应慢的问题，导致调用方的服务也响应慢，甚至会因超时导致服务接口不可用。</li>
-</ul>
-<img src="/2019/07/13/%E4%B8%80%E6%AC%A1node%E8%BF%9B%E7%A8%8Bcpu%E8%B4%9F%E8%BD%BD100-%E9%97%AE%E9%A2%98%E7%9A%84%E5%A4%84%E7%90%86/uhost-manager-cpu-100.png" class="" title="image">
-<p>这个单核打满持续的时间短，在1s左右。</p>
-<span id="more"></span>
-
-<h1 id="2-问题的解决"><a href="#2-问题的解决" class="headerlink" title="2 问题的解决"></a>2 问题的解决</h1><p>为了解决这个问题，带来两个要思考的问题：</p>
-<ul>
-<li>解决方法 –&gt; 怎么改进代码</li>
-<li>怎么衡量改进的效果 –&gt;<br>因为负载高的时间短，统计实时cpu负载，想到的命令只有top，但top命令本身无法做到统计，加入单核打满时间从1秒降到0.9秒，是无法凭肉眼感知的；像ps、vmstat等，也都不满足统计某个进程的实时负载</li>
-</ul>
-<h2 id="2-1-统计进程占用的cpu运行时间"><a href="#2-1-统计进程占用的cpu运行时间" class="headerlink" title="2.1 统计进程占用的cpu运行时间"></a>2.1 统计进程占用的cpu运行时间</h2><p>/proc/<pid>/stat该文件包含了某一进程所有的活动的信息，该文件中的所有值都是从系统启动开始累计到当前时刻。</p>
-<figure class="highlight apache"><table><tr><td class="code"><pre><span class="line"><span class="comment"># cat /proc/17273/stat</span></span><br><span class="line"><span class="attribute">17273</span> (node) R <span class="number">1369</span> <span class="number">17273</span> <span class="number">17273</span> <span class="number">0</span> -<span class="number">1</span> <span class="number">4218880</span> <span class="number">12446677</span> <span class="number">0</span> <span class="number">2</span> <span class="number">0</span> <span class="number">380634</span> <span class="number">40519</span> <span class="number">0</span> <span class="number">0</span> <span class="number">20</span> <span class="number">0</span> <span class="number">6</span> <span class="number">0</span> <span class="number">3525562392</span> <span class="number">964878336</span> <span class="number">38584</span> <span class="number">18446744073709551615</span> <span class="number">4194304</span> <span class="number">5593643</span> <span class="number">140724209068064</span> <span class="number">140400647923040</span> <span class="number">140400819234755</span> <span class="number">0</span> <span class="number">0</span> <span class="number">4096</span> <span class="number">16898</span> <span class="number">0</span> <span class="number">0</span> <span class="number">0</span> <span class="number">17</span> <span class="number">1</span> <span class="number">0</span> <span class="number">0</span> <span class="number">3</span> <span class="number">0</span> <span class="number">0</span> <span class="number">7692288</span> <span class="number">7703720</span> <span class="number">35180544</span> <span class="number">140724209071315</span> <span class="number">140724209071434</span> <span class="number">140724209071434</span> <span class="number">140724209074154</span> <span class="number">0</span></span><br></pre></td></tr></table></figure>
-<p>这样看非常不直观，通过网上找的一段小代码procstat[1]，以人类可读的方式显示。</p>
-<figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line">[<span class="string">root@172-30-38-65</span> <span class="string">uhost-manager.logs</span>]<span class="comment"># procstat 17273</span></span><br><span class="line">                 <span class="attr">pid:</span> <span class="number">17273</span></span><br><span class="line">               <span class="attr">tcomm:</span> <span class="string">(node)</span></span><br><span class="line">                <span class="string">...</span></span><br><span class="line">               <span class="attr">utime:</span> <span class="number">3818.830000</span></span><br><span class="line">               <span class="attr">stime:</span> <span class="number">406.260000</span></span><br><span class="line">              <span class="attr">cutime:</span> <span class="number">0.000000</span></span><br><span class="line">              <span class="attr">cstime:</span> <span class="number">0.000000</span></span><br><span class="line">                 <span class="string">...</span></span><br><span class="line">              <span class="attr">start_time:</span> <span class="number">07.13</span> <span class="number">03</span><span class="string">:00</span> <span class="string">(77599.65s)</span></span><br><span class="line">                 <span class="string">...</span></span><br></pre></td></tr></table></figure>
-<p>进程的总Cpu时间processCpuTime = utime + stime + cutime + cstime，该值包括其所有线程的cpu时间[2]。注：这里统计出来的单位不是s，是相对于clock ticks来说的[3]。</p>
-<p>我们的衡量手段为统计一段时间内新增的该进程的cpu时间；该值越小，表示运行时间越短。</p>
-<p>具体步骤如下：</p>
-<ul>
-<li>以其他端口，再起一个uhost-manager服务，防止被其他服务调用；</li>
-<li>另外，定时任务里只保留定时更新宿主机占用资源的接口（ smi_update_host_resource ）。</li>
-<li>为了使统计的cpu占用时间长一点，smi改成每5秒执行一次；总共统计60s。查看新增的cpu时间，processCpuTime_60s - processCpuTime_0s。</li>
-</ul>
-<h2 id="2-2-解决方法"><a href="#2-2-解决方法" class="headerlink" title="2.2 解决方法"></a>2.2 解决方法</h2><p>为了解决，需要知道消耗cpu性能的环节在哪些步骤上，好进一步优化。</p>
-<h3 id="2-2-1-perf"><a href="#2-2-1-perf" class="headerlink" title="2.2.1 perf"></a>2.2.1 perf</h3><figure class="highlight apache"><table><tr><td class="code"><pre><span class="line"><span class="attribute">perf</span> top -g -p <span class="number">26642</span> -d <span class="number">1</span>  #此时uhost-manager pid为<span class="number">26642</span></span><br></pre></td></tr></table></figure>
-<img src="/2019/07/13/%E4%B8%80%E6%AC%A1node%E8%BF%9B%E7%A8%8Bcpu%E8%B4%9F%E8%BD%BD100-%E9%97%AE%E9%A2%98%E7%9A%84%E5%A4%84%E7%90%86/perf_top.png" class="" title="image">
-<p>这里看起来不直观，并不能看清楚是哪个操作引起的。</p>
-<h3 id="2-2-2-FlameGraph"><a href="#2-2-2-FlameGraph" class="headerlink" title="2.2.2 FlameGraph"></a>2.2.2 FlameGraph</h3><p>火焰图的方式比较直观，这里测试下效果。</p>
-<ul>
-<li>采集脚本： perf record -F 99 -p 26642 -g – sleep 60</li>
-</ul>
-<p>参数说明如下：</p>
-<table>
-<thead>
-<tr>
-<th align="center">采集频率(ms)</th>
-<th align="center">进程pid</th>
-<th align="center">调用记录</th>
-<th align="center">记录时长</th>
-</tr>
-</thead>
-<tbody><tr>
-<td align="center">-F 99</td>
-<td align="center">-p 26642</td>
-<td align="center">-g</td>
-<td align="center">–sleep 60</td>
-</tr>
-</tbody></table>
-<ul>
-<li>进程对应的符号表perf-pid.map权限设置：$chown root /tmp/perf-pid.map。</li>
-</ul>
-<p>踩过的坑！！！是为了消除下面这个问题的</p>
-<figure class="highlight pgsql"><table><tr><td class="code"><pre><span class="line">File /tmp/perf-PID.map <span class="keyword">not</span> <span class="keyword">owned</span> <span class="keyword">by</span> <span class="keyword">current</span> <span class="keyword">user</span> <span class="keyword">or</span> root, ignoring it (use -f <span class="keyword">to</span> override).</span><br><span class="line">Failed <span class="keyword">to</span> <span class="keyword">open</span> /tmp/perf-PID.map, continuing <span class="keyword">without</span> symbols</span><br></pre></td></tr></table></figure>
-<ul>
-<li>FlameGraph使用方式如下：</li>
-</ul>
-<figure class="highlight awk"><table><tr><td class="code"><pre><span class="line">git clone https:<span class="regexp">//gi</span>thub.com<span class="regexp">/brendangregg/</span>FlameGraph.git</span><br><span class="line">cd FlameGraph</span><br><span class="line">perf script -i perf.data &amp;&gt; perf.unfold  <span class="comment"># 以下几个命令都是在FlameGraph目录下执行的</span></span><br><span class="line">perl stackcollapse-perf.pl perf.unfold &amp;&gt; perf.folded</span><br><span class="line">perl flamegraph.pl perf.folded &gt; perf.svg</span><br></pre></td></tr></table></figure>
-
-<ul>
-<li>火焰图效果</li>
-</ul>
-<img src="/2019/07/13/%E4%B8%80%E6%AC%A1node%E8%BF%9B%E7%A8%8Bcpu%E8%B4%9F%E8%BD%BD100-%E9%97%AE%E9%A2%98%E7%9A%84%E5%A4%84%E7%90%86/perf_flamegraph.png" class="" title="image">
-
-<p>火焰图中看到libv8.so.3.14.5是消耗cpu最多的，但底下的方块（父函数）是unknown，所以还是无法知晓是哪里调用的。</p>
-<p>火焰图形状对应关系</p>
-<table>
-<thead>
-<tr>
-<th align="left">形状</th>
-<th align="left">含义</th>
-</tr>
-</thead>
-<tbody><tr>
-<td align="left">每一个平面方块</td>
-<td align="left">一个函数在栈中的位置（也称一个栈帧）</td>
-</tr>
-<tr>
-<td align="left">Y轴</td>
-<td align="left">栈的深度(也叫栈的帧数)</td>
-</tr>
-<tr>
-<td align="left">X轴</td>
-<td align="left">表示总的样例，不过它们左右顺序没有特殊含义</td>
-</tr>
-<tr>
-<td align="left">每个平面方块的宽度</td>
-<td align="left">方块的宽度标示CPU使用时间或者说相对父函数而言使用CPU的比率，越宽代表占用CPU的时间越长，或者使用CPU很频繁</td>
-</tr>
-</tbody></table>
-<h3 id="2-2-3-原始的分析代码方式（肉眼看）"><a href="#2-2-3-原始的分析代码方式（肉眼看）" class="headerlink" title="2.2.3 原始的分析代码方式（肉眼看）"></a>2.2.3 原始的分析代码方式（肉眼看）</h3><p>以上手段不起作用后，只能逐行分析代码，看哪里可能消耗的cpu多，然后优化掉。</p>
-<h4 id="原始的消耗时间"><a href="#原始的消耗时间" class="headerlink" title="原始的消耗时间"></a>原始的消耗时间</h4><p>先按照2.1中的采集uhost-manager进程在60s内消耗的cpu时间，为10.65。这里的时间采集是5次测量，然后取平均值。</p>
-<h4 id="lean"><a href="#lean" class="headerlink" title="lean"></a>lean</h4><p>从MongoDB里读取数据时，用到mongoose的模块。使用lean可以加快查询速度。</p>
-<img src="/2019/07/13/%E4%B8%80%E6%AC%A1node%E8%BF%9B%E7%A8%8Bcpu%E8%B4%9F%E8%BD%BD100-%E9%97%AE%E9%A2%98%E7%9A%84%E5%A4%84%E7%90%86/query%E6%97%B6lean%E7%9A%84%E4%BD%BF%E7%94%A8.png" class="" title="image">
-
-<blockquote>
-<p>The lean option tells Mongoose to skip hydrating the result documents. This makes queries faster and less memory intensive, <strong>but the result documents are plain old JavaScript objects (POJOs), not Mongoose documents</strong>.</p>
-</blockquote>
-<blockquote>
-<p>If you’re executing a query and sending the results without modification to, say, an Express response, you should use lean. <font color=#FF0000 >In general, if you do not modify the query results and do not use custom getters, you should use lean(). If you modify the query results or rely on features like getters or transforms, you should not use lean()</font>.</p>
-</blockquote>
-<p>测试下来结果为6.5，降低了40%左右，效果明显。</p>
-<h4 id="减少无用的重复执行的语句"><a href="#减少无用的重复执行的语句" class="headerlink" title="减少无用的重复执行的语句"></a>减少无用的重复执行的语句</h4><p>修改之后，测试下来结果为5.3。</p>
-<img src="/2019/07/13/%E4%B8%80%E6%AC%A1node%E8%BF%9B%E7%A8%8Bcpu%E8%B4%9F%E8%BD%BD100-%E9%97%AE%E9%A2%98%E7%9A%84%E5%A4%84%E7%90%86/%E9%87%8D%E5%A4%8D%E5%88%A4%E6%96%AD%E8%AE%BE%E7%BD%AE%E5%88%9D%E5%A7%8B%E5%80%BC%E7%9A%84%E4%BB%A3%E7%A0%81.png" class="" title="image">
-
-<h4 id="减少日志打印"><a href="#减少日志打印" class="headerlink" title="减少日志打印"></a>减少日志打印</h4><p>减少量大的无用的日志打印后，测试下来结果为1.9。所以日志打印的cpu消耗在原始基础上占了32%，即（5.3-1.9)/10.65。</p>
-<figure class="highlight reasonml"><table><tr><td class="code"><pre><span class="line"><span class="comment">// 每台虚机打印下vcpu的个数，&gt;2000</span></span><br><span class="line"><span class="module-access"><span class="module"><span class="identifier">GLOBAL</span>.</span></span>logger.info(_vcpus);</span><br><span class="line"></span><br><span class="line"><span class="comment">// 每台宿主机打印下host_id, &gt;200</span></span><br><span class="line"><span class="module-access"><span class="module"><span class="identifier">GLOBAL</span>.</span></span>logger.info(<span class="string">&quot;[SMI]check:&quot;</span>, host_ids<span class="literal">[<span class="identifier">i</span>]</span>);</span><br></pre></td></tr></table></figure>
-
-<h1 id="3-优化效果"><a href="#3-优化效果" class="headerlink" title="3 优化效果"></a>3 优化效果</h1><p>经过优化后，消耗时间是1.9 clock ticks，相对于原来的10.65 clock ticks，减少了82.16%。</p>
-<img src="/2019/07/13/%E4%B8%80%E6%AC%A1node%E8%BF%9B%E7%A8%8Bcpu%E8%B4%9F%E8%BD%BD100-%E9%97%AE%E9%A2%98%E7%9A%84%E5%A4%84%E7%90%86/%E8%BF%9B%E7%A8%8B%E7%9A%84cpu%E6%97%B6%E9%97%B4.png" class="" title="image">
-<p>单核峰值CPU消耗为70%左右，且持续时间很短，为100ms左右。</p>
-<h1 id="参考链接"><a href="#参考链接" class="headerlink" title="参考链接"></a>参考链接</h1><ol>
-<li><a href="http://brokestream.com/procstat.html">procstat - displays linux proc stat (/proc/pid/stat) in human-readable format
-</a></li>
-<li><a href="http://www.samirchen.com/linux-cpu-performance/">Linux环境下进程的CPU占用率</a></li>
-<li><a href="http://man7.org/linux/man-pages/man5/proc.5.html">Linux Programmer’s Manual PROC(5)</a></li>
-<li><a href="https://cloud.tencent.com/developer/article/1005867">NodeJS 性能优化之 CPU 看图篇</a></li>
-<li><a href="http://www.cpper.cn/2017/06/04/linux/perf/">Linux性能调优工具perf的使用</a></li>
-<li><a href="https://www.yangcs.net/posts/how-to-deal-with-increasing-of-cpu-usage/">某个应用的 CPU 使用率居然达到 100%，我该怎么办？</a></li>
-<li><a href="https://mongoosejs.com/docs/tutorials/lean.html#lean-and-populate">Faster Mongoose Queries With Lean</a></li>
-</ol>
-]]></content>
-      <categories>
-        <category>linux性能优化</category>
-      </categories>
-      <tags>
-        <tag>cpu</tag>
-        <tag>node</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>goroutine调度器</title>
-    <url>/2019/07/28/goroutine%E8%B0%83%E5%BA%A6%E5%99%A8/</url>
-    <content><![CDATA[<h1 id="goroutine调度器简介"><a href="#goroutine调度器简介" class="headerlink" title="goroutine调度器简介"></a>goroutine调度器简介</h1><p>G-P-M模型，下面这张图很直观。</p>
-<img src="/2019/07/28/goroutine%E8%B0%83%E5%BA%A6%E5%99%A8/goroutine-scheduler-model.png" class="" title="image">
-<span id="more"></span>
-<p>具体内容，参考以下链接，已经说得很详细，不再重复。</p>
-<ul>
-<li><a href="http://morsmachine.dk/go-scheduler">The Go scheduler</a></li>
-<li><a href="https://tonybai.com/2017/06/23/an-intro-about-goroutine-scheduler/">也谈goroutine调度器</a></li>
-<li><a href="https://segmentfault.com/a/1190000015464889">Goroutine并发调度模型深度解析之手撸一个协程池</a></li>
-<li>源码阅读的话，推荐国内的雨痕老师在其《Go语言学习笔记》</li>
-</ul>
-<h1 id="例子"><a href="#例子" class="headerlink" title="例子"></a>例子</h1><figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"><span class="keyword">import</span> <span class="string">&quot;fmt&quot;</span></span><br><span class="line"><span class="keyword">import</span> <span class="string">&quot;time&quot;</span></span><br><span class="line"><span class="keyword">import</span> <span class="string">&quot;runtime&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">    <span class="keyword">var</span> x <span class="keyword">int</span></span><br><span class="line">    fmt.Println(<span class="string">&quot;GOMAXPROCS =&quot;</span>, runtime.GOMAXPROCS(<span class="number">0</span>) )</span><br><span class="line">    threads := runtime.GOMAXPROCS(<span class="number">0</span>)</span><br><span class="line">    <span class="keyword">for</span> i := <span class="number">0</span>; i &lt; threads; i++ &#123;</span><br><span class="line">        <span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">            <span class="keyword">for</span> &#123; x++ &#125;</span><br><span class="line">        &#125;()</span><br><span class="line">    &#125;</span><br><span class="line">    fmt.Println(<span class="string">&quot;Before time.Sleep&quot;</span>)</span><br><span class="line">    time.Sleep(time.Second)</span><br><span class="line">    fmt.Println(<span class="string">&quot;After time.Sleep&quot;</span>)</span><br><span class="line">    fmt.Println(<span class="string">&quot;x =&quot;</span>, x)  <span class="comment">//程序能运行到这里吗？</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>运行之后，发现main函数运行到Sleep之后，就卡住了，是什么原因呢？</p>
-<figure class="highlight stylus"><table><tr><td class="code"><pre><span class="line"><span class="selector-attr">[patrickxu@vm1 src]</span>$ ./test</span><br><span class="line">GOMAXPROCS = <span class="number">8</span></span><br><span class="line">Before <span class="selector-tag">time</span><span class="selector-class">.Sleep</span></span><br><span class="line"></span><br><span class="line"></span><br></pre></td></tr></table></figure>
-
-<p>因为main函数在执行time.Sleep(time.Second)后，main函数本身占据的P(G-P-M模型中的P)也被for{ x++ }一直占着,抢占的机制。这下总共8个P，全部一直被for { x++ }占着，永远轮不到主函数了。</p>
-<p>runtime.GOMAXPROCS(0)默认等于CPU核数8。每个P可以分配到一个M(即线程)，总共2 + runtime.GOMAXPROCS(0) = 10个。</p>
-<figure class="highlight tap"><table><tr><td class="code"><pre><span class="line">[patrickxu@vm1 ~]$ ps -eLf | grep test</span><br><span class="line">519     <span class="number"> 26778 </span>26325<span class="number"> 26778 </span><span class="number"> 0 </span> <span class="number"> 10 </span>00:18 pts/42   00:00:00 ./test</span><br><span class="line">519     <span class="number"> 26778 </span>26325<span class="number"> 26779 </span><span class="number"> 0 </span> <span class="number"> 10 </span>00:18 pts/42   00:00:00 ./test</span><br><span class="line">519     <span class="number"> 26778 </span>26325<span class="number"> 26780 </span>99  <span class="number"> 10 </span>00:18 pts/42   00:02:28 ./test</span><br><span class="line">519     <span class="number"> 26778 </span>26325<span class="number"> 26781 </span>99  <span class="number"> 10 </span>00:18 pts/42   00:02:28 ./test</span><br><span class="line">519     <span class="number"> 26778 </span>26325<span class="number"> 26782 </span>99  <span class="number"> 10 </span>00:18 pts/42   00:02:28 ./test</span><br><span class="line">519     <span class="number"> 26778 </span>26325<span class="number"> 26783 </span>99  <span class="number"> 10 </span>00:18 pts/42   00:02:28 ./test</span><br><span class="line">519     <span class="number"> 26778 </span>26325<span class="number"> 26784 </span>99  <span class="number"> 10 </span>00:18 pts/42   00:02:28 ./test</span><br><span class="line">519     <span class="number"> 26778 </span>26325<span class="number"> 26785 </span>99  <span class="number"> 10 </span>00:18 pts/42   00:02:27 ./test</span><br><span class="line">519     <span class="number"> 26778 </span>26325<span class="number"> 26786 </span>99  <span class="number"> 10 </span>00:18 pts/42   00:02:28 ./test</span><br><span class="line">519     <span class="number"> 26778 </span>26325<span class="number"> 26787 </span>99  <span class="number"> 10 </span>00:18 pts/42   00:02:28 ./test</span><br></pre></td></tr></table></figure>
-
-
-<p>如果把time.Sleep(time.Second)去掉后，马上全部执行结束。</p>
-<figure class="highlight elixir"><table><tr><td class="code"><pre><span class="line">[patrickxu<span class="variable">@vm1</span> src]<span class="variable">$ </span>./test</span><br><span class="line">GOMAXPROCS = <span class="number">8</span></span><br><span class="line">x = 0</span><br></pre></td></tr></table></figure>
-<p>当然也可以把GOMAXPROCS设打，比如threads := runtime.GOMAXPROCS(10)。有足够多的P，也可以运行完。</p>
-]]></content>
-      <categories>
-        <category>go</category>
-      </categories>
-      <tags>
-        <tag>goroutine</tag>
-        <tag>调度</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>一次mongo慢查询的优化过程</title>
     <url>/2019/07/24/%E4%B8%80%E6%AC%A1mongo%E6%85%A2%E6%9F%A5%E8%AF%A2%E7%9A%84%E4%BC%98%E5%8C%96%E8%BF%87%E7%A8%8B/</url>
     <content><![CDATA[<p>今天发现查询mongo时容易慢查询，现在将整个排查及优化过程,总结记录如下。</p>
@@ -1439,6 +1305,140 @@
       <tags>
         <tag>mongo</tag>
         <tag>MongoDB</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>一次node进程cpu负载高问题的处理</title>
+    <url>/2019/07/13/%E4%B8%80%E6%AC%A1node%E8%BF%9B%E7%A8%8Bcpu%E8%B4%9F%E8%BD%BD100-%E9%97%AE%E9%A2%98%E7%9A%84%E5%A4%84%E7%90%86/</url>
+    <content><![CDATA[<h1 id="1-node进程负载高的问题"><a href="#1-node进程负载高的问题" class="headerlink" title="1 node进程负载高的问题"></a>1 node进程负载高的问题</h1><ul>
+<li>线上有个用node开发的uhost-manager的服务。每个set内会有多台物理机，每台物理机（宿主机）上存在着1台或者多台虚拟机。uhost-manager里有个定时逻辑：每隔30s,从MongoDB里拉取所有的虚拟机的记录，数量为2000多台；将位于同一台宿主机上的虚拟机资源，包括cpu、内存、磁盘容量等，做个sum，将sum再填入对应宿主机（共200多台）的记录里，表示已经被占用的资源。</li>
+<li>由于计算量大，和代码写得差，导致在该定时的计算任务执行时，会把占用的cpu单核打满；如果uhost-manager此时又有其他接口被调用时，就会出现响应慢的问题，导致调用方的服务也响应慢，甚至会因超时导致服务接口不可用。</li>
+</ul>
+<img src="/2019/07/13/%E4%B8%80%E6%AC%A1node%E8%BF%9B%E7%A8%8Bcpu%E8%B4%9F%E8%BD%BD100-%E9%97%AE%E9%A2%98%E7%9A%84%E5%A4%84%E7%90%86/uhost-manager-cpu-100.png" class="" title="image">
+<p>这个单核打满持续的时间短，在1s左右。</p>
+<span id="more"></span>
+
+<h1 id="2-问题的解决"><a href="#2-问题的解决" class="headerlink" title="2 问题的解决"></a>2 问题的解决</h1><p>为了解决这个问题，带来两个要思考的问题：</p>
+<ul>
+<li>解决方法 –&gt; 怎么改进代码</li>
+<li>怎么衡量改进的效果 –&gt;<br>因为负载高的时间短，统计实时cpu负载，想到的命令只有top，但top命令本身无法做到统计，加入单核打满时间从1秒降到0.9秒，是无法凭肉眼感知的；像ps、vmstat等，也都不满足统计某个进程的实时负载</li>
+</ul>
+<h2 id="2-1-统计进程占用的cpu运行时间"><a href="#2-1-统计进程占用的cpu运行时间" class="headerlink" title="2.1 统计进程占用的cpu运行时间"></a>2.1 统计进程占用的cpu运行时间</h2><p>/proc/<pid>/stat该文件包含了某一进程所有的活动的信息，该文件中的所有值都是从系统启动开始累计到当前时刻。</p>
+<figure class="highlight apache"><table><tr><td class="code"><pre><span class="line"><span class="comment"># cat /proc/17273/stat</span></span><br><span class="line"><span class="attribute">17273</span> (node) R <span class="number">1369</span> <span class="number">17273</span> <span class="number">17273</span> <span class="number">0</span> -<span class="number">1</span> <span class="number">4218880</span> <span class="number">12446677</span> <span class="number">0</span> <span class="number">2</span> <span class="number">0</span> <span class="number">380634</span> <span class="number">40519</span> <span class="number">0</span> <span class="number">0</span> <span class="number">20</span> <span class="number">0</span> <span class="number">6</span> <span class="number">0</span> <span class="number">3525562392</span> <span class="number">964878336</span> <span class="number">38584</span> <span class="number">18446744073709551615</span> <span class="number">4194304</span> <span class="number">5593643</span> <span class="number">140724209068064</span> <span class="number">140400647923040</span> <span class="number">140400819234755</span> <span class="number">0</span> <span class="number">0</span> <span class="number">4096</span> <span class="number">16898</span> <span class="number">0</span> <span class="number">0</span> <span class="number">0</span> <span class="number">17</span> <span class="number">1</span> <span class="number">0</span> <span class="number">0</span> <span class="number">3</span> <span class="number">0</span> <span class="number">0</span> <span class="number">7692288</span> <span class="number">7703720</span> <span class="number">35180544</span> <span class="number">140724209071315</span> <span class="number">140724209071434</span> <span class="number">140724209071434</span> <span class="number">140724209074154</span> <span class="number">0</span></span><br></pre></td></tr></table></figure>
+<p>这样看非常不直观，通过网上找的一段小代码procstat[1]，以人类可读的方式显示。</p>
+<figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line">[<span class="string">root@172-30-38-65</span> <span class="string">uhost-manager.logs</span>]<span class="comment"># procstat 17273</span></span><br><span class="line">                 <span class="attr">pid:</span> <span class="number">17273</span></span><br><span class="line">               <span class="attr">tcomm:</span> <span class="string">(node)</span></span><br><span class="line">                <span class="string">...</span></span><br><span class="line">               <span class="attr">utime:</span> <span class="number">3818.830000</span></span><br><span class="line">               <span class="attr">stime:</span> <span class="number">406.260000</span></span><br><span class="line">              <span class="attr">cutime:</span> <span class="number">0.000000</span></span><br><span class="line">              <span class="attr">cstime:</span> <span class="number">0.000000</span></span><br><span class="line">                 <span class="string">...</span></span><br><span class="line">              <span class="attr">start_time:</span> <span class="number">07.13</span> <span class="number">03</span><span class="string">:00</span> <span class="string">(77599.65s)</span></span><br><span class="line">                 <span class="string">...</span></span><br></pre></td></tr></table></figure>
+<p>进程的总Cpu时间processCpuTime = utime + stime + cutime + cstime，该值包括其所有线程的cpu时间[2]。注：这里统计出来的单位不是s，是相对于clock ticks来说的[3]。</p>
+<p>我们的衡量手段为统计一段时间内新增的该进程的cpu时间；该值越小，表示运行时间越短。</p>
+<p>具体步骤如下：</p>
+<ul>
+<li>以其他端口，再起一个uhost-manager服务，防止被其他服务调用；</li>
+<li>另外，定时任务里只保留定时更新宿主机占用资源的接口（ smi_update_host_resource ）。</li>
+<li>为了使统计的cpu占用时间长一点，smi改成每5秒执行一次；总共统计60s。查看新增的cpu时间，processCpuTime_60s - processCpuTime_0s。</li>
+</ul>
+<h2 id="2-2-解决方法"><a href="#2-2-解决方法" class="headerlink" title="2.2 解决方法"></a>2.2 解决方法</h2><p>为了解决，需要知道消耗cpu性能的环节在哪些步骤上，好进一步优化。</p>
+<h3 id="2-2-1-perf"><a href="#2-2-1-perf" class="headerlink" title="2.2.1 perf"></a>2.2.1 perf</h3><figure class="highlight apache"><table><tr><td class="code"><pre><span class="line"><span class="attribute">perf</span> top -g -p <span class="number">26642</span> -d <span class="number">1</span>  #此时uhost-manager pid为<span class="number">26642</span></span><br></pre></td></tr></table></figure>
+<img src="/2019/07/13/%E4%B8%80%E6%AC%A1node%E8%BF%9B%E7%A8%8Bcpu%E8%B4%9F%E8%BD%BD100-%E9%97%AE%E9%A2%98%E7%9A%84%E5%A4%84%E7%90%86/perf_top.png" class="" title="image">
+<p>这里看起来不直观，并不能看清楚是哪个操作引起的。</p>
+<h3 id="2-2-2-FlameGraph"><a href="#2-2-2-FlameGraph" class="headerlink" title="2.2.2 FlameGraph"></a>2.2.2 FlameGraph</h3><p>火焰图的方式比较直观，这里测试下效果。</p>
+<ul>
+<li>采集脚本： perf record -F 99 -p 26642 -g – sleep 60</li>
+</ul>
+<p>参数说明如下：</p>
+<table>
+<thead>
+<tr>
+<th align="center">采集频率(ms)</th>
+<th align="center">进程pid</th>
+<th align="center">调用记录</th>
+<th align="center">记录时长</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">-F 99</td>
+<td align="center">-p 26642</td>
+<td align="center">-g</td>
+<td align="center">–sleep 60</td>
+</tr>
+</tbody></table>
+<ul>
+<li>进程对应的符号表perf-pid.map权限设置：$chown root /tmp/perf-pid.map。</li>
+</ul>
+<p>踩过的坑！！！是为了消除下面这个问题的</p>
+<figure class="highlight pgsql"><table><tr><td class="code"><pre><span class="line">File /tmp/perf-PID.map <span class="keyword">not</span> <span class="keyword">owned</span> <span class="keyword">by</span> <span class="keyword">current</span> <span class="keyword">user</span> <span class="keyword">or</span> root, ignoring it (use -f <span class="keyword">to</span> override).</span><br><span class="line">Failed <span class="keyword">to</span> <span class="keyword">open</span> /tmp/perf-PID.map, continuing <span class="keyword">without</span> symbols</span><br></pre></td></tr></table></figure>
+<ul>
+<li>FlameGraph使用方式如下：</li>
+</ul>
+<figure class="highlight awk"><table><tr><td class="code"><pre><span class="line">git clone https:<span class="regexp">//gi</span>thub.com<span class="regexp">/brendangregg/</span>FlameGraph.git</span><br><span class="line">cd FlameGraph</span><br><span class="line">perf script -i perf.data &amp;&gt; perf.unfold  <span class="comment"># 以下几个命令都是在FlameGraph目录下执行的</span></span><br><span class="line">perl stackcollapse-perf.pl perf.unfold &amp;&gt; perf.folded</span><br><span class="line">perl flamegraph.pl perf.folded &gt; perf.svg</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>火焰图效果</li>
+</ul>
+<img src="/2019/07/13/%E4%B8%80%E6%AC%A1node%E8%BF%9B%E7%A8%8Bcpu%E8%B4%9F%E8%BD%BD100-%E9%97%AE%E9%A2%98%E7%9A%84%E5%A4%84%E7%90%86/perf_flamegraph.png" class="" title="image">
+
+<p>火焰图中看到libv8.so.3.14.5是消耗cpu最多的，但底下的方块（父函数）是unknown，所以还是无法知晓是哪里调用的。</p>
+<p>火焰图形状对应关系</p>
+<table>
+<thead>
+<tr>
+<th align="left">形状</th>
+<th align="left">含义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left">每一个平面方块</td>
+<td align="left">一个函数在栈中的位置（也称一个栈帧）</td>
+</tr>
+<tr>
+<td align="left">Y轴</td>
+<td align="left">栈的深度(也叫栈的帧数)</td>
+</tr>
+<tr>
+<td align="left">X轴</td>
+<td align="left">表示总的样例，不过它们左右顺序没有特殊含义</td>
+</tr>
+<tr>
+<td align="left">每个平面方块的宽度</td>
+<td align="left">方块的宽度标示CPU使用时间或者说相对父函数而言使用CPU的比率，越宽代表占用CPU的时间越长，或者使用CPU很频繁</td>
+</tr>
+</tbody></table>
+<h3 id="2-2-3-原始的分析代码方式（肉眼看）"><a href="#2-2-3-原始的分析代码方式（肉眼看）" class="headerlink" title="2.2.3 原始的分析代码方式（肉眼看）"></a>2.2.3 原始的分析代码方式（肉眼看）</h3><p>以上手段不起作用后，只能逐行分析代码，看哪里可能消耗的cpu多，然后优化掉。</p>
+<h4 id="原始的消耗时间"><a href="#原始的消耗时间" class="headerlink" title="原始的消耗时间"></a>原始的消耗时间</h4><p>先按照2.1中的采集uhost-manager进程在60s内消耗的cpu时间，为10.65。这里的时间采集是5次测量，然后取平均值。</p>
+<h4 id="lean"><a href="#lean" class="headerlink" title="lean"></a>lean</h4><p>从MongoDB里读取数据时，用到mongoose的模块。使用lean可以加快查询速度。</p>
+<img src="/2019/07/13/%E4%B8%80%E6%AC%A1node%E8%BF%9B%E7%A8%8Bcpu%E8%B4%9F%E8%BD%BD100-%E9%97%AE%E9%A2%98%E7%9A%84%E5%A4%84%E7%90%86/query%E6%97%B6lean%E7%9A%84%E4%BD%BF%E7%94%A8.png" class="" title="image">
+
+<blockquote>
+<p>The lean option tells Mongoose to skip hydrating the result documents. This makes queries faster and less memory intensive, <strong>but the result documents are plain old JavaScript objects (POJOs), not Mongoose documents</strong>.</p>
+</blockquote>
+<blockquote>
+<p>If you’re executing a query and sending the results without modification to, say, an Express response, you should use lean. <font color=#FF0000 >In general, if you do not modify the query results and do not use custom getters, you should use lean(). If you modify the query results or rely on features like getters or transforms, you should not use lean()</font>.</p>
+</blockquote>
+<p>测试下来结果为6.5，降低了40%左右，效果明显。</p>
+<h4 id="减少无用的重复执行的语句"><a href="#减少无用的重复执行的语句" class="headerlink" title="减少无用的重复执行的语句"></a>减少无用的重复执行的语句</h4><p>修改之后，测试下来结果为5.3。</p>
+<img src="/2019/07/13/%E4%B8%80%E6%AC%A1node%E8%BF%9B%E7%A8%8Bcpu%E8%B4%9F%E8%BD%BD100-%E9%97%AE%E9%A2%98%E7%9A%84%E5%A4%84%E7%90%86/%E9%87%8D%E5%A4%8D%E5%88%A4%E6%96%AD%E8%AE%BE%E7%BD%AE%E5%88%9D%E5%A7%8B%E5%80%BC%E7%9A%84%E4%BB%A3%E7%A0%81.png" class="" title="image">
+
+<h4 id="减少日志打印"><a href="#减少日志打印" class="headerlink" title="减少日志打印"></a>减少日志打印</h4><p>减少量大的无用的日志打印后，测试下来结果为1.9。所以日志打印的cpu消耗在原始基础上占了32%，即（5.3-1.9)/10.65。</p>
+<figure class="highlight reasonml"><table><tr><td class="code"><pre><span class="line"><span class="comment">// 每台虚机打印下vcpu的个数，&gt;2000</span></span><br><span class="line"><span class="module-access"><span class="module"><span class="identifier">GLOBAL</span>.</span></span>logger.info(_vcpus);</span><br><span class="line"></span><br><span class="line"><span class="comment">// 每台宿主机打印下host_id, &gt;200</span></span><br><span class="line"><span class="module-access"><span class="module"><span class="identifier">GLOBAL</span>.</span></span>logger.info(<span class="string">&quot;[SMI]check:&quot;</span>, host_ids<span class="literal">[<span class="identifier">i</span>]</span>);</span><br></pre></td></tr></table></figure>
+
+<h1 id="3-优化效果"><a href="#3-优化效果" class="headerlink" title="3 优化效果"></a>3 优化效果</h1><p>经过优化后，消耗时间是1.9 clock ticks，相对于原来的10.65 clock ticks，减少了82.16%。</p>
+<img src="/2019/07/13/%E4%B8%80%E6%AC%A1node%E8%BF%9B%E7%A8%8Bcpu%E8%B4%9F%E8%BD%BD100-%E9%97%AE%E9%A2%98%E7%9A%84%E5%A4%84%E7%90%86/%E8%BF%9B%E7%A8%8B%E7%9A%84cpu%E6%97%B6%E9%97%B4.png" class="" title="image">
+<p>单核峰值CPU消耗为70%左右，且持续时间很短，为100ms左右。</p>
+<h1 id="参考链接"><a href="#参考链接" class="headerlink" title="参考链接"></a>参考链接</h1><ol>
+<li><a href="http://brokestream.com/procstat.html">procstat - displays linux proc stat (/proc/pid/stat) in human-readable format
+</a></li>
+<li><a href="http://www.samirchen.com/linux-cpu-performance/">Linux环境下进程的CPU占用率</a></li>
+<li><a href="http://man7.org/linux/man-pages/man5/proc.5.html">Linux Programmer’s Manual PROC(5)</a></li>
+<li><a href="https://cloud.tencent.com/developer/article/1005867">NodeJS 性能优化之 CPU 看图篇</a></li>
+<li><a href="http://www.cpper.cn/2017/06/04/linux/perf/">Linux性能调优工具perf的使用</a></li>
+<li><a href="https://www.yangcs.net/posts/how-to-deal-with-increasing-of-cpu-usage/">某个应用的 CPU 使用率居然达到 100%，我该怎么办？</a></li>
+<li><a href="https://mongoosejs.com/docs/tutorials/lean.html#lean-and-populate">Faster Mongoose Queries With Lean</a></li>
+</ol>
+]]></content>
+      <categories>
+        <category>linux性能优化</category>
+      </categories>
+      <tags>
+        <tag>cpu</tag>
+        <tag>node</tag>
       </tags>
   </entry>
   <entry>
@@ -1735,32 +1735,39 @@
       </tags>
   </entry>
   <entry>
-    <title>这些年读过的那些书&amp;&amp;待读清单列表</title>
-    <url>/2019/08/31/%E8%BF%99%E4%BA%9B%E5%B9%B4%E8%AF%BB%E8%BF%87%E7%9A%84%E9%82%A3%E4%BA%9B%E4%B9%A6-%E5%BE%85%E8%AF%BB%E6%B8%85%E5%8D%95%E5%88%97%E8%A1%A8/</url>
-    <content><![CDATA[<p>每年给自己列个计划，要读哪些书，到年尾看看真正看完的有多少。</p>
-<h1 id="2020年待读清单列表"><a href="#2020年待读清单列表" class="headerlink" title="2020年待读清单列表"></a>2020年待读清单列表</h1><ol>
-<li> 《Designing Data-Intensive Applications》</li>
-</ol>
-<h1 id="2019年待读清单列表"><a href="#2019年待读清单列表" class="headerlink" title="2019年待读清单列表"></a>2019年待读清单列表</h1><ol>
-<li>UNIX环境高级编程（第3版）</li>
-<li>重构网络 SDN架构与实现</li>
-<li>软件定义网络</li>
-<li>全球通史 从史前史到21实际 第7版修订版 上</li>
-<li>全球通史 从史前史到21实际 第7版修订版 下<span id="more"></span></li>
-</ol>
-<h1 id="这些年读过的那些书"><a href="#这些年读过的那些书" class="headerlink" title="这些年读过的那些书"></a>这些年读过的那些书</h1><h2 id="2020年"><a href="#2020年" class="headerlink" title="2020年"></a>2020年</h2><ol>
-<li>《深度思考》 深度思考前的盲目勤奋，注定是吃力不讨好的徒劳。香奈儿前全球CEO从普通职员到职场巅峰的人生进阶之路。大脑中走得越远，现实中走得越稳。</li>
-</ol>
-<h2 id="2019年"><a href="#2019年" class="headerlink" title="2019年"></a>2019年</h2><ol>
-<li>《TCP/IP详解 卷1：协议（原书第2版）》 <a href="https://xusenqi.github.io/2019/04/24/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0-TCP-IP%E8%AF%A6%E8%A7%A3-%E5%8D%B71%EF%BC%9A%E5%8D%8F%E8%AE%AE/">读书笔记-TCP/IP详解 卷1：协议</a></li>
-<li>《软技能 代码之外的生存指南（Soft Skills - The Software Developer’s Life Manual）》对于程序员是很不错的心灵鸡汤，从职业、自我营销、学习、生产力等方面，讲述了作者的方法和心得，很值得借鉴。</li>
-</ol>
+    <title>缺少指令集pclmulqdq导致无法执行crc32c的问题</title>
+    <url>/2022/04/01/%E7%BC%BA%E5%B0%91%E6%8C%87%E4%BB%A4%E9%9B%86pclmulqdq%E5%AF%BC%E8%87%B4%E6%97%A0%E6%B3%95%E6%89%A7%E8%A1%8Ccrc32c%E6%97%A0%E6%B3%95%E6%89%A7%E8%A1%8C%E7%9A%84%E9%97%AE%E9%A2%98/</url>
+    <content><![CDATA[<h1 id="问题"><a href="#问题" class="headerlink" title="问题"></a>问题</h1><p>之前跑程序一直在intel/amd的CPU上，最近要适配一款国产cpu -中科海光 Hygon C86 7151 16-core Processor。突然发现计算crc32的程序跑不起来了，是啥原因呢？</p>
+<span id="more"></span>
+
+<p>这是用到的crc32的库<a href="https://github.com/htot/crc32c/%E3%80%82">https://github.com/htot/crc32c/。</a></p>
+<ul>
+<li>编译 cd crc32c/crc32c; make all</li>
+<li>跑test程序 ./crc32c_test</li>
+</ul>
+<figure class="highlight subunit"><table><tr><td class="code"><pre><span class="line">[root@store<span class="string">-11</span><span class="string">-14</span> crc32c]# ./crc32c_test </span><br><span class="line"><span class="keyword">Testing </span>CRC32C functions</span><br><span class="line">CRC32C:</span><br><span class="line">        CPUDetection: PASSED.</span><br><span class="line">        KnownValues: Illegal instruction</span><br></pre></td></tr></table></figure>
+
+<h1 id="调试"><a href="#调试" class="headerlink" title="调试"></a>调试</h1><p>用gdb汇编调试，</p>
+<figure class="highlight less"><table><tr><td class="code"><pre><span class="line"><span class="selector-tag">gdb</span> ./<span class="selector-tag">crc32c_test</span> </span><br><span class="line">(gdb) <span class="selector-tag">layout</span> <span class="selector-tag">asm</span></span><br><span class="line">(gdb) <span class="selector-tag">run</span></span><br><span class="line">(gdb) <span class="selector-tag">m</span> <span class="selector-tag">received</span> <span class="selector-tag">signal</span> <span class="selector-tag">SIGILL</span>, <span class="selector-tag">Illegal</span> <span class="selector-tag">instruction</span>.</span><br></pre></td></tr></table></figure>
+
+<img src="/2022/04/01/%E7%BC%BA%E5%B0%91%E6%8C%87%E4%BB%A4%E9%9B%86pclmulqdq%E5%AF%BC%E8%87%B4%E6%97%A0%E6%B3%95%E6%89%A7%E8%A1%8Ccrc32c%E6%97%A0%E6%B3%95%E6%89%A7%E8%A1%8C%E7%9A%84%E9%97%AE%E9%A2%98/%E6%B1%87%E7%BC%96%E8%B0%83%E8%AF%95crc32c.png" class="" title="image">
+
+<p>在执行机器指令pclmullqlqdq的时候，出现了Illegal instruction的错误，即改指令不支持。</p>
+<p>该指令的支持，需要cpu支持pclmulqdq指令。该指令有助于实现高效的多项式的乘法。<br>查看Hygon C86 7151的处理器。确实没有该指令，所以无法运行crc32c_test。</p>
+<img src="/2022/04/01/%E7%BC%BA%E5%B0%91%E6%8C%87%E4%BB%A4%E9%9B%86pclmulqdq%E5%AF%BC%E8%87%B4%E6%97%A0%E6%B3%95%E6%89%A7%E8%A1%8Ccrc32c%E6%97%A0%E6%B3%95%E6%89%A7%E8%A1%8C%E7%9A%84%E9%97%AE%E9%A2%98/hygon.png" class="" title="image">
+
+<p>而在用的一款intel cpu上有该pclmulqdq指令，所以可以运行crc32c_test。</p>
+<img src="/2022/04/01/%E7%BC%BA%E5%B0%91%E6%8C%87%E4%BB%A4%E9%9B%86pclmulqdq%E5%AF%BC%E8%87%B4%E6%97%A0%E6%B3%95%E6%89%A7%E8%A1%8Ccrc32c%E6%97%A0%E6%B3%95%E6%89%A7%E8%A1%8C%E7%9A%84%E9%97%AE%E9%A2%98/intel.png" class="" title="image">
+
+<p>再看crc32c中<a href="https://github.com/htot/crc32c/blob/master/crc32c/crc32intelc.cc%E7%9A%84%E6%8F%8F%E8%BF%B0%EF%BC%8C%E4%B9%9F%E6%8F%90%E5%88%B0%E4%BA%86%E4%BE%9D%E8%B5%96%E4%BD%BF%E7%94%A8pclmulqdq">https://github.com/htot/crc32c/blob/master/crc32c/crc32intelc.cc的描述，也提到了依赖使用pclmulqdq</a> instruction，进一步佐证了上面的分析过程。</p>
+<p>/* Use hardware CRC instruction on Intel SSE 4.2 processors.  This computes a<br>  CRC-32C, <em>not</em> the CRC-32 used by Ethernet and zip, gzip, etc. Where efficient<br>  3 crc32q instructions are used which a single core can execute in parallel.<br>  This compensates for the latency of a single crc32q instruction. <font color=#FF0000>Combining the<br>  3 CRC-32C bytes is done using the pclmulqdq instruction</font>, which has overhead of<br>  its own, and makes this code path only efficient for buffer sizes above 216 bytes.<br>  All code requiring a crc32q instruction is done inside a macro, for which alternative<br>  code is generated in case of a 32 bit platform.*/</p>
 ]]></content>
       <categories>
-        <category>读书笔记</category>
+        <category>cpu</category>
       </categories>
       <tags>
-        <tag>清单</tag>
+        <tag>cpu</tag>
+        <tag>crc</tag>
       </tags>
   </entry>
   <entry>
@@ -2003,6 +2010,35 @@
         <tag>debug</tag>
         <tag>delve</tag>
         <tag>dlv</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>这些年读过的那些书&amp;&amp;待读清单列表</title>
+    <url>/2019/08/31/%E8%BF%99%E4%BA%9B%E5%B9%B4%E8%AF%BB%E8%BF%87%E7%9A%84%E9%82%A3%E4%BA%9B%E4%B9%A6-%E5%BE%85%E8%AF%BB%E6%B8%85%E5%8D%95%E5%88%97%E8%A1%A8/</url>
+    <content><![CDATA[<p>每年给自己列个计划，要读哪些书，到年尾看看真正看完的有多少。</p>
+<h1 id="2020年待读清单列表"><a href="#2020年待读清单列表" class="headerlink" title="2020年待读清单列表"></a>2020年待读清单列表</h1><ol>
+<li> 《Designing Data-Intensive Applications》</li>
+</ol>
+<h1 id="2019年待读清单列表"><a href="#2019年待读清单列表" class="headerlink" title="2019年待读清单列表"></a>2019年待读清单列表</h1><ol>
+<li>UNIX环境高级编程（第3版）</li>
+<li>重构网络 SDN架构与实现</li>
+<li>软件定义网络</li>
+<li>全球通史 从史前史到21实际 第7版修订版 上</li>
+<li>全球通史 从史前史到21实际 第7版修订版 下<span id="more"></span></li>
+</ol>
+<h1 id="这些年读过的那些书"><a href="#这些年读过的那些书" class="headerlink" title="这些年读过的那些书"></a>这些年读过的那些书</h1><h2 id="2020年"><a href="#2020年" class="headerlink" title="2020年"></a>2020年</h2><ol>
+<li>《深度思考》 深度思考前的盲目勤奋，注定是吃力不讨好的徒劳。香奈儿前全球CEO从普通职员到职场巅峰的人生进阶之路。大脑中走得越远，现实中走得越稳。</li>
+</ol>
+<h2 id="2019年"><a href="#2019年" class="headerlink" title="2019年"></a>2019年</h2><ol>
+<li>《TCP/IP详解 卷1：协议（原书第2版）》 <a href="https://xusenqi.github.io/2019/04/24/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0-TCP-IP%E8%AF%A6%E8%A7%A3-%E5%8D%B71%EF%BC%9A%E5%8D%8F%E8%AE%AE/">读书笔记-TCP/IP详解 卷1：协议</a></li>
+<li>《软技能 代码之外的生存指南（Soft Skills - The Software Developer’s Life Manual）》对于程序员是很不错的心灵鸡汤，从职业、自我营销、学习、生产力等方面，讲述了作者的方法和心得，很值得借鉴。</li>
+</ol>
+]]></content>
+      <categories>
+        <category>读书笔记</category>
+      </categories>
+      <tags>
+        <tag>清单</tag>
       </tags>
   </entry>
   <entry>
