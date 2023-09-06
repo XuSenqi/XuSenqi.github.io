@@ -1,160 +1,44 @@
 <?xml version="1.0" encoding="utf-8"?>
 <search>
   <entry>
-    <title>c++ profile的大杀器-gperftools的使用</title>
-    <url>/2020/12/06/C++Profile%E7%9A%84%E5%A4%A7%E6%9D%80%E5%99%A8_gperftools%E7%9A%84%E4%BD%BF%E7%94%A8/</url>
-    <content><![CDATA[<p>熟悉golang的同学，一定很熟悉用pprof来作为性能分析和可视化的工具，包括 cpu profile, memery profile等。这么方便且炫的功能，在C++里也一样能实现。所需要的工具就是gperftools。</p>
+    <title>C++内存对齐</title>
+    <url>/2022/05/15/C++%E5%86%85%E5%AD%98%E5%AF%B9%E9%BD%90/</url>
+    <content><![CDATA[<h1 id="什么是内存对齐"><a href="#什么是内存对齐" class="headerlink" title="什么是内存对齐"></a>什么是内存对齐</h1><p>用一个例子带出这个问题，看下面的小程序 。理论上，64位系统下，int占4byte，char占一个byte，那么将它们放到一个结构体中应该占4+1=5byte；但是实际上，通过运行程序得到的结果是8 byte，这就是内存对齐所导致的。</p>
 <span id="more"></span>
 
-<h1 id="安装"><a href="#安装" class="headerlink" title="安装"></a>安装</h1><h2 id="安装libunwind"><a href="#安装libunwind" class="headerlink" title="安装libunwind"></a>安装libunwind</h2><p>64位操作系统需要安装libunwind，gperftools推荐版本是libunwind-0.99-beta，详见gperftools/INSTALL里的说明。</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">wget http://download.savannah.gnu.org/releases/libunwind/libunwind-0.99-beta.tar.gz</span><br><span class="line">tar -zxvf libunwind-0.99-beta.tar.gz</span><br><span class="line">cd libunwind-0.99-beta/</span><br><span class="line">./configure</span><br><span class="line">make</span><br><span class="line">make install</span><br></pre></td></tr></table></figure>
+<p>#include<iostream><br>using namespace std;</p>
+<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span>&#123;</span></span><br><span class="line">    <span class="keyword">int</span> x;</span><br><span class="line">    <span class="keyword">char</span> y;</span><br><span class="line">&#125;Test;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    cout&lt;&lt;<span class="string">&quot;sizeof(int) &quot;</span>&lt;&lt;<span class="built_in"><span class="keyword">sizeof</span></span>(<span class="keyword">int</span>)&lt;&lt;endl;    <span class="comment">// 4</span></span><br><span class="line">    cout&lt;&lt;<span class="string">&quot;sizeof(char) &quot;</span>&lt;&lt;<span class="built_in"><span class="keyword">sizeof</span></span>(<span class="keyword">char</span>)&lt;&lt;endl;  <span class="comment">// 1</span></span><br><span class="line">    cout&lt;&lt;<span class="string">&quot;sizeof(Test) &quot;</span>&lt;&lt;<span class="built_in"><span class="keyword">sizeof</span></span>(Test)&lt;&lt;endl;; <span class="comment">// 输出8不是5</span></span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
-<p>因为默认的libunwind安装在/usr/local/lib目录下，需要将这个目录添加到系统动态库缓存中。</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">echo &quot;/usr/local/lib&quot; &gt; /etc/ld.so.conf.d/usr_local_lib.conf</span><br><span class="line">/sbin/ldconfig</span><br></pre></td></tr></table></figure>
+<p>现代计算机中内存空间都是按照 byte 划分的，从理论上讲似乎对任何类型的变量的访问可以从任何地址开始，但是实际的计算机系统对基本类型数据在内存中存放的位置有限制，它们会要求这些数据的首地址的值是某个数k（通常它为4或8）的倍数，这就是所谓的内存对齐。</p>
+<h1 id="为什么要进行内存对齐"><a href="#为什么要进行内存对齐" class="headerlink" title="为什么要进行内存对齐"></a>为什么要进行内存对齐</h1><h2 id="性能提升"><a href="#性能提升" class="headerlink" title="性能提升"></a>性能提升</h2><p>以64位系统为例，访问内存的IO是以8个字节为单位。现在考虑8字节单位的处理器取long类型变量（64位系统），该处理器只能从地址为8的倍数的内存开始读取数据。</p>
+<p>假如没有内存对齐机制，数据可以任意存放，现在一个long变量存放在从地址1开始的连续8个字节地址中，该处理器去取数据时，需要完成多个步骤：<br>● 要先从0地址开始读取第一个8字节块,剔除不想要的字节（0地址）<br>● 然后从地址8开始读取下一个8字节块,同样剔除不要的数据（9~15地址）<br>● 最后留下的两块数据合并放入寄存器</p>
+<p>现在有了内存对齐的，long类型数据只能存放在按照对齐规则的内存中，比如说0地址开始的内存。那么现在该处理器在取数据时一次性就能将数据读出来了，而且不需要做额外的操作，提高了效率。</p>
+<h2 id="跨平台的支持"><a href="#跨平台的支持" class="headerlink" title="跨平台的支持"></a>跨平台的支持</h2><p>有些硬件平台并不能访问任意地址上的任意数据的，只能处理特定类型的数据，否则会导致硬件层级的错误。</p>
+<p>有些CPU（如基于 Alpha，IA-64，MIPS，和 SuperH 体系的）拒绝读取未对齐数据。当一个程序要求这些 CPU 读取未对齐数据时，这时 CPU 会进入异常处理状态并且通知程序不能继续执行。</p>
+<p>举个例子，在 ARM，MIPS，和 SH 硬件平台上，当操作系统被要求存取一个未对齐数据时会默认给应用程序抛出硬件异常。所以，如果编译器不进行内存对齐，那在很多平台的上的开发将难以进行。</p>
+<h1 id="内存对齐规则"><a href="#内存对齐规则" class="headerlink" title="内存对齐规则"></a>内存对齐规则</h1><p>每个特定平台上的编译器都有自己的默认“对齐系数”（也叫对齐模数）。在64位系统中，gcc中默认#pragma pack(8)，可以通过预编译命令#pragma pack(n)，n = 1,2,4,8,16来改变这一系数。</p>
+<p>有效对齐值：是给定值#pragma pack(n)和结构体中最长数据类型长度中较小的那个。有效对齐值也叫对齐单位。c++11中可以通过alignof(t)来获取。</p>
+<p>了解了上面的概念后，我们现在可以来看看内存对齐需要遵循的规则：<br>(1) 基本类型的对齐值就是其sizeof值;<br>(2) 结构(struct)(或联合(union))的数据成员，以后每个成员相对于结构体首地址的 offset 都是该成员大小与有效对齐值中较小那个的整数倍;<br>(3) 结构体的总大小为 有效对齐值 的整数倍</p>
+<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span><span class="meta-string">&lt;iostream&gt;</span></span></span><br><span class="line"><span class="keyword">using</span> <span class="keyword">namespace</span> std;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">struct</span>&#123;</span></span><br><span class="line">    <span class="keyword">char</span> a;</span><br><span class="line">    <span class="keyword">long</span> b;</span><br><span class="line">    <span class="keyword">int</span> c;</span><br><span class="line">    <span class="keyword">short</span> d;</span><br><span class="line">&#125;Test;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    cout&lt;&lt;<span class="string">&quot;sizeof(char) &quot;</span>&lt;&lt;<span class="built_in"><span class="keyword">sizeof</span></span>(<span class="keyword">char</span>)&lt;&lt;endl;  <span class="comment">// 1</span></span><br><span class="line">    cout&lt;&lt;<span class="string">&quot;sizeof(long) &quot;</span>&lt;&lt;<span class="built_in"><span class="keyword">sizeof</span></span>(<span class="keyword">long</span>)&lt;&lt;endl;  <span class="comment">// 8</span></span><br><span class="line">    cout&lt;&lt;<span class="string">&quot;sizeof(int) &quot;</span>&lt;&lt;<span class="built_in"><span class="keyword">sizeof</span></span>(<span class="keyword">int</span>)&lt;&lt;endl;    <span class="comment">// 4</span></span><br><span class="line">    cout&lt;&lt;<span class="string">&quot;sizeof(short) &quot;</span>&lt;&lt;<span class="built_in"><span class="keyword">sizeof</span></span>(<span class="keyword">short</span>)&lt;&lt;endl;<span class="comment">// 2</span></span><br><span class="line">    cout&lt;&lt;<span class="string">&quot;alignof(Test) &quot;</span>&lt;&lt;<span class="built_in"><span class="keyword">alignof</span></span>(Test)&lt;&lt;endl;<span class="comment">// 8</span></span><br><span class="line">    cout&lt;&lt;<span class="string">&quot;sizeof(Test) &quot;</span>&lt;&lt;<span class="built_in"><span class="keyword">sizeof</span></span>(Test)&lt;&lt;endl;; <span class="comment">// 24</span></span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
-<h2 id="安装graphviz"><a href="#安装graphviz" class="headerlink" title="安装graphviz"></a>安装graphviz</h2><p>Graphviz是一个由AT&amp;T实验室启动的开源工具包，用于绘制DOT语言脚本描述的图形，gperftools依靠此工具生成图形分析结果。<br />安装命令：yum install graphviz</p>
-<p>生成图像时依赖ps2pdf<br />安装命令：yum -y install ghostscript<br /></p>
-<h2 id="安装perftools"><a href="#安装perftools" class="headerlink" title="安装perftools"></a>安装perftools</h2><figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">git clone https://github.com/gperftools/gperftools.git</span><br><span class="line">cd gperftools/</span><br><span class="line">./autogen.sh</span><br><span class="line">./configure</span><br><span class="line">make</span><br><span class="line">make install</span><br></pre></td></tr></table></figure>
+<img src="/2022/05/15/C++%E5%86%85%E5%AD%98%E5%AF%B9%E9%BD%90/%E5%86%85%E5%AD%98%E5%AF%B9%E9%BD%90%E7%9A%84%E4%BE%8B%E5%AD%90.png" class="" title="image.png">
 
-<p>遇到的问题1：</p>
-<figure class="highlight awk"><table><tr><td class="code"><pre><span class="line">[root@<span class="number">10</span>-<span class="number">8</span>-<span class="number">152</span>-<span class="number">53</span> gperftools]<span class="comment"># ./autogen.sh</span></span><br><span class="line">configure.ac:<span class="number">174</span>: error: possibly undefined macro: AC_PROG_LIBTOOL</span><br><span class="line">      If this token and others are legitimate, please use m4_pattern_allow.</span><br><span class="line">      See the Autoconf documentation.</span><br><span class="line">      autoreconf: <span class="regexp">/usr/</span>bin/autoconf failed with <span class="keyword">exit</span> status: </span><br></pre></td></tr></table></figure>
+<p>对齐的过程：<br>● a放在其实地址0；<br>● b占用8个字节，根据规则2，对齐在min{8, 8}的整数倍，即8; c对齐在min{4, 8}的整数倍，即16；d对齐在min{2, 8}的整数倍,即20；<br>● 整个数据结构大小为min{8,8}的整数倍，即24。</p>
+<p>顺道说一下，<br>● attribute((packed))，取消结构在编译过程中的优化对齐，按照实际占用字节数进行对齐。<br>如，以下Test的占用长度为15。</p>
+<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span><span class="meta-string">&lt;iostream&gt;</span></span></span><br><span class="line"><span class="keyword">using</span> <span class="keyword">namespace</span> std;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">T</span>&#123;</span></span><br><span class="line">    <span class="keyword">char</span> a;</span><br><span class="line">    <span class="keyword">long</span> b;</span><br><span class="line">    <span class="keyword">int</span> c;</span><br><span class="line">    <span class="keyword">short</span> d;</span><br><span class="line"></span><br><span class="line">&#125;__attribute__((packed));</span><br><span class="line"></span><br><span class="line">T Test;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    cout&lt;&lt;<span class="string">&quot;sizeof(char) &quot;</span>&lt;&lt;<span class="built_in"><span class="keyword">sizeof</span></span>(<span class="keyword">char</span>)&lt;&lt;endl;  <span class="comment">// 1</span></span><br><span class="line">    cout&lt;&lt;<span class="string">&quot;sizeof(long) &quot;</span>&lt;&lt;<span class="built_in"><span class="keyword">sizeof</span></span>(<span class="keyword">long</span>)&lt;&lt;endl;  <span class="comment">// 8</span></span><br><span class="line">    cout&lt;&lt;<span class="string">&quot;sizeof(int) &quot;</span>&lt;&lt;<span class="built_in"><span class="keyword">sizeof</span></span>(<span class="keyword">int</span>)&lt;&lt;endl;    <span class="comment">// 4</span></span><br><span class="line">    cout&lt;&lt;<span class="string">&quot;sizeof(short) &quot;</span>&lt;&lt;<span class="built_in"><span class="keyword">sizeof</span></span>(<span class="keyword">short</span>)&lt;&lt;endl;<span class="comment">// 2</span></span><br><span class="line">    cout&lt;&lt;<span class="string">&quot;sizeof(Test) &quot;</span>&lt;&lt;<span class="built_in"><span class="keyword">sizeof</span></span>(Test)&lt;&lt;endl;; <span class="comment">// 15</span></span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
-<p>解决方法：yum -y install libtool</p>
-<p>遇到的问题2：</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">[root@hb06-ufile-132-199 gperftools]# ./autogen.sh</span><br><span class="line">libtoolize: putting macros in AC_CONFIG_MACRO_DIR, `m4&#x27;.</span><br><span class="line">libtoolize: copying file `m4/libtool.m4&#x27;</span><br><span class="line">libtoolize: copying file `m4/ltoptions.m4&#x27;</span><br><span class="line">libtoolize: copying file `m4/ltsugar.m4&#x27;</span><br><span class="line">libtoolize: copying file `m4/ltversion.m4&#x27;</span><br><span class="line">libtoolize: copying file `m4/lt~obsolete.m4&#x27;</span><br><span class="line">configure.ac:159: installing &#x27;./compile&#x27;</span><br><span class="line">configure.ac:22: installing &#x27;./config.guess&#x27;</span><br><span class="line">configure.ac:22: installing &#x27;./config.sub&#x27;</span><br><span class="line">configure.ac:23: installing &#x27;./install-sh&#x27;</span><br><span class="line">configure.ac:174: error: required file &#x27;./ltmain.sh&#x27; not found</span><br><span class="line">configure.ac:23: installing &#x27;./missing&#x27;</span><br></pre></td></tr></table></figure>
-
-<p>解决方法：aclocal &amp;&amp; autoheader &amp;&amp; autoconf &amp;&amp; automake –add-missing<br>参考了<a href="https://stackoverflow.com/questions/22603163/automake-error-ltmain-sh-not-found">https://stackoverflow.com/questions/22603163/automake-error-ltmain-sh-not-found</a></p>
-<h1 id="使用举例"><a href="#使用举例" class="headerlink" title="使用举例"></a>使用举例</h1><p>一共有5种使用方式：</p>
-<ul>
-<li><p> TC Malloc</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">gcc [...] -ltcmalloc</span><br></pre></td></tr></table></figure></li>
-<li><p>Heap Checker</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">gcc [...] -o myprogram -ltcmalloc</span><br><span class="line">HEAPCHECK=normal ./myprogram</span><br></pre></td></tr></table></figure></li>
-<li><p>Heap Profiler</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">gcc [...] -o myprogram -ltcmalloc</span><br><span class="line">HEAPPROFILE=/tmp/netheap ./myprogram</span><br></pre></td></tr></table></figure></li>
-<li><p>Cpu Profiler</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">gcc [...] -o myprogram -lprofiler</span><br><span class="line">CPUPROFILE=/tmp/profile ./myprogram</span><br></pre></td></tr></table></figure></li>
-<li><p>pprof and Remote Servers</p>
-</li>
+<h1 id="参考链接"><a href="#参考链接" class="headerlink" title="参考链接"></a>参考链接</h1><ul>
+<li><a href="https://zhuanlan.zhihu.com/p/30007037">https://zhuanlan.zhihu.com/p/30007037</a></li>
+<li><a href="https://zhuanlan.zhihu.com/p/140063999">https://zhuanlan.zhihu.com/p/140063999</a></li>
+<li><a href="http://xusenqi.site/2022/05/04/%E5%86%85%E5%AD%98%E5%AF%B9%E9%BD%90%E7%9A%84%E5%BA%95%E5%B1%82%E5%8E%9F%E7%90%86/">http://xusenqi.site/2022/05/04/%E5%86%85%E5%AD%98%E5%AF%B9%E9%BD%90%E7%9A%84%E5%BA%95%E5%B1%82%E5%8E%9F%E7%90%86/</a></li>
 </ul>
-<p>接下来以Cpu Profiler来详细说明使用方式。</p>
-<h2 id="Cpu-Profiler"><a href="#Cpu-Profiler" class="headerlink" title="Cpu Profiler"></a>Cpu Profiler</h2><h3 id="修改启动方式的运行"><a href="#修改启动方式的运行" class="headerlink" title="修改启动方式的运行"></a>修改启动方式的运行</h3><p>示例代码test.cpp如下：</p>
-<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;gperftools/profiler.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;iostream&gt;</span></span></span><br><span class="line"><span class="keyword">using</span> <span class="keyword">namespace</span> std;</span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">func1</span><span class="params">()</span> </span>&#123;</span><br><span class="line">   <span class="keyword">int</span> i = <span class="number">0</span>;</span><br><span class="line">   <span class="keyword">while</span> (i &lt; <span class="number">100000</span>) &#123;</span><br><span class="line">       ++i;</span><br><span class="line">   &#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">func2</span><span class="params">()</span> </span>&#123;</span><br><span class="line">   <span class="keyword">int</span> i = <span class="number">0</span>;</span><br><span class="line">   <span class="keyword">while</span> (i &lt; <span class="number">200000</span>) &#123;</span><br><span class="line">       ++i;</span><br><span class="line">   &#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">func3</span><span class="params">()</span> </span>&#123;</span><br><span class="line">   <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; <span class="number">1000</span>; ++i) &#123;</span><br><span class="line">       <span class="built_in">func1</span>();</span><br><span class="line">       <span class="built_in">func2</span>();</span><br><span class="line">   &#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">()</span></span>&#123;</span><br><span class="line">   <span class="built_in">func3</span>();</span><br><span class="line">   <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-
-<figure class="highlight awk"><table><tr><td class="code"><pre><span class="line">[root@<span class="number">10</span>-<span class="number">8</span>-<span class="number">152</span>-<span class="number">53</span> cpuprofilertest]<span class="comment"># g++ test.cpp -lprofiler</span></span><br><span class="line">[root@<span class="number">10</span>-<span class="number">8</span>-<span class="number">152</span>-<span class="number">53</span> cpuprofilertest]<span class="comment"># CPUPROFILE=./test.prof ./a.out</span></span><br><span class="line">PROFILE: interrupts<span class="regexp">/evictions/</span>bytes = <span class="number">52</span><span class="regexp">/4/</span><span class="number">512</span></span><br></pre></td></tr></table></figure>
-
-
-<p>运行后会生成test.prof文件，然后用pprof就可以生成text的分析报告，具体如下：</p>
-<figure class="highlight tap"><table><tr><td class="code"><pre><span class="line">[root@10-8-152-53 cpuprofilertest]<span class="comment"># pprof --text a.out test.prof</span></span><br><span class="line">Using local file a.out.</span><br><span class="line">Using local file test.prof.</span><br><span class="line">Total:<span class="number"> 52 </span>samples</span><br><span class="line">     <span class="number"> 40 </span> 76.9%  76.9%      <span class="number"> 40 </span> 76.9% func2</span><br><span class="line">     <span class="number"> 12 </span> 23.1% 100.0%      <span class="number"> 12 </span> 23.1% func1</span><br><span class="line">      <span class="number"> 0 </span>  0.0% 100.0%      <span class="number"> 52 </span>100.0% __libc_start_main</span><br><span class="line">      <span class="number"> 0 </span>  0.0% 100.0%      <span class="number"> 52 </span>100.0% _start</span><br><span class="line">      <span class="number"> 0 </span>  0.0% 100.0%      <span class="number"> 52 </span>100.0% func3</span><br><span class="line">      <span class="number"> 0 </span>  0.0% 100.0%      <span class="number"> 52 </span>100.0% main</span><br></pre></td></tr></table></figure>
-
-<p>输出数据解析：每行包含6列数据，依次为:</p>
-<ol>
-<li>分析样本数量（不包含其他函数调用）</li>
-<li>分析样本百分比（不包含其他函数调用）</li>
-<li>目前为止的分析样本百分比（不包含其他函数调用）</li>
-<li>分析样本数量（包含其他函数调用）</li>
-<li>分析样本百分比（包含其他函数调用）</li>
-<li>函数名</li>
-</ol>
-<p>运行命令生成函数调用树形式的pdf分析报告：</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">pprof --pdf a.out test.prof &gt; test.pdf</span><br></pre></td></tr></table></figure>
-
-<img src="/2020/12/06/C++Profile%E7%9A%84%E5%A4%A7%E6%9D%80%E5%99%A8_gperftools%E7%9A%84%E4%BD%BF%E7%94%A8/gperftoos_cpuprofile.png" class="" title="image.png"><br />
-
-<p>树上的每个节点代表一个函数，节点数据格式：</p>
-<ol>
-<li>函数名 或者 类名+方法名</li>
-<li>不包含内部函数调用的样本数 (百分比)</li>
-<li>包含内部函数调用的样本数 (百分比) #如果没有内部调用函数则这一项数据不显示</li>
-</ol>
-<h3 id="不修改启动方式，但修改代码方式的运行"><a href="#不修改启动方式，但修改代码方式的运行" class="headerlink" title="不修改启动方式，但修改代码方式的运行"></a>不修改启动方式，但修改代码方式的运行</h3><h4 id="运行一段时间会正常退出的程序的性能分析"><a href="#运行一段时间会正常退出的程序的性能分析" class="headerlink" title="运行一段时间会正常退出的程序的性能分析"></a>运行一段时间会正常退出的程序的性能分析</h4><p>这种情况，我们可以直接在代码中插入性能分析函数。示例代码如下：</p>
-<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;gperftools/profiler.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;iostream&gt;</span></span></span><br><span class="line"><span class="keyword">using</span> <span class="keyword">namespace</span> std;</span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">func1</span><span class="params">()</span> </span>&#123;</span><br><span class="line">   <span class="keyword">int</span> i = <span class="number">0</span>;</span><br><span class="line">   <span class="keyword">while</span> (i &lt; <span class="number">100000</span>) &#123;</span><br><span class="line">       ++i;</span><br><span class="line">   &#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">func2</span><span class="params">()</span> </span>&#123;</span><br><span class="line">   <span class="keyword">int</span> i = <span class="number">0</span>;</span><br><span class="line">   <span class="keyword">while</span> (i &lt; <span class="number">200000</span>) &#123;</span><br><span class="line">       ++i;</span><br><span class="line">   &#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">func3</span><span class="params">()</span> </span>&#123;</span><br><span class="line">   <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; <span class="number">1000</span>; ++i) &#123;</span><br><span class="line">       <span class="built_in">func1</span>();</span><br><span class="line">       <span class="built_in">func2</span>();</span><br><span class="line">   &#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">()</span></span>&#123;</span><br><span class="line">   <span class="built_in">ProfilerStart</span>(<span class="string">&quot;test.prof&quot;</span>); <span class="comment">// 指定所生成的profile文件名</span></span><br><span class="line">   <span class="built_in">func3</span>();</span><br><span class="line">   <span class="built_in">ProfilerStop</span>(); <span class="comment">// 结束profiling</span></span><br><span class="line">   <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>编译运行，注意编译时需要连接tcmalloc和profiler库。运行后会生成test.prof文件，然后用pprof就可以生成text的分析报告，具体如下：</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">[root@10-8-152-53 cpuprofilertest]# g++ not_run_always.cpp -lprofiler -ltcmalloc</span><br><span class="line">[root@10-8-152-53 cpuprofilertest]# ./a.out</span><br><span class="line">PROFILE: interrupts/evictions/bytes = 52/7/680</span><br><span class="line">[root@10-8-152-53 cpuprofilertest]# pprof --text a.out test.prof</span><br><span class="line">Using local file a.out.</span><br><span class="line">Using local file test.prof.</span><br><span class="line">Total: 52 samples</span><br><span class="line">      32  61.5%  61.5%       32  61.5% func2</span><br><span class="line">      20  38.5% 100.0%       20  38.5% func1</span><br><span class="line">       0   0.0% 100.0%       52 100.0% __libc_start_main</span><br><span class="line">       0   0.0% 100.0%       52 100.0% _start</span><br><span class="line">       0   0.0% 100.0%       52 100.0% func3</span><br><span class="line">       0   0.0% 100.0%       52 100.0% main</span><br></pre></td></tr></table></figure>
-
-
-<h4 id="一直运行的程序的性能分析"><a href="#一直运行的程序的性能分析" class="headerlink" title="一直运行的程序的性能分析"></a>一直运行的程序的性能分析</h4><p>一直运行的程序由于不能正常退出，所以不能采用上面的方法。我们可以用信号量来开启/关闭性能分析，具体代码如下：</p>
-<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;gperftools/profiler.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;stdio.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;signal.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;unistd.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">gprofStartAndStop</span><span class="params">(<span class="keyword">int</span> signum)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">static</span> <span class="keyword">int</span> isStarted = <span class="number">0</span>;</span><br><span class="line">    <span class="keyword">if</span> (signum != SIGUSR1) <span class="keyword">return</span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">//通过isStarted标记未来控制第一次收到信号量开启性能分析，第二次收到关闭性能分析。</span></span><br><span class="line">    <span class="keyword">if</span> (!isStarted)&#123;</span><br><span class="line">        isStarted = <span class="number">1</span>;</span><br><span class="line">        <span class="built_in">ProfilerStart</span>(<span class="string">&quot;test.prof&quot;</span>);</span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">&quot;ProfilerStart success\n&quot;</span>);</span><br><span class="line">    &#125;<span class="keyword">else</span>&#123;</span><br><span class="line">        <span class="built_in">ProfilerStop</span>();</span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">&quot;ProfilerStop success\n&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">func1</span><span class="params">()</span> </span>&#123;</span><br><span class="line">   <span class="keyword">int</span> i = <span class="number">0</span>;</span><br><span class="line">   <span class="keyword">while</span> (i &lt; <span class="number">100000</span>) &#123;</span><br><span class="line">       ++i;</span><br><span class="line">   &#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">func2</span><span class="params">()</span> </span>&#123;</span><br><span class="line">   <span class="keyword">int</span> i = <span class="number">0</span>;</span><br><span class="line">   <span class="keyword">while</span> (i &lt; <span class="number">200000</span>) &#123;</span><br><span class="line">       ++i;</span><br><span class="line">   &#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">func3</span><span class="params">()</span> </span>&#123;</span><br><span class="line">   <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; <span class="number">1000</span>; ++i) &#123;</span><br><span class="line">       <span class="built_in">func1</span>();</span><br><span class="line">       <span class="built_in">func2</span>();</span><br><span class="line">   &#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">()</span></span>&#123;</span><br><span class="line">   <span class="built_in">signal</span>(SIGUSR1, gprofStartAndStop);</span><br><span class="line"></span><br><span class="line">   <span class="keyword">while</span>(<span class="number">1</span>)&#123;</span><br><span class="line">     <span class="built_in">printf</span>(<span class="string">&quot;call f\n&quot;</span>);</span><br><span class="line">     <span class="built_in">func3</span>();</span><br><span class="line">     <span class="built_in">sleep</span>(<span class="number">1</span>);<span class="comment">//为了防止死循环，导致信号处理函数得不到调度</span></span><br><span class="line">   &#125;</span><br><span class="line">   <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>编译运行如下：</p>
-<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line">[root@<span class="number">10</span><span class="number">-8</span><span class="number">-152</span><span class="number">-53</span> cpuprofilertest]<span class="meta"># g++ run_always.cpp -lprofiler -ltcmalloc</span></span><br><span class="line">[root@<span class="number">10</span><span class="number">-8</span><span class="number">-152</span><span class="number">-53</span> cpuprofilertest]# ./a.out</span><br><span class="line">call f</span><br><span class="line">call f</span><br><span class="line">...</span><br><span class="line">    </span><br></pre></td></tr></table></figure>
-<p><strong>通过kill命令发送信号给进程来开启/关闭性能分析：</strong><br />用top命令查看进程的PID<br />kill -s SIGUSR1 PID //第一次运行命令启动性能分析<br />kill -s SIGUSR1 PID //再次运行命令关闭性能分析，产生test.prof</p>
-<p>后续查看分析报告和之前一样。<br />这种方式适合灵活关闭profile，不用重启启动服务，适合在线上临时查看。<br /></p>
-<h2 id="Heap-Profiler"><a href="#Heap-Profiler" class="headerlink" title="Heap Profiler"></a>Heap Profiler</h2><h3 id="示例1-修改启动方式"><a href="#示例1-修改启动方式" class="headerlink" title="示例1 - 修改启动方式"></a>示例1 - 修改启动方式</h3><p>示例代码如下：</p>
-<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;gperftools/profiler.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;iostream&gt;</span></span></span><br><span class="line"><span class="keyword">using</span> <span class="keyword">namespace</span> std;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">f1</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">int</span> i;</span><br><span class="line">    <span class="keyword">for</span> (i=<span class="number">0</span>; i&lt;<span class="number">1024</span>*<span class="number">1024</span>; ++i)</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">int</span>* p2 = <span class="keyword">new</span> <span class="keyword">int</span>;</span><br><span class="line">        <span class="comment">//delete[] p2;</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">f2</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">int</span> i;</span><br><span class="line">    <span class="keyword">for</span> (i=<span class="number">0</span>; i&lt;<span class="number">1024</span>*<span class="number">1024</span>; ++i)</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">int</span>* p2 = <span class="keyword">new</span> <span class="keyword">int</span>;</span><br><span class="line">        <span class="comment">//delete[] p2;</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">()</span></span>&#123;</span><br><span class="line">   <span class="built_in">f1</span>();</span><br><span class="line">   <span class="built_in">f2</span>();</span><br><span class="line">   <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>编译运行如下：</p>
-<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line">[root@<span class="number">10</span><span class="number">-8</span><span class="number">-152</span><span class="number">-53</span> heapprofilertest]<span class="meta"># g++ test.cpp -ltcmalloc</span></span><br><span class="line">[root@<span class="number">10</span><span class="number">-8</span><span class="number">-152</span><span class="number">-53</span> heapprofilertest]<span class="meta"># env HEAPPROFILE=./test_heap.prof ./a.out</span></span><br><span class="line">Starting tracking the heap</span><br><span class="line">Dumping heap profile to ./test_heap.prof<span class="number">.0001</span>.<span class="built_in">heap</span> (Exiting, <span class="number">8</span> MB in use)</span><br><span class="line">[root@<span class="number">10</span><span class="number">-8</span><span class="number">-152</span><span class="number">-53</span> heapprofilertest]<span class="meta"># pprof --text ./a.out ./test_heap.prof.0001.heap</span></span><br><span class="line">Using local file ./a.out.</span><br><span class="line">Using local file ./test_heap.prof<span class="number">.0001</span>.heap.</span><br><span class="line">Total: <span class="number">8.0</span> MB</span><br><span class="line">     <span class="number">4.0</span>  <span class="number">50.0</span>%  <span class="number">50.0</span>%      <span class="number">4.0</span>  <span class="number">50.0</span>% f1</span><br><span class="line">     <span class="number">4.0</span>  <span class="number">50.0</span>% <span class="number">100.0</span>%      <span class="number">4.0</span>  <span class="number">50.0</span>% f2</span><br><span class="line">     <span class="number">0.0</span>   <span class="number">0.0</span>% <span class="number">100.0</span>%      <span class="number">8.0</span> <span class="number">100.0</span>% __libc_start_main</span><br><span class="line">     <span class="number">0.0</span>   <span class="number">0.0</span>% <span class="number">100.0</span>%      <span class="number">8.0</span> <span class="number">100.0</span>% _start</span><br><span class="line">     <span class="number">0.0</span>   <span class="number">0.0</span>% <span class="number">100.0</span>%      <span class="number">8.0</span> <span class="number">100.0</span>% main</span><br><span class="line">[root@<span class="number">10</span><span class="number">-8</span><span class="number">-152</span><span class="number">-53</span> heapprofilertest]<span class="meta"># pprof --pdf ./a.out ./test_heap.prof.0001.heap &gt; ./test_heap.pdf</span></span><br><span class="line">Using local file ./a.out.</span><br><span class="line">Using local file ./test_heap.prof<span class="number">.0001</span>.heap.</span><br><span class="line">Dropping nodes with &lt;= <span class="number">0.0</span> MB; edges with &lt;= <span class="number">0.0</span> <span class="built_in">abs</span>(MB)</span><br><span class="line">[root@<span class="number">10</span><span class="number">-8</span><span class="number">-152</span><span class="number">-53</span> heapprofilertest]<span class="meta"># ls</span></span><br><span class="line">a.out  test.cpp  test_heap.pdf  test_heap.prof<span class="number">.0001</span>.heap</span><br></pre></td></tr></table></figure>
-
-<img src="/2020/12/06/C++Profile%E7%9A%84%E5%A4%A7%E6%9D%80%E5%99%A8_gperftools%E7%9A%84%E4%BD%BF%E7%94%A8/gperftools_heapprofile.png" class="" title="image.png">
-
-<p>在生成heap的过程中，还有另外的一些属性可以设置[2]：</p>
-<table>
-<thead>
-<tr>
-<th><code>HEAP_PROFILE_ALLOCATION_INTERVAL</code></th>
-<th>default: 1073741824 (1 Gb)</th>
-<th>Dump heap profiling information each time the specified number of bytes has been allocated by the program.</th>
-</tr>
-</thead>
-<tbody><tr>
-<td><code>HEAP_PROFILE_INUSE_INTERVAL</code></td>
-<td>default: 104857600 (100 Mb)</td>
-<td>Dump heap profiling information whenever the high-water memory usage mark increases by the specified number of bytes.</td>
-</tr>
-<tr>
-<td><code>HEAP_PROFILE_TIME_INTERVAL</code></td>
-<td>default: 0</td>
-<td>Dump heap profiling information each time the specified number of seconds has elapsed.</td>
-</tr>
-<tr>
-<td><code>HEAPPROFILESIGNAL</code></td>
-<td>default: disabled</td>
-<td>Dump heap profiling information whenever the specified signal is sent to the process.</td>
-</tr>
-<tr>
-<td><code>HEAP_PROFILE_MMAP</code></td>
-<td>default: false</td>
-<td>Profile <code>mmap</code>, <code>mremap</code> and <code>sbrk</code> calls in addition to <code>malloc</code>, <code>calloc</code>, <code>realloc</code>, and <code>new</code>. NOTE: this causes the profiler to profile calls internal to tcmalloc, since tcmalloc and friends use mmap and sbrk internally for allocations. One partial solution is to filter these allocations out when running <code>pprof</code>, with something like `pprof –ignore=’DoAllocWithArena</td>
-</tr>
-<tr>
-<td><code>HEAP_PROFILE_ONLY_MMAP</code></td>
-<td>default: false</td>
-<td>Only profile <code>mmap</code>, <code>mremap</code>, and <code>sbrk</code> calls; do not profile <code>malloc</code>, <code>calloc</code>, <code>realloc</code>, or <code>new</code>.</td>
-</tr>
-<tr>
-<td><code>HEAP_PROFILE_MMAP_LOG</code></td>
-<td>default: false</td>
-<td>Log <code>mmap</code>/<code>munmap</code> calls.</td>
-</tr>
-</tbody></table>
-<h3 id="线上例子-修改启动方式"><a href="#线上例子-修改启动方式" class="headerlink" title="线上例子-修改启动方式"></a>线上例子-修改启动方式</h3><h4 id="编译"><a href="#编译" class="headerlink" title="编译"></a>编译</h4><p>加上-ltcmalloc<br><code>set(CMAKE_CXX_FLAGS &quot;$&#123;CMAKE_CXX_FLAGS&#125; -std=c++11 -g3 -ggdb3 -O3 -mavx2 -Wall -DDEBUG_RING -ltcmalloc&quot;)</code></p>
-<h4 id="启动命令"><a href="#启动命令" class="headerlink" title="启动命令"></a>启动命令</h4><figure class="highlight gradle"><table><tr><td class="code"><pre><span class="line">env HEAPPROFILE=<span class="regexp">/tmp/</span>broker_1003_xxx_heap.prof HEAP_PROFILE_ALLOCATION_INTERVAL=<span class="number">107374182400</span> HEAP_PROFILE_INUSE_INTERVAL=<span class="number">1073741824000</span> <span class="regexp">/root/u</span><span class="keyword">file</span><span class="regexp">/UFileBroker-set1003/U</span>FileBroker-set1003 -c <span class="regexp">/root/u</span><span class="keyword">file</span><span class="regexp">/UFileBroker-set1003/</span>config-set1003.ini</span><br></pre></td></tr></table></figure>
-
-<ul>
-<li>HEAP_PROFILE_ALLOCATION_INTERVAL=107374182400 每次分配了100GB内存，进行dump</li>
-<li>HEAP_PROFILE_INUSE_INTERVAL=1073741824000   每次内存的最高使用量超过1000GB，进行dump，看下面日志没有达到触发条件。</li>
-</ul>
-<figure class="highlight vim"><table><tr><td class="code"><pre><span class="line">Dumping heap <span class="keyword">profile</span> <span class="keyword">to</span> /tmp/broker_1003_xxx_heap.<span class="keyword">prof</span>.<span class="number">0001</span>.heap (<span class="number">10240</span> MB allocated cumulatively, <span class="number">1118</span> MB currently in use)</span><br><span class="line">Dumping heap <span class="keyword">profile</span> <span class="keyword">to</span> /tmp/broker_1003_xxx_heap.<span class="keyword">prof</span>.<span class="number">0002</span>.heap (<span class="number">20480</span> MB allocated cumulatively, <span class="number">2005</span> MB currently in use)</span><br><span class="line">Dumping heap <span class="keyword">profile</span> <span class="keyword">to</span> /tmp/broker_1003_xxx_heap.<span class="keyword">prof</span>.<span class="number">0003</span>.heap (<span class="number">30720</span> MB allocated cumulatively, <span class="number">2383</span> MB currently in use)</span><br><span class="line">Dumping heap <span class="keyword">profile</span> <span class="keyword">to</span> /tmp/broker_1003_xxx_heap.<span class="keyword">prof</span>.<span class="number">0004</span>.heap (<span class="number">40960</span> MB allocated cumulatively, <span class="number">2482</span> MB currently in use)</span><br><span class="line">......</span><br><span class="line">Dumping heap <span class="keyword">profile</span> <span class="keyword">to</span> /tmp/broker_1003_xxx_heap.<span class="keyword">prof</span>.<span class="number">0126</span>.heap (<span class="number">1290366</span> MB allocated cumulatively, <span class="number">2876</span> MB currently in use)</span><br><span class="line">Dumping heap <span class="keyword">profile</span> <span class="keyword">to</span> /tmp/broker_1003_xxx_heap.<span class="keyword">prof</span>.<span class="number">0127</span>.heap (<span class="number">1300606</span> MB allocated cumulatively, <span class="number">2871</span> MB currently in use)</span><br><span class="line">Dumping heap <span class="keyword">profile</span> <span class="keyword">to</span> /tmp/broker_1003_xxx_heap.<span class="keyword">prof</span>.<span class="number">0128</span>.heap (<span class="number">1310849</span> MB allocated cumulatively, <span class="number">2870</span> MB currently in use)</span><br><span class="line">Dumping heap <span class="keyword">profile</span> <span class="keyword">to</span> /tmp/broker_1003_xxx_heap.<span class="keyword">prof</span>.<span class="number">0129</span>.heap (<span class="number">1321090</span> MB allocated cumulatively, <span class="number">2878</span> MB currently in use)</span><br></pre></td></tr></table></figure>
-
-
-<h4 id="分析heap"><a href="#分析heap" class="headerlink" title="分析heap"></a>分析heap</h4><img src="/2020/12/06/C++Profile%E7%9A%84%E5%A4%A7%E6%9D%80%E5%99%A8_gperftools%E7%9A%84%E4%BD%BF%E7%94%A8/broker_1003_3GB.jpeg" class="" title="image.png">
-<p>可以看到95%的heap都是从同一个地方分配出来的，是需要优化的方向。</p>
-<h1 id="参考链接"><a href="#参考链接" class="headerlink" title="参考链接"></a>参考链接</h1><ol>
-<li><a href="https://github.com/gperftools/gperftools/wiki">https://github.com/gperftools/gperftools/wiki</a></li>
-<li><a href="https://gperftools.github.io/gperftools/heapprofile.html">https://gperftools.github.io/gperftools/heapprofile.html</a></li>
-<li><a href="https://github.com/gperftools/gperftools/wiki">https://github.com/gperftools/gperftools/wiki</a></li>
-<li><a href="https://www.cnblogs.com/gary-guo/p/10607514.html">gperftools对程序进行分析</a></li>
-</ol>
 ]]></content>
       <categories>
-        <category>c++</category>
+        <category>内存</category>
       </categories>
       <tags>
         <tag>c++</tag>
-        <tag>profile</tag>
-        <tag>gperftools</tag>
+        <tag>内存</tag>
       </tags>
   </entry>
   <entry>
@@ -392,6 +276,107 @@
       </tags>
   </entry>
   <entry>
+    <title>Visual Studio Code的使用总结</title>
+    <url>/2019/08/23/Visual-Studio-Code%E7%9A%84%E4%BD%BF%E7%94%A8%E6%80%BB%E7%BB%93/</url>
+    <content><![CDATA[<h1 id="Visual-Studio-Code介绍"><a href="#Visual-Studio-Code介绍" class="headerlink" title="Visual Studio Code介绍"></a>Visual Studio Code介绍</h1><p>Visual Studio Code是很轻量但功能强大的代码编辑器，可以在Windows、macOS和 Linux上运行。</p>
+<span id="more"></span>
+
+<h1 id="User-and-Workspace-Settings"><a href="#User-and-Workspace-Settings" class="headerlink" title="User and Workspace Settings"></a>User and Workspace Settings</h1><p>通过settings，可以很容易地配置自己的Visual Studio Code。它提供了<br>two different scopes for settings:</p>
+<ul>
+<li>User Settings - Settings that apply globally to any instance of VS Code you open.</li>
+<li>Workspace Settings - Settings stored inside your workspace and only apply when the workspace is opened.</li>
+</ul>
+<p>Workspace settings override user settings.</p>
+<h2 id="打开方式"><a href="#打开方式" class="headerlink" title="打开方式"></a>打开方式</h2><p>页面打开：Code –&gt; Preferences –&gt; Settings，这种方式可以很直观地配置</p>
+<img src="/2019/08/23/Visual-Studio-Code%E7%9A%84%E4%BD%BF%E7%94%A8%E6%80%BB%E7%BB%93/Settings.jpg" class="" title="image">
+
+<p>也可以在json文件里直接修改：</p>
+<ul>
+<li>User Settings:   </li>
+</ul>
+<figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="string">➜</span>  <span class="string">User</span> <span class="string">cat</span> <span class="string">settings.json</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="attr">window.title:</span> <span class="string">$</span>&#123;<span class="string">activeEditorLong</span>&#125;<span class="string">$</span>&#123;<span class="string">separator</span>&#125;<span class="string">$</span>&#123;<span class="string">rootName</span>&#125;,</span><br><span class="line">    <span class="attr">workbench.statusBar.visible:</span> <span class="literal">true</span>,</span><br><span class="line">    <span class="attr">workbench.colorTheme:</span> <span class="string">Visual</span> <span class="string">Studio</span> <span class="string">Dark</span>,</span><br><span class="line">    <span class="attr">workbench.iconTheme:</span> <span class="string">vs-minimal</span>, <span class="string">//</span> <span class="string">panel</span></span><br><span class="line">    <span class="attr">window.zoomLevel:</span> <span class="number">0</span>,</span><br><span class="line">    <span class="attr">editor.tabSize:</span> <span class="number">4</span>,</span><br><span class="line">    <span class="attr">editor.detectIndentation:</span> <span class="literal">false</span>,</span><br><span class="line">    <span class="attr">editor.renderControlCharacters:</span> <span class="literal">true</span>,</span><br><span class="line">    <span class="attr">editor.minimap.enabled:</span> <span class="literal">false</span>,</span><br><span class="line">    <span class="attr">leetcode.endpoint:</span> <span class="string">leetcode</span>,</span><br><span class="line">    <span class="attr">leetcode.defaultLanguage:</span> <span class="string">golang</span>,</span><br><span class="line">    <span class="attr">breadcrumbs.enabled:</span> <span class="literal">false</span>,</span><br><span class="line">    <span class="attr">editor.renderWhitespace:</span> <span class="string">none</span>,</span><br><span class="line">    <span class="attr">terminal.integrated.shell.osx:</span> <span class="string">zsh</span>,</span><br><span class="line">    <span class="attr">terminal.external.osxExec:</span> <span class="string">iTerm.app</span>,  <span class="string">//</span> <span class="string">默认打开iterm2</span></span><br><span class="line">    <span class="string">//</span> <span class="string">golang</span></span><br><span class="line">    <span class="attr">go.autocompleteUnimportedPackages:</span> <span class="literal">true</span>,</span><br><span class="line">    <span class="attr">go.formatTool:</span> <span class="string">goimports</span>, <span class="string">//使用</span> <span class="string">goimports</span> <span class="string">工具进行代码格式化，或者使用</span> <span class="string">goreturns</span> <span class="string">和</span> <span class="string">gofmt</span></span><br><span class="line">    [<span class="string">go</span>]<span class="string">:</span> &#123;</span><br><span class="line">        <span class="attr">editor.formatOnSave:</span> <span class="literal">true</span>,</span><br><span class="line">    &#125;,</span><br><span class="line">    <span class="string">//</span> <span class="string">vim</span></span><br><span class="line">    <span class="attr">vim.useSystemClipboard:</span> <span class="literal">true</span>,</span><br><span class="line">    <span class="attr">diffEditor.ignoreTrimWhitespace:</span> <span class="literal">false</span>,</span><br><span class="line">    <span class="attr">diffEditor.renderSideBySide:</span> <span class="literal">true</span>,</span><br><span class="line">    <span class="attr">C_Cpp.updateChannel:</span> <span class="string">Insiders</span>,</span><br><span class="line">    <span class="attr">editor.suggestSelection:</span> <span class="string">first</span>,</span><br><span class="line">    <span class="attr">vsintellicode.modify.editor.suggestSelection:</span> <span class="string">automaticallyOverrodeDefaultValue</span>,</span><br><span class="line">    <span class="attr">editor.wordWrap:</span> <span class="string">wordWrapColumn</span>,</span><br><span class="line">    <span class="attr">editor.wordWrapColumn:</span> <span class="number">120</span>,</span><br><span class="line">    <span class="string">//</span> <span class="string">每行输入字符长度提示线</span></span><br><span class="line">    <span class="attr">editor.rulers:</span> [</span><br><span class="line">        <span class="number">80</span>,</span><br><span class="line">        <span class="number">120</span></span><br><span class="line">    ],</span><br><span class="line">    <span class="attr">editor.renderLineHighlight:</span> <span class="string">all</span>,</span><br><span class="line">    <span class="attr">go.useLanguageServer:</span> <span class="literal">true</span>,</span><br><span class="line">    <span class="attr">&quot;window.openFilesInNewWindow&quot;:</span> <span class="string">&quot;on&quot;</span>, <span class="string">//启用后，将在新窗口中打开文件，而不是重复使用现有实例。</span></span><br><span class="line">       <span class="attr">&quot;workbench.editor.enablePreview&quot;:</span> <span class="literal">false</span>,   <span class="string">//</span> <span class="string">打开的文件显示在多个tab&quot;</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<ul>
+<li>Wrokspace: …</li>
+</ul>
+<h1 id="快捷键"><a href="#快捷键" class="headerlink" title="快捷键"></a>快捷键</h1><h2 id="默认常用快捷键"><a href="#默认常用快捷键" class="headerlink" title="默认常用快捷键"></a>默认常用快捷键</h2><ul>
+<li>(Command Palette | Show All Commands)  shift + command + p 或者 F1<img src="/2019/08/23/Visual-Studio-Code%E7%9A%84%E4%BD%BF%E7%94%A8%E6%80%BB%E7%BB%93/CommandPalette.jpg" class="" title="image"></li>
+<li>搜索文件 command + p</li>
+<li>搜索内容(Find in Files) shift + command + f</li>
+<li>回到上一个地方(Go Back) ctrl + -</li>
+<li>跳到侧边栏(Focus into Side Bar) command + 0</li>
+<li>切换侧边栏(Toggle Side Bar Visibility) command + b</li>
+<li>打开原生的console(OpenNativeConsole) shift + command +c</li>
+<li>切换Panel(Toggle Panel) command + j</li>
+<li>调整Panel大小(Resize Panel) ctrl + command + &lt;– | –&gt;</li>
+</ul>
+<h3 id="Code-navigation"><a href="#Code-navigation" class="headerlink" title="Code navigation"></a>Code navigation</h3><p>![image](Visual-Studio-Code的使用总结/Code navigation.jpg)</p>
+<ul>
+<li>跳转到定义(Go to Definition) F12</li>
+<li>(showAllSymbols) command + t</li>
+</ul>
+<h2 id="自定义快捷键"><a href="#自定义快捷键" class="headerlink" title="自定义快捷键"></a>自定义快捷键</h2><h3 id="更改方式"><a href="#更改方式" class="headerlink" title="更改方式"></a>更改方式</h3><p>打开键盘快捷键</p>
+<img src="/2019/08/23/Visual-Studio-Code%E7%9A%84%E4%BD%BF%E7%94%A8%E6%80%BB%E7%BB%93/OpenKeyboardShotcuts.jpg" class="" title="image">
+
+<p>Keyboard Shotcuts里显示当前支持哪些快捷键，包括默认的和自定义的；也可以在里面直接更改</p>
+<img src="/2019/08/23/Visual-Studio-Code%E7%9A%84%E4%BD%BF%E7%94%A8%E6%80%BB%E7%BB%93/KeyboardShotcuts.jpg" class="" title="image">
+
+<p>Keyboard Shotcuts(json)里了自定义的快捷键；前面在Keyboard Shotcuts修改的会展示在这里，也可以在这里直接修改</p>
+<img src="/2019/08/23/Visual-Studio-Code%E7%9A%84%E4%BD%BF%E7%94%A8%E6%80%BB%E7%BB%93/KeyboardShotcuts_json.jpg" class="" title="image">
+
+<h3 id="常用自定义快捷键"><a href="#常用自定义快捷键" class="headerlink" title="常用自定义快捷键"></a>常用自定义快捷键</h3><p>根绝个人喜好，常用的如下：</p>
+<figure class="highlight awk"><table><tr><td class="code"><pre><span class="line"> &#123;</span><br><span class="line">     <span class="string">&quot;key&quot;</span>: <span class="string">&quot;cmd+enter&quot;</span>,</span><br><span class="line">     <span class="string">&quot;command&quot;</span>: <span class="string">&quot;workbench.action.toggleFullScreen&quot;</span>  <span class="regexp">//</span>切换全屏</span><br><span class="line"> &#125;,</span><br><span class="line"> &#123;</span><br><span class="line">     <span class="string">&quot;key&quot;</span>: <span class="string">&quot;cmd+right&quot;</span>,</span><br><span class="line">     <span class="string">&quot;command&quot;</span>: <span class="string">&quot;workbench.action.nextEditor&quot;</span>   <span class="regexp">//</span>下个编辑器</span><br><span class="line"> &#125;,</span><br><span class="line"> &#123;</span><br><span class="line">     <span class="string">&quot;key&quot;</span>: <span class="string">&quot;cmd+left&quot;</span>,</span><br><span class="line">     <span class="string">&quot;command&quot;</span>: <span class="string">&quot;workbench.action.previousEditor&quot;</span> <span class="regexp">//</span>上个编辑器</span><br><span class="line"> &#125;,</span><br><span class="line"> &#123;</span><br><span class="line">    <span class="string">&quot;key&quot;</span>: <span class="string">&quot;alt+cmd+n&quot;</span>,</span><br><span class="line">    <span class="string">&quot;command&quot;</span>: <span class="string">&quot;openInTerminal&quot;</span>  <span class="regexp">//</span>打开Terminal,并跳到当前文件的目录</span><br><span class="line">&#125;,</span><br><span class="line">&#123;</span><br><span class="line">    <span class="string">&quot;key&quot;</span>: <span class="string">&quot;cmd+s cmd+w&quot;</span>,</span><br><span class="line">    <span class="string">&quot;command&quot;</span>: <span class="string">&quot;workbench.action.quickSwitchWindow&quot;</span> <span class="regexp">//</span> 切换窗口</span><br><span class="line">&#125;,</span><br><span class="line">&#123;</span><br><span class="line">    <span class="string">&quot;key&quot;</span>: <span class="string">&quot;cmd+2&quot;</span>,</span><br><span class="line">    <span class="string">&quot;command&quot;</span>: <span class="string">&quot;workbench.action.focusPanel&quot;</span>   <span class="regexp">//</span> 跳到Panel</span><br><span class="line">&#125; </span><br></pre></td></tr></table></figure>
+
+
+<h1 id="常用插件"><a href="#常用插件" class="headerlink" title="常用插件"></a>常用插件</h1><p>在左边Extensions里选择插件install。下面列出几种常用的插件：</p>
+<h2 id="Vim"><a href="#Vim" class="headerlink" title="Vim"></a>Vim</h2><h3 id="遇到的问题"><a href="#遇到的问题" class="headerlink" title="遇到的问题"></a>遇到的问题</h3><ul>
+<li>Vim方向键无法长按</li>
+</ul>
+<p>解决方案：终端下执行命令：</p>
+<p>defaults write com.microsoft.VSCode ApplePressAndHoldEnabled -bool false</p>
+<p>复原:</p>
+<p>defaults write com.microsoft.VSCode ApplePressAndHoldEnabled -bool true</p>
+<ul>
+<li>让 VIM yank 至剪切板的内容通过 ⌘  V 粘贴出来</li>
+</ul>
+<p>配置如下 setting：<br>“vim.useSystemClipboard”: true,</p>
+<h2 id="Go"><a href="#Go" class="headerlink" title="Go"></a>Go</h2><p><a href="https://code.visualstudio.com/docs/languages/go">https://code.visualstudio.com/docs/languages/go</a></p>
+<h3 id="Auto-completions"><a href="#Auto-completions" class="headerlink" title="Auto completions"></a>Auto completions</h3><figure class="highlight awk"><table><tr><td class="code"><pre><span class="line"><span class="string">&quot;go.autocompleteUnimportedPackages&quot;</span>: true, <span class="regexp">//</span> Auto completions</span><br><span class="line"><span class="string">&quot;go.formatTool&quot;</span>: <span class="string">&quot;gofmt&quot;</span>, <span class="regexp">//</span>代码格式化, 可以用goimports，或者goreturns和gofmt; 必须把vscode的<span class="string">&quot;files.autoSave&quot;</span>: off才能生效</span><br></pre></td></tr></table></figure>
+<h3 id="Code-navigation-1"><a href="#Code-navigation-1" class="headerlink" title="Code navigation"></a>Code navigation</h3><p>Code navigation features are available in the context menu in the editor.</p>
+<ul>
+<li>Go To Definition F12 - Go to the source code of the type definition.</li>
+<li>Peek Definition ⌥F12 - Bring up a Peek window with the type definition.</li>
+<li>Peek References <strong>⇧F12</strong> - Show all references for the type. (显示该类型的所有引用,个人觉得这个功能很强大)<img src="/2019/08/23/Visual-Studio-Code%E7%9A%84%E4%BD%BF%E7%94%A8%E6%80%BB%E7%BB%93/PeekReferences.jpg" class="" title="image"></li>
+</ul>
+<p>You can navigate via symbol search using the Go to Symbol commands from the Command Palette (⇧⌘P).</p>
+<p>Go to Symbol in File - ⇧⌘O<br>显示该文件的symbol,symbol: 指定义的函数，变量，类型等</p>
+<img src="/2019/08/23/Visual-Studio-Code%E7%9A%84%E4%BD%BF%E7%94%A8%E6%80%BB%E7%BB%93/symbols.jpg" class="" title="image">
+
+<p>Go to Symbol in Workspace - ⌘T</p>
+<p>You can also navigate back and forth between a Go file and its test implementation using the Go: Toggle Test File command.</p>
+<h3 id="Debugging-Go-code-using-VS-Code"><a href="#Debugging-Go-code-using-VS-Code" class="headerlink" title="Debugging Go code using VS Code"></a><a href="https://github.com/Microsoft/vscode-go/wiki/Debugging-Go-code-using-VS-Code">Debugging Go code using VS Code</a></h3><p>设置一个或者多个GOPATH</p>
+<img src="/2019/08/23/Visual-Studio-Code%E7%9A%84%E4%BD%BF%E7%94%A8%E6%80%BB%E7%BB%93/GoDebugConfigurations.jpg" class="" title="image">
+
+<h2 id="C-C"><a href="#C-C" class="headerlink" title="C/C++"></a>C/C++</h2><h3 id="Edit-Configurations"><a href="#Edit-Configurations" class="headerlink" title="Edit Configurations"></a>Edit Configurations</h3><p>F1打开Command Palette –&gt; C/C++: Edit configurations (JSON)</p>
+<p>主要设置”includePath”, 便于代码跳转，参考 <a href="https://code.visualstudio.com/docs/cpp/c-cpp-properties-schema-reference">https://code.visualstudio.com/docs/cpp/c-cpp-properties-schema-reference</a></p>
+<h1 id="在终端里直接打开vscode"><a href="#在终端里直接打开vscode" class="headerlink" title="在终端里直接打开vscode"></a>在终端里直接打开vscode</h1><img src="/2019/08/23/Visual-Studio-Code%E7%9A%84%E4%BD%BF%E7%94%A8%E6%80%BB%E7%BB%93/code.jpg" class="" title="image">
+
+<p>在vscode 中快捷键 shift + command + p 输入 code ,选择安装code 命令。<br>本质是做了个软链/usr/local/bin/code</p>
+<img src="/2019/08/23/Visual-Studio-Code%E7%9A%84%E4%BD%BF%E7%94%A8%E6%80%BB%E7%BB%93/CodeLink.jpg" class="" title="image">
+
+<p>用vscode打开当前目录：</p>
+<figure class="highlight clean"><table><tr><td class="code"><pre><span class="line"><span class="keyword">code</span> .</span><br></pre></td></tr></table></figure>
+
+
+]]></content>
+      <categories>
+        <category>vscode</category>
+      </categories>
+      <tags>
+        <tag>快捷键</tag>
+        <tag>插件</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>TCP三次握手</title>
     <url>/2018/05/15/TCP%E4%B8%89%E6%AC%A1%E6%8F%A1%E6%89%8B/</url>
     <content><![CDATA[<p>TCP三次握手/四次挥手的文章看过太多，但有些不太正确。还是决定自己写一篇，也算是对自己知识和碰到的问题的总结。</p>
@@ -525,107 +510,6 @@
       </categories>
       <tags>
         <tag>TCP</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>Visual Studio Code的使用总结</title>
-    <url>/2019/08/23/Visual-Studio-Code%E7%9A%84%E4%BD%BF%E7%94%A8%E6%80%BB%E7%BB%93/</url>
-    <content><![CDATA[<h1 id="Visual-Studio-Code介绍"><a href="#Visual-Studio-Code介绍" class="headerlink" title="Visual Studio Code介绍"></a>Visual Studio Code介绍</h1><p>Visual Studio Code是很轻量但功能强大的代码编辑器，可以在Windows、macOS和 Linux上运行。</p>
-<span id="more"></span>
-
-<h1 id="User-and-Workspace-Settings"><a href="#User-and-Workspace-Settings" class="headerlink" title="User and Workspace Settings"></a>User and Workspace Settings</h1><p>通过settings，可以很容易地配置自己的Visual Studio Code。它提供了<br>two different scopes for settings:</p>
-<ul>
-<li>User Settings - Settings that apply globally to any instance of VS Code you open.</li>
-<li>Workspace Settings - Settings stored inside your workspace and only apply when the workspace is opened.</li>
-</ul>
-<p>Workspace settings override user settings.</p>
-<h2 id="打开方式"><a href="#打开方式" class="headerlink" title="打开方式"></a>打开方式</h2><p>页面打开：Code –&gt; Preferences –&gt; Settings，这种方式可以很直观地配置</p>
-<img src="/2019/08/23/Visual-Studio-Code%E7%9A%84%E4%BD%BF%E7%94%A8%E6%80%BB%E7%BB%93/Settings.jpg" class="" title="image">
-
-<p>也可以在json文件里直接修改：</p>
-<ul>
-<li>User Settings:   </li>
-</ul>
-<figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="string">➜</span>  <span class="string">User</span> <span class="string">cat</span> <span class="string">settings.json</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="attr">window.title:</span> <span class="string">$</span>&#123;<span class="string">activeEditorLong</span>&#125;<span class="string">$</span>&#123;<span class="string">separator</span>&#125;<span class="string">$</span>&#123;<span class="string">rootName</span>&#125;,</span><br><span class="line">    <span class="attr">workbench.statusBar.visible:</span> <span class="literal">true</span>,</span><br><span class="line">    <span class="attr">workbench.colorTheme:</span> <span class="string">Visual</span> <span class="string">Studio</span> <span class="string">Dark</span>,</span><br><span class="line">    <span class="attr">workbench.iconTheme:</span> <span class="string">vs-minimal</span>, <span class="string">//</span> <span class="string">panel</span></span><br><span class="line">    <span class="attr">window.zoomLevel:</span> <span class="number">0</span>,</span><br><span class="line">    <span class="attr">editor.tabSize:</span> <span class="number">4</span>,</span><br><span class="line">    <span class="attr">editor.detectIndentation:</span> <span class="literal">false</span>,</span><br><span class="line">    <span class="attr">editor.renderControlCharacters:</span> <span class="literal">true</span>,</span><br><span class="line">    <span class="attr">editor.minimap.enabled:</span> <span class="literal">false</span>,</span><br><span class="line">    <span class="attr">leetcode.endpoint:</span> <span class="string">leetcode</span>,</span><br><span class="line">    <span class="attr">leetcode.defaultLanguage:</span> <span class="string">golang</span>,</span><br><span class="line">    <span class="attr">breadcrumbs.enabled:</span> <span class="literal">false</span>,</span><br><span class="line">    <span class="attr">editor.renderWhitespace:</span> <span class="string">none</span>,</span><br><span class="line">    <span class="attr">terminal.integrated.shell.osx:</span> <span class="string">zsh</span>,</span><br><span class="line">    <span class="attr">terminal.external.osxExec:</span> <span class="string">iTerm.app</span>,  <span class="string">//</span> <span class="string">默认打开iterm2</span></span><br><span class="line">    <span class="string">//</span> <span class="string">golang</span></span><br><span class="line">    <span class="attr">go.autocompleteUnimportedPackages:</span> <span class="literal">true</span>,</span><br><span class="line">    <span class="attr">go.formatTool:</span> <span class="string">goimports</span>, <span class="string">//使用</span> <span class="string">goimports</span> <span class="string">工具进行代码格式化，或者使用</span> <span class="string">goreturns</span> <span class="string">和</span> <span class="string">gofmt</span></span><br><span class="line">    [<span class="string">go</span>]<span class="string">:</span> &#123;</span><br><span class="line">        <span class="attr">editor.formatOnSave:</span> <span class="literal">true</span>,</span><br><span class="line">    &#125;,</span><br><span class="line">    <span class="string">//</span> <span class="string">vim</span></span><br><span class="line">    <span class="attr">vim.useSystemClipboard:</span> <span class="literal">true</span>,</span><br><span class="line">    <span class="attr">diffEditor.ignoreTrimWhitespace:</span> <span class="literal">false</span>,</span><br><span class="line">    <span class="attr">diffEditor.renderSideBySide:</span> <span class="literal">true</span>,</span><br><span class="line">    <span class="attr">C_Cpp.updateChannel:</span> <span class="string">Insiders</span>,</span><br><span class="line">    <span class="attr">editor.suggestSelection:</span> <span class="string">first</span>,</span><br><span class="line">    <span class="attr">vsintellicode.modify.editor.suggestSelection:</span> <span class="string">automaticallyOverrodeDefaultValue</span>,</span><br><span class="line">    <span class="attr">editor.wordWrap:</span> <span class="string">wordWrapColumn</span>,</span><br><span class="line">    <span class="attr">editor.wordWrapColumn:</span> <span class="number">120</span>,</span><br><span class="line">    <span class="string">//</span> <span class="string">每行输入字符长度提示线</span></span><br><span class="line">    <span class="attr">editor.rulers:</span> [</span><br><span class="line">        <span class="number">80</span>,</span><br><span class="line">        <span class="number">120</span></span><br><span class="line">    ],</span><br><span class="line">    <span class="attr">editor.renderLineHighlight:</span> <span class="string">all</span>,</span><br><span class="line">    <span class="attr">go.useLanguageServer:</span> <span class="literal">true</span>,</span><br><span class="line">    <span class="attr">&quot;window.openFilesInNewWindow&quot;:</span> <span class="string">&quot;on&quot;</span>, <span class="string">//启用后，将在新窗口中打开文件，而不是重复使用现有实例。</span></span><br><span class="line">       <span class="attr">&quot;workbench.editor.enablePreview&quot;:</span> <span class="literal">false</span>,   <span class="string">//</span> <span class="string">打开的文件显示在多个tab&quot;</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<ul>
-<li>Wrokspace: …</li>
-</ul>
-<h1 id="快捷键"><a href="#快捷键" class="headerlink" title="快捷键"></a>快捷键</h1><h2 id="默认常用快捷键"><a href="#默认常用快捷键" class="headerlink" title="默认常用快捷键"></a>默认常用快捷键</h2><ul>
-<li>(Command Palette | Show All Commands)  shift + command + p 或者 F1<img src="/2019/08/23/Visual-Studio-Code%E7%9A%84%E4%BD%BF%E7%94%A8%E6%80%BB%E7%BB%93/CommandPalette.jpg" class="" title="image"></li>
-<li>搜索文件 command + p</li>
-<li>搜索内容(Find in Files) shift + command + f</li>
-<li>回到上一个地方(Go Back) ctrl + -</li>
-<li>跳到侧边栏(Focus into Side Bar) command + 0</li>
-<li>切换侧边栏(Toggle Side Bar Visibility) command + b</li>
-<li>打开原生的console(OpenNativeConsole) shift + command +c</li>
-<li>切换Panel(Toggle Panel) command + j</li>
-<li>调整Panel大小(Resize Panel) ctrl + command + &lt;– | –&gt;</li>
-</ul>
-<h3 id="Code-navigation"><a href="#Code-navigation" class="headerlink" title="Code navigation"></a>Code navigation</h3><p>![image](Visual-Studio-Code的使用总结/Code navigation.jpg)</p>
-<ul>
-<li>跳转到定义(Go to Definition) F12</li>
-<li>(showAllSymbols) command + t</li>
-</ul>
-<h2 id="自定义快捷键"><a href="#自定义快捷键" class="headerlink" title="自定义快捷键"></a>自定义快捷键</h2><h3 id="更改方式"><a href="#更改方式" class="headerlink" title="更改方式"></a>更改方式</h3><p>打开键盘快捷键</p>
-<img src="/2019/08/23/Visual-Studio-Code%E7%9A%84%E4%BD%BF%E7%94%A8%E6%80%BB%E7%BB%93/OpenKeyboardShotcuts.jpg" class="" title="image">
-
-<p>Keyboard Shotcuts里显示当前支持哪些快捷键，包括默认的和自定义的；也可以在里面直接更改</p>
-<img src="/2019/08/23/Visual-Studio-Code%E7%9A%84%E4%BD%BF%E7%94%A8%E6%80%BB%E7%BB%93/KeyboardShotcuts.jpg" class="" title="image">
-
-<p>Keyboard Shotcuts(json)里了自定义的快捷键；前面在Keyboard Shotcuts修改的会展示在这里，也可以在这里直接修改</p>
-<img src="/2019/08/23/Visual-Studio-Code%E7%9A%84%E4%BD%BF%E7%94%A8%E6%80%BB%E7%BB%93/KeyboardShotcuts_json.jpg" class="" title="image">
-
-<h3 id="常用自定义快捷键"><a href="#常用自定义快捷键" class="headerlink" title="常用自定义快捷键"></a>常用自定义快捷键</h3><p>根绝个人喜好，常用的如下：</p>
-<figure class="highlight awk"><table><tr><td class="code"><pre><span class="line"> &#123;</span><br><span class="line">     <span class="string">&quot;key&quot;</span>: <span class="string">&quot;cmd+enter&quot;</span>,</span><br><span class="line">     <span class="string">&quot;command&quot;</span>: <span class="string">&quot;workbench.action.toggleFullScreen&quot;</span>  <span class="regexp">//</span>切换全屏</span><br><span class="line"> &#125;,</span><br><span class="line"> &#123;</span><br><span class="line">     <span class="string">&quot;key&quot;</span>: <span class="string">&quot;cmd+right&quot;</span>,</span><br><span class="line">     <span class="string">&quot;command&quot;</span>: <span class="string">&quot;workbench.action.nextEditor&quot;</span>   <span class="regexp">//</span>下个编辑器</span><br><span class="line"> &#125;,</span><br><span class="line"> &#123;</span><br><span class="line">     <span class="string">&quot;key&quot;</span>: <span class="string">&quot;cmd+left&quot;</span>,</span><br><span class="line">     <span class="string">&quot;command&quot;</span>: <span class="string">&quot;workbench.action.previousEditor&quot;</span> <span class="regexp">//</span>上个编辑器</span><br><span class="line"> &#125;,</span><br><span class="line"> &#123;</span><br><span class="line">    <span class="string">&quot;key&quot;</span>: <span class="string">&quot;alt+cmd+n&quot;</span>,</span><br><span class="line">    <span class="string">&quot;command&quot;</span>: <span class="string">&quot;openInTerminal&quot;</span>  <span class="regexp">//</span>打开Terminal,并跳到当前文件的目录</span><br><span class="line">&#125;,</span><br><span class="line">&#123;</span><br><span class="line">    <span class="string">&quot;key&quot;</span>: <span class="string">&quot;cmd+s cmd+w&quot;</span>,</span><br><span class="line">    <span class="string">&quot;command&quot;</span>: <span class="string">&quot;workbench.action.quickSwitchWindow&quot;</span> <span class="regexp">//</span> 切换窗口</span><br><span class="line">&#125;,</span><br><span class="line">&#123;</span><br><span class="line">    <span class="string">&quot;key&quot;</span>: <span class="string">&quot;cmd+2&quot;</span>,</span><br><span class="line">    <span class="string">&quot;command&quot;</span>: <span class="string">&quot;workbench.action.focusPanel&quot;</span>   <span class="regexp">//</span> 跳到Panel</span><br><span class="line">&#125; </span><br></pre></td></tr></table></figure>
-
-
-<h1 id="常用插件"><a href="#常用插件" class="headerlink" title="常用插件"></a>常用插件</h1><p>在左边Extensions里选择插件install。下面列出几种常用的插件：</p>
-<h2 id="Vim"><a href="#Vim" class="headerlink" title="Vim"></a>Vim</h2><h3 id="遇到的问题"><a href="#遇到的问题" class="headerlink" title="遇到的问题"></a>遇到的问题</h3><ul>
-<li>Vim方向键无法长按</li>
-</ul>
-<p>解决方案：终端下执行命令：</p>
-<p>defaults write com.microsoft.VSCode ApplePressAndHoldEnabled -bool false</p>
-<p>复原:</p>
-<p>defaults write com.microsoft.VSCode ApplePressAndHoldEnabled -bool true</p>
-<ul>
-<li>让 VIM yank 至剪切板的内容通过 ⌘  V 粘贴出来</li>
-</ul>
-<p>配置如下 setting：<br>“vim.useSystemClipboard”: true,</p>
-<h2 id="Go"><a href="#Go" class="headerlink" title="Go"></a>Go</h2><p><a href="https://code.visualstudio.com/docs/languages/go">https://code.visualstudio.com/docs/languages/go</a></p>
-<h3 id="Auto-completions"><a href="#Auto-completions" class="headerlink" title="Auto completions"></a>Auto completions</h3><figure class="highlight awk"><table><tr><td class="code"><pre><span class="line"><span class="string">&quot;go.autocompleteUnimportedPackages&quot;</span>: true, <span class="regexp">//</span> Auto completions</span><br><span class="line"><span class="string">&quot;go.formatTool&quot;</span>: <span class="string">&quot;gofmt&quot;</span>, <span class="regexp">//</span>代码格式化, 可以用goimports，或者goreturns和gofmt; 必须把vscode的<span class="string">&quot;files.autoSave&quot;</span>: off才能生效</span><br></pre></td></tr></table></figure>
-<h3 id="Code-navigation-1"><a href="#Code-navigation-1" class="headerlink" title="Code navigation"></a>Code navigation</h3><p>Code navigation features are available in the context menu in the editor.</p>
-<ul>
-<li>Go To Definition F12 - Go to the source code of the type definition.</li>
-<li>Peek Definition ⌥F12 - Bring up a Peek window with the type definition.</li>
-<li>Peek References <strong>⇧F12</strong> - Show all references for the type. (显示该类型的所有引用,个人觉得这个功能很强大)<img src="/2019/08/23/Visual-Studio-Code%E7%9A%84%E4%BD%BF%E7%94%A8%E6%80%BB%E7%BB%93/PeekReferences.jpg" class="" title="image"></li>
-</ul>
-<p>You can navigate via symbol search using the Go to Symbol commands from the Command Palette (⇧⌘P).</p>
-<p>Go to Symbol in File - ⇧⌘O<br>显示该文件的symbol,symbol: 指定义的函数，变量，类型等</p>
-<img src="/2019/08/23/Visual-Studio-Code%E7%9A%84%E4%BD%BF%E7%94%A8%E6%80%BB%E7%BB%93/symbols.jpg" class="" title="image">
-
-<p>Go to Symbol in Workspace - ⌘T</p>
-<p>You can also navigate back and forth between a Go file and its test implementation using the Go: Toggle Test File command.</p>
-<h3 id="Debugging-Go-code-using-VS-Code"><a href="#Debugging-Go-code-using-VS-Code" class="headerlink" title="Debugging Go code using VS Code"></a><a href="https://github.com/Microsoft/vscode-go/wiki/Debugging-Go-code-using-VS-Code">Debugging Go code using VS Code</a></h3><p>设置一个或者多个GOPATH</p>
-<img src="/2019/08/23/Visual-Studio-Code%E7%9A%84%E4%BD%BF%E7%94%A8%E6%80%BB%E7%BB%93/GoDebugConfigurations.jpg" class="" title="image">
-
-<h2 id="C-C"><a href="#C-C" class="headerlink" title="C/C++"></a>C/C++</h2><h3 id="Edit-Configurations"><a href="#Edit-Configurations" class="headerlink" title="Edit Configurations"></a>Edit Configurations</h3><p>F1打开Command Palette –&gt; C/C++: Edit configurations (JSON)</p>
-<p>主要设置”includePath”, 便于代码跳转，参考 <a href="https://code.visualstudio.com/docs/cpp/c-cpp-properties-schema-reference">https://code.visualstudio.com/docs/cpp/c-cpp-properties-schema-reference</a></p>
-<h1 id="在终端里直接打开vscode"><a href="#在终端里直接打开vscode" class="headerlink" title="在终端里直接打开vscode"></a>在终端里直接打开vscode</h1><img src="/2019/08/23/Visual-Studio-Code%E7%9A%84%E4%BD%BF%E7%94%A8%E6%80%BB%E7%BB%93/code.jpg" class="" title="image">
-
-<p>在vscode 中快捷键 shift + command + p 输入 code ,选择安装code 命令。<br>本质是做了个软链/usr/local/bin/code</p>
-<img src="/2019/08/23/Visual-Studio-Code%E7%9A%84%E4%BD%BF%E7%94%A8%E6%80%BB%E7%BB%93/CodeLink.jpg" class="" title="image">
-
-<p>用vscode打开当前目录：</p>
-<figure class="highlight clean"><table><tr><td class="code"><pre><span class="line"><span class="keyword">code</span> .</span><br></pre></td></tr></table></figure>
-
-
-]]></content>
-      <categories>
-        <category>vscode</category>
-      </categories>
-      <tags>
-        <tag>快捷键</tag>
-        <tag>插件</tag>
       </tags>
   </entry>
   <entry>
@@ -771,6 +655,41 @@
       </tags>
   </entry>
   <entry>
+    <title>goroutine调度器</title>
+    <url>/2019/07/28/goroutine%E8%B0%83%E5%BA%A6%E5%99%A8/</url>
+    <content><![CDATA[<h1 id="goroutine调度器简介"><a href="#goroutine调度器简介" class="headerlink" title="goroutine调度器简介"></a>goroutine调度器简介</h1><p>G-P-M模型，下面这张图很直观。</p>
+<img src="/2019/07/28/goroutine%E8%B0%83%E5%BA%A6%E5%99%A8/goroutine-scheduler-model.png" class="" title="image">
+<span id="more"></span>
+<p>具体内容，参考以下链接，已经说得很详细，不再重复。</p>
+<ul>
+<li><a href="http://morsmachine.dk/go-scheduler">The Go scheduler</a></li>
+<li><a href="https://tonybai.com/2017/06/23/an-intro-about-goroutine-scheduler/">也谈goroutine调度器</a></li>
+<li><a href="https://segmentfault.com/a/1190000015464889">Goroutine并发调度模型深度解析之手撸一个协程池</a></li>
+<li>源码阅读的话，推荐国内的雨痕老师在其《Go语言学习笔记》</li>
+</ul>
+<h1 id="例子"><a href="#例子" class="headerlink" title="例子"></a>例子</h1><figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"><span class="keyword">import</span> <span class="string">&quot;fmt&quot;</span></span><br><span class="line"><span class="keyword">import</span> <span class="string">&quot;time&quot;</span></span><br><span class="line"><span class="keyword">import</span> <span class="string">&quot;runtime&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">    <span class="keyword">var</span> x <span class="keyword">int</span></span><br><span class="line">    fmt.Println(<span class="string">&quot;GOMAXPROCS =&quot;</span>, runtime.GOMAXPROCS(<span class="number">0</span>) )</span><br><span class="line">    threads := runtime.GOMAXPROCS(<span class="number">0</span>)</span><br><span class="line">    <span class="keyword">for</span> i := <span class="number">0</span>; i &lt; threads; i++ &#123;</span><br><span class="line">        <span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">            <span class="keyword">for</span> &#123; x++ &#125;</span><br><span class="line">        &#125;()</span><br><span class="line">    &#125;</span><br><span class="line">    fmt.Println(<span class="string">&quot;Before time.Sleep&quot;</span>)</span><br><span class="line">    time.Sleep(time.Second)</span><br><span class="line">    fmt.Println(<span class="string">&quot;After time.Sleep&quot;</span>)</span><br><span class="line">    fmt.Println(<span class="string">&quot;x =&quot;</span>, x)  <span class="comment">//程序能运行到这里吗？</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>运行之后，发现main函数运行到Sleep之后，就卡住了，是什么原因呢？</p>
+<figure class="highlight stylus"><table><tr><td class="code"><pre><span class="line"><span class="selector-attr">[patrickxu@vm1 src]</span>$ ./test</span><br><span class="line">GOMAXPROCS = <span class="number">8</span></span><br><span class="line">Before <span class="selector-tag">time</span><span class="selector-class">.Sleep</span></span><br><span class="line"></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>因为main函数在执行time.Sleep(time.Second)后，main函数本身占据的P(G-P-M模型中的P)也被for{ x++ }一直占着,抢占的机制。这下总共8个P，全部一直被for { x++ }占着，永远轮不到主函数了。</p>
+<p>runtime.GOMAXPROCS(0)默认等于CPU核数8。每个P可以分配到一个M(即线程)，总共2 + runtime.GOMAXPROCS(0) = 10个。</p>
+<figure class="highlight tap"><table><tr><td class="code"><pre><span class="line">[patrickxu@vm1 ~]$ ps -eLf | grep test</span><br><span class="line">519     <span class="number"> 26778 </span>26325<span class="number"> 26778 </span><span class="number"> 0 </span> <span class="number"> 10 </span>00:18 pts/42   00:00:00 ./test</span><br><span class="line">519     <span class="number"> 26778 </span>26325<span class="number"> 26779 </span><span class="number"> 0 </span> <span class="number"> 10 </span>00:18 pts/42   00:00:00 ./test</span><br><span class="line">519     <span class="number"> 26778 </span>26325<span class="number"> 26780 </span>99  <span class="number"> 10 </span>00:18 pts/42   00:02:28 ./test</span><br><span class="line">519     <span class="number"> 26778 </span>26325<span class="number"> 26781 </span>99  <span class="number"> 10 </span>00:18 pts/42   00:02:28 ./test</span><br><span class="line">519     <span class="number"> 26778 </span>26325<span class="number"> 26782 </span>99  <span class="number"> 10 </span>00:18 pts/42   00:02:28 ./test</span><br><span class="line">519     <span class="number"> 26778 </span>26325<span class="number"> 26783 </span>99  <span class="number"> 10 </span>00:18 pts/42   00:02:28 ./test</span><br><span class="line">519     <span class="number"> 26778 </span>26325<span class="number"> 26784 </span>99  <span class="number"> 10 </span>00:18 pts/42   00:02:28 ./test</span><br><span class="line">519     <span class="number"> 26778 </span>26325<span class="number"> 26785 </span>99  <span class="number"> 10 </span>00:18 pts/42   00:02:27 ./test</span><br><span class="line">519     <span class="number"> 26778 </span>26325<span class="number"> 26786 </span>99  <span class="number"> 10 </span>00:18 pts/42   00:02:28 ./test</span><br><span class="line">519     <span class="number"> 26778 </span>26325<span class="number"> 26787 </span>99  <span class="number"> 10 </span>00:18 pts/42   00:02:28 ./test</span><br></pre></td></tr></table></figure>
+
+
+<p>如果把time.Sleep(time.Second)去掉后，马上全部执行结束。</p>
+<figure class="highlight elixir"><table><tr><td class="code"><pre><span class="line">[patrickxu<span class="variable">@vm1</span> src]<span class="variable">$ </span>./test</span><br><span class="line">GOMAXPROCS = <span class="number">8</span></span><br><span class="line">x = 0</span><br></pre></td></tr></table></figure>
+<p>当然也可以把GOMAXPROCS设打，比如threads := runtime.GOMAXPROCS(10)。有足够多的P，也可以运行完。</p>
+]]></content>
+      <categories>
+        <category>go</category>
+      </categories>
+      <tags>
+        <tag>goroutine</tag>
+        <tag>调度</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>golang - json操作的注意点</title>
     <url>/2018/10/22/golang-json%E6%93%8D%E4%BD%9C%E7%9A%84%E6%B3%A8%E6%84%8F%E7%82%B9/</url>
     <content><![CDATA[<h2 id="变量的大小写"><a href="#变量的大小写" class="headerlink" title="变量的大小写"></a>变量的大小写</h2><p>go中根据首字母的大小写来确定可以访问的权限。如果首字母大写，则可以被其他的包访问；如果首字母小写，则只能在本包中使用。包括接口、类型、函数和变量等。</p>
@@ -820,41 +739,6 @@
       <tags>
         <tag>Go</tag>
         <tag>json</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>goroutine调度器</title>
-    <url>/2019/07/28/goroutine%E8%B0%83%E5%BA%A6%E5%99%A8/</url>
-    <content><![CDATA[<h1 id="goroutine调度器简介"><a href="#goroutine调度器简介" class="headerlink" title="goroutine调度器简介"></a>goroutine调度器简介</h1><p>G-P-M模型，下面这张图很直观。</p>
-<img src="/2019/07/28/goroutine%E8%B0%83%E5%BA%A6%E5%99%A8/goroutine-scheduler-model.png" class="" title="image">
-<span id="more"></span>
-<p>具体内容，参考以下链接，已经说得很详细，不再重复。</p>
-<ul>
-<li><a href="http://morsmachine.dk/go-scheduler">The Go scheduler</a></li>
-<li><a href="https://tonybai.com/2017/06/23/an-intro-about-goroutine-scheduler/">也谈goroutine调度器</a></li>
-<li><a href="https://segmentfault.com/a/1190000015464889">Goroutine并发调度模型深度解析之手撸一个协程池</a></li>
-<li>源码阅读的话，推荐国内的雨痕老师在其《Go语言学习笔记》</li>
-</ul>
-<h1 id="例子"><a href="#例子" class="headerlink" title="例子"></a>例子</h1><figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"><span class="keyword">import</span> <span class="string">&quot;fmt&quot;</span></span><br><span class="line"><span class="keyword">import</span> <span class="string">&quot;time&quot;</span></span><br><span class="line"><span class="keyword">import</span> <span class="string">&quot;runtime&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">    <span class="keyword">var</span> x <span class="keyword">int</span></span><br><span class="line">    fmt.Println(<span class="string">&quot;GOMAXPROCS =&quot;</span>, runtime.GOMAXPROCS(<span class="number">0</span>) )</span><br><span class="line">    threads := runtime.GOMAXPROCS(<span class="number">0</span>)</span><br><span class="line">    <span class="keyword">for</span> i := <span class="number">0</span>; i &lt; threads; i++ &#123;</span><br><span class="line">        <span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">            <span class="keyword">for</span> &#123; x++ &#125;</span><br><span class="line">        &#125;()</span><br><span class="line">    &#125;</span><br><span class="line">    fmt.Println(<span class="string">&quot;Before time.Sleep&quot;</span>)</span><br><span class="line">    time.Sleep(time.Second)</span><br><span class="line">    fmt.Println(<span class="string">&quot;After time.Sleep&quot;</span>)</span><br><span class="line">    fmt.Println(<span class="string">&quot;x =&quot;</span>, x)  <span class="comment">//程序能运行到这里吗？</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>运行之后，发现main函数运行到Sleep之后，就卡住了，是什么原因呢？</p>
-<figure class="highlight stylus"><table><tr><td class="code"><pre><span class="line"><span class="selector-attr">[patrickxu@vm1 src]</span>$ ./test</span><br><span class="line">GOMAXPROCS = <span class="number">8</span></span><br><span class="line">Before <span class="selector-tag">time</span><span class="selector-class">.Sleep</span></span><br><span class="line"></span><br><span class="line"></span><br></pre></td></tr></table></figure>
-
-<p>因为main函数在执行time.Sleep(time.Second)后，main函数本身占据的P(G-P-M模型中的P)也被for{ x++ }一直占着,抢占的机制。这下总共8个P，全部一直被for { x++ }占着，永远轮不到主函数了。</p>
-<p>runtime.GOMAXPROCS(0)默认等于CPU核数8。每个P可以分配到一个M(即线程)，总共2 + runtime.GOMAXPROCS(0) = 10个。</p>
-<figure class="highlight tap"><table><tr><td class="code"><pre><span class="line">[patrickxu@vm1 ~]$ ps -eLf | grep test</span><br><span class="line">519     <span class="number"> 26778 </span>26325<span class="number"> 26778 </span><span class="number"> 0 </span> <span class="number"> 10 </span>00:18 pts/42   00:00:00 ./test</span><br><span class="line">519     <span class="number"> 26778 </span>26325<span class="number"> 26779 </span><span class="number"> 0 </span> <span class="number"> 10 </span>00:18 pts/42   00:00:00 ./test</span><br><span class="line">519     <span class="number"> 26778 </span>26325<span class="number"> 26780 </span>99  <span class="number"> 10 </span>00:18 pts/42   00:02:28 ./test</span><br><span class="line">519     <span class="number"> 26778 </span>26325<span class="number"> 26781 </span>99  <span class="number"> 10 </span>00:18 pts/42   00:02:28 ./test</span><br><span class="line">519     <span class="number"> 26778 </span>26325<span class="number"> 26782 </span>99  <span class="number"> 10 </span>00:18 pts/42   00:02:28 ./test</span><br><span class="line">519     <span class="number"> 26778 </span>26325<span class="number"> 26783 </span>99  <span class="number"> 10 </span>00:18 pts/42   00:02:28 ./test</span><br><span class="line">519     <span class="number"> 26778 </span>26325<span class="number"> 26784 </span>99  <span class="number"> 10 </span>00:18 pts/42   00:02:28 ./test</span><br><span class="line">519     <span class="number"> 26778 </span>26325<span class="number"> 26785 </span>99  <span class="number"> 10 </span>00:18 pts/42   00:02:27 ./test</span><br><span class="line">519     <span class="number"> 26778 </span>26325<span class="number"> 26786 </span>99  <span class="number"> 10 </span>00:18 pts/42   00:02:28 ./test</span><br><span class="line">519     <span class="number"> 26778 </span>26325<span class="number"> 26787 </span>99  <span class="number"> 10 </span>00:18 pts/42   00:02:28 ./test</span><br></pre></td></tr></table></figure>
-
-
-<p>如果把time.Sleep(time.Second)去掉后，马上全部执行结束。</p>
-<figure class="highlight elixir"><table><tr><td class="code"><pre><span class="line">[patrickxu<span class="variable">@vm1</span> src]<span class="variable">$ </span>./test</span><br><span class="line">GOMAXPROCS = <span class="number">8</span></span><br><span class="line">x = 0</span><br></pre></td></tr></table></figure>
-<p>当然也可以把GOMAXPROCS设打，比如threads := runtime.GOMAXPROCS(10)。有足够多的P，也可以运行完。</p>
-]]></content>
-      <categories>
-        <category>go</category>
-      </categories>
-      <tags>
-        <tag>goroutine</tag>
-        <tag>调度</tag>
       </tags>
   </entry>
   <entry>
@@ -1308,47 +1192,6 @@
       </tags>
   </entry>
   <entry>
-    <title>C++内存对齐</title>
-    <url>/2022/05/15/C++%E5%86%85%E5%AD%98%E5%AF%B9%E9%BD%90/</url>
-    <content><![CDATA[<h1 id="什么是内存对齐"><a href="#什么是内存对齐" class="headerlink" title="什么是内存对齐"></a>什么是内存对齐</h1><p>用一个例子带出这个问题，看下面的小程序 。理论上，64位系统下，int占4byte，char占一个byte，那么将它们放到一个结构体中应该占4+1=5byte；但是实际上，通过运行程序得到的结果是8 byte，这就是内存对齐所导致的。</p>
-<span id="more"></span>
-
-<p>#include<iostream><br>using namespace std;</p>
-<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span>&#123;</span></span><br><span class="line">    <span class="keyword">int</span> x;</span><br><span class="line">    <span class="keyword">char</span> y;</span><br><span class="line">&#125;Test;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    cout&lt;&lt;<span class="string">&quot;sizeof(int) &quot;</span>&lt;&lt;<span class="built_in"><span class="keyword">sizeof</span></span>(<span class="keyword">int</span>)&lt;&lt;endl;    <span class="comment">// 4</span></span><br><span class="line">    cout&lt;&lt;<span class="string">&quot;sizeof(char) &quot;</span>&lt;&lt;<span class="built_in"><span class="keyword">sizeof</span></span>(<span class="keyword">char</span>)&lt;&lt;endl;  <span class="comment">// 1</span></span><br><span class="line">    cout&lt;&lt;<span class="string">&quot;sizeof(Test) &quot;</span>&lt;&lt;<span class="built_in"><span class="keyword">sizeof</span></span>(Test)&lt;&lt;endl;; <span class="comment">// 输出8不是5</span></span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>现代计算机中内存空间都是按照 byte 划分的，从理论上讲似乎对任何类型的变量的访问可以从任何地址开始，但是实际的计算机系统对基本类型数据在内存中存放的位置有限制，它们会要求这些数据的首地址的值是某个数k（通常它为4或8）的倍数，这就是所谓的内存对齐。</p>
-<h1 id="为什么要进行内存对齐"><a href="#为什么要进行内存对齐" class="headerlink" title="为什么要进行内存对齐"></a>为什么要进行内存对齐</h1><h2 id="性能提升"><a href="#性能提升" class="headerlink" title="性能提升"></a>性能提升</h2><p>以64位系统为例，访问内存的IO是以8个字节为单位。现在考虑8字节单位的处理器取long类型变量（64位系统），该处理器只能从地址为8的倍数的内存开始读取数据。</p>
-<p>假如没有内存对齐机制，数据可以任意存放，现在一个long变量存放在从地址1开始的连续8个字节地址中，该处理器去取数据时，需要完成多个步骤：<br>● 要先从0地址开始读取第一个8字节块,剔除不想要的字节（0地址）<br>● 然后从地址8开始读取下一个8字节块,同样剔除不要的数据（9~15地址）<br>● 最后留下的两块数据合并放入寄存器</p>
-<p>现在有了内存对齐的，long类型数据只能存放在按照对齐规则的内存中，比如说0地址开始的内存。那么现在该处理器在取数据时一次性就能将数据读出来了，而且不需要做额外的操作，提高了效率。</p>
-<h2 id="跨平台的支持"><a href="#跨平台的支持" class="headerlink" title="跨平台的支持"></a>跨平台的支持</h2><p>有些硬件平台并不能访问任意地址上的任意数据的，只能处理特定类型的数据，否则会导致硬件层级的错误。</p>
-<p>有些CPU（如基于 Alpha，IA-64，MIPS，和 SuperH 体系的）拒绝读取未对齐数据。当一个程序要求这些 CPU 读取未对齐数据时，这时 CPU 会进入异常处理状态并且通知程序不能继续执行。</p>
-<p>举个例子，在 ARM，MIPS，和 SH 硬件平台上，当操作系统被要求存取一个未对齐数据时会默认给应用程序抛出硬件异常。所以，如果编译器不进行内存对齐，那在很多平台的上的开发将难以进行。</p>
-<h1 id="内存对齐规则"><a href="#内存对齐规则" class="headerlink" title="内存对齐规则"></a>内存对齐规则</h1><p>每个特定平台上的编译器都有自己的默认“对齐系数”（也叫对齐模数）。在64位系统中，gcc中默认#pragma pack(8)，可以通过预编译命令#pragma pack(n)，n = 1,2,4,8,16来改变这一系数。</p>
-<p>有效对齐值：是给定值#pragma pack(n)和结构体中最长数据类型长度中较小的那个。有效对齐值也叫对齐单位。c++11中可以通过alignof(t)来获取。</p>
-<p>了解了上面的概念后，我们现在可以来看看内存对齐需要遵循的规则：<br>(1) 基本类型的对齐值就是其sizeof值;<br>(2) 结构(struct)(或联合(union))的数据成员，以后每个成员相对于结构体首地址的 offset 都是该成员大小与有效对齐值中较小那个的整数倍;<br>(3) 结构体的总大小为 有效对齐值 的整数倍</p>
-<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span><span class="meta-string">&lt;iostream&gt;</span></span></span><br><span class="line"><span class="keyword">using</span> <span class="keyword">namespace</span> std;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">struct</span>&#123;</span></span><br><span class="line">    <span class="keyword">char</span> a;</span><br><span class="line">    <span class="keyword">long</span> b;</span><br><span class="line">    <span class="keyword">int</span> c;</span><br><span class="line">    <span class="keyword">short</span> d;</span><br><span class="line">&#125;Test;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    cout&lt;&lt;<span class="string">&quot;sizeof(char) &quot;</span>&lt;&lt;<span class="built_in"><span class="keyword">sizeof</span></span>(<span class="keyword">char</span>)&lt;&lt;endl;  <span class="comment">// 1</span></span><br><span class="line">    cout&lt;&lt;<span class="string">&quot;sizeof(long) &quot;</span>&lt;&lt;<span class="built_in"><span class="keyword">sizeof</span></span>(<span class="keyword">long</span>)&lt;&lt;endl;  <span class="comment">// 8</span></span><br><span class="line">    cout&lt;&lt;<span class="string">&quot;sizeof(int) &quot;</span>&lt;&lt;<span class="built_in"><span class="keyword">sizeof</span></span>(<span class="keyword">int</span>)&lt;&lt;endl;    <span class="comment">// 4</span></span><br><span class="line">    cout&lt;&lt;<span class="string">&quot;sizeof(short) &quot;</span>&lt;&lt;<span class="built_in"><span class="keyword">sizeof</span></span>(<span class="keyword">short</span>)&lt;&lt;endl;<span class="comment">// 2</span></span><br><span class="line">    cout&lt;&lt;<span class="string">&quot;alignof(Test) &quot;</span>&lt;&lt;<span class="built_in"><span class="keyword">alignof</span></span>(Test)&lt;&lt;endl;<span class="comment">// 8</span></span><br><span class="line">    cout&lt;&lt;<span class="string">&quot;sizeof(Test) &quot;</span>&lt;&lt;<span class="built_in"><span class="keyword">sizeof</span></span>(Test)&lt;&lt;endl;; <span class="comment">// 24</span></span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<img src="/2022/05/15/C++%E5%86%85%E5%AD%98%E5%AF%B9%E9%BD%90/%E5%86%85%E5%AD%98%E5%AF%B9%E9%BD%90%E7%9A%84%E4%BE%8B%E5%AD%90.png" class="" title="image.png">
-
-<p>对齐的过程：<br>● a放在其实地址0；<br>● b占用8个字节，根据规则2，对齐在min{8, 8}的整数倍，即8; c对齐在min{4, 8}的整数倍，即16；d对齐在min{2, 8}的整数倍,即20；<br>● 整个数据结构大小为min{8,8}的整数倍，即24。</p>
-<p>顺道说一下，<br>● attribute((packed))，取消结构在编译过程中的优化对齐，按照实际占用字节数进行对齐。<br>如，以下Test的占用长度为15。</p>
-<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span><span class="meta-string">&lt;iostream&gt;</span></span></span><br><span class="line"><span class="keyword">using</span> <span class="keyword">namespace</span> std;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">T</span>&#123;</span></span><br><span class="line">    <span class="keyword">char</span> a;</span><br><span class="line">    <span class="keyword">long</span> b;</span><br><span class="line">    <span class="keyword">int</span> c;</span><br><span class="line">    <span class="keyword">short</span> d;</span><br><span class="line"></span><br><span class="line">&#125;__attribute__((packed));</span><br><span class="line"></span><br><span class="line">T Test;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    cout&lt;&lt;<span class="string">&quot;sizeof(char) &quot;</span>&lt;&lt;<span class="built_in"><span class="keyword">sizeof</span></span>(<span class="keyword">char</span>)&lt;&lt;endl;  <span class="comment">// 1</span></span><br><span class="line">    cout&lt;&lt;<span class="string">&quot;sizeof(long) &quot;</span>&lt;&lt;<span class="built_in"><span class="keyword">sizeof</span></span>(<span class="keyword">long</span>)&lt;&lt;endl;  <span class="comment">// 8</span></span><br><span class="line">    cout&lt;&lt;<span class="string">&quot;sizeof(int) &quot;</span>&lt;&lt;<span class="built_in"><span class="keyword">sizeof</span></span>(<span class="keyword">int</span>)&lt;&lt;endl;    <span class="comment">// 4</span></span><br><span class="line">    cout&lt;&lt;<span class="string">&quot;sizeof(short) &quot;</span>&lt;&lt;<span class="built_in"><span class="keyword">sizeof</span></span>(<span class="keyword">short</span>)&lt;&lt;endl;<span class="comment">// 2</span></span><br><span class="line">    cout&lt;&lt;<span class="string">&quot;sizeof(Test) &quot;</span>&lt;&lt;<span class="built_in"><span class="keyword">sizeof</span></span>(Test)&lt;&lt;endl;; <span class="comment">// 15</span></span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<h1 id="参考链接"><a href="#参考链接" class="headerlink" title="参考链接"></a>参考链接</h1><ul>
-<li><a href="https://zhuanlan.zhihu.com/p/30007037">https://zhuanlan.zhihu.com/p/30007037</a></li>
-<li><a href="https://zhuanlan.zhihu.com/p/140063999">https://zhuanlan.zhihu.com/p/140063999</a></li>
-<li><a href="http://xusenqi.site/2022/05/04/%E5%86%85%E5%AD%98%E5%AF%B9%E9%BD%90%E7%9A%84%E5%BA%95%E5%B1%82%E5%8E%9F%E7%90%86/">http://xusenqi.site/2022/05/04/%E5%86%85%E5%AD%98%E5%AF%B9%E9%BD%90%E7%9A%84%E5%BA%95%E5%B1%82%E5%8E%9F%E7%90%86/</a></li>
-</ul>
-]]></content>
-      <categories>
-        <category>内存</category>
-      </categories>
-      <tags>
-        <tag>c++</tag>
-        <tag>内存</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>一次node进程cpu负载高问题的处理</title>
     <url>/2019/07/13/%E4%B8%80%E6%AC%A1node%E8%BF%9B%E7%A8%8Bcpu%E8%B4%9F%E8%BD%BD100-%E9%97%AE%E9%A2%98%E7%9A%84%E5%A4%84%E7%90%86/</url>
     <content><![CDATA[<h1 id="1-node进程负载高的问题"><a href="#1-node进程负载高的问题" class="headerlink" title="1 node进程负载高的问题"></a>1 node进程负载高的问题</h1><ul>
@@ -1568,6 +1411,44 @@
       </tags>
   </entry>
   <entry>
+    <title>内存对齐的底层原理</title>
+    <url>/2022/05/04/%E5%86%85%E5%AD%98%E5%AF%B9%E9%BD%90%E7%9A%84%E5%BA%95%E5%B1%82%E5%8E%9F%E7%90%86/</url>
+    <content><![CDATA[<p>内存对齐后，可以达到更高的性能。但背后的原理是什么呢？本文从内存的物理组成方式，和读取原理上进行说明。</p>
+<span id="more"></span>
+
+<h1 id="内存的物理组织方式"><a href="#内存的物理组织方式" class="headerlink" title="内存的物理组织方式"></a>内存的物理组织方式</h1><ul>
+<li>电脑主板上的内存插槽就是Channel，一个Channel可以插入一个内存条。</li>
+<li>内存条通常是DIMM(Dual In-Line Memory Modules)模式,即正反两面的引脚是独立的。每一面都是一个Rank。</li>
+<li>一个Rank由多个Chip组成，如图中4个黑色颗粒，也可能是8个。</li>
+<li>每个Chip由多个Bank组成，图中是8个。</li>
+</ul>
+<img src="/2022/05/04/%E5%86%85%E5%AD%98%E5%AF%B9%E9%BD%90%E7%9A%84%E5%BA%95%E5%B1%82%E5%8E%9F%E7%90%86/%E5%86%85%E5%AD%98%E7%9A%84%E5%9F%BA%E6%9C%AC%E7%BB%93%E6%9E%84.png" class="" title="image">
+
+<p>内存控制器通过设置rank select的bit位，来控制读哪个rank。</p>
+<img src="/2022/05/04/%E5%86%85%E5%AD%98%E5%AF%B9%E9%BD%90%E7%9A%84%E5%BA%95%E5%B1%82%E5%8E%9F%E7%90%86/%E5%86%85%E5%AD%98%E6%8E%A7%E5%88%B6%E9%80%89%E6%8B%A9rank.png" class="" title="image">
+
+<h1 id="读取数据的过程"><a href="#读取数据的过程" class="headerlink" title="读取数据的过程"></a>读取数据的过程</h1><p>每个Bank是DRAM Chip中独立的矩阵。</p>
+<img src="/2022/05/04/%E5%86%85%E5%AD%98%E5%AF%B9%E9%BD%90%E7%9A%84%E5%BA%95%E5%B1%82%E5%8E%9F%E7%90%86/chip_rank.png" class="" title="image">
+
+<p>下面先来解释memory controllers如何从rank中取数据。因为每个rank下面会有很多chip，而每个chip又包括bank0、bank1、bank2等，在memory controllers看来每次发数据，都会同时发送给所有chip下的某个bank，并声明row和col。</p>
+<img src="/2022/05/04/%E5%86%85%E5%AD%98%E5%AF%B9%E9%BD%90%E7%9A%84%E5%BA%95%E5%B1%82%E5%8E%9F%E7%90%86/read_example.png" class="" title="image">
+
+<p>每个chip的bank0 的同一地点（row=i col=j）都会被读出8bit，那么8个chip就会同时读出64bit，然后由memory controllers传送给cpu，也就是8byte。每个bank只保存了1个字节。在物理位置上，读出来的64 bits数据并不连续。</p>
+<p>在memory controllers看来，每个bank存在于每个chip中，如上图所示，可以把每个chip里面的小bank连成一行，看作成一个大的bank。然后从大的bank中读取数据。<br>每个bank有一个row bufffer，作为一个bank page，所有bank共享地址、数据总线，但是每个channel有他们自己的地址、数据总线。正因为有buffer，所以每次bank都会预读64bit的数据。</p>
+<p>那么为什么要这样设计呢？原因是提高了电路的工作效率。不同chip下的bank可以并行工作。如果你想读取地址0x0000-0x0007，每个bank工作一次，拼起来就是你要的数据，IO效率会比较高。但要存在一个bank里，那这个bank只能自己干活。只能串行进行读取，需要读8次，这样速度会慢很多。</p>
+<h1 id="结论"><a href="#结论" class="headerlink" title="结论"></a>结论</h1><p>所以，内存对齐最最底层的原因是内存的IO是以8个字节64bit为单位进行的。 对于64位数据宽度的内存，假如cpu也是64位的cpu（现在的计算机基本都是这样的），每次内存IO获取数据都是从同行同列的8个bank中各自读取一个字节拼起来的。从内存的0地址开始，0-7字节的数据可以一次IO读取出来，8-15字节的数据也可以一次读取出来。</p>
+<p>换个例子，假如你指定要获取的是0x0001-0x0008，也是8字节，但是不是0开头的，内存需要怎么工作呢？没有好办法，内存只好先工作一次把0x0000-0x0007取出来，然后再把0x0008-0x0015取出来，把两次的结果都返回给你。CPU和内存IO的硬件限制导致没办法一次跨在两个数据宽度中间进行IO。这样你的应用程序就会变慢，算是计算机因为你不懂内存对齐而给你的一点点惩罚。</p>
+<h1 id="延伸"><a href="#延伸" class="headerlink" title="延伸"></a>延伸</h1><p>另外，在cpu cache中有cache line的概念，为每次读内存的最小单位，为64 bytes，需要也8次这样的读操作。写入到buffer中，这就是局部性原理。如果我们程序猿不尊重这个规则，也就迫使bank的buffer每次取值都必须清空当前的缓冲区，重新读数据，降低数据的访问速度。</p>
+<h1 id="参考链接"><a href="#参考链接" class="headerlink" title="参考链接"></a>参考链接</h1><p><a href="http://thebeardsage.com/dram-nomenclature-explained/">http://thebeardsage.com/dram-nomenclature-explained/</a><br><a href="https://mp.weixin.qq.com/s/F0NTfz-3x3UxQeF-GSavRg">https://mp.weixin.qq.com/s/F0NTfz-3x3UxQeF-GSavRg</a><br><a href="https://lzz5235.github.io/2015/04/21/memory.html">https://lzz5235.github.io/2015/04/21/memory.html</a><br><a href="https://www.youtube.com/watch?v=rTxsO9DVjNk">https://www.youtube.com/watch?v=rTxsO9DVjNk</a></p>
+]]></content>
+      <categories>
+        <category>内存</category>
+      </categories>
+      <tags>
+        <tag>对齐</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>分布式系统架构的简介</title>
     <url>/2019/03/18/%E5%88%86%E5%B8%83%E5%BC%8F%E7%B3%BB%E7%BB%9F%E6%9E%B6%E6%9E%84%E7%9A%84%E7%AE%80%E4%BB%8B/</url>
     <content><![CDATA[<p>摘自 分布式系统架构的冰与火 左耳听风</p>
@@ -1620,44 +1501,6 @@
       </categories>
       <tags>
         <tag>并发控制</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>内存对齐的底层原理</title>
-    <url>/2022/05/04/%E5%86%85%E5%AD%98%E5%AF%B9%E9%BD%90%E7%9A%84%E5%BA%95%E5%B1%82%E5%8E%9F%E7%90%86/</url>
-    <content><![CDATA[<p>内存对齐后，可以达到更高的性能。但背后的原理是什么呢？本文从内存的物理组成方式，和读取原理上进行说明。</p>
-<span id="more"></span>
-
-<h1 id="内存的物理组织方式"><a href="#内存的物理组织方式" class="headerlink" title="内存的物理组织方式"></a>内存的物理组织方式</h1><ul>
-<li>电脑主板上的内存插槽就是Channel，一个Channel可以插入一个内存条。</li>
-<li>内存条通常是DIMM(Dual In-Line Memory Modules)模式,即正反两面的引脚是独立的。每一面都是一个Rank。</li>
-<li>一个Rank由多个Chip组成，如图中4个黑色颗粒，也可能是8个。</li>
-<li>每个Chip由多个Bank组成，图中是8个。</li>
-</ul>
-<img src="/2022/05/04/%E5%86%85%E5%AD%98%E5%AF%B9%E9%BD%90%E7%9A%84%E5%BA%95%E5%B1%82%E5%8E%9F%E7%90%86/%E5%86%85%E5%AD%98%E7%9A%84%E5%9F%BA%E6%9C%AC%E7%BB%93%E6%9E%84.png" class="" title="image">
-
-<p>内存控制器通过设置rank select的bit位，来控制读哪个rank。</p>
-<img src="/2022/05/04/%E5%86%85%E5%AD%98%E5%AF%B9%E9%BD%90%E7%9A%84%E5%BA%95%E5%B1%82%E5%8E%9F%E7%90%86/%E5%86%85%E5%AD%98%E6%8E%A7%E5%88%B6%E9%80%89%E6%8B%A9rank.png" class="" title="image">
-
-<h1 id="读取数据的过程"><a href="#读取数据的过程" class="headerlink" title="读取数据的过程"></a>读取数据的过程</h1><p>每个Bank是DRAM Chip中独立的矩阵。</p>
-<img src="/2022/05/04/%E5%86%85%E5%AD%98%E5%AF%B9%E9%BD%90%E7%9A%84%E5%BA%95%E5%B1%82%E5%8E%9F%E7%90%86/chip_rank.png" class="" title="image">
-
-<p>下面先来解释memory controllers如何从rank中取数据。因为每个rank下面会有很多chip，而每个chip又包括bank0、bank1、bank2等，在memory controllers看来每次发数据，都会同时发送给所有chip下的某个bank，并声明row和col。</p>
-<img src="/2022/05/04/%E5%86%85%E5%AD%98%E5%AF%B9%E9%BD%90%E7%9A%84%E5%BA%95%E5%B1%82%E5%8E%9F%E7%90%86/read_example.png" class="" title="image">
-
-<p>每个chip的bank0 的同一地点（row=i col=j）都会被读出8bit，那么8个chip就会同时读出64bit，然后由memory controllers传送给cpu，也就是8byte。每个bank只保存了1个字节。在物理位置上，读出来的64 bits数据并不连续。</p>
-<p>在memory controllers看来，每个bank存在于每个chip中，如上图所示，可以把每个chip里面的小bank连成一行，看作成一个大的bank。然后从大的bank中读取数据。<br>每个bank有一个row bufffer，作为一个bank page，所有bank共享地址、数据总线，但是每个channel有他们自己的地址、数据总线。正因为有buffer，所以每次bank都会预读64bit的数据。</p>
-<p>那么为什么要这样设计呢？原因是提高了电路的工作效率。不同chip下的bank可以并行工作。如果你想读取地址0x0000-0x0007，每个bank工作一次，拼起来就是你要的数据，IO效率会比较高。但要存在一个bank里，那这个bank只能自己干活。只能串行进行读取，需要读8次，这样速度会慢很多。</p>
-<h1 id="结论"><a href="#结论" class="headerlink" title="结论"></a>结论</h1><p>所以，内存对齐最最底层的原因是内存的IO是以8个字节64bit为单位进行的。 对于64位数据宽度的内存，假如cpu也是64位的cpu（现在的计算机基本都是这样的），每次内存IO获取数据都是从同行同列的8个bank中各自读取一个字节拼起来的。从内存的0地址开始，0-7字节的数据可以一次IO读取出来，8-15字节的数据也可以一次读取出来。</p>
-<p>换个例子，假如你指定要获取的是0x0001-0x0008，也是8字节，但是不是0开头的，内存需要怎么工作呢？没有好办法，内存只好先工作一次把0x0000-0x0007取出来，然后再把0x0008-0x0015取出来，把两次的结果都返回给你。CPU和内存IO的硬件限制导致没办法一次跨在两个数据宽度中间进行IO。这样你的应用程序就会变慢，算是计算机因为你不懂内存对齐而给你的一点点惩罚。</p>
-<h1 id="延伸"><a href="#延伸" class="headerlink" title="延伸"></a>延伸</h1><p>另外，在cpu cache中有cache line的概念，为每次读内存的最小单位，为64 bytes，需要也8次这样的读操作。写入到buffer中，这就是局部性原理。如果我们程序猿不尊重这个规则，也就迫使bank的buffer每次取值都必须清空当前的缓冲区，重新读数据，降低数据的访问速度。</p>
-<h1 id="参考链接"><a href="#参考链接" class="headerlink" title="参考链接"></a>参考链接</h1><p><a href="http://thebeardsage.com/dram-nomenclature-explained/">http://thebeardsage.com/dram-nomenclature-explained/</a><br><a href="https://mp.weixin.qq.com/s/F0NTfz-3x3UxQeF-GSavRg">https://mp.weixin.qq.com/s/F0NTfz-3x3UxQeF-GSavRg</a><br><a href="https://lzz5235.github.io/2015/04/21/memory.html">https://lzz5235.github.io/2015/04/21/memory.html</a><br><a href="https://www.youtube.com/watch?v=rTxsO9DVjNk">https://www.youtube.com/watch?v=rTxsO9DVjNk</a></p>
-]]></content>
-      <categories>
-        <category>内存</category>
-      </categories>
-      <tags>
-        <tag>对齐</tag>
       </tags>
   </entry>
   <entry>
@@ -2118,6 +1961,163 @@
         <tag>debug</tag>
         <tag>delve</tag>
         <tag>dlv</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>c++ profile的大杀器-gperftools的使用</title>
+    <url>/2020/12/06/C++Profile%E7%9A%84%E5%A4%A7%E6%9D%80%E5%99%A8_gperftools%E7%9A%84%E4%BD%BF%E7%94%A8/</url>
+    <content><![CDATA[<p>熟悉golang的同学，一定很熟悉用pprof来作为性能分析和可视化的工具，包括 cpu profile, memery profile等。这么方便且炫的功能，在C++里也一样能实现。所需要的工具就是gperftools。</p>
+<span id="more"></span>
+
+<h1 id="安装"><a href="#安装" class="headerlink" title="安装"></a>安装</h1><h2 id="安装libunwind"><a href="#安装libunwind" class="headerlink" title="安装libunwind"></a>安装libunwind</h2><p>64位操作系统需要安装libunwind，gperftools推荐版本是libunwind-0.99-beta，详见gperftools/INSTALL里的说明。</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">wget http://download.savannah.gnu.org/releases/libunwind/libunwind-0.99-beta.tar.gz</span><br><span class="line">tar -zxvf libunwind-0.99-beta.tar.gz</span><br><span class="line">cd libunwind-0.99-beta/</span><br><span class="line">./configure</span><br><span class="line">make</span><br><span class="line">make install</span><br></pre></td></tr></table></figure>
+
+<p>因为默认的libunwind安装在/usr/local/lib目录下，需要将这个目录添加到系统动态库缓存中。</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">echo &quot;/usr/local/lib&quot; &gt; /etc/ld.so.conf.d/usr_local_lib.conf</span><br><span class="line">/sbin/ldconfig</span><br></pre></td></tr></table></figure>
+
+<h2 id="安装graphviz"><a href="#安装graphviz" class="headerlink" title="安装graphviz"></a>安装graphviz</h2><p>Graphviz是一个由AT&amp;T实验室启动的开源工具包，用于绘制DOT语言脚本描述的图形，gperftools依靠此工具生成图形分析结果。<br />安装命令：yum install graphviz</p>
+<p>生成图像时依赖ps2pdf<br />安装命令：yum -y install ghostscript<br /></p>
+<h2 id="安装perftools"><a href="#安装perftools" class="headerlink" title="安装perftools"></a>安装perftools</h2><figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">git clone https://github.com/gperftools/gperftools.git</span><br><span class="line">cd gperftools/</span><br><span class="line">./autogen.sh</span><br><span class="line">./configure</span><br><span class="line">make</span><br><span class="line">make install</span><br></pre></td></tr></table></figure>
+
+<p>遇到的问题1：</p>
+<figure class="highlight awk"><table><tr><td class="code"><pre><span class="line">[root@<span class="number">10</span>-<span class="number">8</span>-<span class="number">152</span>-<span class="number">53</span> gperftools]<span class="comment"># ./autogen.sh</span></span><br><span class="line">configure.ac:<span class="number">174</span>: error: possibly undefined macro: AC_PROG_LIBTOOL</span><br><span class="line">      If this token and others are legitimate, please use m4_pattern_allow.</span><br><span class="line">      See the Autoconf documentation.</span><br><span class="line">      autoreconf: <span class="regexp">/usr/</span>bin/autoconf failed with <span class="keyword">exit</span> status: </span><br></pre></td></tr></table></figure>
+
+<p>解决方法：yum -y install libtool</p>
+<p>遇到的问题2：</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">[root@hb06-ufile-132-199 gperftools]# ./autogen.sh</span><br><span class="line">libtoolize: putting macros in AC_CONFIG_MACRO_DIR, `m4&#x27;.</span><br><span class="line">libtoolize: copying file `m4/libtool.m4&#x27;</span><br><span class="line">libtoolize: copying file `m4/ltoptions.m4&#x27;</span><br><span class="line">libtoolize: copying file `m4/ltsugar.m4&#x27;</span><br><span class="line">libtoolize: copying file `m4/ltversion.m4&#x27;</span><br><span class="line">libtoolize: copying file `m4/lt~obsolete.m4&#x27;</span><br><span class="line">configure.ac:159: installing &#x27;./compile&#x27;</span><br><span class="line">configure.ac:22: installing &#x27;./config.guess&#x27;</span><br><span class="line">configure.ac:22: installing &#x27;./config.sub&#x27;</span><br><span class="line">configure.ac:23: installing &#x27;./install-sh&#x27;</span><br><span class="line">configure.ac:174: error: required file &#x27;./ltmain.sh&#x27; not found</span><br><span class="line">configure.ac:23: installing &#x27;./missing&#x27;</span><br></pre></td></tr></table></figure>
+
+<p>解决方法：aclocal &amp;&amp; autoheader &amp;&amp; autoconf &amp;&amp; automake –add-missing<br>参考了<a href="https://stackoverflow.com/questions/22603163/automake-error-ltmain-sh-not-found">https://stackoverflow.com/questions/22603163/automake-error-ltmain-sh-not-found</a></p>
+<h1 id="使用举例"><a href="#使用举例" class="headerlink" title="使用举例"></a>使用举例</h1><p>一共有5种使用方式：</p>
+<ul>
+<li><p> TC Malloc</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">gcc [...] -ltcmalloc</span><br></pre></td></tr></table></figure></li>
+<li><p>Heap Checker</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">gcc [...] -o myprogram -ltcmalloc</span><br><span class="line">HEAPCHECK=normal ./myprogram</span><br></pre></td></tr></table></figure></li>
+<li><p>Heap Profiler</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">gcc [...] -o myprogram -ltcmalloc</span><br><span class="line">HEAPPROFILE=/tmp/netheap ./myprogram</span><br></pre></td></tr></table></figure></li>
+<li><p>Cpu Profiler</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">gcc [...] -o myprogram -lprofiler</span><br><span class="line">CPUPROFILE=/tmp/profile ./myprogram</span><br></pre></td></tr></table></figure></li>
+<li><p>pprof and Remote Servers</p>
+</li>
+</ul>
+<p>接下来以Cpu Profiler来详细说明使用方式。</p>
+<h2 id="Cpu-Profiler"><a href="#Cpu-Profiler" class="headerlink" title="Cpu Profiler"></a>Cpu Profiler</h2><h3 id="修改启动方式的运行"><a href="#修改启动方式的运行" class="headerlink" title="修改启动方式的运行"></a>修改启动方式的运行</h3><p>示例代码test.cpp如下：</p>
+<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;gperftools/profiler.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;iostream&gt;</span></span></span><br><span class="line"><span class="keyword">using</span> <span class="keyword">namespace</span> std;</span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">func1</span><span class="params">()</span> </span>&#123;</span><br><span class="line">   <span class="keyword">int</span> i = <span class="number">0</span>;</span><br><span class="line">   <span class="keyword">while</span> (i &lt; <span class="number">100000</span>) &#123;</span><br><span class="line">       ++i;</span><br><span class="line">   &#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">func2</span><span class="params">()</span> </span>&#123;</span><br><span class="line">   <span class="keyword">int</span> i = <span class="number">0</span>;</span><br><span class="line">   <span class="keyword">while</span> (i &lt; <span class="number">200000</span>) &#123;</span><br><span class="line">       ++i;</span><br><span class="line">   &#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">func3</span><span class="params">()</span> </span>&#123;</span><br><span class="line">   <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; <span class="number">1000</span>; ++i) &#123;</span><br><span class="line">       <span class="built_in">func1</span>();</span><br><span class="line">       <span class="built_in">func2</span>();</span><br><span class="line">   &#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">()</span></span>&#123;</span><br><span class="line">   <span class="built_in">func3</span>();</span><br><span class="line">   <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+<figure class="highlight awk"><table><tr><td class="code"><pre><span class="line">[root@<span class="number">10</span>-<span class="number">8</span>-<span class="number">152</span>-<span class="number">53</span> cpuprofilertest]<span class="comment"># g++ test.cpp -lprofiler</span></span><br><span class="line">[root@<span class="number">10</span>-<span class="number">8</span>-<span class="number">152</span>-<span class="number">53</span> cpuprofilertest]<span class="comment"># CPUPROFILE=./test.prof ./a.out</span></span><br><span class="line">PROFILE: interrupts<span class="regexp">/evictions/</span>bytes = <span class="number">52</span><span class="regexp">/4/</span><span class="number">512</span></span><br></pre></td></tr></table></figure>
+
+
+<p>运行后会生成test.prof文件，然后用pprof就可以生成text的分析报告，具体如下：</p>
+<figure class="highlight tap"><table><tr><td class="code"><pre><span class="line">[root@10-8-152-53 cpuprofilertest]<span class="comment"># pprof --text a.out test.prof</span></span><br><span class="line">Using local file a.out.</span><br><span class="line">Using local file test.prof.</span><br><span class="line">Total:<span class="number"> 52 </span>samples</span><br><span class="line">     <span class="number"> 40 </span> 76.9%  76.9%      <span class="number"> 40 </span> 76.9% func2</span><br><span class="line">     <span class="number"> 12 </span> 23.1% 100.0%      <span class="number"> 12 </span> 23.1% func1</span><br><span class="line">      <span class="number"> 0 </span>  0.0% 100.0%      <span class="number"> 52 </span>100.0% __libc_start_main</span><br><span class="line">      <span class="number"> 0 </span>  0.0% 100.0%      <span class="number"> 52 </span>100.0% _start</span><br><span class="line">      <span class="number"> 0 </span>  0.0% 100.0%      <span class="number"> 52 </span>100.0% func3</span><br><span class="line">      <span class="number"> 0 </span>  0.0% 100.0%      <span class="number"> 52 </span>100.0% main</span><br></pre></td></tr></table></figure>
+
+<p>输出数据解析：每行包含6列数据，依次为:</p>
+<ol>
+<li>分析样本数量（不包含其他函数调用）</li>
+<li>分析样本百分比（不包含其他函数调用）</li>
+<li>目前为止的分析样本百分比（不包含其他函数调用）</li>
+<li>分析样本数量（包含其他函数调用）</li>
+<li>分析样本百分比（包含其他函数调用）</li>
+<li>函数名</li>
+</ol>
+<p>运行命令生成函数调用树形式的pdf分析报告：</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">pprof --pdf a.out test.prof &gt; test.pdf</span><br></pre></td></tr></table></figure>
+
+<img src="/2020/12/06/C++Profile%E7%9A%84%E5%A4%A7%E6%9D%80%E5%99%A8_gperftools%E7%9A%84%E4%BD%BF%E7%94%A8/gperftoos_cpuprofile.png" class="" title="image.png"><br />
+
+<p>树上的每个节点代表一个函数，节点数据格式：</p>
+<ol>
+<li>函数名 或者 类名+方法名</li>
+<li>不包含内部函数调用的样本数 (百分比)</li>
+<li>包含内部函数调用的样本数 (百分比) #如果没有内部调用函数则这一项数据不显示</li>
+</ol>
+<h3 id="不修改启动方式，但修改代码方式的运行"><a href="#不修改启动方式，但修改代码方式的运行" class="headerlink" title="不修改启动方式，但修改代码方式的运行"></a>不修改启动方式，但修改代码方式的运行</h3><h4 id="运行一段时间会正常退出的程序的性能分析"><a href="#运行一段时间会正常退出的程序的性能分析" class="headerlink" title="运行一段时间会正常退出的程序的性能分析"></a>运行一段时间会正常退出的程序的性能分析</h4><p>这种情况，我们可以直接在代码中插入性能分析函数。示例代码如下：</p>
+<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;gperftools/profiler.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;iostream&gt;</span></span></span><br><span class="line"><span class="keyword">using</span> <span class="keyword">namespace</span> std;</span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">func1</span><span class="params">()</span> </span>&#123;</span><br><span class="line">   <span class="keyword">int</span> i = <span class="number">0</span>;</span><br><span class="line">   <span class="keyword">while</span> (i &lt; <span class="number">100000</span>) &#123;</span><br><span class="line">       ++i;</span><br><span class="line">   &#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">func2</span><span class="params">()</span> </span>&#123;</span><br><span class="line">   <span class="keyword">int</span> i = <span class="number">0</span>;</span><br><span class="line">   <span class="keyword">while</span> (i &lt; <span class="number">200000</span>) &#123;</span><br><span class="line">       ++i;</span><br><span class="line">   &#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">func3</span><span class="params">()</span> </span>&#123;</span><br><span class="line">   <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; <span class="number">1000</span>; ++i) &#123;</span><br><span class="line">       <span class="built_in">func1</span>();</span><br><span class="line">       <span class="built_in">func2</span>();</span><br><span class="line">   &#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">()</span></span>&#123;</span><br><span class="line">   <span class="built_in">ProfilerStart</span>(<span class="string">&quot;test.prof&quot;</span>); <span class="comment">// 指定所生成的profile文件名</span></span><br><span class="line">   <span class="built_in">func3</span>();</span><br><span class="line">   <span class="built_in">ProfilerStop</span>(); <span class="comment">// 结束profiling</span></span><br><span class="line">   <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>编译运行，注意编译时需要连接tcmalloc和profiler库。运行后会生成test.prof文件，然后用pprof就可以生成text的分析报告，具体如下：</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">[root@10-8-152-53 cpuprofilertest]# g++ not_run_always.cpp -lprofiler -ltcmalloc</span><br><span class="line">[root@10-8-152-53 cpuprofilertest]# ./a.out</span><br><span class="line">PROFILE: interrupts/evictions/bytes = 52/7/680</span><br><span class="line">[root@10-8-152-53 cpuprofilertest]# pprof --text a.out test.prof</span><br><span class="line">Using local file a.out.</span><br><span class="line">Using local file test.prof.</span><br><span class="line">Total: 52 samples</span><br><span class="line">      32  61.5%  61.5%       32  61.5% func2</span><br><span class="line">      20  38.5% 100.0%       20  38.5% func1</span><br><span class="line">       0   0.0% 100.0%       52 100.0% __libc_start_main</span><br><span class="line">       0   0.0% 100.0%       52 100.0% _start</span><br><span class="line">       0   0.0% 100.0%       52 100.0% func3</span><br><span class="line">       0   0.0% 100.0%       52 100.0% main</span><br></pre></td></tr></table></figure>
+
+
+<h4 id="一直运行的程序的性能分析"><a href="#一直运行的程序的性能分析" class="headerlink" title="一直运行的程序的性能分析"></a>一直运行的程序的性能分析</h4><p>一直运行的程序由于不能正常退出，所以不能采用上面的方法。我们可以用信号量来开启/关闭性能分析，具体代码如下：</p>
+<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;gperftools/profiler.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;stdio.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;signal.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;unistd.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">gprofStartAndStop</span><span class="params">(<span class="keyword">int</span> signum)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">static</span> <span class="keyword">int</span> isStarted = <span class="number">0</span>;</span><br><span class="line">    <span class="keyword">if</span> (signum != SIGUSR1) <span class="keyword">return</span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">//通过isStarted标记未来控制第一次收到信号量开启性能分析，第二次收到关闭性能分析。</span></span><br><span class="line">    <span class="keyword">if</span> (!isStarted)&#123;</span><br><span class="line">        isStarted = <span class="number">1</span>;</span><br><span class="line">        <span class="built_in">ProfilerStart</span>(<span class="string">&quot;test.prof&quot;</span>);</span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">&quot;ProfilerStart success\n&quot;</span>);</span><br><span class="line">    &#125;<span class="keyword">else</span>&#123;</span><br><span class="line">        <span class="built_in">ProfilerStop</span>();</span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">&quot;ProfilerStop success\n&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">func1</span><span class="params">()</span> </span>&#123;</span><br><span class="line">   <span class="keyword">int</span> i = <span class="number">0</span>;</span><br><span class="line">   <span class="keyword">while</span> (i &lt; <span class="number">100000</span>) &#123;</span><br><span class="line">       ++i;</span><br><span class="line">   &#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">func2</span><span class="params">()</span> </span>&#123;</span><br><span class="line">   <span class="keyword">int</span> i = <span class="number">0</span>;</span><br><span class="line">   <span class="keyword">while</span> (i &lt; <span class="number">200000</span>) &#123;</span><br><span class="line">       ++i;</span><br><span class="line">   &#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">func3</span><span class="params">()</span> </span>&#123;</span><br><span class="line">   <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; <span class="number">1000</span>; ++i) &#123;</span><br><span class="line">       <span class="built_in">func1</span>();</span><br><span class="line">       <span class="built_in">func2</span>();</span><br><span class="line">   &#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">()</span></span>&#123;</span><br><span class="line">   <span class="built_in">signal</span>(SIGUSR1, gprofStartAndStop);</span><br><span class="line"></span><br><span class="line">   <span class="keyword">while</span>(<span class="number">1</span>)&#123;</span><br><span class="line">     <span class="built_in">printf</span>(<span class="string">&quot;call f\n&quot;</span>);</span><br><span class="line">     <span class="built_in">func3</span>();</span><br><span class="line">     <span class="built_in">sleep</span>(<span class="number">1</span>);<span class="comment">//为了防止死循环，导致信号处理函数得不到调度</span></span><br><span class="line">   &#125;</span><br><span class="line">   <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>编译运行如下：</p>
+<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line">[root@<span class="number">10</span><span class="number">-8</span><span class="number">-152</span><span class="number">-53</span> cpuprofilertest]<span class="meta"># g++ run_always.cpp -lprofiler -ltcmalloc</span></span><br><span class="line">[root@<span class="number">10</span><span class="number">-8</span><span class="number">-152</span><span class="number">-53</span> cpuprofilertest]# ./a.out</span><br><span class="line">call f</span><br><span class="line">call f</span><br><span class="line">...</span><br><span class="line">    </span><br></pre></td></tr></table></figure>
+<p><strong>通过kill命令发送信号给进程来开启/关闭性能分析：</strong><br />用top命令查看进程的PID<br />kill -s SIGUSR1 PID //第一次运行命令启动性能分析<br />kill -s SIGUSR1 PID //再次运行命令关闭性能分析，产生test.prof</p>
+<p>后续查看分析报告和之前一样。<br />这种方式适合灵活关闭profile，不用重启启动服务，适合在线上临时查看。<br /></p>
+<h2 id="Heap-Profiler"><a href="#Heap-Profiler" class="headerlink" title="Heap Profiler"></a>Heap Profiler</h2><h3 id="示例1-修改启动方式"><a href="#示例1-修改启动方式" class="headerlink" title="示例1 - 修改启动方式"></a>示例1 - 修改启动方式</h3><p>示例代码如下：</p>
+<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;gperftools/profiler.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;iostream&gt;</span></span></span><br><span class="line"><span class="keyword">using</span> <span class="keyword">namespace</span> std;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">f1</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">int</span> i;</span><br><span class="line">    <span class="keyword">for</span> (i=<span class="number">0</span>; i&lt;<span class="number">1024</span>*<span class="number">1024</span>; ++i)</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">int</span>* p2 = <span class="keyword">new</span> <span class="keyword">int</span>;</span><br><span class="line">        <span class="comment">//delete[] p2;</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">f2</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">int</span> i;</span><br><span class="line">    <span class="keyword">for</span> (i=<span class="number">0</span>; i&lt;<span class="number">1024</span>*<span class="number">1024</span>; ++i)</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">int</span>* p2 = <span class="keyword">new</span> <span class="keyword">int</span>;</span><br><span class="line">        <span class="comment">//delete[] p2;</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">()</span></span>&#123;</span><br><span class="line">   <span class="built_in">f1</span>();</span><br><span class="line">   <span class="built_in">f2</span>();</span><br><span class="line">   <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>编译运行如下：</p>
+<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line">[root@<span class="number">10</span><span class="number">-8</span><span class="number">-152</span><span class="number">-53</span> heapprofilertest]<span class="meta"># g++ test.cpp -ltcmalloc</span></span><br><span class="line">[root@<span class="number">10</span><span class="number">-8</span><span class="number">-152</span><span class="number">-53</span> heapprofilertest]<span class="meta"># env HEAPPROFILE=./test_heap.prof ./a.out</span></span><br><span class="line">Starting tracking the heap</span><br><span class="line">Dumping heap profile to ./test_heap.prof<span class="number">.0001</span>.<span class="built_in">heap</span> (Exiting, <span class="number">8</span> MB in use)</span><br><span class="line">[root@<span class="number">10</span><span class="number">-8</span><span class="number">-152</span><span class="number">-53</span> heapprofilertest]<span class="meta"># pprof --text ./a.out ./test_heap.prof.0001.heap</span></span><br><span class="line">Using local file ./a.out.</span><br><span class="line">Using local file ./test_heap.prof<span class="number">.0001</span>.heap.</span><br><span class="line">Total: <span class="number">8.0</span> MB</span><br><span class="line">     <span class="number">4.0</span>  <span class="number">50.0</span>%  <span class="number">50.0</span>%      <span class="number">4.0</span>  <span class="number">50.0</span>% f1</span><br><span class="line">     <span class="number">4.0</span>  <span class="number">50.0</span>% <span class="number">100.0</span>%      <span class="number">4.0</span>  <span class="number">50.0</span>% f2</span><br><span class="line">     <span class="number">0.0</span>   <span class="number">0.0</span>% <span class="number">100.0</span>%      <span class="number">8.0</span> <span class="number">100.0</span>% __libc_start_main</span><br><span class="line">     <span class="number">0.0</span>   <span class="number">0.0</span>% <span class="number">100.0</span>%      <span class="number">8.0</span> <span class="number">100.0</span>% _start</span><br><span class="line">     <span class="number">0.0</span>   <span class="number">0.0</span>% <span class="number">100.0</span>%      <span class="number">8.0</span> <span class="number">100.0</span>% main</span><br><span class="line">[root@<span class="number">10</span><span class="number">-8</span><span class="number">-152</span><span class="number">-53</span> heapprofilertest]<span class="meta"># pprof --pdf ./a.out ./test_heap.prof.0001.heap &gt; ./test_heap.pdf</span></span><br><span class="line">Using local file ./a.out.</span><br><span class="line">Using local file ./test_heap.prof<span class="number">.0001</span>.heap.</span><br><span class="line">Dropping nodes with &lt;= <span class="number">0.0</span> MB; edges with &lt;= <span class="number">0.0</span> <span class="built_in">abs</span>(MB)</span><br><span class="line">[root@<span class="number">10</span><span class="number">-8</span><span class="number">-152</span><span class="number">-53</span> heapprofilertest]<span class="meta"># ls</span></span><br><span class="line">a.out  test.cpp  test_heap.pdf  test_heap.prof<span class="number">.0001</span>.heap</span><br></pre></td></tr></table></figure>
+
+<img src="/2020/12/06/C++Profile%E7%9A%84%E5%A4%A7%E6%9D%80%E5%99%A8_gperftools%E7%9A%84%E4%BD%BF%E7%94%A8/gperftools_heapprofile.png" class="" title="image.png">
+
+<p>在生成heap的过程中，还有另外的一些属性可以设置[2]：</p>
+<table>
+<thead>
+<tr>
+<th><code>HEAP_PROFILE_ALLOCATION_INTERVAL</code></th>
+<th>default: 1073741824 (1 Gb)</th>
+<th>Dump heap profiling information each time the specified number of bytes has been allocated by the program.</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>HEAP_PROFILE_INUSE_INTERVAL</code></td>
+<td>default: 104857600 (100 Mb)</td>
+<td>Dump heap profiling information whenever the high-water memory usage mark increases by the specified number of bytes.</td>
+</tr>
+<tr>
+<td><code>HEAP_PROFILE_TIME_INTERVAL</code></td>
+<td>default: 0</td>
+<td>Dump heap profiling information each time the specified number of seconds has elapsed.</td>
+</tr>
+<tr>
+<td><code>HEAPPROFILESIGNAL</code></td>
+<td>default: disabled</td>
+<td>Dump heap profiling information whenever the specified signal is sent to the process.</td>
+</tr>
+<tr>
+<td><code>HEAP_PROFILE_MMAP</code></td>
+<td>default: false</td>
+<td>Profile <code>mmap</code>, <code>mremap</code> and <code>sbrk</code> calls in addition to <code>malloc</code>, <code>calloc</code>, <code>realloc</code>, and <code>new</code>. NOTE: this causes the profiler to profile calls internal to tcmalloc, since tcmalloc and friends use mmap and sbrk internally for allocations. One partial solution is to filter these allocations out when running <code>pprof</code>, with something like `pprof –ignore=’DoAllocWithArena</td>
+</tr>
+<tr>
+<td><code>HEAP_PROFILE_ONLY_MMAP</code></td>
+<td>default: false</td>
+<td>Only profile <code>mmap</code>, <code>mremap</code>, and <code>sbrk</code> calls; do not profile <code>malloc</code>, <code>calloc</code>, <code>realloc</code>, or <code>new</code>.</td>
+</tr>
+<tr>
+<td><code>HEAP_PROFILE_MMAP_LOG</code></td>
+<td>default: false</td>
+<td>Log <code>mmap</code>/<code>munmap</code> calls.</td>
+</tr>
+</tbody></table>
+<h3 id="线上例子-修改启动方式"><a href="#线上例子-修改启动方式" class="headerlink" title="线上例子-修改启动方式"></a>线上例子-修改启动方式</h3><h4 id="编译"><a href="#编译" class="headerlink" title="编译"></a>编译</h4><p>加上-ltcmalloc<br><code>set(CMAKE_CXX_FLAGS &quot;$&#123;CMAKE_CXX_FLAGS&#125; -std=c++11 -g3 -ggdb3 -O3 -mavx2 -Wall -DDEBUG_RING -ltcmalloc&quot;)</code></p>
+<h4 id="启动命令"><a href="#启动命令" class="headerlink" title="启动命令"></a>启动命令</h4><figure class="highlight gradle"><table><tr><td class="code"><pre><span class="line">env HEAPPROFILE=<span class="regexp">/tmp/</span>broker_1003_xxx_heap.prof HEAP_PROFILE_ALLOCATION_INTERVAL=<span class="number">107374182400</span> HEAP_PROFILE_INUSE_INTERVAL=<span class="number">1073741824000</span> <span class="regexp">/root/u</span><span class="keyword">file</span><span class="regexp">/UFileBroker-set1003/U</span>FileBroker-set1003 -c <span class="regexp">/root/u</span><span class="keyword">file</span><span class="regexp">/UFileBroker-set1003/</span>config-set1003.ini</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>HEAP_PROFILE_ALLOCATION_INTERVAL=107374182400 每次分配了100GB内存，进行dump</li>
+<li>HEAP_PROFILE_INUSE_INTERVAL=1073741824000   每次内存的最高使用量超过1000GB，进行dump，看下面日志没有达到触发条件。</li>
+</ul>
+<figure class="highlight vim"><table><tr><td class="code"><pre><span class="line">Dumping heap <span class="keyword">profile</span> <span class="keyword">to</span> /tmp/broker_1003_xxx_heap.<span class="keyword">prof</span>.<span class="number">0001</span>.heap (<span class="number">10240</span> MB allocated cumulatively, <span class="number">1118</span> MB currently in use)</span><br><span class="line">Dumping heap <span class="keyword">profile</span> <span class="keyword">to</span> /tmp/broker_1003_xxx_heap.<span class="keyword">prof</span>.<span class="number">0002</span>.heap (<span class="number">20480</span> MB allocated cumulatively, <span class="number">2005</span> MB currently in use)</span><br><span class="line">Dumping heap <span class="keyword">profile</span> <span class="keyword">to</span> /tmp/broker_1003_xxx_heap.<span class="keyword">prof</span>.<span class="number">0003</span>.heap (<span class="number">30720</span> MB allocated cumulatively, <span class="number">2383</span> MB currently in use)</span><br><span class="line">Dumping heap <span class="keyword">profile</span> <span class="keyword">to</span> /tmp/broker_1003_xxx_heap.<span class="keyword">prof</span>.<span class="number">0004</span>.heap (<span class="number">40960</span> MB allocated cumulatively, <span class="number">2482</span> MB currently in use)</span><br><span class="line">......</span><br><span class="line">Dumping heap <span class="keyword">profile</span> <span class="keyword">to</span> /tmp/broker_1003_xxx_heap.<span class="keyword">prof</span>.<span class="number">0126</span>.heap (<span class="number">1290366</span> MB allocated cumulatively, <span class="number">2876</span> MB currently in use)</span><br><span class="line">Dumping heap <span class="keyword">profile</span> <span class="keyword">to</span> /tmp/broker_1003_xxx_heap.<span class="keyword">prof</span>.<span class="number">0127</span>.heap (<span class="number">1300606</span> MB allocated cumulatively, <span class="number">2871</span> MB currently in use)</span><br><span class="line">Dumping heap <span class="keyword">profile</span> <span class="keyword">to</span> /tmp/broker_1003_xxx_heap.<span class="keyword">prof</span>.<span class="number">0128</span>.heap (<span class="number">1310849</span> MB allocated cumulatively, <span class="number">2870</span> MB currently in use)</span><br><span class="line">Dumping heap <span class="keyword">profile</span> <span class="keyword">to</span> /tmp/broker_1003_xxx_heap.<span class="keyword">prof</span>.<span class="number">0129</span>.heap (<span class="number">1321090</span> MB allocated cumulatively, <span class="number">2878</span> MB currently in use)</span><br></pre></td></tr></table></figure>
+
+
+<h4 id="分析heap"><a href="#分析heap" class="headerlink" title="分析heap"></a>分析heap</h4><img src="/2020/12/06/C++Profile%E7%9A%84%E5%A4%A7%E6%9D%80%E5%99%A8_gperftools%E7%9A%84%E4%BD%BF%E7%94%A8/broker_1003_3GB.jpeg" class="" title="image.png">
+<p>可以看到95%的heap都是从同一个地方分配出来的，是需要优化的方向。</p>
+<h1 id="参考链接"><a href="#参考链接" class="headerlink" title="参考链接"></a>参考链接</h1><ol>
+<li><a href="https://github.com/gperftools/gperftools/wiki">https://github.com/gperftools/gperftools/wiki</a></li>
+<li><a href="https://gperftools.github.io/gperftools/heapprofile.html">https://gperftools.github.io/gperftools/heapprofile.html</a></li>
+<li><a href="https://github.com/gperftools/gperftools/wiki">https://github.com/gperftools/gperftools/wiki</a></li>
+<li><a href="https://www.cnblogs.com/gary-guo/p/10607514.html">gperftools对程序进行分析</a></li>
+</ol>
+]]></content>
+      <categories>
+        <category>c++</category>
+      </categories>
+      <tags>
+        <tag>c++</tag>
+        <tag>profile</tag>
+        <tag>gperftools</tag>
       </tags>
   </entry>
   <entry>
