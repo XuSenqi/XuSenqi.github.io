@@ -1078,6 +1078,140 @@
 ]]></content>
   </entry>
   <entry>
+    <title>一次go语言内存泄漏的排查过程</title>
+    <url>/2018/12/11/%E4%B8%80%E6%AC%A1go%E5%86%85%E5%AD%98%E6%B3%84%E6%BC%8F%E7%9A%84%E6%8E%92%E6%9F%A5%E8%BF%87%E7%A8%8B/</url>
+    <content><![CDATA[<h2 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h2><p>线上一个go语言写的服务，在连续跑了10多天后，占用内存从最开始的20M左右，涨到了1个多G，有内存泄漏的问题，将整个排查过程和相应方法进行整理，做个记录。</p>
+<img src="/2018/12/11/%E4%B8%80%E6%AC%A1go%E5%86%85%E5%AD%98%E6%B3%84%E6%BC%8F%E7%9A%84%E6%8E%92%E6%9F%A5%E8%BF%87%E7%A8%8B/1_%E5%86%85%E5%AD%98%E6%B3%84%E6%BC%8F.png" class="" title="image">
+
+<h2 id="pprof"><a href="#pprof" class="headerlink" title="pprof"></a>pprof</h2><p>Go语言自带的pprof工具，是检测Golang开发应用性能的利器。</p>
+<p>pprof 采样数据主要有三种获取方式:</p>
+<ol>
+<li>runtime/pprof: 手动调用runtime.StartCPUProfile或者runtime.StopCPUProfile等 API来生成和写入采样文件，灵活性高。参考文档<a href="https://blog.golang.org/profiling-go-programs">profiling-go-programs</a></li>
+</ol>
+<ol start="2">
+<li><p>net/http/pprof: 通过 http 服务获取Profile采样文件，简单易用，适用于对应用程序的整体监控。通过runtime/pprof实现。这里推荐这种方法</p>
+</li>
+<li><p>go test: 通过 go test -bench . -cpuprofile prof.cpu生成采样文件 适用对函数进行针对性测试</p>
+</li>
+</ol>
+<h2 id="net-http-pprof"><a href="#net-http-pprof" class="headerlink" title="net/http/pprof"></a>net/http/pprof</h2><p>线上的服务是一直运行的，用过“net/http/pprof”可以看到实时的状态，看到各个信息指标，这里主要介绍这种方法。</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">import</span> _ <span class="string">&quot;net/http/pprof&quot;</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	......</span><br><span class="line">	<span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">		log.Println(http.ListenAndServe(<span class="string">&quot;localhost:8211&quot;</span>, <span class="literal">nil</span>))</span><br><span class="line">	&#125;()</span><br><span class="line">	......</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<img src="/2018/12/11/%E4%B8%80%E6%AC%A1go%E5%86%85%E5%AD%98%E6%B3%84%E6%BC%8F%E7%9A%84%E6%8E%92%E6%9F%A5%E8%BF%87%E7%A8%8B/3_netpprof%E6%B5%8F%E8%A7%88%E5%99%A8%E6%88%AA%E5%9B%BE2.png" class="" title="image">
+
+<p>之后可以通过 <a href="http://localhost:8211/debug/pprof/CMD%E8%8E%B7%E5%8F%96%E5%AF%B9%E5%BA%94%E7%9A%84%E9%87%87%E6%A0%B7%E6%95%B0%E6%8D%AE">http://localhost:8211/debug/pprof/CMD获取对应的采样数据</a></p>
+<p><a href="https://golang.org/src/runtime/pprof/pprof.go?s=23119:23158#L730">pprof</a></p>
+<p>Profile翻译为“剖面，侧面等”，可以理解为当前应用的的一个剖面。可以知道哪些地方耗费了cpu、memory。</p>
+<p>// Each Profile has a unique name. A few profiles are predefined:</p>
+<ol>
+<li><pre><code>goroutine    - stack traces of all current goroutines
+</code></pre>
+</li>
+<li>heap         - a sampling of memory allocations of live objects</li>
+<li>allocs       - a sampling of all past memory allocations</li>
+<li>threadcreate - stack traces that led to the creation of new OS threads</li>
+<li>block        - stack traces that led to blocking on synchronization primitives</li>
+<li>mutex        - stack traces of holders of contended mutexes</li>
+</ol>
+<ul>
+<li>goroutine: 获取程序当前所有 goroutine 的堆栈信息。</li>
+<li>heap: 包含每个 goroutine 分配大小，分配堆栈等。每分配 runtime.MemProfileRate(默认为512K) 个字节进行一次数据采样。</li>
+<li>threadcreate: 获取导致创建 OS 线程的 goroutine 堆栈</li>
+<li>block: 获取导致阻塞的 goroutine 堆栈(如 channel, mutex 等)，使用前需要先调用 runtime.SetBlockProfileRate</li>
+<li>mutex: 获取导致 mutex 争用的 goroutine 堆栈，使用前需要先调用 runtime.SetMutexProfileFraction</li>
+</ul>
+<p><a href="https://golang.org/src/runtime/pprof/pprof.go?s=23119:23158#L730">pprof_debug</a></p>
+<p>The debug parameter enables additional output.</p>
+<p>Passing debug=0 prints only the hexadecimal addresses that pprof needs.</p>
+<p>Passing debug=1 adds comments translating addresses to function names and line numbers, so that a programmer can read the profile without tools.</p>
+<img src="/2018/12/11/%E4%B8%80%E6%AC%A1go%E5%86%85%E5%AD%98%E6%B3%84%E6%BC%8F%E7%9A%84%E6%8E%92%E6%9F%A5%E8%BF%87%E7%A8%8B/4_netpprof_debug_1.png" class="" title="image">
+
+
+<p>The predefined profiles may assign meaning to other debug values;</p>
+<p>for example, when printing the “goroutine” profile, debug=2 means to print the goroutine stacks in the same form that a Go program uses when dying due to an unrecovered panic.</p>
+<p>以上几种 Profile 可在 <a href="http://localhost:8211/debug/pprof/">http://localhost:8211/debug/pprof/</a> 中看到，除此之外，go pprof 的 CMD 还包括, </p>
+<ul>
+<li>cmdline: 获取程序的命令行启动参数</li>
+<li>profile: 获取指定时间内(从请求时开始)的cpuprof，倒计时结束后自动返回。参数: seconds, 默认值为30。cpuprofile 每秒钟采样100次，收集当前运行的 goroutine 堆栈信息。</li>
+<li>symbol: 用于将地址列表转换为函数名列表，地址通过’+’分隔，如 URL/debug/pprof?0x18d067f+0x17933e7</li>
+<li>trace: 对应用程序进行执行追踪，参数: seconds, 默认值1s</li>
+</ul>
+<p>参数具体信息可以参考<a href="https://golang.org/pkg/net/http/pprof/">http_pprof</a></p>
+<p>再回顾来看服务的问题，从图2中看到，goroutine的数量在一直增长；从图3看出，共起了414个goroutine, 其中395个是在调用FetchZkName。<br>然后再查看我们的代码，有哪里在调用go, 哪个goroutine会最终调用FetchZkName,就可以查到出问题的地方。</p>
+<p>最终查到原因是：</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line">  <span class="comment">// 10s去更新下zk节点</span></span><br><span class="line">ticker2 := time.NewTicker(time.Second * <span class="number">10</span>)</span><br><span class="line"><span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">	<span class="keyword">for</span> &#123;</span><br><span class="line">		<span class="keyword">select</span> &#123;</span><br><span class="line">		<span class="keyword">case</span> &lt;-ticker2.C:</span><br><span class="line">			UpdateInstanceFromZk()</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;()</span><br><span class="line"></span><br><span class="line"><span class="comment">// 里面的函数调用关系如下：</span></span><br><span class="line">UpdateInstanceFromZk --&gt; nameservice.InitNameService </span><br><span class="line">--&gt; updateNames --&gt; FetchZkName</span><br><span class="line"></span><br><span class="line"><span class="comment">// FetchZkName函数里起了一个goroutine,封装了watcher，自己已实现了更新zk节点的功能</span></span><br><span class="line">   <span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">	<span class="keyword">select</span> &#123;</span><br><span class="line">	<span class="keyword">case</span> ev := &lt;-ch:</span><br><span class="line">		uflog.INFO(<span class="string">&quot;cat watcher&quot;</span>, ev)</span><br><span class="line">		<span class="keyword">if</span> ev.Type == zk.EventNotWatching &amp;&amp; ev.State == zk.StateDisconnected &#123;</span><br><span class="line">			reConnect(connStr)</span><br><span class="line">		&#125;</span><br><span class="line">		nc.FetchZkName(connStr, shortName, fullName)</span><br><span class="line">	&#125;</span><br><span class="line">&#125;()</span><br><span class="line"></span><br><span class="line"><span class="comment">// 该goroutine不会退出，会一直watch。定时调用UpdateInstanceFromZk，会导致goroutine不断增加，内存泄漏。</span></span><br></pre></td></tr></table></figure>
+
+<p>解决方案是：UpdateInstanceFromZk（）调用一次即可。</p>
+<p>改进后，占用内存一直保持在20M左右，完美~</p>
+<img src="/2018/12/11/%E4%B8%80%E6%AC%A1go%E5%86%85%E5%AD%98%E6%B3%84%E6%BC%8F%E7%9A%84%E6%8E%92%E6%9F%A5%E8%BF%87%E7%A8%8B/6_%E5%86%85%E5%AD%98%E6%B3%84%E6%BC%8F%E8%A7%A3%E5%86%B3.png" class="" title="image">
+
+<h2 id="Go-Tool-PProf-分析工具"><a href="#Go-Tool-PProf-分析工具" class="headerlink" title="Go Tool PProf 分析工具"></a>Go Tool PProf 分析工具</h2><p>上面通过浏览器访问http服务的方式，需要有图形界面。而线上服务器通常是没有图形界面的，可以通过命令行方式来分析，或者将profile拷贝到本地，再生成调用关系图</p>
+<h3 id="Go-Tool-PProf-命令行"><a href="#Go-Tool-PProf-命令行" class="headerlink" title="Go Tool PProf 命令行"></a>Go Tool PProf 命令行</h3><p>支持的cmd跟net/http/pprof里提到的一样</p>
+<figure class="highlight awk"><table><tr><td class="code"><pre><span class="line">go tool pprof http:<span class="regexp">//</span>localhost:<span class="number">8211</span><span class="regexp">/debug/</span>pprof/goroutine</span><br><span class="line">go tool pprof http:<span class="regexp">//</span>localhost:<span class="number">8211</span><span class="regexp">/debug/</span>pprof/profile</span><br><span class="line">go tool pprof http:<span class="regexp">//</span>localhost:<span class="number">8211</span><span class="regexp">/debug/</span>pprof/heap</span><br><span class="line">...</span><br></pre></td></tr></table></figure>
+
+<p>以采集CPU耗时举例, </p>
+<figure class="highlight vim"><table><tr><td class="code"><pre><span class="line"># /root/<span class="keyword">go</span>/bin/<span class="keyword">go</span> tool pprof http://localhos<span class="variable">t:8211</span>/<span class="keyword">debug</span>/pprof/<span class="keyword">profile</span></span><br><span class="line">Fetching <span class="keyword">profile</span> over HTTP from http://localhos<span class="variable">t:8211</span>/<span class="keyword">debug</span>/pprof/<span class="keyword">profile</span></span><br><span class="line">Saved <span class="keyword">profile</span> in /root/pprof/pprof.uhost_server.samples.cpu.<span class="number">003</span>.pb.gz</span><br><span class="line">File: uhost_server</span><br><span class="line">Type: cpu</span><br><span class="line">Time: Dec <span class="number">11</span>, <span class="number">2018</span> at <span class="number">6</span>:<span class="number">12</span>pm (CST)</span><br><span class="line">Duration: <span class="number">30</span>s, Total samples = <span class="number">10</span>ms (<span class="number">0.033</span>%)</span><br><span class="line">Entering interactive <span class="keyword">mode</span> (<span class="built_in">type</span> <span class="string">&quot;help&quot;</span> <span class="keyword">for</span> commands, <span class="string">&quot;o&quot;</span> <span class="keyword">for</span> <span class="keyword">options</span>)</span><br><span class="line">(pprof)</span><br></pre></td></tr></table></figure>
+
+<p>会经历30s的采样时间，生成pprof.uhost_server.samples.cpu.003.pb.gz,这个可以拷贝到本地分析。</p>
+<h4 id="最重要的分析命令是top-N"><a href="#最重要的分析命令是top-N" class="headerlink" title="最重要的分析命令是top N"></a>最重要的分析命令是top N</h4><p>topN 命令可以查出程序最耗 CPU 的调用</p>
+<figure class="highlight r"><table><tr><td class="code"><pre><span class="line">(pprof) top <span class="number">5</span></span><br><span class="line">Showing nodes accounting <span class="keyword">for</span> <span class="number">70</span>ms, <span class="number">38.89</span>% of 180ms total</span><br><span class="line">Showing top 5 nodes out of 83</span><br><span class="line">      flat  flat%   <span class="built_in">sum</span>%        cum   cum%</span><br><span class="line">      <span class="number">30</span>ms <span class="number">16.67</span>% 16.67%       <span class="number">30</span>ms <span class="number">16.67</span>%  syscall.Syscall</span><br><span class="line">      10ms  5.56% <span class="number">22.22</span>%       20ms 11.11%  fmt.Sprintf</span><br><span class="line">      <span class="number">10</span>ms  <span class="number">5.56</span>% 27.78%       <span class="number">30</span>ms <span class="number">16.67</span>%  os.(*File).write</span><br><span class="line">      10ms  5.56% <span class="number">33.33</span>%       10ms  5.56%  runtime._ExternalCode</span><br><span class="line">      <span class="number">10</span>ms  <span class="number">5.56</span>% 38.89%       <span class="number">10</span>ms  <span class="number">5.56</span>%  runtime.epollwait</span><br></pre></td></tr></table></figure>
+<ul>
+<li>flat / flat% : 函数占用CPU的运行时间和百分比</li>
+<li>sum% : 按列累加的累计占用CPU百分比</li>
+<li>cum / cum% : 采样过程中， the function appeared (either running or waiting for a called function to return).</li>
+</ul>
+<h4 id="top-cum"><a href="#top-cum" class="headerlink" title="top -cum"></a>top -cum</h4><p>以累加的方式，看出消耗cpu的函数运行。可以和后面图形的方式做个对比</p>
+<figure class="highlight r"><table><tr><td class="code"><pre><span class="line">(pprof) top10 -cum</span><br><span class="line">Showing nodes accounting <span class="keyword">for</span> <span class="number">40</span>ms, <span class="number">22.22</span>% of 180ms total</span><br><span class="line">Showing top 10 nodes out of 83</span><br><span class="line">      flat  flat%   <span class="built_in">sum</span>%        cum   cum%</span><br><span class="line">         <span class="number">0</span>     <span class="number">0</span>%     0%      <span class="number">140</span>ms <span class="number">77.78</span>%  runtime.goexit</span><br><span class="line">         0     0%     <span class="number">0</span>%       40ms 22.22%  uframework/log.RealWrite</span><br><span class="line">         <span class="number">0</span>     <span class="number">0</span>%     0%       <span class="number">40</span>ms <span class="number">22.22</span>%  uframework/task.(*TCPTask).Run.func1</span><br><span class="line">         0     0%     <span class="number">0</span>%       40ms 22.22%  uframework/task.TCPTaskFunc.ServeTCP</span><br><span class="line">         <span class="number">0</span>     <span class="number">0</span>%     0%       <span class="number">40</span>ms <span class="number">22.22</span>%  uhost-go/uhost-scheduler/logic.getSuitableResource</span><br><span class="line">         0     0%     <span class="number">0</span>%       30ms 16.67%  os.(*File).Write</span><br><span class="line">      <span class="number">10</span>ms  <span class="number">5.56</span>%  5.56%       <span class="number">30</span>ms <span class="number">16.67</span>%  os.(*File).write</span><br><span class="line">      30ms 16.67% <span class="number">22.22</span>%       30ms 16.67%  syscall.Syscall</span><br><span class="line">         <span class="number">0</span>     <span class="number">0</span>% 22.22%       <span class="number">30</span>ms <span class="number">16.67</span>%  uframework/message/protobuf/proto.(*Buffer).dec_slice_struct</span><br><span class="line">         0     0% <span class="number">22.22</span>%       30ms 16.67%  uframework/message/protobuf/proto.(*Buffer).dec_slice_struct_message</span><br></pre></td></tr></table></figure>
+
+<h4 id="list-Func"><a href="#list-Func" class="headerlink" title="list Func"></a>list Func</h4><p>显示函数名以及每行代码的采样分析</p>
+<figure class="highlight gradle"><table><tr><td class="code"><pre><span class="line">(pprof) list dec_slice_struct_message</span><br><span class="line">Total: <span class="number">180</span>ms</span><br><span class="line">ROUTINE ======================== uframework<span class="regexp">/message/</span>protobuf<span class="regexp">/proto.(*Buffer).dec_slice_struct_message in /U</span>sers<span class="regexp">/patrick.xu/g</span>o<span class="regexp">/src/u</span>framework<span class="regexp">/message/</span>protobuf<span class="regexp">/proto/</span>decode.go</span><br><span class="line">         <span class="number">0</span>       <span class="number">30</span>ms (flat, cum) <span class="number">16.67</span>% of Total</span><br><span class="line">         .          .    <span class="number">822</span>:	<span class="keyword">return</span> err</span><br><span class="line">         .          .    <span class="number">823</span>:&#125;</span><br><span class="line">         .          .    <span class="number">824</span>:</span><br><span class="line">         .          .    <span class="number">825</span>:<span class="comment">// Decode a slice of embedded messages.</span></span><br><span class="line">         .          .    <span class="number">826</span>:func (o *Buffer) dec_slice_struct_message(p *Properties, base structPointer) error &#123;</span><br><span class="line">         .       <span class="number">30</span>ms    <span class="number">827</span>:	<span class="keyword">return</span> o.dec_slice_struct(p, <span class="keyword">false</span>, base)</span><br><span class="line">         .          .    <span class="number">828</span>:&#125;</span><br><span class="line">         .          .    <span class="number">829</span>:</span><br><span class="line">         .          .    <span class="number">830</span>:<span class="comment">// Decode a slice of embedded groups.</span></span><br><span class="line">         .          .    <span class="number">831</span>:func (o *Buffer) dec_slice_struct_group(p *Properties, base structPointer) error &#123;</span><br><span class="line">         .          .    <span class="number">832</span>:	<span class="keyword">return</span> o.dec_slice_struct(p, <span class="keyword">true</span>, base)</span><br></pre></td></tr></table></figure>
+
+<h4 id="web-web-Func"><a href="#web-web-Func" class="headerlink" title="web / web Func"></a>web / web Func</h4><p>显示调用图 / 显示某个具体函数的调用图</p>
+<p>mac上需要先安装graphviz <a href="http://www.graphviz.org/">http://www.graphviz.org/</a></p>
+<p>homebrew安装完毕后运行 brew install graphviz即可</p>
+<figure class="highlight vim"><table><tr><td class="code"><pre><span class="line">➜  uhost-<span class="keyword">go</span> gi<span class="variable">t:</span>(from_pxu) ✗ <span class="keyword">go</span> tool pprof uhost_server pprof.uhost_server.samples.cpu.<span class="number">004</span>.pb</span><br><span class="line">Entering interactive <span class="keyword">mode</span> (<span class="built_in">type</span> <span class="string">&quot;help&quot;</span> <span class="keyword">for</span> commands)</span><br><span class="line">(pprof) web</span><br><span class="line">(pprof) web getSuitableResource</span><br></pre></td></tr></table></figure>
+
+<p>但是web命令生成的调用图往往是残缺的，不知道是什么原因。但找到下面更好的方式。</p>
+<h4 id="本地显示远程的调用图（推荐）"><a href="#本地显示远程的调用图（推荐）" class="headerlink" title="本地显示远程的调用图（推荐）"></a>本地显示远程的调用图（推荐）</h4><p>后来返现一种更易用的方式，服务在线上运行，本地浏览器直接打开调用图。<br>线上服务器ip为172.21.212.101，pprof监听端口为8991。</p>
+<p>下面还是以cpu耗时为例</p>
+<figure class="highlight vim"><table><tr><td class="code"><pre><span class="line">[root@gw ~]# <span class="keyword">go</span> tool pprof http://<span class="number">172.21</span>.<span class="number">212.101</span>:<span class="number">8991</span>/<span class="keyword">debug</span>/pprof/<span class="keyword">profile</span></span><br><span class="line">Fetching <span class="keyword">profile</span> over HTTP from http://<span class="number">172.21</span>.<span class="number">212.101</span>:<span class="number">8991</span>/<span class="keyword">debug</span>/pprof/<span class="keyword">profile</span></span><br><span class="line">Saved <span class="keyword">profile</span> in /root/pprof/pprof.node_server.samples.cpu.<span class="number">005</span>.pb.gz</span><br><span class="line">File: node_server</span><br><span class="line">Type: cpu</span><br><span class="line">Time: Sep <span class="number">16</span>, <span class="number">2021</span> at <span class="number">4</span>:<span class="number">36</span>pm (CST)</span><br><span class="line">Duration: <span class="number">30.18</span>s, Total samples = <span class="number">5.15</span>mins (<span class="number">1023.28</span>%)</span><br><span class="line">Entering interactive <span class="keyword">mode</span> (<span class="built_in">type</span> <span class="string">&quot;help&quot;</span> <span class="keyword">for</span> commands, <span class="string">&quot;o&quot;</span> <span class="keyword">for</span> <span class="keyword">options</span>)</span><br><span class="line">(pprof) </span><br></pre></td></tr></table></figure>
+
+<p>然后在线上服务器再起一个8992的端口</p>
+<figure class="highlight awk"><table><tr><td class="code"><pre><span class="line">[root@gw ~]<span class="comment"># go tool pprof -http=&quot;172.21.212.101:8992&quot; http://172.21.212.101:8991/debug/pprof/profile</span></span><br><span class="line">Fetching profile over HTTP from http:<span class="regexp">//</span><span class="number">172.21</span>.<span class="number">212.101</span>:<span class="number">8991</span><span class="regexp">/debug/</span>pprof/profile</span><br><span class="line">Saved profile <span class="keyword">in</span> <span class="regexp">/root/</span>pprof/pprof.node_server.samples.cpu.<span class="number">006</span>.pb.gz</span><br><span class="line">Serving web UI on http:<span class="regexp">//</span><span class="number">172.21</span>.<span class="number">212.101</span>:<span class="number">8992</span></span><br><span class="line">http:<span class="regexp">//</span><span class="number">172.21</span>.<span class="number">212.101</span>:<span class="number">8992</span></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>在本地浏览器可以直接打开web UI</p>
+<img src="/2018/12/11/%E4%B8%80%E6%AC%A1go%E5%86%85%E5%AD%98%E6%B3%84%E6%BC%8F%E7%9A%84%E6%8E%92%E6%9F%A5%E8%BF%87%E7%A8%8B/pprof_webui.png" class="" title="image">
+<p>还有火焰图，汇编代码等，功能更加强大。</p>
+<h2 id="pprof-1"><a href="#pprof-1" class="headerlink" title="pprof"></a>pprof</h2><p>As of Go 1.11, flamegraph visualizations are available in go tool pprof directly!</p>
+<p>This will listen on :8081 and open a browser.<br>Change :8081 to a port of your choice.</p>
+<p>$ go tool pprof -http=”:8081” [binary] [profile]</p>
+<p>If you cannot use Go 1.11, you can get the latest pprof tool and use it instead:</p>
+<p>Get the pprof tool directly</p>
+<p>$ go get -u github.com/google/pprof</p>
+<p>$ pprof -http=”:8081” [binary] [profile]</p>
+<p>由于我的Mac上用的是go1.8.1版本，所用pprof命令。</p>
+<figure class="highlight pgsql"><table><tr><td class="code"><pre><span class="line">➜  uhost-go git:(from_pxu) ✗ pprof uhost_server pprof.uhost_server.samples.cpu<span class="number">.004</span>.pb</span><br><span class="line">uhost_server: parsing profile: unrecognized profile <span class="keyword">format</span></span><br><span class="line">Fetched <span class="number">1</span> source profiles <span class="keyword">out</span> <span class="keyword">of</span> <span class="number">2</span></span><br><span class="line">File: uhost_server</span><br><span class="line"><span class="keyword">Type</span>: cpu</span><br><span class="line"><span class="type">Time</span>: <span class="type">Dec</span> <span class="number">11</span>, <span class="number">2018</span> at <span class="number">6</span>:<span class="number">18</span>pm (CST)</span><br><span class="line">Duration: <span class="number">30</span>s, Total samples = <span class="number">180</span>ms (  <span class="number">0.6</span>%)</span><br><span class="line">Entering interactive mode (<span class="keyword">type</span> &quot;help&quot; <span class="keyword">for</span> commands, &quot;o&quot; <span class="keyword">for</span> <span class="keyword">options</span>)</span><br><span class="line">(pprof) web</span><br></pre></td></tr></table></figure>
+
+<img src="/2018/12/11/%E4%B8%80%E6%AC%A1go%E5%86%85%E5%AD%98%E6%B3%84%E6%BC%8F%E7%9A%84%E6%8E%92%E6%9F%A5%E8%BF%87%E7%A8%8B/5_cpu%E8%80%97%E6%97%B6%E8%B0%83%E5%BA%A6%E5%9B%BE.png" class="" title="image">
+
+<h2 id="其他工具"><a href="#其他工具" class="headerlink" title="其他工具"></a>其他工具</h2><ul>
+<li>delve<br><a href="https://github.com/derekparker/delve">https://github.com/derekparker/delve</a></li>
+<li>go-torch 生成火焰图<br><a href="https://github.com/uber/go-torch">https://github.com/uber/go-torch</a></li>
+</ul>
+<p>以后用到了再整理，这里mark下</p>
+<h2 id="参考链接"><a href="#参考链接" class="headerlink" title="参考链接"></a>参考链接</h2><p><a href="https://blog.golang.org/profiling-go-programs">Profiling Go Programs</a></p>
+<p><a href="https://golang.org/src/runtime/pprof/pprof.go?s=23119:23158#L730">Source file src/runtime/pprof/pprof.go</a></p>
+<p><a href="http://wudaijun.com/2018/04/go-pprof/">go pprof性能分析</a></p>
+<p><a href="https://cizixs.com/2017/09/11/profiling-golang-program/">使用pprof和火焰图调试golang应用</a></p>
+]]></content>
+      <categories>
+        <category>Go</category>
+      </categories>
+      <tags>
+        <tag>Go</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>一次mongo慢查询的优化过程</title>
     <url>/2019/07/24/%E4%B8%80%E6%AC%A1mongo%E6%85%A2%E6%9F%A5%E8%AF%A2%E7%9A%84%E4%BC%98%E5%8C%96%E8%BF%87%E7%A8%8B/</url>
     <content><![CDATA[<p>今天发现查询mongo时容易慢查询，现在将整个排查及优化过程,总结记录如下。</p>
@@ -1212,140 +1346,6 @@
       <tags>
         <tag>mongo</tag>
         <tag>MongoDB</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>一次go语言内存泄漏的排查过程</title>
-    <url>/2018/12/11/%E4%B8%80%E6%AC%A1go%E5%86%85%E5%AD%98%E6%B3%84%E6%BC%8F%E7%9A%84%E6%8E%92%E6%9F%A5%E8%BF%87%E7%A8%8B/</url>
-    <content><![CDATA[<h2 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h2><p>线上一个go语言写的服务，在连续跑了10多天后，占用内存从最开始的20M左右，涨到了1个多G，有内存泄漏的问题，将整个排查过程和相应方法进行整理，做个记录。</p>
-<img src="/2018/12/11/%E4%B8%80%E6%AC%A1go%E5%86%85%E5%AD%98%E6%B3%84%E6%BC%8F%E7%9A%84%E6%8E%92%E6%9F%A5%E8%BF%87%E7%A8%8B/1_%E5%86%85%E5%AD%98%E6%B3%84%E6%BC%8F.png" class="" title="image">
-
-<h2 id="pprof"><a href="#pprof" class="headerlink" title="pprof"></a>pprof</h2><p>Go语言自带的pprof工具，是检测Golang开发应用性能的利器。</p>
-<p>pprof 采样数据主要有三种获取方式:</p>
-<ol>
-<li>runtime/pprof: 手动调用runtime.StartCPUProfile或者runtime.StopCPUProfile等 API来生成和写入采样文件，灵活性高。参考文档<a href="https://blog.golang.org/profiling-go-programs">profiling-go-programs</a></li>
-</ol>
-<ol start="2">
-<li><p>net/http/pprof: 通过 http 服务获取Profile采样文件，简单易用，适用于对应用程序的整体监控。通过runtime/pprof实现。这里推荐这种方法</p>
-</li>
-<li><p>go test: 通过 go test -bench . -cpuprofile prof.cpu生成采样文件 适用对函数进行针对性测试</p>
-</li>
-</ol>
-<h2 id="net-http-pprof"><a href="#net-http-pprof" class="headerlink" title="net/http/pprof"></a>net/http/pprof</h2><p>线上的服务是一直运行的，用过“net/http/pprof”可以看到实时的状态，看到各个信息指标，这里主要介绍这种方法。</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">import</span> _ <span class="string">&quot;net/http/pprof&quot;</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	......</span><br><span class="line">	<span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">		log.Println(http.ListenAndServe(<span class="string">&quot;localhost:8211&quot;</span>, <span class="literal">nil</span>))</span><br><span class="line">	&#125;()</span><br><span class="line">	......</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<img src="/2018/12/11/%E4%B8%80%E6%AC%A1go%E5%86%85%E5%AD%98%E6%B3%84%E6%BC%8F%E7%9A%84%E6%8E%92%E6%9F%A5%E8%BF%87%E7%A8%8B/3_netpprof%E6%B5%8F%E8%A7%88%E5%99%A8%E6%88%AA%E5%9B%BE2.png" class="" title="image">
-
-<p>之后可以通过 <a href="http://localhost:8211/debug/pprof/CMD%E8%8E%B7%E5%8F%96%E5%AF%B9%E5%BA%94%E7%9A%84%E9%87%87%E6%A0%B7%E6%95%B0%E6%8D%AE">http://localhost:8211/debug/pprof/CMD获取对应的采样数据</a></p>
-<p><a href="https://golang.org/src/runtime/pprof/pprof.go?s=23119:23158#L730">pprof</a></p>
-<p>Profile翻译为“剖面，侧面等”，可以理解为当前应用的的一个剖面。可以知道哪些地方耗费了cpu、memory。</p>
-<p>// Each Profile has a unique name. A few profiles are predefined:</p>
-<ol>
-<li><pre><code>goroutine    - stack traces of all current goroutines
-</code></pre>
-</li>
-<li>heap         - a sampling of memory allocations of live objects</li>
-<li>allocs       - a sampling of all past memory allocations</li>
-<li>threadcreate - stack traces that led to the creation of new OS threads</li>
-<li>block        - stack traces that led to blocking on synchronization primitives</li>
-<li>mutex        - stack traces of holders of contended mutexes</li>
-</ol>
-<ul>
-<li>goroutine: 获取程序当前所有 goroutine 的堆栈信息。</li>
-<li>heap: 包含每个 goroutine 分配大小，分配堆栈等。每分配 runtime.MemProfileRate(默认为512K) 个字节进行一次数据采样。</li>
-<li>threadcreate: 获取导致创建 OS 线程的 goroutine 堆栈</li>
-<li>block: 获取导致阻塞的 goroutine 堆栈(如 channel, mutex 等)，使用前需要先调用 runtime.SetBlockProfileRate</li>
-<li>mutex: 获取导致 mutex 争用的 goroutine 堆栈，使用前需要先调用 runtime.SetMutexProfileFraction</li>
-</ul>
-<p><a href="https://golang.org/src/runtime/pprof/pprof.go?s=23119:23158#L730">pprof_debug</a></p>
-<p>The debug parameter enables additional output.</p>
-<p>Passing debug=0 prints only the hexadecimal addresses that pprof needs.</p>
-<p>Passing debug=1 adds comments translating addresses to function names and line numbers, so that a programmer can read the profile without tools.</p>
-<img src="/2018/12/11/%E4%B8%80%E6%AC%A1go%E5%86%85%E5%AD%98%E6%B3%84%E6%BC%8F%E7%9A%84%E6%8E%92%E6%9F%A5%E8%BF%87%E7%A8%8B/4_netpprof_debug_1.png" class="" title="image">
-
-
-<p>The predefined profiles may assign meaning to other debug values;</p>
-<p>for example, when printing the “goroutine” profile, debug=2 means to print the goroutine stacks in the same form that a Go program uses when dying due to an unrecovered panic.</p>
-<p>以上几种 Profile 可在 <a href="http://localhost:8211/debug/pprof/">http://localhost:8211/debug/pprof/</a> 中看到，除此之外，go pprof 的 CMD 还包括, </p>
-<ul>
-<li>cmdline: 获取程序的命令行启动参数</li>
-<li>profile: 获取指定时间内(从请求时开始)的cpuprof，倒计时结束后自动返回。参数: seconds, 默认值为30。cpuprofile 每秒钟采样100次，收集当前运行的 goroutine 堆栈信息。</li>
-<li>symbol: 用于将地址列表转换为函数名列表，地址通过’+’分隔，如 URL/debug/pprof?0x18d067f+0x17933e7</li>
-<li>trace: 对应用程序进行执行追踪，参数: seconds, 默认值1s</li>
-</ul>
-<p>参数具体信息可以参考<a href="https://golang.org/pkg/net/http/pprof/">http_pprof</a></p>
-<p>再回顾来看服务的问题，从图2中看到，goroutine的数量在一直增长；从图3看出，共起了414个goroutine, 其中395个是在调用FetchZkName。<br>然后再查看我们的代码，有哪里在调用go, 哪个goroutine会最终调用FetchZkName,就可以查到出问题的地方。</p>
-<p>最终查到原因是：</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line">  <span class="comment">// 10s去更新下zk节点</span></span><br><span class="line">ticker2 := time.NewTicker(time.Second * <span class="number">10</span>)</span><br><span class="line"><span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">	<span class="keyword">for</span> &#123;</span><br><span class="line">		<span class="keyword">select</span> &#123;</span><br><span class="line">		<span class="keyword">case</span> &lt;-ticker2.C:</span><br><span class="line">			UpdateInstanceFromZk()</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;()</span><br><span class="line"></span><br><span class="line"><span class="comment">// 里面的函数调用关系如下：</span></span><br><span class="line">UpdateInstanceFromZk --&gt; nameservice.InitNameService </span><br><span class="line">--&gt; updateNames --&gt; FetchZkName</span><br><span class="line"></span><br><span class="line"><span class="comment">// FetchZkName函数里起了一个goroutine,封装了watcher，自己已实现了更新zk节点的功能</span></span><br><span class="line">   <span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">	<span class="keyword">select</span> &#123;</span><br><span class="line">	<span class="keyword">case</span> ev := &lt;-ch:</span><br><span class="line">		uflog.INFO(<span class="string">&quot;cat watcher&quot;</span>, ev)</span><br><span class="line">		<span class="keyword">if</span> ev.Type == zk.EventNotWatching &amp;&amp; ev.State == zk.StateDisconnected &#123;</span><br><span class="line">			reConnect(connStr)</span><br><span class="line">		&#125;</span><br><span class="line">		nc.FetchZkName(connStr, shortName, fullName)</span><br><span class="line">	&#125;</span><br><span class="line">&#125;()</span><br><span class="line"></span><br><span class="line"><span class="comment">// 该goroutine不会退出，会一直watch。定时调用UpdateInstanceFromZk，会导致goroutine不断增加，内存泄漏。</span></span><br></pre></td></tr></table></figure>
-
-<p>解决方案是：UpdateInstanceFromZk（）调用一次即可。</p>
-<p>改进后，占用内存一直保持在20M左右，完美~</p>
-<img src="/2018/12/11/%E4%B8%80%E6%AC%A1go%E5%86%85%E5%AD%98%E6%B3%84%E6%BC%8F%E7%9A%84%E6%8E%92%E6%9F%A5%E8%BF%87%E7%A8%8B/6_%E5%86%85%E5%AD%98%E6%B3%84%E6%BC%8F%E8%A7%A3%E5%86%B3.png" class="" title="image">
-
-<h2 id="Go-Tool-PProf-分析工具"><a href="#Go-Tool-PProf-分析工具" class="headerlink" title="Go Tool PProf 分析工具"></a>Go Tool PProf 分析工具</h2><p>上面通过浏览器访问http服务的方式，需要有图形界面。而线上服务器通常是没有图形界面的，可以通过命令行方式来分析，或者将profile拷贝到本地，再生成调用关系图</p>
-<h3 id="Go-Tool-PProf-命令行"><a href="#Go-Tool-PProf-命令行" class="headerlink" title="Go Tool PProf 命令行"></a>Go Tool PProf 命令行</h3><p>支持的cmd跟net/http/pprof里提到的一样</p>
-<figure class="highlight awk"><table><tr><td class="code"><pre><span class="line">go tool pprof http:<span class="regexp">//</span>localhost:<span class="number">8211</span><span class="regexp">/debug/</span>pprof/goroutine</span><br><span class="line">go tool pprof http:<span class="regexp">//</span>localhost:<span class="number">8211</span><span class="regexp">/debug/</span>pprof/profile</span><br><span class="line">go tool pprof http:<span class="regexp">//</span>localhost:<span class="number">8211</span><span class="regexp">/debug/</span>pprof/heap</span><br><span class="line">...</span><br></pre></td></tr></table></figure>
-
-<p>以采集CPU耗时举例, </p>
-<figure class="highlight vim"><table><tr><td class="code"><pre><span class="line"># /root/<span class="keyword">go</span>/bin/<span class="keyword">go</span> tool pprof http://localhos<span class="variable">t:8211</span>/<span class="keyword">debug</span>/pprof/<span class="keyword">profile</span></span><br><span class="line">Fetching <span class="keyword">profile</span> over HTTP from http://localhos<span class="variable">t:8211</span>/<span class="keyword">debug</span>/pprof/<span class="keyword">profile</span></span><br><span class="line">Saved <span class="keyword">profile</span> in /root/pprof/pprof.uhost_server.samples.cpu.<span class="number">003</span>.pb.gz</span><br><span class="line">File: uhost_server</span><br><span class="line">Type: cpu</span><br><span class="line">Time: Dec <span class="number">11</span>, <span class="number">2018</span> at <span class="number">6</span>:<span class="number">12</span>pm (CST)</span><br><span class="line">Duration: <span class="number">30</span>s, Total samples = <span class="number">10</span>ms (<span class="number">0.033</span>%)</span><br><span class="line">Entering interactive <span class="keyword">mode</span> (<span class="built_in">type</span> <span class="string">&quot;help&quot;</span> <span class="keyword">for</span> commands, <span class="string">&quot;o&quot;</span> <span class="keyword">for</span> <span class="keyword">options</span>)</span><br><span class="line">(pprof)</span><br></pre></td></tr></table></figure>
-
-<p>会经历30s的采样时间，生成pprof.uhost_server.samples.cpu.003.pb.gz,这个可以拷贝到本地分析。</p>
-<h4 id="最重要的分析命令是top-N"><a href="#最重要的分析命令是top-N" class="headerlink" title="最重要的分析命令是top N"></a>最重要的分析命令是top N</h4><p>topN 命令可以查出程序最耗 CPU 的调用</p>
-<figure class="highlight r"><table><tr><td class="code"><pre><span class="line">(pprof) top <span class="number">5</span></span><br><span class="line">Showing nodes accounting <span class="keyword">for</span> <span class="number">70</span>ms, <span class="number">38.89</span>% of 180ms total</span><br><span class="line">Showing top 5 nodes out of 83</span><br><span class="line">      flat  flat%   <span class="built_in">sum</span>%        cum   cum%</span><br><span class="line">      <span class="number">30</span>ms <span class="number">16.67</span>% 16.67%       <span class="number">30</span>ms <span class="number">16.67</span>%  syscall.Syscall</span><br><span class="line">      10ms  5.56% <span class="number">22.22</span>%       20ms 11.11%  fmt.Sprintf</span><br><span class="line">      <span class="number">10</span>ms  <span class="number">5.56</span>% 27.78%       <span class="number">30</span>ms <span class="number">16.67</span>%  os.(*File).write</span><br><span class="line">      10ms  5.56% <span class="number">33.33</span>%       10ms  5.56%  runtime._ExternalCode</span><br><span class="line">      <span class="number">10</span>ms  <span class="number">5.56</span>% 38.89%       <span class="number">10</span>ms  <span class="number">5.56</span>%  runtime.epollwait</span><br></pre></td></tr></table></figure>
-<ul>
-<li>flat / flat% : 函数占用CPU的运行时间和百分比</li>
-<li>sum% : 按列累加的累计占用CPU百分比</li>
-<li>cum / cum% : 采样过程中， the function appeared (either running or waiting for a called function to return).</li>
-</ul>
-<h4 id="top-cum"><a href="#top-cum" class="headerlink" title="top -cum"></a>top -cum</h4><p>以累加的方式，看出消耗cpu的函数运行。可以和后面图形的方式做个对比</p>
-<figure class="highlight r"><table><tr><td class="code"><pre><span class="line">(pprof) top10 -cum</span><br><span class="line">Showing nodes accounting <span class="keyword">for</span> <span class="number">40</span>ms, <span class="number">22.22</span>% of 180ms total</span><br><span class="line">Showing top 10 nodes out of 83</span><br><span class="line">      flat  flat%   <span class="built_in">sum</span>%        cum   cum%</span><br><span class="line">         <span class="number">0</span>     <span class="number">0</span>%     0%      <span class="number">140</span>ms <span class="number">77.78</span>%  runtime.goexit</span><br><span class="line">         0     0%     <span class="number">0</span>%       40ms 22.22%  uframework/log.RealWrite</span><br><span class="line">         <span class="number">0</span>     <span class="number">0</span>%     0%       <span class="number">40</span>ms <span class="number">22.22</span>%  uframework/task.(*TCPTask).Run.func1</span><br><span class="line">         0     0%     <span class="number">0</span>%       40ms 22.22%  uframework/task.TCPTaskFunc.ServeTCP</span><br><span class="line">         <span class="number">0</span>     <span class="number">0</span>%     0%       <span class="number">40</span>ms <span class="number">22.22</span>%  uhost-go/uhost-scheduler/logic.getSuitableResource</span><br><span class="line">         0     0%     <span class="number">0</span>%       30ms 16.67%  os.(*File).Write</span><br><span class="line">      <span class="number">10</span>ms  <span class="number">5.56</span>%  5.56%       <span class="number">30</span>ms <span class="number">16.67</span>%  os.(*File).write</span><br><span class="line">      30ms 16.67% <span class="number">22.22</span>%       30ms 16.67%  syscall.Syscall</span><br><span class="line">         <span class="number">0</span>     <span class="number">0</span>% 22.22%       <span class="number">30</span>ms <span class="number">16.67</span>%  uframework/message/protobuf/proto.(*Buffer).dec_slice_struct</span><br><span class="line">         0     0% <span class="number">22.22</span>%       30ms 16.67%  uframework/message/protobuf/proto.(*Buffer).dec_slice_struct_message</span><br></pre></td></tr></table></figure>
-
-<h4 id="list-Func"><a href="#list-Func" class="headerlink" title="list Func"></a>list Func</h4><p>显示函数名以及每行代码的采样分析</p>
-<figure class="highlight gradle"><table><tr><td class="code"><pre><span class="line">(pprof) list dec_slice_struct_message</span><br><span class="line">Total: <span class="number">180</span>ms</span><br><span class="line">ROUTINE ======================== uframework<span class="regexp">/message/</span>protobuf<span class="regexp">/proto.(*Buffer).dec_slice_struct_message in /U</span>sers<span class="regexp">/patrick.xu/g</span>o<span class="regexp">/src/u</span>framework<span class="regexp">/message/</span>protobuf<span class="regexp">/proto/</span>decode.go</span><br><span class="line">         <span class="number">0</span>       <span class="number">30</span>ms (flat, cum) <span class="number">16.67</span>% of Total</span><br><span class="line">         .          .    <span class="number">822</span>:	<span class="keyword">return</span> err</span><br><span class="line">         .          .    <span class="number">823</span>:&#125;</span><br><span class="line">         .          .    <span class="number">824</span>:</span><br><span class="line">         .          .    <span class="number">825</span>:<span class="comment">// Decode a slice of embedded messages.</span></span><br><span class="line">         .          .    <span class="number">826</span>:func (o *Buffer) dec_slice_struct_message(p *Properties, base structPointer) error &#123;</span><br><span class="line">         .       <span class="number">30</span>ms    <span class="number">827</span>:	<span class="keyword">return</span> o.dec_slice_struct(p, <span class="keyword">false</span>, base)</span><br><span class="line">         .          .    <span class="number">828</span>:&#125;</span><br><span class="line">         .          .    <span class="number">829</span>:</span><br><span class="line">         .          .    <span class="number">830</span>:<span class="comment">// Decode a slice of embedded groups.</span></span><br><span class="line">         .          .    <span class="number">831</span>:func (o *Buffer) dec_slice_struct_group(p *Properties, base structPointer) error &#123;</span><br><span class="line">         .          .    <span class="number">832</span>:	<span class="keyword">return</span> o.dec_slice_struct(p, <span class="keyword">true</span>, base)</span><br></pre></td></tr></table></figure>
-
-<h4 id="web-web-Func"><a href="#web-web-Func" class="headerlink" title="web / web Func"></a>web / web Func</h4><p>显示调用图 / 显示某个具体函数的调用图</p>
-<p>mac上需要先安装graphviz <a href="http://www.graphviz.org/">http://www.graphviz.org/</a></p>
-<p>homebrew安装完毕后运行 brew install graphviz即可</p>
-<figure class="highlight vim"><table><tr><td class="code"><pre><span class="line">➜  uhost-<span class="keyword">go</span> gi<span class="variable">t:</span>(from_pxu) ✗ <span class="keyword">go</span> tool pprof uhost_server pprof.uhost_server.samples.cpu.<span class="number">004</span>.pb</span><br><span class="line">Entering interactive <span class="keyword">mode</span> (<span class="built_in">type</span> <span class="string">&quot;help&quot;</span> <span class="keyword">for</span> commands)</span><br><span class="line">(pprof) web</span><br><span class="line">(pprof) web getSuitableResource</span><br></pre></td></tr></table></figure>
-
-<p>但是web命令生成的调用图往往是残缺的，不知道是什么原因。但找到下面更好的方式。</p>
-<h4 id="本地显示远程的调用图（推荐）"><a href="#本地显示远程的调用图（推荐）" class="headerlink" title="本地显示远程的调用图（推荐）"></a>本地显示远程的调用图（推荐）</h4><p>后来返现一种更易用的方式，服务在线上运行，本地浏览器直接打开调用图。<br>线上服务器ip为172.21.212.101，pprof监听端口为8991。</p>
-<p>下面还是以cpu耗时为例</p>
-<figure class="highlight vim"><table><tr><td class="code"><pre><span class="line">[root@gw ~]# <span class="keyword">go</span> tool pprof http://<span class="number">172.21</span>.<span class="number">212.101</span>:<span class="number">8991</span>/<span class="keyword">debug</span>/pprof/<span class="keyword">profile</span></span><br><span class="line">Fetching <span class="keyword">profile</span> over HTTP from http://<span class="number">172.21</span>.<span class="number">212.101</span>:<span class="number">8991</span>/<span class="keyword">debug</span>/pprof/<span class="keyword">profile</span></span><br><span class="line">Saved <span class="keyword">profile</span> in /root/pprof/pprof.node_server.samples.cpu.<span class="number">005</span>.pb.gz</span><br><span class="line">File: node_server</span><br><span class="line">Type: cpu</span><br><span class="line">Time: Sep <span class="number">16</span>, <span class="number">2021</span> at <span class="number">4</span>:<span class="number">36</span>pm (CST)</span><br><span class="line">Duration: <span class="number">30.18</span>s, Total samples = <span class="number">5.15</span>mins (<span class="number">1023.28</span>%)</span><br><span class="line">Entering interactive <span class="keyword">mode</span> (<span class="built_in">type</span> <span class="string">&quot;help&quot;</span> <span class="keyword">for</span> commands, <span class="string">&quot;o&quot;</span> <span class="keyword">for</span> <span class="keyword">options</span>)</span><br><span class="line">(pprof) </span><br></pre></td></tr></table></figure>
-
-<p>然后在线上服务器再起一个8992的端口</p>
-<figure class="highlight awk"><table><tr><td class="code"><pre><span class="line">[root@gw ~]<span class="comment"># go tool pprof -http=&quot;172.21.212.101:8992&quot; http://172.21.212.101:8991/debug/pprof/profile</span></span><br><span class="line">Fetching profile over HTTP from http:<span class="regexp">//</span><span class="number">172.21</span>.<span class="number">212.101</span>:<span class="number">8991</span><span class="regexp">/debug/</span>pprof/profile</span><br><span class="line">Saved profile <span class="keyword">in</span> <span class="regexp">/root/</span>pprof/pprof.node_server.samples.cpu.<span class="number">006</span>.pb.gz</span><br><span class="line">Serving web UI on http:<span class="regexp">//</span><span class="number">172.21</span>.<span class="number">212.101</span>:<span class="number">8992</span></span><br><span class="line">http:<span class="regexp">//</span><span class="number">172.21</span>.<span class="number">212.101</span>:<span class="number">8992</span></span><br><span class="line"></span><br></pre></td></tr></table></figure>
-
-<p>在本地浏览器可以直接打开web UI</p>
-<img src="/2018/12/11/%E4%B8%80%E6%AC%A1go%E5%86%85%E5%AD%98%E6%B3%84%E6%BC%8F%E7%9A%84%E6%8E%92%E6%9F%A5%E8%BF%87%E7%A8%8B/pprof_webui.png" class="" title="image">
-<p>还有火焰图，汇编代码等，功能更加强大。</p>
-<h2 id="pprof-1"><a href="#pprof-1" class="headerlink" title="pprof"></a>pprof</h2><p>As of Go 1.11, flamegraph visualizations are available in go tool pprof directly!</p>
-<p>This will listen on :8081 and open a browser.<br>Change :8081 to a port of your choice.</p>
-<p>$ go tool pprof -http=”:8081” [binary] [profile]</p>
-<p>If you cannot use Go 1.11, you can get the latest pprof tool and use it instead:</p>
-<p>Get the pprof tool directly</p>
-<p>$ go get -u github.com/google/pprof</p>
-<p>$ pprof -http=”:8081” [binary] [profile]</p>
-<p>由于我的Mac上用的是go1.8.1版本，所用pprof命令。</p>
-<figure class="highlight pgsql"><table><tr><td class="code"><pre><span class="line">➜  uhost-go git:(from_pxu) ✗ pprof uhost_server pprof.uhost_server.samples.cpu<span class="number">.004</span>.pb</span><br><span class="line">uhost_server: parsing profile: unrecognized profile <span class="keyword">format</span></span><br><span class="line">Fetched <span class="number">1</span> source profiles <span class="keyword">out</span> <span class="keyword">of</span> <span class="number">2</span></span><br><span class="line">File: uhost_server</span><br><span class="line"><span class="keyword">Type</span>: cpu</span><br><span class="line"><span class="type">Time</span>: <span class="type">Dec</span> <span class="number">11</span>, <span class="number">2018</span> at <span class="number">6</span>:<span class="number">18</span>pm (CST)</span><br><span class="line">Duration: <span class="number">30</span>s, Total samples = <span class="number">180</span>ms (  <span class="number">0.6</span>%)</span><br><span class="line">Entering interactive mode (<span class="keyword">type</span> &quot;help&quot; <span class="keyword">for</span> commands, &quot;o&quot; <span class="keyword">for</span> <span class="keyword">options</span>)</span><br><span class="line">(pprof) web</span><br></pre></td></tr></table></figure>
-
-<img src="/2018/12/11/%E4%B8%80%E6%AC%A1go%E5%86%85%E5%AD%98%E6%B3%84%E6%BC%8F%E7%9A%84%E6%8E%92%E6%9F%A5%E8%BF%87%E7%A8%8B/5_cpu%E8%80%97%E6%97%B6%E8%B0%83%E5%BA%A6%E5%9B%BE.png" class="" title="image">
-
-<h2 id="其他工具"><a href="#其他工具" class="headerlink" title="其他工具"></a>其他工具</h2><ul>
-<li>delve<br><a href="https://github.com/derekparker/delve">https://github.com/derekparker/delve</a></li>
-<li>go-torch 生成火焰图<br><a href="https://github.com/uber/go-torch">https://github.com/uber/go-torch</a></li>
-</ul>
-<p>以后用到了再整理，这里mark下</p>
-<h2 id="参考链接"><a href="#参考链接" class="headerlink" title="参考链接"></a>参考链接</h2><p><a href="https://blog.golang.org/profiling-go-programs">Profiling Go Programs</a></p>
-<p><a href="https://golang.org/src/runtime/pprof/pprof.go?s=23119:23158#L730">Source file src/runtime/pprof/pprof.go</a></p>
-<p><a href="http://wudaijun.com/2018/04/go-pprof/">go pprof性能分析</a></p>
-<p><a href="https://cizixs.com/2017/09/11/profiling-golang-program/">使用pprof和火焰图调试golang应用</a></p>
-]]></content>
-      <categories>
-        <category>Go</category>
-      </categories>
-      <tags>
-        <tag>Go</tag>
       </tags>
   </entry>
   <entry>

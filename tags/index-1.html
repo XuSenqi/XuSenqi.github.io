@@ -58,7 +58,7 @@
 <meta property="og:description" content="完成比完美更重要">
 <meta property="og:locale">
 <meta property="article:published_time" content="2017-12-09T14:06:51.000Z">
-<meta property="article:modified_time" content="2021-08-18T13:21:33.121Z">
+<meta property="article:modified_time" content="2023-09-06T14:12:25.421Z">
 <meta property="article:author" content="patrick.xu">
 <meta name="twitter:card" content="summary">
 
@@ -124,7 +124,7 @@
         <span class="logo-line-after"><i></i></span>
       </a>
     </div>
-        <p class="site-subtitle">长期有耐心</p>
+        <p class="site-subtitle">人必有所执，方能有所成</p>
   </div>
 
   <div class="site-nav-toggle">
@@ -258,7 +258,13 @@
 
           </div>
           
-    <div class="comments" id="valine-comments"></div>
+<script src="https://utteranc.es/client.js"
+        repo="XuSenqi/hexo-blog-comment"
+        issue-term="pathname"
+        theme="github-light"
+        crossorigin="anonymous"
+        async>
+</script>
 
 <script>
   window.addEventListener('tabs:register', () => {
@@ -363,7 +369,7 @@
 <div class="copyright">
   
   &copy; 
-  <span itemprop="copyrightYear">2022</span>
+  <span itemprop="copyrightYear">2023</span>
   <span class="with-love">
     <i class="fa fa-user"></i>
   </span>
@@ -541,35 +547,6 @@
   
 
   
-
-
-<script>
-NexT.utils.loadComments(document.querySelector('#valine-comments'), () => {
-  NexT.utils.getScript('//unpkg.com/valine/dist/Valine.min.js', () => {
-    var GUEST = ['nick', 'mail', 'link'];
-    var guest = 'nick,mail,link';
-    guest = guest.split(',').filter(item => {
-      return GUEST.includes(item);
-    });
-    new Valine({
-      el: '#valine-comments',
-      verify: false,
-      notify: true,
-      appId: 'RuNvykqCFiSKIt83PqlqJbK0-gzGzoHsz',
-      appKey: '9TDvi5mOVCQ0aBL2MXCwd9WC',
-      placeholder: "Just go go",
-      avatar: 'mm',
-      meta: guest,
-      pageSize: '10' || 10,
-      visitor: false,
-      lang: '' || 'zh-cn',
-      path: location.pathname,
-      recordIP: false,
-      serverURLs: ''
-    });
-  }, window.Valine);
-});
-</script>
 
 </body>
 </html>

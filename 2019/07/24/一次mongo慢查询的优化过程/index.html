@@ -58,7 +58,7 @@
 <meta property="og:description" content="今天发现查询mongo时容易慢查询，现在将整个排查及优化过程,总结记录如下。 Database Profiler介绍类似于mysql,Profiler可以实现慢查询日志的功能，它把数据收集在system.profile集合里。该集合是一个capped collection（有上限的集合）。Profiler默认是关闭的，可以在一个database或者一个instance上设置开启，设置不同的prof">
 <meta property="og:locale">
 <meta property="article:published_time" content="2019-07-23T16:39:19.000Z">
-<meta property="article:modified_time" content="2021-08-19T09:54:38.731Z">
+<meta property="article:modified_time" content="2023-09-06T14:12:25.418Z">
 <meta property="article:author" content="patrick.xu">
 <meta property="article:tag" content="mongo">
 <meta property="article:tag" content="MongoDB">
@@ -125,7 +125,7 @@
         <span class="logo-line-after"><i></i></span>
       </a>
     </div>
-        <p class="site-subtitle">长期有耐心</p>
+        <p class="site-subtitle">人必有所执，方能有所成</p>
   </div>
 
   <div class="site-nav-toggle">
@@ -247,7 +247,7 @@
                   <i class="fa fa-calendar-check-o"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2021-08-19 17:54:38" itemprop="dateModified" datetime="2021-08-19T17:54:38+08:00">2021-08-19</time>
+                <time title="修改时间：2023-09-06 22:12:25" itemprop="dateModified" datetime="2023-09-06T22:12:25+08:00">2023-09-06</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -268,21 +268,7 @@
               </span>
               <span class="post-meta-item-text">阅读次数：</span>
               <span class="leancloud-visitors-count"></span>
-            </span>
-  
-  <span class="post-meta-item">
-    
-      <span class="post-meta-item-icon">
-        <i class="fa fa-comment-o"></i>
-      </span>
-      <span class="post-meta-item-text">Valine：</span>
-    
-    <a title="valine" href="/2019/07/24/%E4%B8%80%E6%AC%A1mongo%E6%85%A2%E6%9F%A5%E8%AF%A2%E7%9A%84%E4%BC%98%E5%8C%96%E8%BF%87%E7%A8%8B/#comments" itemprop="discussionUrl">
-      <span class="post-comments-count valine-comment-count" data-xid="/2019/07/24/%E4%B8%80%E6%AC%A1mongo%E6%85%A2%E6%9F%A5%E8%AF%A2%E7%9A%84%E4%BC%98%E5%8C%96%E8%BF%87%E7%A8%8B/" itemprop="commentCount"></span>
-    </a>
-  </span>
-  
-  <br>
+            </span><br>
             <span class="post-meta-item" title="本文字数">
               <span class="post-meta-item-icon">
                 <i class="fa fa-file-word-o"></i>
@@ -471,7 +457,13 @@
 
           </div>
           
-    <div class="comments" id="valine-comments"></div>
+<script src="https://utteranc.es/client.js"
+        repo="XuSenqi/hexo-blog-comment"
+        issue-term="pathname"
+        theme="github-light"
+        crossorigin="anonymous"
+        async>
+</script>
 
 <script>
   window.addEventListener('tabs:register', () => {
@@ -577,7 +569,7 @@
 <div class="copyright">
   
   &copy; 
-  <span itemprop="copyrightYear">2022</span>
+  <span itemprop="copyrightYear">2023</span>
   <span class="with-love">
     <i class="fa fa-user"></i>
   </span>
@@ -755,35 +747,6 @@
   
 
   
-
-
-<script>
-NexT.utils.loadComments(document.querySelector('#valine-comments'), () => {
-  NexT.utils.getScript('//unpkg.com/valine/dist/Valine.min.js', () => {
-    var GUEST = ['nick', 'mail', 'link'];
-    var guest = 'nick,mail,link';
-    guest = guest.split(',').filter(item => {
-      return GUEST.includes(item);
-    });
-    new Valine({
-      el: '#valine-comments',
-      verify: false,
-      notify: true,
-      appId: 'RuNvykqCFiSKIt83PqlqJbK0-gzGzoHsz',
-      appKey: '9TDvi5mOVCQ0aBL2MXCwd9WC',
-      placeholder: "Just go go",
-      avatar: 'mm',
-      meta: guest,
-      pageSize: '10' || 10,
-      visitor: false,
-      lang: '' || 'zh-cn',
-      path: location.pathname,
-      recordIP: false,
-      serverURLs: ''
-    });
-  }, window.Valine);
-});
-</script>
 
 </body>
 </html>

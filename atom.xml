@@ -2,11 +2,11 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>许森琪的博客</title>
   <icon>https://xusenqi.site/icon.png</icon>
-  <subtitle>长期有耐心</subtitle>
+  <subtitle>人必有所执，方能有所成</subtitle>
   <link href="https://xusenqi.site/atom.xml" rel="self"/>
   
   <link href="https://xusenqi.site/"/>
-  <updated>2022-05-15T15:35:31.828Z</updated>
+  <updated>2023-09-06T14:12:25.374Z</updated>
   <id>https://xusenqi.site/</id>
   
   <author>
@@ -21,7 +21,7 @@
     <link href="https://xusenqi.site/2022/05/15/C++%E5%86%85%E5%AD%98%E5%AF%B9%E9%BD%90/"/>
     <id>https://xusenqi.site/2022/05/15/C++%E5%86%85%E5%AD%98%E5%AF%B9%E9%BD%90/</id>
     <published>2022-05-15T15:27:55.000Z</published>
-    <updated>2022-05-15T15:35:31.828Z</updated>
+    <updated>2023-09-06T14:12:25.374Z</updated>
     
     
     <summary type="html">&lt;h1 id=&quot;什么是内存对齐&quot;&gt;&lt;a href=&quot;#什么是内存对齐&quot; class=&quot;headerlink&quot; title=&quot;什么是内存对齐&quot;&gt;&lt;/a&gt;什么是内存对齐&lt;/h1&gt;&lt;p&gt;用一个例子带出这个问题，看下面的小程序 。理论上，64位系统下，int占4byte，char占一个byte，那么将它们放到一个结构体中应该占4+1=5byte；但是实际上，通过运行程序得到的结果是8 byte，这就是内存对齐所导致的。&lt;/p&gt;</summary>
@@ -42,7 +42,7 @@
     <link href="https://xusenqi.site/2022/05/04/%E5%86%85%E5%AD%98%E5%AF%B9%E9%BD%90%E7%9A%84%E5%BA%95%E5%B1%82%E5%8E%9F%E7%90%86/"/>
     <id>https://xusenqi.site/2022/05/04/%E5%86%85%E5%AD%98%E5%AF%B9%E9%BD%90%E7%9A%84%E5%BA%95%E5%B1%82%E5%8E%9F%E7%90%86/</id>
     <published>2022-05-04T15:50:21.000Z</published>
-    <updated>2022-05-04T16:04:08.074Z</updated>
+    <updated>2023-09-06T14:12:25.374Z</updated>
     
     
     <summary type="html">&lt;p&gt;内存对齐后，可以达到更高的性能。但背后的原理是什么呢？本文从内存的物理组成方式，和读取原理上进行说明。&lt;/p&gt;</summary>
@@ -61,7 +61,7 @@
     <link href="https://xusenqi.site/2022/04/01/%E7%BC%BA%E5%B0%91%E6%8C%87%E4%BB%A4%E9%9B%86pclmulqdq%E5%AF%BC%E8%87%B4%E6%97%A0%E6%B3%95%E8%BF%90%E8%A1%8Ccrc32c%E7%9A%84%E9%97%AE%E9%A2%98/"/>
     <id>https://xusenqi.site/2022/04/01/%E7%BC%BA%E5%B0%91%E6%8C%87%E4%BB%A4%E9%9B%86pclmulqdq%E5%AF%BC%E8%87%B4%E6%97%A0%E6%B3%95%E8%BF%90%E8%A1%8Ccrc32c%E7%9A%84%E9%97%AE%E9%A2%98/</id>
     <published>2022-04-01T14:54:00.000Z</published>
-    <updated>2022-04-04T01:39:50.950Z</updated>
+    <updated>2023-09-06T14:12:25.252Z</updated>
     
     
     <summary type="html">&lt;h1 id=&quot;问题&quot;&gt;&lt;a href=&quot;#问题&quot; class=&quot;headerlink&quot; title=&quot;问题&quot;&gt;&lt;/a&gt;问题&lt;/h1&gt;&lt;p&gt;之前跑程序一直在intel/amd的CPU上，最近要适配一款国产cpu -中科海光 Hygon C86 7151 16-core Processor。突然发现计算crc32的程序跑不起来了，是啥原因呢？&lt;/p&gt;</summary>
@@ -82,7 +82,7 @@
     <link href="https://xusenqi.site/2022/03/19/cpu-cache/"/>
     <id>https://xusenqi.site/2022/03/19/cpu-cache/</id>
     <published>2022-03-19T15:03:13.000Z</published>
-    <updated>2022-03-20T03:23:42.482Z</updated>
+    <updated>2023-09-06T14:12:25.413Z</updated>
     
     
     <summary type="html">&lt;h1 id=&quot;1-cpu-cache的介绍&quot;&gt;&lt;a href=&quot;#1-cpu-cache的介绍&quot; class=&quot;headerlink&quot; title=&quot;1 cpu cache的介绍&quot;&gt;&lt;/a&gt;1 cpu cache的介绍&lt;/h1&gt;&lt;p&gt;cpu cache(高速缓存)分为三类：L1 cache、L2 cache和L3 cache。&lt;/p&gt;
@@ -108,7 +108,7 @@
     <link href="https://xusenqi.site/2021/09/05/%E4%B8%8D%E5%90%8CIO%E6%A8%A1%E5%9E%8B%E7%9A%84%E6%AF%94%E8%BE%83/"/>
     <id>https://xusenqi.site/2021/09/05/%E4%B8%8D%E5%90%8CIO%E6%A8%A1%E5%9E%8B%E7%9A%84%E6%AF%94%E8%BE%83/</id>
     <published>2021-09-05T08:50:02.000Z</published>
-    <updated>2021-09-13T07:13:23.693Z</updated>
+    <updated>2023-09-06T14:12:25.418Z</updated>
     
     
     <summary type="html">&lt;h1 id=&quot;IO模型&quot;&gt;&lt;a href=&quot;#IO模型&quot; class=&quot;headerlink&quot; title=&quot;IO模型&quot;&gt;&lt;/a&gt;IO模型&lt;/h1&gt;&lt;p&gt;一个IO输入操作通常包括2个阶段：&lt;/p&gt;
@@ -161,7 +161,7 @@
     <link href="https://xusenqi.site/2020/12/06/C++Profile%E7%9A%84%E5%A4%A7%E6%9D%80%E5%99%A8_gperftools%E7%9A%84%E4%BD%BF%E7%94%A8/"/>
     <id>https://xusenqi.site/2020/12/06/C++Profile%E7%9A%84%E5%A4%A7%E6%9D%80%E5%99%A8_gperftools%E7%9A%84%E4%BD%BF%E7%94%A8/</id>
     <published>2020-12-06T13:57:10.000Z</published>
-    <updated>2021-08-19T09:54:38.488Z</updated>
+    <updated>2023-09-06T14:12:25.253Z</updated>
     
     
     <summary type="html">&lt;p&gt;熟悉golang的同学，一定很熟悉用pprof来作为性能分析和可视化的工具，包括 cpu profile, memery profile等。这么方便且炫的功能，在C++里也一样能实现。所需要的工具就是gperftools。&lt;/p&gt;</summary>
@@ -184,7 +184,7 @@
     <link href="https://xusenqi.site/2020/03/08/golang%E4%B8%AD%E7%9A%84map%E5%B9%B6%E5%8F%91%E8%AF%BB%E5%86%99%E9%97%AE%E9%A2%98/"/>
     <id>https://xusenqi.site/2020/03/08/golang%E4%B8%AD%E7%9A%84map%E5%B9%B6%E5%8F%91%E8%AF%BB%E5%86%99%E9%97%AE%E9%A2%98/</id>
     <published>2020-03-08T13:32:07.000Z</published>
-    <updated>2021-08-19T09:54:38.652Z</updated>
+    <updated>2023-09-06T14:12:25.285Z</updated>
     
     
     <summary type="html">&lt;h1 id=&quot;map不是并发安全的&quot;&gt;&lt;a href=&quot;#map不是并发安全的&quot; class=&quot;headerlink&quot; title=&quot;map不是并发安全的&quot;&gt;&lt;/a&gt;map不是并发安全的&lt;/h1&gt;&lt;p&gt;官方的&lt;a href=&quot;https://golang.org/doc/faq#atomic_maps&quot;&gt;faq&lt;/a&gt;里有说明，考虑到有性能损失，map没有设计成原子操作，在并发读写时会有问题。&lt;/p&gt;
@@ -208,7 +208,7 @@
     <link href="https://xusenqi.site/2019/12/23/Remote-Debug-Go-Code-with-Visual-Studio-Code/"/>
     <id>https://xusenqi.site/2019/12/23/Remote-Debug-Go-Code-with-Visual-Studio-Code/</id>
     <published>2019-12-23T13:24:20.000Z</published>
-    <updated>2021-08-19T09:54:38.539Z</updated>
+    <updated>2023-09-06T14:12:25.231Z</updated>
     
     
     <summary type="html">&lt;p&gt;当了解一些大型项目的代码逻辑时，如kubernetes，跟着调试器跟踪代码学习，是很好的方式。当项目部署在远程环境时，在本机进行开发，很自然对Remote Debug有迫切需求，这也是和调试一般golang程序最主要的诉求区别点，本文将通过两个实际例子，来介绍如何Remote Debug。&lt;/p&gt;</summary>
@@ -231,7 +231,7 @@
     <link href="https://xusenqi.site/2019/12/11/kubeadm%E9%83%A8%E7%BD%B2single-control-plane-k8s%E9%9B%86%E7%BE%A4/"/>
     <id>https://xusenqi.site/2019/12/11/kubeadm%E9%83%A8%E7%BD%B2single-control-plane-k8s%E9%9B%86%E7%BE%A4/</id>
     <published>2019-12-10T16:58:25.000Z</published>
-    <updated>2021-08-19T09:54:38.671Z</updated>
+    <updated>2023-09-06T14:12:25.197Z</updated>
     
     
     <summary type="html">&lt;h1 id=&quot;kubeadm介绍&quot;&gt;&lt;a href=&quot;#kubeadm介绍&quot; class=&quot;headerlink&quot; title=&quot;kubeadm介绍&quot;&gt;&lt;/a&gt;kubeadm介绍&lt;/h1&gt;&lt;blockquote&gt;
@@ -258,7 +258,7 @@
     <link href="https://xusenqi.site/2019/08/31/%E8%BF%99%E4%BA%9B%E5%B9%B4%E8%AF%BB%E8%BF%87%E7%9A%84%E9%82%A3%E4%BA%9B%E4%B9%A6-%E5%BE%85%E8%AF%BB%E6%B8%85%E5%8D%95%E5%88%97%E8%A1%A8/"/>
     <id>https://xusenqi.site/2019/08/31/%E8%BF%99%E4%BA%9B%E5%B9%B4%E8%AF%BB%E8%BF%87%E7%9A%84%E9%82%A3%E4%BA%9B%E4%B9%A6-%E5%BE%85%E8%AF%BB%E6%B8%85%E5%8D%95%E5%88%97%E8%A1%A8/</id>
     <published>2019-08-31T15:23:54.000Z</published>
-    <updated>2021-08-19T09:54:38.916Z</updated>
+    <updated>2023-09-06T14:12:25.377Z</updated>
     
     
     <summary type="html">&lt;p&gt;每年给自己列个计划，要读哪些书，到年尾看看真正看完的有多少。&lt;/p&gt;
@@ -286,7 +286,7 @@
     <link href="https://xusenqi.site/2019/08/25/%E9%80%9A%E8%BF%87delve-dlv-%E8%B0%83%E8%AF%95golang%E7%A8%8B%E5%BA%8F/"/>
     <id>https://xusenqi.site/2019/08/25/%E9%80%9A%E8%BF%87delve-dlv-%E8%B0%83%E8%AF%95golang%E7%A8%8B%E5%BA%8F/</id>
     <published>2019-08-25T13:04:13.000Z</published>
-    <updated>2021-08-19T09:54:38.711Z</updated>
+    <updated>2023-09-06T14:12:25.403Z</updated>
     
     
     <summary type="html">&lt;h1 id=&quot;介绍&quot;&gt;&lt;a href=&quot;#介绍&quot; class=&quot;headerlink&quot; title=&quot;介绍&quot;&gt;&lt;/a&gt;介绍&lt;/h1&gt;&lt;p&gt;gdb是强大的调试工具。但对于golang程序来说，delve是个更好的选择，它能更好地理解Go runtime, data structures, and expressions，尤其是goroutine。&lt;/p&gt;
@@ -313,7 +313,7 @@
     <link href="https://xusenqi.site/2019/08/23/Visual-Studio-Code%E7%9A%84%E4%BD%BF%E7%94%A8%E6%80%BB%E7%BB%93/"/>
     <id>https://xusenqi.site/2019/08/23/Visual-Studio-Code%E7%9A%84%E4%BD%BF%E7%94%A8%E6%80%BB%E7%BB%93/</id>
     <published>2019-08-23T14:57:05.000Z</published>
-    <updated>2021-08-19T09:54:38.602Z</updated>
+    <updated>2023-09-06T14:12:25.404Z</updated>
     
     
     <summary type="html">&lt;h1 id=&quot;Visual-Studio-Code介绍&quot;&gt;&lt;a href=&quot;#Visual-Studio-Code介绍&quot; class=&quot;headerlink&quot; title=&quot;Visual Studio Code介绍&quot;&gt;&lt;/a&gt;Visual Studio Code介绍&lt;/h1&gt;&lt;p&gt;Visual Studio Code是很轻量但功能强大的代码编辑器，可以在Windows、macOS和 Linux上运行。&lt;/p&gt;</summary>
@@ -334,7 +334,7 @@
     <link href="https://xusenqi.site/2019/07/28/goroutine%E8%B0%83%E5%BA%A6%E5%99%A8/"/>
     <id>https://xusenqi.site/2019/07/28/goroutine%E8%B0%83%E5%BA%A6%E5%99%A8/</id>
     <published>2019-07-28T15:54:16.000Z</published>
-    <updated>2021-08-19T09:54:38.655Z</updated>
+    <updated>2023-09-06T14:12:25.414Z</updated>
     
     
     <summary type="html">&lt;h1 id=&quot;goroutine调度器简介&quot;&gt;&lt;a href=&quot;#goroutine调度器简介&quot; class=&quot;headerlink&quot; title=&quot;goroutine调度器简介&quot;&gt;&lt;/a&gt;goroutine调度器简介&lt;/h1&gt;&lt;p&gt;G-P-M模型，下面这张图很直观。&lt;/p&gt;
@@ -356,7 +356,7 @@
     <link href="https://xusenqi.site/2019/07/24/%E4%B8%80%E6%AC%A1mongo%E6%85%A2%E6%9F%A5%E8%AF%A2%E7%9A%84%E4%BC%98%E5%8C%96%E8%BF%87%E7%A8%8B/"/>
     <id>https://xusenqi.site/2019/07/24/%E4%B8%80%E6%AC%A1mongo%E6%85%A2%E6%9F%A5%E8%AF%A2%E7%9A%84%E4%BC%98%E5%8C%96%E8%BF%87%E7%A8%8B/</id>
     <published>2019-07-23T16:39:19.000Z</published>
-    <updated>2021-08-19T09:54:38.731Z</updated>
+    <updated>2023-09-06T14:12:25.418Z</updated>
     
     
     <summary type="html">&lt;p&gt;今天发现查询mongo时容易慢查询，现在将整个排查及优化过程,总结记录如下。&lt;/p&gt;
@@ -378,7 +378,7 @@
     <link href="https://xusenqi.site/2019/07/13/%E4%B8%80%E6%AC%A1node%E8%BF%9B%E7%A8%8Bcpu%E8%B4%9F%E8%BD%BD100-%E9%97%AE%E9%A2%98%E7%9A%84%E5%A4%84%E7%90%86/"/>
     <id>https://xusenqi.site/2019/07/13/%E4%B8%80%E6%AC%A1node%E8%BF%9B%E7%A8%8Bcpu%E8%B4%9F%E8%BD%BD100-%E9%97%AE%E9%A2%98%E7%9A%84%E5%A4%84%E7%90%86/</id>
     <published>2019-07-13T15:17:28.000Z</published>
-    <updated>2021-08-19T09:54:52.550Z</updated>
+    <updated>2023-09-06T14:12:25.259Z</updated>
     
     
     <summary type="html">&lt;h1 id=&quot;1-node进程负载高的问题&quot;&gt;&lt;a href=&quot;#1-node进程负载高的问题&quot; class=&quot;headerlink&quot; title=&quot;1 node进程负载高的问题&quot;&gt;&lt;/a&gt;1 node进程负载高的问题&lt;/h1&gt;&lt;ul&gt;
@@ -404,7 +404,7 @@
     <link href="https://xusenqi.site/2019/06/06/%E5%85%B3%E4%BA%8E%E5%AE%A2%E6%88%B7%E7%AB%AF%E9%87%8D%E8%BF%9EZooKeeper%E7%9A%84%E7%9A%84%E9%82%A3%E4%BA%9B%E4%BA%8B%E5%84%BF/"/>
     <id>https://xusenqi.site/2019/06/06/%E5%85%B3%E4%BA%8E%E5%AE%A2%E6%88%B7%E7%AB%AF%E9%87%8D%E8%BF%9EZooKeeper%E7%9A%84%E7%9A%84%E9%82%A3%E4%BA%9B%E4%BA%8B%E5%84%BF/</id>
     <published>2019-06-06T06:24:24.000Z</published>
-    <updated>2021-08-19T09:54:38.914Z</updated>
+    <updated>2023-09-06T14:12:25.287Z</updated>
     
     
     <summary type="html">&lt;h1 id=&quot;ZooKeeper-Sessions&quot;&gt;&lt;a href=&quot;#ZooKeeper-Sessions&quot; class=&quot;headerlink&quot; title=&quot;ZooKeeper Sessions&quot;&gt;&lt;/a&gt;ZooKeeper Sessions&lt;/h1&gt;&lt;p&gt;![image](关于客户端重连ZooKeeper的的那些事儿/ZooKeeper Sessions.jpg)&lt;/p&gt;
@@ -427,7 +427,7 @@
     <link href="https://xusenqi.site/2019/04/24/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0-TCP-IP%E8%AF%A6%E8%A7%A3-%E5%8D%B71%EF%BC%9A%E5%8D%8F%E8%AE%AE/"/>
     <id>https://xusenqi.site/2019/04/24/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0-TCP-IP%E8%AF%A6%E8%A7%A3-%E5%8D%B71%EF%BC%9A%E5%8D%8F%E8%AE%AE/</id>
     <published>2019-04-24T15:38:54.000Z</published>
-    <updated>2021-08-19T09:54:38.837Z</updated>
+    <updated>2023-09-06T14:12:25.378Z</updated>
     
     
     <summary type="html">&lt;p&gt;不同层的PDU（Protocol Data Unit）&lt;/p&gt;
@@ -453,7 +453,7 @@
     <link href="https://xusenqi.site/2019/03/18/%E5%88%86%E5%B8%83%E5%BC%8F%E7%B3%BB%E7%BB%9F%E6%9E%B6%E6%9E%84%E7%9A%84%E7%AE%80%E4%BB%8B/"/>
     <id>https://xusenqi.site/2019/03/18/%E5%88%86%E5%B8%83%E5%BC%8F%E7%B3%BB%E7%BB%9F%E6%9E%B6%E6%9E%84%E7%9A%84%E7%AE%80%E4%BB%8B/</id>
     <published>2019-03-18T12:47:18.000Z</published>
-    <updated>2021-08-19T09:54:38.924Z</updated>
+    <updated>2023-09-06T14:12:25.405Z</updated>
     
     
       
@@ -481,7 +481,7 @@
     <link href="https://xusenqi.site/2018/12/14/nodejs%E8%8E%B7%E5%8F%96%E5%AE%A2%E6%88%B7%E7%AB%AFIP-Address/"/>
     <id>https://xusenqi.site/2018/12/14/nodejs%E8%8E%B7%E5%8F%96%E5%AE%A2%E6%88%B7%E7%AB%AFIP-Address/</id>
     <published>2018-12-14T12:44:51.000Z</published>
-    <updated>2021-08-19T09:54:38.672Z</updated>
+    <updated>2023-09-06T14:12:25.418Z</updated>
     
     
       
