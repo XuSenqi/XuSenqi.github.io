@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.4.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+  <meta name="google-site-verification" content="Zbg0rdOzWnb205c5VcQrMg5KgGiU83O7WEZiLcWHlOE" />
+  <meta name="baidu-site-verification" content="code-CTVvBc6GO1" />
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+  <link rel="stylesheet" href="/lib/pace/pace-theme-minimal.min.css">
+  <script src="/lib/pace/pace.min.js"></script>
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    hostname: new URL('https://xusenqi.site').hostname,
+    root: '/',
+    scheme: 'Gemini',
+    version: '7.7.0',
+    exturl: false,
+    sidebar: {"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},
+    copycode: {"enable":true,"show_result":true,"style":"mac"},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":false},
+    bookmark: {"enable":false,"color":"#222","save":"auto"},
+    fancybox: false,
+    mediumzoom: false,
+    lazyload: false,
+    pangu: false,
+    comments: {"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: 'search.xml',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}
+  };
+</script>
+
+  <meta name="description" content="How to name branches and write commit messages when using git? A thorough summary of all usual conventions is given below.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Git Conventions For Naming Branches And Commit Messages">
+<meta property="og:url" content="https://xusenqi.site/2024/03/11/GitConventionsForNamingBranchesAndCommitMessages/index.html">
+<meta property="og:site_name" content="许森琪的博客">
+<meta property="og:description" content="How to name branches and write commit messages when using git? A thorough summary of all usual conventions is given below.">
+<meta property="og:locale">
+<meta property="article:published_time" content="2024-03-11T13:31:07.000Z">
+<meta property="article:modified_time" content="2024-03-11T14:13:18.186Z">
+<meta property="article:author" content="patrick.xu">
+<meta property="article:tag" content="Git">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="https://xusenqi.site/2024/03/11/GitConventionsForNamingBranchesAndCommitMessages/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true
+  };
+</script>
+
+  <title>Git Conventions For Naming Branches And Commit Messages | 许森琪的博客</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+<link rel="alternate" href="/atom.xml" title="许森琪的博客" type="application/atom+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">许森琪的博客</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+        <p class="site-subtitle">人必有所执，方能有所成</p>
+  </div>
+
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-fw fa-user"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>标签<span class="badge">44</span></a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-fw fa-th"></i>分类<span class="badge">15</span></a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档<span class="badge">33</span></a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+
+</nav>
+  <div class="site-search">
+    <div class="popup search-popup">
+    <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocorrect="off" autocapitalize="none"
+           placeholder="搜索..." spellcheck="false"
+           type="text" id="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result"></div>
+
+</div>
+<div class="search-pop-overlay"></div>
+
+  </div>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content">
+            
+
+  <div class="posts-expand">
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block " lang="zh-Hans">
+    <link itemprop="mainEntityOfPage" href="https://xusenqi.site/2024/03/11/GitConventionsForNamingBranchesAndCommitMessages/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/ppwqgtl.png">
+      <meta itemprop="name" content="patrick.xu">
+      <meta itemprop="description" content="完成比完美更重要">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="许森琪的博客">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Git Conventions For Naming Branches And Commit Messages
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2024-03-11 21:31:07 / 修改时间：22:13:18" itemprop="dateCreated datePublished" datetime="2024-03-11T21:31:07+08:00">2024-03-11</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Git/" itemprop="url" rel="index">
+                    <span itemprop="name">Git</span>
+                  </a>
+                </span>
+            </span>
+
+          
+            <span id="/2024/03/11/GitConventionsForNamingBranchesAndCommitMessages/" class="post-meta-item leancloud_visitors" data-flag-title="Git Conventions For Naming Branches And Commit Messages" title="阅读次数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span class="leancloud-visitors-count"></span>
+            </span><br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-file-word-o"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>8.4k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-clock-o"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>14 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>How to name branches and write commit messages when using git? A thorough summary of all usual conventions is given below.</p>
+<span id="more"></span>
+
+<h1 id="Branch-Naming-Convention"><a href="#Branch-Naming-Convention" class="headerlink" title="Branch Naming Convention"></a>Branch Naming Convention</h1><p>Git branches can generally be separated into two categories:</p>
+<h2 id="Code-Flow-Branches"><a href="#Code-Flow-Branches" class="headerlink" title="Code Flow Branches"></a>Code Flow Branches</h2><p>These branches which we expect to be permanently available on the repository follow the flow of code changes starting from development until the production.</p>
+<ul>
+<li><p>Development<br>All new features and bug fixes should be brought to the development branch. Resolving developer codes conflicts should be done as early as here.</p>
+</li>
+<li><p>Master<br>The production branch, if the repository is published, this is the default branch being presented.</p>
+</li>
+</ul>
+<h2 id="Temporary-Branches"><a href="#Temporary-Branches" class="headerlink" title="Temporary Branches"></a>Temporary Branches</h2><h3 id="Category"><a href="#Category" class="headerlink" title="Category"></a>Category</h3><p>A temporary git branch should start with a category. Pick one of these: feature, bugfix, hotfix, or test.</p>
+<ul>
+<li><p>feature<br>Any code changes for a new module or use case should be done on a feature branch. This branch is created based on the current development branch. When all changes are Done, a Pull Request/Merge Request is needed to put all of these to the development branch.</p>
+</li>
+<li><p>bugfix<br>If the code changes made from the feature branch were rejected after a release, sprint or demo, any necessary fixes after that should be done on the bugfix branch.</p>
+</li>
+<li><p>hotfix<br>If there is a need to fix a blocker, do a temporary patch, apply a critical framework or configuration change that should be handled immediately, it should be created as a Hotfix. It does not follow the scheduled integration of code and could be merged directly to the production branch, then on the development branch later.</p>
+</li>
+<li><p>test<br>is for experimenting outside of an issue/ticket</p>
+</li>
+</ul>
+<h3 id="Reference"><a href="#Reference" class="headerlink" title="Reference"></a>Reference</h3><p>After the category, there should be a “/“ followed by the reference of the issue/ticket you are working on. If there’s no reference, just add no-ref.</p>
+<h3 id="Description"><a href="#Description" class="headerlink" title="Description"></a>Description</h3><p>After the reference, there should be another “/“ followed by a description which sums up the purpose of this specific branch. This description should be short and “kebab-cased”.</p>
+<p>By default, you can use the title of the issue/ticket you are working on. Just replace any special character by “-“.</p>
+<p>To sum up, follow this pattern when branching:</p>
+<figure class="highlight gradle"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git branch &lt;category<span class="regexp">/reference/</span><span class="keyword">description</span>-in-kebab-<span class="keyword">case</span>&gt;</span><br></pre></td></tr></table></figure>
+
+<h3 id="Examples"><a href="#Examples" class="headerlink" title="Examples"></a>Examples</h3><p>You need to add, refactor or remove a feature: </p>
+<figure class="highlight gradle"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">feature<span class="regexp">/issue-42/</span>create-<span class="keyword">new</span>-button-component</span><br></pre></td></tr></table></figure>
+
+<p>You need to fix a bug: </p>
+<figure class="highlight apache"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">bugfix</span>/issue-<span class="number">342</span>/button-overlap-form-<span class="literal">on</span>-mobile</span><br></pre></td></tr></table></figure>
+
+<p>You need to fix a bug really fast (possibly with a temporary solution): </p>
+<figure class="highlight awk"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">hotfix<span class="regexp">/no-ref/</span>registration-form-not-working</span><br></pre></td></tr></table></figure>
+
+<p>You need to experiment outside of an issue/ticket: </p>
+<figure class="highlight pgsql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">test/<span class="keyword">no</span>-<span class="keyword">ref</span>/refactor-components-<span class="keyword">with</span>-atomic-design</span><br></pre></td></tr></table></figure>
+
+<h1 id="Commit-Naming-Convention"><a href="#Commit-Naming-Convention" class="headerlink" title="Commit Naming Convention"></a>Commit Naming Convention</h1><h2 id="Commit-Message-Format"><a href="#Commit-Message-Format" class="headerlink" title="Commit Message Format"></a>Commit Message Format</h2><p>Each commit message consists of a header, a body and a footer. The header has a special format that includes a type, a scope and a subject:</p>
+<figure class="highlight fortran"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">&lt;<span class="keyword">type</span>&gt;[<span class="keyword">optional</span> scope]: &lt;subject&gt;</span><br><span class="line"></span><br><span class="line">[<span class="keyword">optional</span> body]</span><br><span class="line"></span><br><span class="line">[<span class="keyword">optional</span> footer(s)]</span><br></pre></td></tr></table></figure>
+
+<h2 id="Type"><a href="#Type" class="headerlink" title="Type"></a>Type</h2><p>Must be one of the following:</p>
+<ul>
+<li>feat for a new feature for the user, not a new feature for build script. Such commit will trigger a release bumping a MINOR version.</li>
+<li>fix for a bug fix for the user, not a fix to a build script. Such commit will trigger a release bumping a PATCH version.</li>
+<li>perf for performance improvements. Such commit will trigger a release bumping a PATCH version.</li>
+<li>docs for changes to the documentation.</li>
+<li>style for formatting changes, missing semicolons, etc.</li>
+<li>refactor for refactoring production code, e.g. renaming a variable.</li>
+<li>test for adding missing tests, refactoring tests; no production code change.</li>
+<li>build for updating build configuration, development tools or other changes irrelevant to the user.</li>
+<li>ci: Changes to our CI configuration files and scripts (example scopes: Travis, Circle, BrowserStack, SauceLabs)</li>
+<li>revert: reverts a previous commit. Begins with revert: , followed by the header of the reverted commit. In the body it should say: This reverts commit <hash>., where the hash is the SHA of the commit being reverted.</li>
+<li>chore: Update something without impacting the user (updating grunt tasks bump a dependency in package.json. no production code change).</li>
+</ul>
+<h2 id="Scope-optional"><a href="#Scope-optional" class="headerlink" title="Scope(optional)"></a>Scope(optional)</h2><p>Scope can be anything specifying place of the commit change. </p>
+<ul>
+<li>init</li>
+<li>runner</li>
+<li>watcher</li>
+<li>config</li>
+<li>web-server</li>
+<li>proxy</li>
+<li>etc.</li>
+</ul>
+<h2 id="Subject"><a href="#Subject" class="headerlink" title="Subject"></a>Subject</h2><p>The subject contains a succinct description of the change:</p>
+<ul>
+<li>use the imperative, present tense: “change” not “changed” nor “changes”</li>
+<li>don’t capitalize the first letter</li>
+<li>no dot (.) at the end</li>
+</ul>
+<h2 id="Body-optional"><a href="#Body-optional" class="headerlink" title="Body(optional)"></a>Body(optional)</h2><p>Just as in the subject, use the imperative, present tense: “change” not “changed” nor “changes”. The body should include the motivation for the change and contrast this with previous behavior.</p>
+<h2 id="Footer-optional"><a href="#Footer-optional" class="headerlink" title="Footer(optional)"></a>Footer(optional)</h2><p>The footer should contain any information about Breaking Changes and is also the place to reference GitHub issues that this commit Closes.</p>
+<h3 id="Breaking-changes"><a href="#Breaking-changes" class="headerlink" title="Breaking changes"></a>Breaking changes</h3><p>Breaking Changes should start with the word BREAKING CHANGE: with a space or two newlines. The rest of the commit message is then the description of the change, justification and migration notes. </p>
+<p>BREAKING CHANGE example with two newlines</p>
+<figure class="highlight vhdl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">BREAKING CHANGE:</span><br><span class="line"></span><br><span class="line">`<span class="keyword">port</span>-runner` command <span class="literal">line</span> option has changed <span class="keyword">to</span> `runner-<span class="keyword">port</span>`, so that it <span class="keyword">is</span></span><br><span class="line">consistent <span class="keyword">with</span> the <span class="keyword">configuration</span> <span class="keyword">file</span> syntax.</span><br><span class="line"></span><br><span class="line"><span class="keyword">To</span> migrate your project, change <span class="keyword">all</span> the commands, where you <span class="keyword">use</span> `<span class="comment">--port-runner`</span></span><br><span class="line"><span class="keyword">to</span> `<span class="comment">--runner-port`.</span></span><br></pre></td></tr></table></figure>
+
+<p>BREAKING CHANGE example with a space</p>
+<figure class="highlight clean"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line">BREAKING CHANGE: isolate scope bindings <span class="keyword">definition</span> has changed and</span><br><span class="line">    the inject option for the directive controller injection was removed.</span><br><span class="line">    </span><br><span class="line">    To migrate the <span class="keyword">code</span> follow the example below:</span><br><span class="line">    </span><br><span class="line">    Before:</span><br><span class="line">    </span><br><span class="line">    scope: &#123;</span><br><span class="line">      myAttr: <span class="string">&#x27;attribute&#x27;</span>,</span><br><span class="line">      myBind: <span class="string">&#x27;bind&#x27;</span>,</span><br><span class="line">      myExpression: <span class="string">&#x27;expression&#x27;</span>,</span><br><span class="line">      myEval: <span class="string">&#x27;evaluate&#x27;</span>,</span><br><span class="line">      myAccessor: <span class="string">&#x27;accessor&#x27;</span></span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    After:</span><br><span class="line">    </span><br><span class="line">    scope: &#123;</span><br><span class="line">      myAttr: <span class="string">&#x27;@&#x27;</span>,</span><br><span class="line">      myBind: <span class="string">&#x27;@&#x27;</span>,</span><br><span class="line">      myExpression: <span class="string">&#x27;&amp;&#x27;</span>,</span><br><span class="line">      <span class="comment">// myEval - usually not useful, but in cases where the expression is assignable, you can use &#x27;=&#x27;</span></span><br><span class="line">      myAccessor: <span class="string">&#x27;=&#x27;</span> <span class="comment">// in directive&#x27;s template change myAccessor() to myAccessor</span></span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    The removed `inject` wasn<span class="string">&#x27;t generaly useful for directives so there should be no code using it.</span></span><br></pre></td></tr></table></figure>
+
+<p>Any commit with the breaking change section will trigger a MAJOR release and appear on the changelog independently of the commit type.</p>
+<h3 id="Referencing-issues"><a href="#Referencing-issues" class="headerlink" title="Referencing issues"></a>Referencing issues</h3><p>Closed bugs should be listed on a separate line in the footer prefixed with “Closes” keyword like this:</p>
+<figure class="highlight mipsasm"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">Closes </span><span class="comment">#234</span></span><br></pre></td></tr></table></figure>
+<p>or in case of multiple issues:</p>
+<figure class="highlight apache"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">Closes</span> #<span class="number">123</span>, #<span class="number">245</span>, #<span class="number">992</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="Commit-Message-Examples"><a href="#Commit-Message-Examples" class="headerlink" title="Commit Message Examples"></a>Commit Message Examples</h3><p>Standard commit message</p>
+<figure class="highlight pgsql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">fix(middleware): ensure Range headers adhere more closely <span class="keyword">to</span> RFC <span class="number">2616</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">Add</span> one <span class="built_in">new</span> dependency, use `<span class="keyword">range</span>-<span class="keyword">parser</span>` (Express dependency) <span class="keyword">to</span> compute</span><br><span class="line">range. It <span class="keyword">is</span> more well-tested <span class="keyword">in</span> the wild.</span><br><span class="line"></span><br><span class="line">Closes #<span class="number">2310</span></span><br></pre></td></tr></table></figure>
+
+<p>Commit message with no body</p>
+<figure class="highlight avrasm"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="symbol">docs:</span> correct spelling of CHANGELOG</span><br></pre></td></tr></table></figure>
+
+<p>Commit message with scope</p>
+<figure class="highlight stylus"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="title">feat</span><span class="params">(lang)</span></span>: add Polish language</span><br></pre></td></tr></table></figure>
+
+<p>Commit message with body and footer</p>
+<figure class="highlight oxygene"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">feat($browser): onUrlChange <span class="keyword">event</span> (popstate/hashchange/polling)</span><br><span class="line"></span><br><span class="line">Added <span class="keyword">new</span> <span class="keyword">event</span> <span class="keyword">to</span> $browser:</span><br><span class="line">- <span class="keyword">forward</span> popstate <span class="keyword">event</span> <span class="keyword">if</span> available</span><br><span class="line">- <span class="keyword">forward</span> hashchange <span class="keyword">event</span> <span class="keyword">if</span> popstate <span class="keyword">not</span> available</span><br><span class="line">- <span class="keyword">do</span> polling when neither popstate nor hashchange available</span><br><span class="line"></span><br><span class="line">Breaks $browser.onHashChange, which was removed (use onUrlChange instead)</span><br></pre></td></tr></table></figure>
+
+<p>Commit message with multi-paragraph body and multiple footers</p>
+<figure class="highlight applescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">fix: prevent racing <span class="keyword">of</span> requests</span><br><span class="line"></span><br><span class="line">Introduce a request <span class="built_in">id</span> <span class="keyword">and</span> <span class="keyword">a reference</span> <span class="keyword">to</span> latest request. Dismiss</span><br><span class="line">incoming responses other than <span class="keyword">from</span> latest request.</span><br><span class="line"></span><br><span class="line">Remove timeouts which were used <span class="keyword">to</span> mitigate <span class="keyword">the</span> racing issue <span class="keyword">but</span> are</span><br><span class="line">obsolete now.</span><br><span class="line"></span><br><span class="line">Reviewed-<span class="keyword">by</span>: Z</span><br><span class="line">Refs: <span class="comment">#123</span></span><br></pre></td></tr></table></figure>
+
+<p>Commit message with body and footer of referencing issue</p>
+<figure class="highlight mipsasm"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">fix($compile): couple of unit tests for IE9</span><br><span class="line"></span><br><span class="line">Older IEs serialize html uppercased, <span class="keyword">but </span>IE9 does not...</span><br><span class="line">Would <span class="keyword">be </span><span class="keyword">better </span>to expect case <span class="keyword">insensitive, </span>unfortunately <span class="keyword">jasmine </span>does</span><br><span class="line">not allow to user regexps for throw expectations.</span><br><span class="line"></span><br><span class="line"><span class="keyword">Closes </span><span class="comment">#392</span></span><br><span class="line"><span class="keyword">Breaks </span>foo.<span class="keyword">bar </span>api, foo.<span class="keyword">baz </span><span class="keyword">should </span><span class="keyword">be </span>used <span class="keyword">instead</span></span><br></pre></td></tr></table></figure>
+
+<p>Commit message with multi-paragraph body and footer of BREAKING CHANGE</p>
+<figure class="highlight lasso"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br></pre></td><td class="code"><pre><span class="line">feat($compile): simplify isolate scope bindings</span><br><span class="line"></span><br><span class="line">Changed the isolate scope binding options <span class="keyword">to</span>:</span><br><span class="line">  - @attr - attribute binding (including interpolation)</span><br><span class="line">  - =model - <span class="keyword">by</span><span class="params">-directional</span> model binding</span><br><span class="line">  - &amp;expr - expression execution binding</span><br><span class="line"></span><br><span class="line">This change simplifies the terminology as well as</span><br><span class="line">number of choices available <span class="keyword">to</span> the developer. It</span><br><span class="line">also supports <span class="built_in">local</span> name aliasing from the <span class="keyword">parent</span>.</span><br><span class="line"></span><br><span class="line">BREAKING CHANGE: isolate scope bindings definition has changed <span class="literal">and</span></span><br><span class="line">the inject option for the directive controller injection was removed.</span><br><span class="line"></span><br><span class="line"><span class="keyword">To</span> migrate the code follow the example below:</span><br><span class="line"></span><br><span class="line">Before:</span><br><span class="line"></span><br><span class="line">scope: &#123;</span><br><span class="line">  myAttr: <span class="string">&#x27;attribute&#x27;</span>,</span><br><span class="line">  myBind: <span class="string">&#x27;bind&#x27;</span>,</span><br><span class="line">  myExpression: <span class="string">&#x27;expression&#x27;</span>,</span><br><span class="line">  myEval: <span class="string">&#x27;evaluate&#x27;</span>,</span><br><span class="line">  myAccessor: <span class="string">&#x27;accessor&#x27;</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">After:</span><br><span class="line"></span><br><span class="line">scope: &#123;</span><br><span class="line">  myAttr: <span class="string">&#x27;@&#x27;</span>,</span><br><span class="line">  myBind: <span class="string">&#x27;@&#x27;</span>,</span><br><span class="line">  myExpression: <span class="string">&#x27;&amp;&#x27;</span>,</span><br><span class="line">  <span class="comment">// myEval - usually not useful, but in cases where the expression is assignable, you can use &#x27;=&#x27;</span></span><br><span class="line">  myAccessor: <span class="string">&#x27;=&#x27;</span> <span class="comment">// in directive&#x27;s template change myAccessor() to myAccessor</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">The removed <span class="string">`inject`</span> wasn<span class="string">&#x27;t generaly useful for directives so there should be no code using it.</span></span><br><span class="line"><span class="string"></span></span><br></pre></td></tr></table></figure>
+
+<h1 id="References"><a href="#References" class="headerlink" title="References"></a>References</h1><ul>
+<li>A Simplified Convention for Naming Branches and Commits in Git<br><a target="_blank" rel="noopener" href="https://dev.to/varbsan/a-simplified-convention-for-naming-branches-and-commits-in-git-il4">https://dev.to/varbsan/a-simplified-convention-for-naming-branches-and-commits-in-git-il4</a></li>
+<li>Git Branch Naming Convention<br><a target="_blank" rel="noopener" href="https://dev.to/couchcamote/git-branching-name-convention-cch">https://dev.to/couchcamote/git-branching-name-convention-cch</a></li>
+<li>Git Commit Msg<br><a target="_blank" rel="noopener" href="https://karma-runner.github.io/6.3/dev/git-commit-msg.html">https://karma-runner.github.io/6.3/dev/git-commit-msg.html</a></li>
+<li>Conventional Commits 1.0.0<br><a target="_blank" rel="noopener" href="https://www.conventionalcommits.org/en/v1.0.0/#summary">https://www.conventionalcommits.org/en/v1.0.0/#summary</a></li>
+<li>Contributing to Angular<br><a target="_blank" rel="noopener" href="https://github.com/angular/angular/blob/22b96b9/CONTRIBUTING.md#-commit-message-guidelines">https://github.com/angular/angular/blob/22b96b9/CONTRIBUTING.md#-commit-message-guidelines</a></li>
+<li>AngularJS Git Commit Message Conventions<br><a target="_blank" rel="noopener" href="https://docs.google.com/document/d/1QrDFcIiPjSLDn3EL15IJygNPiHORgU1_OOAqWjiDU5Y/edit">https://docs.google.com/document/d/1QrDFcIiPjSLDn3EL15IJygNPiHORgU1_OOAqWjiDU5Y/edit</a></li>
+</ul>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/Git/" rel="tag"># Git</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2022/05/15/C++%E5%86%85%E5%AD%98%E5%AF%B9%E9%BD%90/" rel="prev" title="C++内存对齐">
+      <i class="fa fa-chevron-left"></i> C++内存对齐
+    </a></div>
+      <div class="post-nav-item"></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+  </div>
+
+
+          </div>
+          
+  
+    <div class="comments" id="comments">
+        <script src="https://utteranc.es/client.js"
+                repo="XuSenqi/hexo-blog-comment"
+                issue-term="pathname"
+                label="💬"
+                theme="github-light"
+                crossorigin="anonymous"
+                async>
+        </script>
+    </div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let activeClass = CONFIG.comments.activeClass;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Branch-Naming-Convention"><span class="nav-number">1.</span> <span class="nav-text">Branch Naming Convention</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Code-Flow-Branches"><span class="nav-number">1.1.</span> <span class="nav-text">Code Flow Branches</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Temporary-Branches"><span class="nav-number">1.2.</span> <span class="nav-text">Temporary Branches</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Category"><span class="nav-number">1.2.1.</span> <span class="nav-text">Category</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Reference"><span class="nav-number">1.2.2.</span> <span class="nav-text">Reference</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Description"><span class="nav-number">1.2.3.</span> <span class="nav-text">Description</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Examples"><span class="nav-number">1.2.4.</span> <span class="nav-text">Examples</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Commit-Naming-Convention"><span class="nav-number">2.</span> <span class="nav-text">Commit Naming Convention</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Commit-Message-Format"><span class="nav-number">2.1.</span> <span class="nav-text">Commit Message Format</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Type"><span class="nav-number">2.2.</span> <span class="nav-text">Type</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Scope-optional"><span class="nav-number">2.3.</span> <span class="nav-text">Scope(optional)</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Subject"><span class="nav-number">2.4.</span> <span class="nav-text">Subject</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Body-optional"><span class="nav-number">2.5.</span> <span class="nav-text">Body(optional)</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Footer-optional"><span class="nav-number">2.6.</span> <span class="nav-text">Footer(optional)</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Breaking-changes"><span class="nav-number">2.6.1.</span> <span class="nav-text">Breaking changes</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Referencing-issues"><span class="nav-number">2.6.2.</span> <span class="nav-text">Referencing issues</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Commit-Message-Examples"><span class="nav-number">2.6.3.</span> <span class="nav-text">Commit Message Examples</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#References"><span class="nav-number">3.</span> <span class="nav-text">References</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="patrick.xu"
+      src="/images/ppwqgtl.png">
+  <p class="site-author-name" itemprop="name">patrick.xu</p>
+  <div class="site-description" itemprop="description">完成比完美更重要</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">33</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">15</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">44</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="/atom.xml" title="RSS → &#x2F;atom.xml"><i class="fa fa-fw fa-rss"></i>RSS</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">patrick.xu</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-area-chart"></i>
+    </span>
+    <span title="站点总字数">145k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">4:01</span>
+</div>
+  <div class="theme-info">主题 – <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> v7.7.0
+  </div>
+
+        
+
+
+
+
+
+
+  <script>
+  function leancloudSelector(url) {
+    url = encodeURI(url);
+    return document.getElementById(url).querySelector('.leancloud-visitors-count');
+  }
+  if (CONFIG.page.isPost) {
+    function addCount(Counter) {
+      var visitors = document.querySelector('.leancloud_visitors');
+      var url = decodeURI(visitors.getAttribute('id'));
+      var title = visitors.getAttribute('data-flag-title');
+
+      Counter('get', `/classes/Counter?where=${JSON.stringify({ url })}`)
+        .then(response => response.json())
+        .then(({ results }) => {
+          if (results.length > 0) {
+            var counter = results[0];
+            Counter('put', '/classes/Counter/' + counter.objectId, { time: { '__op': 'Increment', 'amount': 1 } })
+              .then(response => response.json())
+              .then(() => {
+                leancloudSelector(url).innerText = counter.time + 1;
+              })
+              .catch(error => {
+                console.error('Failed to save visitor count', error);
+              })
+          } else {
+              Counter('post', '/classes/Counter', { title: title, url: url, time: 1 })
+                .then(response => response.json())
+                .then(() => {
+                  leancloudSelector(url).innerText = 1;
+                })
+                .catch(error => {
+                  console.error('Failed to create', error);
+                });
+          }
+        })
+        .catch(error => {
+          console.error('LeanCloud Counter Error', error);
+        });
+    }
+  } else {
+    function showTime(Counter) {
+      var visitors = document.querySelectorAll('.leancloud_visitors');
+      var entries = [...visitors].map(element => {
+        return decodeURI(element.getAttribute('id'));
+      });
+
+      Counter('get', `/classes/Counter?where=${JSON.stringify({ url: { '$in': entries } })}`)
+        .then(response => response.json())
+        .then(({ results }) => {
+          if (results.length === 0) {
+            document.querySelectorAll('.leancloud_visitors .leancloud-visitors-count').forEach(element => {
+              element.innerText = 0;
+            });
+            return;
+          }
+          for (let item of results) {
+            let { url, time } = item;
+            leancloudSelector(url).innerText = time;
+          }
+          for (let url of entries) {
+            var element = leancloudSelector(url);
+            if (element.innerText == '') {
+              element.innerText = 0;
+            }
+          }
+        })
+        .catch(error => {
+          console.error('LeanCloud Counter Error', error);
+        });
+    }
+  }
+
+  fetch('https://app-router.leancloud.cn/2/route?appId=RuNvykqCFiSKIt83PqlqJbK0-gzGzoHsz')
+    .then(response => response.json())
+    .then(({ api_server }) => {
+      var Counter = (method, url, data) => {
+        return fetch(`https://${api_server}/1.1${url}`, {
+          method: method,
+          headers: {
+            'X-LC-Id': 'RuNvykqCFiSKIt83PqlqJbK0-gzGzoHsz',
+            'X-LC-Key': '9TDvi5mOVCQ0aBL2MXCwd9WC',
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(data)
+        });
+      };
+      if (CONFIG.page.isPost) {
+        if (CONFIG.hostname !== location.hostname) return;
+        addCount(Counter);
+      } else if (document.querySelectorAll('.post-title-link').length >= 1) {
+        showTime(Counter);
+      }
+    });
+  </script>
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  
+  <script color='0,0,255' opacity='0.5' zIndex='-1' count='99' src="/lib/canvas-nest/canvas-nest.min.js"></script>
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+  <script>
+    (function(){
+      var bp = document.createElement('script');
+      var curProtocol = window.location.protocol.split(':')[0];
+      bp.src = (curProtocol === 'https') ? 'https://zz.bdstatic.com/linksubmit/push.js' : 'http://push.zhanzhang.baidu.com/push.js';
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(bp, s);
+    })();
+  </script>
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

@@ -6,7 +6,7 @@
   <link href="https://xusenqi.site/atom.xml" rel="self"/>
   
   <link href="https://xusenqi.site/"/>
-  <updated>2023-09-06T14:12:25.374Z</updated>
+  <updated>2024-03-11T14:13:18.186Z</updated>
   <id>https://xusenqi.site/</id>
   
   <author>
@@ -15,6 +15,25 @@
   </author>
   
   <generator uri="https://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>Git Conventions For Naming Branches And Commit Messages</title>
+    <link href="https://xusenqi.site/2024/03/11/GitConventionsForNamingBranchesAndCommitMessages/"/>
+    <id>https://xusenqi.site/2024/03/11/GitConventionsForNamingBranchesAndCommitMessages/</id>
+    <published>2024-03-11T13:31:07.000Z</published>
+    <updated>2024-03-11T14:13:18.186Z</updated>
+    
+    
+    <summary type="html">&lt;p&gt;How to name branches and write commit messages when using git? A thorough summary of all usual conventions is given below.&lt;/p&gt;</summary>
+    
+    
+    
+    <category term="Git" scheme="https://xusenqi.site/categories/Git/"/>
+    
+    
+    <category term="Git" scheme="https://xusenqi.site/tags/Git/"/>
+    
+  </entry>
   
   <entry>
     <title>C++内存对齐</title>
@@ -473,28 +492,6 @@
     <category term="分布式系统" scheme="https://xusenqi.site/tags/%E5%88%86%E5%B8%83%E5%BC%8F%E7%B3%BB%E7%BB%9F/"/>
     
     <category term="架构" scheme="https://xusenqi.site/tags/%E6%9E%B6%E6%9E%84/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>nodejs获取客户端IP Address(转)</title>
-    <link href="https://xusenqi.site/2018/12/14/nodejs%E8%8E%B7%E5%8F%96%E5%AE%A2%E6%88%B7%E7%AB%AFIP-Address/"/>
-    <id>https://xusenqi.site/2018/12/14/nodejs%E8%8E%B7%E5%8F%96%E5%AE%A2%E6%88%B7%E7%AB%AFIP-Address/</id>
-    <published>2018-12-14T12:44:51.000Z</published>
-    <updated>2023-09-06T14:12:25.418Z</updated>
-    
-    
-      
-      
-        
-        
-    <summary type="html">&lt;p&gt;在网上看见很多问node.js如何获取客户端IP,所以记录下来，以供大家参考。&lt;/p&gt;
-&lt;figure class=&quot;highlight ada&quot;&gt;&lt;table&gt;&lt;tr&gt;&lt;td class=&quot;gutter&quot;&gt;&lt;pre&gt;&lt;span</summary>
-        
-      
-    
-    
-    
     
   </entry>
   

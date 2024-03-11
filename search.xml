@@ -199,6 +199,134 @@
       </tags>
   </entry>
   <entry>
+    <title>Git Conventions For Naming Branches And Commit Messages</title>
+    <url>/2024/03/11/GitConventionsForNamingBranchesAndCommitMessages/</url>
+    <content><![CDATA[<p>How to name branches and write commit messages when using git? A thorough summary of all usual conventions is given below.</p>
+<span id="more"></span>
+
+<h1 id="Branch-Naming-Convention"><a href="#Branch-Naming-Convention" class="headerlink" title="Branch Naming Convention"></a>Branch Naming Convention</h1><p>Git branches can generally be separated into two categories:</p>
+<h2 id="Code-Flow-Branches"><a href="#Code-Flow-Branches" class="headerlink" title="Code Flow Branches"></a>Code Flow Branches</h2><p>These branches which we expect to be permanently available on the repository follow the flow of code changes starting from development until the production.</p>
+<ul>
+<li><p>Development<br>All new features and bug fixes should be brought to the development branch. Resolving developer codes conflicts should be done as early as here.</p>
+</li>
+<li><p>Master<br>The production branch, if the repository is published, this is the default branch being presented.</p>
+</li>
+</ul>
+<h2 id="Temporary-Branches"><a href="#Temporary-Branches" class="headerlink" title="Temporary Branches"></a>Temporary Branches</h2><h3 id="Category"><a href="#Category" class="headerlink" title="Category"></a>Category</h3><p>A temporary git branch should start with a category. Pick one of these: feature, bugfix, hotfix, or test.</p>
+<ul>
+<li><p>feature<br>Any code changes for a new module or use case should be done on a feature branch. This branch is created based on the current development branch. When all changes are Done, a Pull Request/Merge Request is needed to put all of these to the development branch.</p>
+</li>
+<li><p>bugfix<br>If the code changes made from the feature branch were rejected after a release, sprint or demo, any necessary fixes after that should be done on the bugfix branch.</p>
+</li>
+<li><p>hotfix<br>If there is a need to fix a blocker, do a temporary patch, apply a critical framework or configuration change that should be handled immediately, it should be created as a Hotfix. It does not follow the scheduled integration of code and could be merged directly to the production branch, then on the development branch later.</p>
+</li>
+<li><p>test<br>is for experimenting outside of an issue/ticket</p>
+</li>
+</ul>
+<h3 id="Reference"><a href="#Reference" class="headerlink" title="Reference"></a>Reference</h3><p>After the category, there should be a “/“ followed by the reference of the issue/ticket you are working on. If there’s no reference, just add no-ref.</p>
+<h3 id="Description"><a href="#Description" class="headerlink" title="Description"></a>Description</h3><p>After the reference, there should be another “/“ followed by a description which sums up the purpose of this specific branch. This description should be short and “kebab-cased”.</p>
+<p>By default, you can use the title of the issue/ticket you are working on. Just replace any special character by “-“.</p>
+<p>To sum up, follow this pattern when branching:</p>
+<figure class="highlight gradle"><table><tr><td class="code"><pre><span class="line">git branch &lt;category<span class="regexp">/reference/</span><span class="keyword">description</span>-in-kebab-<span class="keyword">case</span>&gt;</span><br></pre></td></tr></table></figure>
+
+<h3 id="Examples"><a href="#Examples" class="headerlink" title="Examples"></a>Examples</h3><p>You need to add, refactor or remove a feature: </p>
+<figure class="highlight gradle"><table><tr><td class="code"><pre><span class="line">feature<span class="regexp">/issue-42/</span>create-<span class="keyword">new</span>-button-component</span><br></pre></td></tr></table></figure>
+
+<p>You need to fix a bug: </p>
+<figure class="highlight apache"><table><tr><td class="code"><pre><span class="line"><span class="attribute">bugfix</span>/issue-<span class="number">342</span>/button-overlap-form-<span class="literal">on</span>-mobile</span><br></pre></td></tr></table></figure>
+
+<p>You need to fix a bug really fast (possibly with a temporary solution): </p>
+<figure class="highlight awk"><table><tr><td class="code"><pre><span class="line">hotfix<span class="regexp">/no-ref/</span>registration-form-not-working</span><br></pre></td></tr></table></figure>
+
+<p>You need to experiment outside of an issue/ticket: </p>
+<figure class="highlight pgsql"><table><tr><td class="code"><pre><span class="line">test/<span class="keyword">no</span>-<span class="keyword">ref</span>/refactor-components-<span class="keyword">with</span>-atomic-design</span><br></pre></td></tr></table></figure>
+
+<h1 id="Commit-Naming-Convention"><a href="#Commit-Naming-Convention" class="headerlink" title="Commit Naming Convention"></a>Commit Naming Convention</h1><h2 id="Commit-Message-Format"><a href="#Commit-Message-Format" class="headerlink" title="Commit Message Format"></a>Commit Message Format</h2><p>Each commit message consists of a header, a body and a footer. The header has a special format that includes a type, a scope and a subject:</p>
+<figure class="highlight fortran"><table><tr><td class="code"><pre><span class="line">&lt;<span class="keyword">type</span>&gt;[<span class="keyword">optional</span> scope]: &lt;subject&gt;</span><br><span class="line"></span><br><span class="line">[<span class="keyword">optional</span> body]</span><br><span class="line"></span><br><span class="line">[<span class="keyword">optional</span> footer(s)]</span><br></pre></td></tr></table></figure>
+
+<h2 id="Type"><a href="#Type" class="headerlink" title="Type"></a>Type</h2><p>Must be one of the following:</p>
+<ul>
+<li>feat for a new feature for the user, not a new feature for build script. Such commit will trigger a release bumping a MINOR version.</li>
+<li>fix for a bug fix for the user, not a fix to a build script. Such commit will trigger a release bumping a PATCH version.</li>
+<li>perf for performance improvements. Such commit will trigger a release bumping a PATCH version.</li>
+<li>docs for changes to the documentation.</li>
+<li>style for formatting changes, missing semicolons, etc.</li>
+<li>refactor for refactoring production code, e.g. renaming a variable.</li>
+<li>test for adding missing tests, refactoring tests; no production code change.</li>
+<li>build for updating build configuration, development tools or other changes irrelevant to the user.</li>
+<li>ci: Changes to our CI configuration files and scripts (example scopes: Travis, Circle, BrowserStack, SauceLabs)</li>
+<li>revert: reverts a previous commit. Begins with revert: , followed by the header of the reverted commit. In the body it should say: This reverts commit <hash>., where the hash is the SHA of the commit being reverted.</li>
+<li>chore: Update something without impacting the user (updating grunt tasks bump a dependency in package.json. no production code change).</li>
+</ul>
+<h2 id="Scope-optional"><a href="#Scope-optional" class="headerlink" title="Scope(optional)"></a>Scope(optional)</h2><p>Scope can be anything specifying place of the commit change. </p>
+<ul>
+<li>init</li>
+<li>runner</li>
+<li>watcher</li>
+<li>config</li>
+<li>web-server</li>
+<li>proxy</li>
+<li>etc.</li>
+</ul>
+<h2 id="Subject"><a href="#Subject" class="headerlink" title="Subject"></a>Subject</h2><p>The subject contains a succinct description of the change:</p>
+<ul>
+<li>use the imperative, present tense: “change” not “changed” nor “changes”</li>
+<li>don’t capitalize the first letter</li>
+<li>no dot (.) at the end</li>
+</ul>
+<h2 id="Body-optional"><a href="#Body-optional" class="headerlink" title="Body(optional)"></a>Body(optional)</h2><p>Just as in the subject, use the imperative, present tense: “change” not “changed” nor “changes”. The body should include the motivation for the change and contrast this with previous behavior.</p>
+<h2 id="Footer-optional"><a href="#Footer-optional" class="headerlink" title="Footer(optional)"></a>Footer(optional)</h2><p>The footer should contain any information about Breaking Changes and is also the place to reference GitHub issues that this commit Closes.</p>
+<h3 id="Breaking-changes"><a href="#Breaking-changes" class="headerlink" title="Breaking changes"></a>Breaking changes</h3><p>Breaking Changes should start with the word BREAKING CHANGE: with a space or two newlines. The rest of the commit message is then the description of the change, justification and migration notes. </p>
+<p>BREAKING CHANGE example with two newlines</p>
+<figure class="highlight vhdl"><table><tr><td class="code"><pre><span class="line">BREAKING CHANGE:</span><br><span class="line"></span><br><span class="line">`<span class="keyword">port</span>-runner` command <span class="literal">line</span> option has changed <span class="keyword">to</span> `runner-<span class="keyword">port</span>`, so that it <span class="keyword">is</span></span><br><span class="line">consistent <span class="keyword">with</span> the <span class="keyword">configuration</span> <span class="keyword">file</span> syntax.</span><br><span class="line"></span><br><span class="line"><span class="keyword">To</span> migrate your project, change <span class="keyword">all</span> the commands, where you <span class="keyword">use</span> `<span class="comment">--port-runner`</span></span><br><span class="line"><span class="keyword">to</span> `<span class="comment">--runner-port`.</span></span><br></pre></td></tr></table></figure>
+
+<p>BREAKING CHANGE example with a space</p>
+<figure class="highlight clean"><table><tr><td class="code"><pre><span class="line">BREAKING CHANGE: isolate scope bindings <span class="keyword">definition</span> has changed and</span><br><span class="line">    the inject option for the directive controller injection was removed.</span><br><span class="line">    </span><br><span class="line">    To migrate the <span class="keyword">code</span> follow the example below:</span><br><span class="line">    </span><br><span class="line">    Before:</span><br><span class="line">    </span><br><span class="line">    scope: &#123;</span><br><span class="line">      myAttr: <span class="string">&#x27;attribute&#x27;</span>,</span><br><span class="line">      myBind: <span class="string">&#x27;bind&#x27;</span>,</span><br><span class="line">      myExpression: <span class="string">&#x27;expression&#x27;</span>,</span><br><span class="line">      myEval: <span class="string">&#x27;evaluate&#x27;</span>,</span><br><span class="line">      myAccessor: <span class="string">&#x27;accessor&#x27;</span></span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    After:</span><br><span class="line">    </span><br><span class="line">    scope: &#123;</span><br><span class="line">      myAttr: <span class="string">&#x27;@&#x27;</span>,</span><br><span class="line">      myBind: <span class="string">&#x27;@&#x27;</span>,</span><br><span class="line">      myExpression: <span class="string">&#x27;&amp;&#x27;</span>,</span><br><span class="line">      <span class="comment">// myEval - usually not useful, but in cases where the expression is assignable, you can use &#x27;=&#x27;</span></span><br><span class="line">      myAccessor: <span class="string">&#x27;=&#x27;</span> <span class="comment">// in directive&#x27;s template change myAccessor() to myAccessor</span></span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    The removed `inject` wasn<span class="string">&#x27;t generaly useful for directives so there should be no code using it.</span></span><br></pre></td></tr></table></figure>
+
+<p>Any commit with the breaking change section will trigger a MAJOR release and appear on the changelog independently of the commit type.</p>
+<h3 id="Referencing-issues"><a href="#Referencing-issues" class="headerlink" title="Referencing issues"></a>Referencing issues</h3><p>Closed bugs should be listed on a separate line in the footer prefixed with “Closes” keyword like this:</p>
+<figure class="highlight mipsasm"><table><tr><td class="code"><pre><span class="line"><span class="keyword">Closes </span><span class="comment">#234</span></span><br></pre></td></tr></table></figure>
+<p>or in case of multiple issues:</p>
+<figure class="highlight apache"><table><tr><td class="code"><pre><span class="line"><span class="attribute">Closes</span> #<span class="number">123</span>, #<span class="number">245</span>, #<span class="number">992</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="Commit-Message-Examples"><a href="#Commit-Message-Examples" class="headerlink" title="Commit Message Examples"></a>Commit Message Examples</h3><p>Standard commit message</p>
+<figure class="highlight pgsql"><table><tr><td class="code"><pre><span class="line">fix(middleware): ensure Range headers adhere more closely <span class="keyword">to</span> RFC <span class="number">2616</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">Add</span> one <span class="built_in">new</span> dependency, use `<span class="keyword">range</span>-<span class="keyword">parser</span>` (Express dependency) <span class="keyword">to</span> compute</span><br><span class="line">range. It <span class="keyword">is</span> more well-tested <span class="keyword">in</span> the wild.</span><br><span class="line"></span><br><span class="line">Closes #<span class="number">2310</span></span><br></pre></td></tr></table></figure>
+
+<p>Commit message with no body</p>
+<figure class="highlight avrasm"><table><tr><td class="code"><pre><span class="line"><span class="symbol">docs:</span> correct spelling of CHANGELOG</span><br></pre></td></tr></table></figure>
+
+<p>Commit message with scope</p>
+<figure class="highlight stylus"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="title">feat</span><span class="params">(lang)</span></span>: add Polish language</span><br></pre></td></tr></table></figure>
+
+<p>Commit message with body and footer</p>
+<figure class="highlight oxygene"><table><tr><td class="code"><pre><span class="line">feat($browser): onUrlChange <span class="keyword">event</span> (popstate/hashchange/polling)</span><br><span class="line"></span><br><span class="line">Added <span class="keyword">new</span> <span class="keyword">event</span> <span class="keyword">to</span> $browser:</span><br><span class="line">- <span class="keyword">forward</span> popstate <span class="keyword">event</span> <span class="keyword">if</span> available</span><br><span class="line">- <span class="keyword">forward</span> hashchange <span class="keyword">event</span> <span class="keyword">if</span> popstate <span class="keyword">not</span> available</span><br><span class="line">- <span class="keyword">do</span> polling when neither popstate nor hashchange available</span><br><span class="line"></span><br><span class="line">Breaks $browser.onHashChange, which was removed (use onUrlChange instead)</span><br></pre></td></tr></table></figure>
+
+<p>Commit message with multi-paragraph body and multiple footers</p>
+<figure class="highlight applescript"><table><tr><td class="code"><pre><span class="line">fix: prevent racing <span class="keyword">of</span> requests</span><br><span class="line"></span><br><span class="line">Introduce a request <span class="built_in">id</span> <span class="keyword">and</span> <span class="keyword">a reference</span> <span class="keyword">to</span> latest request. Dismiss</span><br><span class="line">incoming responses other than <span class="keyword">from</span> latest request.</span><br><span class="line"></span><br><span class="line">Remove timeouts which were used <span class="keyword">to</span> mitigate <span class="keyword">the</span> racing issue <span class="keyword">but</span> are</span><br><span class="line">obsolete now.</span><br><span class="line"></span><br><span class="line">Reviewed-<span class="keyword">by</span>: Z</span><br><span class="line">Refs: <span class="comment">#123</span></span><br></pre></td></tr></table></figure>
+
+<p>Commit message with body and footer of referencing issue</p>
+<figure class="highlight mipsasm"><table><tr><td class="code"><pre><span class="line">fix($compile): couple of unit tests for IE9</span><br><span class="line"></span><br><span class="line">Older IEs serialize html uppercased, <span class="keyword">but </span>IE9 does not...</span><br><span class="line">Would <span class="keyword">be </span><span class="keyword">better </span>to expect case <span class="keyword">insensitive, </span>unfortunately <span class="keyword">jasmine </span>does</span><br><span class="line">not allow to user regexps for throw expectations.</span><br><span class="line"></span><br><span class="line"><span class="keyword">Closes </span><span class="comment">#392</span></span><br><span class="line"><span class="keyword">Breaks </span>foo.<span class="keyword">bar </span>api, foo.<span class="keyword">baz </span><span class="keyword">should </span><span class="keyword">be </span>used <span class="keyword">instead</span></span><br></pre></td></tr></table></figure>
+
+<p>Commit message with multi-paragraph body and footer of BREAKING CHANGE</p>
+<figure class="highlight lasso"><table><tr><td class="code"><pre><span class="line">feat($compile): simplify isolate scope bindings</span><br><span class="line"></span><br><span class="line">Changed the isolate scope binding options <span class="keyword">to</span>:</span><br><span class="line">  - @attr - attribute binding (including interpolation)</span><br><span class="line">  - =model - <span class="keyword">by</span><span class="params">-directional</span> model binding</span><br><span class="line">  - &amp;expr - expression execution binding</span><br><span class="line"></span><br><span class="line">This change simplifies the terminology as well as</span><br><span class="line">number of choices available <span class="keyword">to</span> the developer. It</span><br><span class="line">also supports <span class="built_in">local</span> name aliasing from the <span class="keyword">parent</span>.</span><br><span class="line"></span><br><span class="line">BREAKING CHANGE: isolate scope bindings definition has changed <span class="literal">and</span></span><br><span class="line">the inject option for the directive controller injection was removed.</span><br><span class="line"></span><br><span class="line"><span class="keyword">To</span> migrate the code follow the example below:</span><br><span class="line"></span><br><span class="line">Before:</span><br><span class="line"></span><br><span class="line">scope: &#123;</span><br><span class="line">  myAttr: <span class="string">&#x27;attribute&#x27;</span>,</span><br><span class="line">  myBind: <span class="string">&#x27;bind&#x27;</span>,</span><br><span class="line">  myExpression: <span class="string">&#x27;expression&#x27;</span>,</span><br><span class="line">  myEval: <span class="string">&#x27;evaluate&#x27;</span>,</span><br><span class="line">  myAccessor: <span class="string">&#x27;accessor&#x27;</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">After:</span><br><span class="line"></span><br><span class="line">scope: &#123;</span><br><span class="line">  myAttr: <span class="string">&#x27;@&#x27;</span>,</span><br><span class="line">  myBind: <span class="string">&#x27;@&#x27;</span>,</span><br><span class="line">  myExpression: <span class="string">&#x27;&amp;&#x27;</span>,</span><br><span class="line">  <span class="comment">// myEval - usually not useful, but in cases where the expression is assignable, you can use &#x27;=&#x27;</span></span><br><span class="line">  myAccessor: <span class="string">&#x27;=&#x27;</span> <span class="comment">// in directive&#x27;s template change myAccessor() to myAccessor</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">The removed <span class="string">`inject`</span> wasn<span class="string">&#x27;t generaly useful for directives so there should be no code using it.</span></span><br><span class="line"><span class="string"></span></span><br></pre></td></tr></table></figure>
+
+<h1 id="References"><a href="#References" class="headerlink" title="References"></a>References</h1><ul>
+<li>A Simplified Convention for Naming Branches and Commits in Git<br><a href="https://dev.to/varbsan/a-simplified-convention-for-naming-branches-and-commits-in-git-il4">https://dev.to/varbsan/a-simplified-convention-for-naming-branches-and-commits-in-git-il4</a></li>
+<li>Git Branch Naming Convention<br><a href="https://dev.to/couchcamote/git-branching-name-convention-cch">https://dev.to/couchcamote/git-branching-name-convention-cch</a></li>
+<li>Git Commit Msg<br><a href="https://karma-runner.github.io/6.3/dev/git-commit-msg.html">https://karma-runner.github.io/6.3/dev/git-commit-msg.html</a></li>
+<li>Conventional Commits 1.0.0<br><a href="https://www.conventionalcommits.org/en/v1.0.0/#summary">https://www.conventionalcommits.org/en/v1.0.0/#summary</a></li>
+<li>Contributing to Angular<br><a href="https://github.com/angular/angular/blob/22b96b9/CONTRIBUTING.md#-commit-message-guidelines">https://github.com/angular/angular/blob/22b96b9/CONTRIBUTING.md#-commit-message-guidelines</a></li>
+<li>AngularJS Git Commit Message Conventions<br><a href="https://docs.google.com/document/d/1QrDFcIiPjSLDn3EL15IJygNPiHORgU1_OOAqWjiDU5Y/edit">https://docs.google.com/document/d/1QrDFcIiPjSLDn3EL15IJygNPiHORgU1_OOAqWjiDU5Y/edit</a></li>
+</ul>
+]]></content>
+      <categories>
+        <category>Git</category>
+      </categories>
+      <tags>
+        <tag>Git</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>Go语言 - 01 工作区和GOPATH</title>
     <url>/2018/08/12/Go%E8%AF%AD%E8%A8%80-01-%E5%B7%A5%E4%BD%9C%E5%8C%BA%E5%92%8CGOPATH/</url>
     <content><![CDATA[<h2 id="Go语言的安装"><a href="#Go语言的安装" class="headerlink" title="Go语言的安装"></a>Go语言的安装</h2><p>参照官网文档 <a href="https://golang.org/doc/install">https://golang.org/doc/install</a><br>可以在命令行中输入命令来验证是否安装成功：</p>
@@ -1636,6 +1764,31 @@
       </tags>
   </entry>
   <entry>
+    <title>并发控制</title>
+    <url>/2018/08/14/%E5%B9%B6%E5%8F%91%E6%8E%A7%E5%88%B6/</url>
+    <content><![CDATA[<h2 id="并发场景"><a href="#并发场景" class="headerlink" title="并发场景"></a>并发场景</h2><p>秒杀场景，多人并发申请购买同一种商品。<br>下面以2人抢购同一件商品举例，商品数量为1。<br>基本流程如下：</p>
+<img src="/2018/08/14/%E5%B9%B6%E5%8F%91%E6%8E%A7%E5%88%B6/%E8%B4%AD%E4%B9%B0%E8%AE%B0%E5%BD%95.png" class="" title="image">
+<p>这个流程中存在明显的并发问题，当进程A查看有1个商品，但未开始创建购买记录，此时另一个进程B也进行了资源检查，发现有1个商品，顺利通过，并完成购买操作，此时A继续执行，则1个商品会产生两条购买的记录。（这个并发场景很简单，很普遍）</p>
+<h2 id="解决方案"><a href="#解决方案" class="headerlink" title="解决方案"></a>解决方案</h2><p>解决方案通常是2类：<br>1 通过将请求分发到不同set，减少并发的可能性，分而治之。这里暂时不讨论。<br>2 当收到并发请求时，如何处理。</p>
+<h3 id="加锁操作先占有锁资源，再占有资源"><a href="#加锁操作先占有锁资源，再占有资源" class="headerlink" title="加锁操作先占有锁资源，再占有资源"></a>加锁操作先占有锁资源，再占有资源</h3><p>a. 锁库存<br>b. 插入“秒杀”记录<br>c. 更新库存</p>
+<p>“秒杀”系统的设计难点就在这个事务操作上。商品库存在DB中记为一行，大量用户同时“秒杀”同一商品时，第一个到达DB的请求锁住了这行库存记录。在第一个事务完成提交之前这个锁一直被第一个请求占用，其他到达的请求全部失败。</p>
+<p>加锁的方案，效率会比较低。实际应用时，通常要配合排队系统，让没有获取到锁的请求排队。</p>
+<h3 id="单独开发请求排队调度模块"><a href="#单独开发请求排队调度模块" class="headerlink" title="单独开发请求排队调度模块"></a>单独开发请求排队调度模块</h3><p>排队模块接收用户的抢红包请求，以FIFO模式保存下来，调度模块负责FIFO队列的动态调度，一旦有空闲资源，便从队列头部把用户的访问请求取出后交给真正提供服务的模块处理。优点是，具有中心节点的统一资源管理，对系统的可控性强，可深度定制。缺点是，所有请求流量都会有中心节点参与，效率必然会比分布式无中心系统低，并且，中心节点也很容易成为整个系统的性能瓶颈。</p>
+<h3 id="巧用Redis-特性，使其成为分布式序号生成器（我们最终采用的做法）-–-具体还要再看，如何利用redis的特性"><a href="#巧用Redis-特性，使其成为分布式序号生成器（我们最终采用的做法）-–-具体还要再看，如何利用redis的特性" class="headerlink" title="巧用Redis 特性，使其成为分布式序号生成器（我们最终采用的做法） – 具体还要再看，如何利用redis的特性"></a>巧用Redis 特性，使其成为分布式序号生成器（我们最终采用的做法） – 具体还要再看，如何利用redis的特性</h3><p>参考<br><a href="https://www.ibm.com/developerworks/cn/web/wa-design-small-and-good-kill-system/index.html">https://www.ibm.com/developerworks/cn/web/wa-design-small-and-good-kill-system/index.html</a><br><a href="https://blog.csdn.net/zhanjianshinian/article/details/53342730">https://blog.csdn.net/zhanjianshinian/article/details/53342730</a><br>每件商品以一个数字ID来标识，这个ID是全局唯一的，所有围绕商品的操作都使用这个ID作为数据的关联项。</p>
+<p>Redis节点内存储的是这个分组可以分发的商品ID号段，利用Redis特性实现红包分发，各服务节点通过Redis原语获取当前拆到的红包。这种做法的思路是，Redis 本身是单进程工作模型，来自分布式系统各个节点的操作请求天然的被 Redis Server 做了一个同步队列，只要每个请求执行的足够快，这个队列就不会引起阻塞及请求超时。而本例中我们使用了 DECR 原语，性能上是可以满足需求的。Redis 在这里相当于是充当一个分布式序号发生器的功能，分发红包 ID。</p>
+<h3 id="通过memcached来控制并发数-–-具体还要再看"><a href="#通过memcached来控制并发数-–-具体还要再看" class="headerlink" title="通过memcached来控制并发数 – 具体还要再看"></a>通过memcached来控制并发数 – 具体还要再看</h3><p><a href="https://blog.csdn.net/echo3/article/details/17580347">https://blog.csdn.net/echo3/article/details/17580347</a>  使用memcached进行并发控制（写的非常好）<br><a href="http://www.infoq.com/cn/articles/2017hongbao-weixin#">http://www.infoq.com/cn/articles/2017hongbao-weixin#</a>  百亿级微信红包的高并发资金交易系统设计方案<br><a href="https://blog.csdn.net/yanker1990/article/details/78737626">https://blog.csdn.net/yanker1990/article/details/78737626</a>  Memcache的并发问题和利用CAS的解决方案</p>
+<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><p>如何设计一个小而美的秒杀系统？<br><a href="https://www.ibm.com/developerworks/cn/web/wa-design-small-and-good-kill-system/index.html">https://www.ibm.com/developerworks/cn/web/wa-design-small-and-good-kill-system/index.html</a><br>使用memcached进行并发控制（写的非常好）<br><a href="https://blog.csdn.net/echo3/article/details/17580347">https://blog.csdn.net/echo3/article/details/17580347</a><br>电商秒杀系统设计分析<br><a href="https://blog.csdn.net/zhanjianshinian/article/details/53342730">https://blog.csdn.net/zhanjianshinian/article/details/53342730</a></p>
+<p><a href="https://memcached.org/about">https://memcached.org/about</a><br>Redis DECR命令<br><a href="https://www.kancloud.cn/thinkphp/redis-quickstart/36180">https://www.kancloud.cn/thinkphp/redis-quickstart/36180</a></p>
+<p>云主机的问题:<br>申请时要排队，好像没有意义。<br>防止申请到同一台宿主机，前面做的临时添加资源是否有用。跟定时更新是否有冲突？</p>
+]]></content>
+      <categories>
+        <category>架构设计</category>
+      </categories>
+      <tags>
+        <tag>并发控制</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>文件删除空间未释放的例子</title>
     <url>/2018/11/10/%E6%96%87%E4%BB%B6%E5%B7%B2%E5%88%A0%E9%99%A4%E7%A9%BA%E9%97%B4%E6%9C%AA%E9%87%8A%E6%94%BE%E7%9A%84%E4%BE%8B%E5%AD%90/</url>
     <content><![CDATA[<h2 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h2><p>在删除文件后，有时会遇到磁盘空间并未被释放的场景。这里自己尝试复现，并去做相关的说明。</p>
@@ -1683,67 +1836,6 @@
       </categories>
       <tags>
         <tag>文件系统</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>并发控制</title>
-    <url>/2018/08/14/%E5%B9%B6%E5%8F%91%E6%8E%A7%E5%88%B6/</url>
-    <content><![CDATA[<h2 id="并发场景"><a href="#并发场景" class="headerlink" title="并发场景"></a>并发场景</h2><p>秒杀场景，多人并发申请购买同一种商品。<br>下面以2人抢购同一件商品举例，商品数量为1。<br>基本流程如下：</p>
-<img src="/2018/08/14/%E5%B9%B6%E5%8F%91%E6%8E%A7%E5%88%B6/%E8%B4%AD%E4%B9%B0%E8%AE%B0%E5%BD%95.png" class="" title="image">
-<p>这个流程中存在明显的并发问题，当进程A查看有1个商品，但未开始创建购买记录，此时另一个进程B也进行了资源检查，发现有1个商品，顺利通过，并完成购买操作，此时A继续执行，则1个商品会产生两条购买的记录。（这个并发场景很简单，很普遍）</p>
-<h2 id="解决方案"><a href="#解决方案" class="headerlink" title="解决方案"></a>解决方案</h2><p>解决方案通常是2类：<br>1 通过将请求分发到不同set，减少并发的可能性，分而治之。这里暂时不讨论。<br>2 当收到并发请求时，如何处理。</p>
-<h3 id="加锁操作先占有锁资源，再占有资源"><a href="#加锁操作先占有锁资源，再占有资源" class="headerlink" title="加锁操作先占有锁资源，再占有资源"></a>加锁操作先占有锁资源，再占有资源</h3><p>a. 锁库存<br>b. 插入“秒杀”记录<br>c. 更新库存</p>
-<p>“秒杀”系统的设计难点就在这个事务操作上。商品库存在DB中记为一行，大量用户同时“秒杀”同一商品时，第一个到达DB的请求锁住了这行库存记录。在第一个事务完成提交之前这个锁一直被第一个请求占用，其他到达的请求全部失败。</p>
-<p>加锁的方案，效率会比较低。实际应用时，通常要配合排队系统，让没有获取到锁的请求排队。</p>
-<h3 id="单独开发请求排队调度模块"><a href="#单独开发请求排队调度模块" class="headerlink" title="单独开发请求排队调度模块"></a>单独开发请求排队调度模块</h3><p>排队模块接收用户的抢红包请求，以FIFO模式保存下来，调度模块负责FIFO队列的动态调度，一旦有空闲资源，便从队列头部把用户的访问请求取出后交给真正提供服务的模块处理。优点是，具有中心节点的统一资源管理，对系统的可控性强，可深度定制。缺点是，所有请求流量都会有中心节点参与，效率必然会比分布式无中心系统低，并且，中心节点也很容易成为整个系统的性能瓶颈。</p>
-<h3 id="巧用Redis-特性，使其成为分布式序号生成器（我们最终采用的做法）-–-具体还要再看，如何利用redis的特性"><a href="#巧用Redis-特性，使其成为分布式序号生成器（我们最终采用的做法）-–-具体还要再看，如何利用redis的特性" class="headerlink" title="巧用Redis 特性，使其成为分布式序号生成器（我们最终采用的做法） – 具体还要再看，如何利用redis的特性"></a>巧用Redis 特性，使其成为分布式序号生成器（我们最终采用的做法） – 具体还要再看，如何利用redis的特性</h3><p>参考<br><a href="https://www.ibm.com/developerworks/cn/web/wa-design-small-and-good-kill-system/index.html">https://www.ibm.com/developerworks/cn/web/wa-design-small-and-good-kill-system/index.html</a><br><a href="https://blog.csdn.net/zhanjianshinian/article/details/53342730">https://blog.csdn.net/zhanjianshinian/article/details/53342730</a><br>每件商品以一个数字ID来标识，这个ID是全局唯一的，所有围绕商品的操作都使用这个ID作为数据的关联项。</p>
-<p>Redis节点内存储的是这个分组可以分发的商品ID号段，利用Redis特性实现红包分发，各服务节点通过Redis原语获取当前拆到的红包。这种做法的思路是，Redis 本身是单进程工作模型，来自分布式系统各个节点的操作请求天然的被 Redis Server 做了一个同步队列，只要每个请求执行的足够快，这个队列就不会引起阻塞及请求超时。而本例中我们使用了 DECR 原语，性能上是可以满足需求的。Redis 在这里相当于是充当一个分布式序号发生器的功能，分发红包 ID。</p>
-<h3 id="通过memcached来控制并发数-–-具体还要再看"><a href="#通过memcached来控制并发数-–-具体还要再看" class="headerlink" title="通过memcached来控制并发数 – 具体还要再看"></a>通过memcached来控制并发数 – 具体还要再看</h3><p><a href="https://blog.csdn.net/echo3/article/details/17580347">https://blog.csdn.net/echo3/article/details/17580347</a>  使用memcached进行并发控制（写的非常好）<br><a href="http://www.infoq.com/cn/articles/2017hongbao-weixin#">http://www.infoq.com/cn/articles/2017hongbao-weixin#</a>  百亿级微信红包的高并发资金交易系统设计方案<br><a href="https://blog.csdn.net/yanker1990/article/details/78737626">https://blog.csdn.net/yanker1990/article/details/78737626</a>  Memcache的并发问题和利用CAS的解决方案</p>
-<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><p>如何设计一个小而美的秒杀系统？<br><a href="https://www.ibm.com/developerworks/cn/web/wa-design-small-and-good-kill-system/index.html">https://www.ibm.com/developerworks/cn/web/wa-design-small-and-good-kill-system/index.html</a><br>使用memcached进行并发控制（写的非常好）<br><a href="https://blog.csdn.net/echo3/article/details/17580347">https://blog.csdn.net/echo3/article/details/17580347</a><br>电商秒杀系统设计分析<br><a href="https://blog.csdn.net/zhanjianshinian/article/details/53342730">https://blog.csdn.net/zhanjianshinian/article/details/53342730</a></p>
-<p><a href="https://memcached.org/about">https://memcached.org/about</a><br>Redis DECR命令<br><a href="https://www.kancloud.cn/thinkphp/redis-quickstart/36180">https://www.kancloud.cn/thinkphp/redis-quickstart/36180</a></p>
-<p>云主机的问题:<br>申请时要排队，好像没有意义。<br>防止申请到同一台宿主机，前面做的临时添加资源是否有用。跟定时更新是否有冲突？</p>
-]]></content>
-      <categories>
-        <category>架构设计</category>
-      </categories>
-      <tags>
-        <tag>并发控制</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>缺少指令集pclmulqdq导致无法运行crc32c的问题</title>
-    <url>/2022/04/01/%E7%BC%BA%E5%B0%91%E6%8C%87%E4%BB%A4%E9%9B%86pclmulqdq%E5%AF%BC%E8%87%B4%E6%97%A0%E6%B3%95%E8%BF%90%E8%A1%8Ccrc32c%E7%9A%84%E9%97%AE%E9%A2%98/</url>
-    <content><![CDATA[<h1 id="问题"><a href="#问题" class="headerlink" title="问题"></a>问题</h1><p>之前跑程序一直在intel/amd的CPU上，最近要适配一款国产cpu -中科海光 Hygon C86 7151 16-core Processor。突然发现计算crc32的程序跑不起来了，是啥原因呢？</p>
-<span id="more"></span>
-
-<p>这是用到的crc32的库<a href="https://github.com/htot/crc32c/%E3%80%82">https://github.com/htot/crc32c/。</a></p>
-<ul>
-<li>编译 cd crc32c/crc32c; make all</li>
-<li>跑test程序 ./crc32c_test</li>
-</ul>
-<figure class="highlight subunit"><table><tr><td class="code"><pre><span class="line">[root@store<span class="string">-11</span><span class="string">-14</span> crc32c]# ./crc32c_test </span><br><span class="line"><span class="keyword">Testing </span>CRC32C functions</span><br><span class="line">CRC32C:</span><br><span class="line">        CPUDetection: PASSED.</span><br><span class="line">        KnownValues: Illegal instruction</span><br></pre></td></tr></table></figure>
-
-<h1 id="调试"><a href="#调试" class="headerlink" title="调试"></a>调试</h1><p>用gdb汇编调试，</p>
-<figure class="highlight less"><table><tr><td class="code"><pre><span class="line"><span class="selector-tag">gdb</span> ./<span class="selector-tag">crc32c_test</span> </span><br><span class="line">(gdb) <span class="selector-tag">layout</span> <span class="selector-tag">asm</span></span><br><span class="line">(gdb) <span class="selector-tag">run</span></span><br><span class="line">(gdb) <span class="selector-tag">m</span> <span class="selector-tag">received</span> <span class="selector-tag">signal</span> <span class="selector-tag">SIGILL</span>, <span class="selector-tag">Illegal</span> <span class="selector-tag">instruction</span>.</span><br></pre></td></tr></table></figure>
-
-<img src="/2022/04/01/%E7%BC%BA%E5%B0%91%E6%8C%87%E4%BB%A4%E9%9B%86pclmulqdq%E5%AF%BC%E8%87%B4%E6%97%A0%E6%B3%95%E8%BF%90%E8%A1%8Ccrc32c%E7%9A%84%E9%97%AE%E9%A2%98/%E6%B1%87%E7%BC%96%E8%B0%83%E8%AF%95crc32c.png" class="" title="image">
-
-<p>在执行机器指令pclmullqlqdq的时候，出现了Illegal instruction的错误，即改指令不支持。</p>
-<p>该指令的支持，需要cpu支持pclmulqdq指令。该指令有助于实现高效的多项式的乘法。<br>查看Hygon C86 7151的处理器。确实没有该指令，所以无法运行crc32c_test。</p>
-<img src="/2022/04/01/%E7%BC%BA%E5%B0%91%E6%8C%87%E4%BB%A4%E9%9B%86pclmulqdq%E5%AF%BC%E8%87%B4%E6%97%A0%E6%B3%95%E8%BF%90%E8%A1%8Ccrc32c%E7%9A%84%E9%97%AE%E9%A2%98/hygon.png" class="" title="image">
-
-<p>而在用的一款intel cpu上有该pclmulqdq指令，所以可以运行crc32c_test。</p>
-<img src="/2022/04/01/%E7%BC%BA%E5%B0%91%E6%8C%87%E4%BB%A4%E9%9B%86pclmulqdq%E5%AF%BC%E8%87%B4%E6%97%A0%E6%B3%95%E8%BF%90%E8%A1%8Ccrc32c%E7%9A%84%E9%97%AE%E9%A2%98/intel.png" class="" title="image">
-
-<p>再看crc32c中<a href="https://github.com/htot/crc32c/blob/master/crc32c/crc32intelc.cc%E7%9A%84%E6%8F%8F%E8%BF%B0%EF%BC%8C%E4%B9%9F%E6%8F%90%E5%88%B0%E4%BA%86%E4%BE%9D%E8%B5%96%E4%BD%BF%E7%94%A8pclmulqdq">https://github.com/htot/crc32c/blob/master/crc32c/crc32intelc.cc的描述，也提到了依赖使用pclmulqdq</a> instruction，进一步佐证了上面的分析过程。</p>
-<p>/* Use hardware CRC instruction on Intel SSE 4.2 processors.  This computes a<br>  CRC-32C, <em>not</em> the CRC-32 used by Ethernet and zip, gzip, etc. Where efficient<br>  3 crc32q instructions are used which a single core can execute in parallel.<br>  This compensates for the latency of a single crc32q instruction. <font color=#FF0000>Combining the<br>  3 CRC-32C bytes is done using the pclmulqdq instruction</font>, which has overhead of<br>  its own, and makes this code path only efficient for buffer sizes above 216 bytes.<br>  All code requiring a crc32q instruction is done inside a macro, for which alternative<br>  code is generated in case of a 32 bit platform.*/</p>
-]]></content>
-      <categories>
-        <category>cpu</category>
-      </categories>
-      <tags>
-        <tag>cpu</tag>
-        <tag>crc</tag>
       </tags>
   </entry>
   <entry>
@@ -1847,6 +1939,42 @@
         <tag>限速</tag>
         <tag>cgroup</tag>
         <tag>磁盘IO</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>缺少指令集pclmulqdq导致无法运行crc32c的问题</title>
+    <url>/2022/04/01/%E7%BC%BA%E5%B0%91%E6%8C%87%E4%BB%A4%E9%9B%86pclmulqdq%E5%AF%BC%E8%87%B4%E6%97%A0%E6%B3%95%E8%BF%90%E8%A1%8Ccrc32c%E7%9A%84%E9%97%AE%E9%A2%98/</url>
+    <content><![CDATA[<h1 id="问题"><a href="#问题" class="headerlink" title="问题"></a>问题</h1><p>之前跑程序一直在intel/amd的CPU上，最近要适配一款国产cpu -中科海光 Hygon C86 7151 16-core Processor。突然发现计算crc32的程序跑不起来了，是啥原因呢？</p>
+<span id="more"></span>
+
+<p>这是用到的crc32的库<a href="https://github.com/htot/crc32c/%E3%80%82">https://github.com/htot/crc32c/。</a></p>
+<ul>
+<li>编译 cd crc32c/crc32c; make all</li>
+<li>跑test程序 ./crc32c_test</li>
+</ul>
+<figure class="highlight subunit"><table><tr><td class="code"><pre><span class="line">[root@store<span class="string">-11</span><span class="string">-14</span> crc32c]# ./crc32c_test </span><br><span class="line"><span class="keyword">Testing </span>CRC32C functions</span><br><span class="line">CRC32C:</span><br><span class="line">        CPUDetection: PASSED.</span><br><span class="line">        KnownValues: Illegal instruction</span><br></pre></td></tr></table></figure>
+
+<h1 id="调试"><a href="#调试" class="headerlink" title="调试"></a>调试</h1><p>用gdb汇编调试，</p>
+<figure class="highlight less"><table><tr><td class="code"><pre><span class="line"><span class="selector-tag">gdb</span> ./<span class="selector-tag">crc32c_test</span> </span><br><span class="line">(gdb) <span class="selector-tag">layout</span> <span class="selector-tag">asm</span></span><br><span class="line">(gdb) <span class="selector-tag">run</span></span><br><span class="line">(gdb) <span class="selector-tag">m</span> <span class="selector-tag">received</span> <span class="selector-tag">signal</span> <span class="selector-tag">SIGILL</span>, <span class="selector-tag">Illegal</span> <span class="selector-tag">instruction</span>.</span><br></pre></td></tr></table></figure>
+
+<img src="/2022/04/01/%E7%BC%BA%E5%B0%91%E6%8C%87%E4%BB%A4%E9%9B%86pclmulqdq%E5%AF%BC%E8%87%B4%E6%97%A0%E6%B3%95%E8%BF%90%E8%A1%8Ccrc32c%E7%9A%84%E9%97%AE%E9%A2%98/%E6%B1%87%E7%BC%96%E8%B0%83%E8%AF%95crc32c.png" class="" title="image">
+
+<p>在执行机器指令pclmullqlqdq的时候，出现了Illegal instruction的错误，即改指令不支持。</p>
+<p>该指令的支持，需要cpu支持pclmulqdq指令。该指令有助于实现高效的多项式的乘法。<br>查看Hygon C86 7151的处理器。确实没有该指令，所以无法运行crc32c_test。</p>
+<img src="/2022/04/01/%E7%BC%BA%E5%B0%91%E6%8C%87%E4%BB%A4%E9%9B%86pclmulqdq%E5%AF%BC%E8%87%B4%E6%97%A0%E6%B3%95%E8%BF%90%E8%A1%8Ccrc32c%E7%9A%84%E9%97%AE%E9%A2%98/hygon.png" class="" title="image">
+
+<p>而在用的一款intel cpu上有该pclmulqdq指令，所以可以运行crc32c_test。</p>
+<img src="/2022/04/01/%E7%BC%BA%E5%B0%91%E6%8C%87%E4%BB%A4%E9%9B%86pclmulqdq%E5%AF%BC%E8%87%B4%E6%97%A0%E6%B3%95%E8%BF%90%E8%A1%8Ccrc32c%E7%9A%84%E9%97%AE%E9%A2%98/intel.png" class="" title="image">
+
+<p>再看crc32c中<a href="https://github.com/htot/crc32c/blob/master/crc32c/crc32intelc.cc%E7%9A%84%E6%8F%8F%E8%BF%B0%EF%BC%8C%E4%B9%9F%E6%8F%90%E5%88%B0%E4%BA%86%E4%BE%9D%E8%B5%96%E4%BD%BF%E7%94%A8pclmulqdq">https://github.com/htot/crc32c/blob/master/crc32c/crc32intelc.cc的描述，也提到了依赖使用pclmulqdq</a> instruction，进一步佐证了上面的分析过程。</p>
+<p>/* Use hardware CRC instruction on Intel SSE 4.2 processors.  This computes a<br>  CRC-32C, <em>not</em> the CRC-32 used by Ethernet and zip, gzip, etc. Where efficient<br>  3 crc32q instructions are used which a single core can execute in parallel.<br>  This compensates for the latency of a single crc32q instruction. <font color=#FF0000>Combining the<br>  3 CRC-32C bytes is done using the pclmulqdq instruction</font>, which has overhead of<br>  its own, and makes this code path only efficient for buffer sizes above 216 bytes.<br>  All code requiring a crc32q instruction is done inside a macro, for which alternative<br>  code is generated in case of a 32 bit platform.*/</p>
+]]></content>
+      <categories>
+        <category>cpu</category>
+      </categories>
+      <tags>
+        <tag>cpu</tag>
+        <tag>crc</tag>
       </tags>
   </entry>
   <entry>
@@ -2006,6 +2134,35 @@
       </tags>
   </entry>
   <entry>
+    <title>这些年读过的那些书&amp;&amp;待读清单列表</title>
+    <url>/2019/08/31/%E8%BF%99%E4%BA%9B%E5%B9%B4%E8%AF%BB%E8%BF%87%E7%9A%84%E9%82%A3%E4%BA%9B%E4%B9%A6-%E5%BE%85%E8%AF%BB%E6%B8%85%E5%8D%95%E5%88%97%E8%A1%A8/</url>
+    <content><![CDATA[<p>每年给自己列个计划，要读哪些书，到年尾看看真正看完的有多少。</p>
+<h1 id="2020年待读清单列表"><a href="#2020年待读清单列表" class="headerlink" title="2020年待读清单列表"></a>2020年待读清单列表</h1><ol>
+<li> 《Designing Data-Intensive Applications》</li>
+</ol>
+<h1 id="2019年待读清单列表"><a href="#2019年待读清单列表" class="headerlink" title="2019年待读清单列表"></a>2019年待读清单列表</h1><ol>
+<li>UNIX环境高级编程（第3版）</li>
+<li>重构网络 SDN架构与实现</li>
+<li>软件定义网络</li>
+<li>全球通史 从史前史到21实际 第7版修订版 上</li>
+<li>全球通史 从史前史到21实际 第7版修订版 下<span id="more"></span></li>
+</ol>
+<h1 id="这些年读过的那些书"><a href="#这些年读过的那些书" class="headerlink" title="这些年读过的那些书"></a>这些年读过的那些书</h1><h2 id="2020年"><a href="#2020年" class="headerlink" title="2020年"></a>2020年</h2><ol>
+<li>《深度思考》 深度思考前的盲目勤奋，注定是吃力不讨好的徒劳。香奈儿前全球CEO从普通职员到职场巅峰的人生进阶之路。大脑中走得越远，现实中走得越稳。</li>
+</ol>
+<h2 id="2019年"><a href="#2019年" class="headerlink" title="2019年"></a>2019年</h2><ol>
+<li>《TCP/IP详解 卷1：协议（原书第2版）》 <a href="https://xusenqi.github.io/2019/04/24/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0-TCP-IP%E8%AF%A6%E8%A7%A3-%E5%8D%B71%EF%BC%9A%E5%8D%8F%E8%AE%AE/">读书笔记-TCP/IP详解 卷1：协议</a></li>
+<li>《软技能 代码之外的生存指南（Soft Skills - The Software Developer’s Life Manual）》对于程序员是很不错的心灵鸡汤，从职业、自我营销、学习、生产力等方面，讲述了作者的方法和心得，很值得借鉴。</li>
+</ol>
+]]></content>
+      <categories>
+        <category>读书笔记</category>
+      </categories>
+      <tags>
+        <tag>清单</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>通过delve(dlv)调试golang程序</title>
     <url>/2019/08/25/%E9%80%9A%E8%BF%87delve-dlv-%E8%B0%83%E8%AF%95golang%E7%A8%8B%E5%BA%8F/</url>
     <content><![CDATA[<h1 id="介绍"><a href="#介绍" class="headerlink" title="介绍"></a>介绍</h1><p>gdb是强大的调试工具。但对于golang程序来说，delve是个更好的选择，它能更好地理解Go runtime, data structures, and expressions，尤其是goroutine。</p>
@@ -2089,35 +2246,6 @@
         <tag>debug</tag>
         <tag>delve</tag>
         <tag>dlv</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>这些年读过的那些书&amp;&amp;待读清单列表</title>
-    <url>/2019/08/31/%E8%BF%99%E4%BA%9B%E5%B9%B4%E8%AF%BB%E8%BF%87%E7%9A%84%E9%82%A3%E4%BA%9B%E4%B9%A6-%E5%BE%85%E8%AF%BB%E6%B8%85%E5%8D%95%E5%88%97%E8%A1%A8/</url>
-    <content><![CDATA[<p>每年给自己列个计划，要读哪些书，到年尾看看真正看完的有多少。</p>
-<h1 id="2020年待读清单列表"><a href="#2020年待读清单列表" class="headerlink" title="2020年待读清单列表"></a>2020年待读清单列表</h1><ol>
-<li> 《Designing Data-Intensive Applications》</li>
-</ol>
-<h1 id="2019年待读清单列表"><a href="#2019年待读清单列表" class="headerlink" title="2019年待读清单列表"></a>2019年待读清单列表</h1><ol>
-<li>UNIX环境高级编程（第3版）</li>
-<li>重构网络 SDN架构与实现</li>
-<li>软件定义网络</li>
-<li>全球通史 从史前史到21实际 第7版修订版 上</li>
-<li>全球通史 从史前史到21实际 第7版修订版 下<span id="more"></span></li>
-</ol>
-<h1 id="这些年读过的那些书"><a href="#这些年读过的那些书" class="headerlink" title="这些年读过的那些书"></a>这些年读过的那些书</h1><h2 id="2020年"><a href="#2020年" class="headerlink" title="2020年"></a>2020年</h2><ol>
-<li>《深度思考》 深度思考前的盲目勤奋，注定是吃力不讨好的徒劳。香奈儿前全球CEO从普通职员到职场巅峰的人生进阶之路。大脑中走得越远，现实中走得越稳。</li>
-</ol>
-<h2 id="2019年"><a href="#2019年" class="headerlink" title="2019年"></a>2019年</h2><ol>
-<li>《TCP/IP详解 卷1：协议（原书第2版）》 <a href="https://xusenqi.github.io/2019/04/24/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0-TCP-IP%E8%AF%A6%E8%A7%A3-%E5%8D%B71%EF%BC%9A%E5%8D%8F%E8%AE%AE/">读书笔记-TCP/IP详解 卷1：协议</a></li>
-<li>《软技能 代码之外的生存指南（Soft Skills - The Software Developer’s Life Manual）》对于程序员是很不错的心灵鸡汤，从职业、自我营销、学习、生产力等方面，讲述了作者的方法和心得，很值得借鉴。</li>
-</ol>
-]]></content>
-      <categories>
-        <category>读书笔记</category>
-      </categories>
-      <tags>
-        <tag>清单</tag>
       </tags>
   </entry>
   <entry>
